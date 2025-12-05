@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+packages/*/node_modules/
+
+# Build outputs
+dist/
+packages/*/dist/
+bundle/
+coverage/
+.nyc_output/
+.vitest/
+packages/cli/src/generated/
+packages/vscode-ide-companion/*.vsix
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs and temporary files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+*.tgz
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
