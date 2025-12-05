@@ -5,7 +5,6 @@
  */
 
 import type { TiktokenEncoding, Tiktoken } from 'tiktoken';
-import { get_encoding } from 'tiktoken';
 
 /**
  * Text tokenizer for calculating text tokens using tiktoken
@@ -25,6 +24,7 @@ export class TextTokenizer {
     if (this.encoding) return;
 
     try {
+      const { get_encoding } = await import('tiktoken');
       // Use type assertion since we know the encoding name is valid
       this.encoding = get_encoding(this.encodingName as TiktokenEncoding);
     } catch (error) {
