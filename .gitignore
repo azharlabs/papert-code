@@ -35,3 +35,7 @@ pnpm-debug.log*
 
 .papert
 .papertignore
+
+# Test report files
+junit.xml
+packages/*/coverage/
