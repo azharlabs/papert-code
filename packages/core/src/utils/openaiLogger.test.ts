@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as path from 'node:path';
 import * as os from 'os';
 import { promises as fs } from 'node:fs';
@@ -25,8 +25,8 @@ describe('OpenAILogger', () => {
       'openai-logger',
       'home-directory',
     );
-    originalHome = process.env.HOME;
-    process.env.HOME = fakeHome;
+    originalHome = process.env['HOME'];
+    process.env['HOME'] = fakeHome;
     testTempDir = path.join(
       process.cwd(),
       'tmp',
@@ -56,7 +56,7 @@ describe('OpenAILogger', () => {
     });
 
     await Promise.all(cleanupPromises);
-    process.env.HOME = originalHome;
+    process.env['HOME'] = originalHome;
     process.chdir(originalCwd);
   });
 

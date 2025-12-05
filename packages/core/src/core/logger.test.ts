@@ -78,9 +78,9 @@ describe('Logger', () => {
     vi.resetAllMocks();
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2025-01-01T12:00:00.000Z'));
-    originalHome = process.env.HOME;
+    originalHome = process.env['HOME'];
     testHomeDir = path.join(process.cwd(), '.papert-test-home');
-    process.env.HOME = testHomeDir;
+    process.env['HOME'] = testHomeDir;
     vi.spyOn(os, 'homedir').mockReturnValue(testHomeDir);
     testGeminiDir = path.join(
       testHomeDir,
@@ -104,7 +104,7 @@ describe('Logger', () => {
     }
     // Clean up after the test
     await cleanupLogAndCheckpointFiles();
-    process.env.HOME = originalHome;
+    process.env['HOME'] = originalHome;
     vi.useRealTimers();
     vi.restoreAllMocks();
   });

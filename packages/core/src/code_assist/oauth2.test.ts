@@ -70,7 +70,7 @@ if (!canListenOnLoopback) {
           const callback =
             typeof _hostOrCb === 'function' ? _hostOrCb : cb ?? (() => {});
           callback();
-          listeners.listening.forEach((fn) => fn());
+          listeners['listening'].forEach((fn) => fn());
         },
         address: () =>
           ({
@@ -83,7 +83,7 @@ if (!canListenOnLoopback) {
           listeners[event].push(handler);
         },
         close: () => {
-          listeners.close.forEach((fn) => fn());
+          listeners['close'].forEach((fn) => fn());
         },
         unref: () => {},
       };

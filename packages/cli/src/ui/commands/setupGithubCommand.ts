@@ -202,6 +202,7 @@ export const setupGithubCommand: SlashCommand = {
       type: 'tool',
       toolName: 'run_shell_command',
       toolArgs: {
+        is_background: false,
         description:
           'Setting up GitHub Actions to triage issues and review PRs with Gemini.',
         command,

@@ -9,7 +9,11 @@ bundle/
 coverage/
 .nyc_output/
 .vitest/
+
+# Generated files
 packages/cli/src/generated/
+packages/core/src/generated/
+.integration-tests/
 packages/vscode-ide-companion/*.vsix
 
 # Editor and OS files
@@ -33,9 +37,13 @@ pnpm-debug.log*
 .env.*
 !.env.example
 
+.github/
+
 .papert
 .papertignore
 
 # Test report files
 junit.xml
 packages/*/coverage/
+.gemini/
+gha-creds-*.json
