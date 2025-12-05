@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as path from 'node:path';
 import * as os from 'os';
 import { promises as fs } from 'node:fs';
@@ -13,11 +13,26 @@ import { OpenAILogger } from './openaiLogger.js';
 describe('OpenAILogger', () => {
   let originalCwd: string;
   let testTempDir: string;
+  let originalHome: string | undefined;
+  let fakeHome: string;
   const createdDirs: string[] = [];
 
   beforeEach(() => {
     originalCwd = process.cwd();
-    testTempDir = path.join(os.tmpdir(), `openai-logger-test-${Date.now()}`);
+    fakeHome = path.join(
+      process.cwd(),
+      'tmp',
+      'openai-logger',
+      'home-directory',
+    );
+    originalHome = process.env.HOME;
+    process.env.HOME = fakeHome;
+    testTempDir = path.join(
+      process.cwd(),
+      'tmp',
+      'openai-logger',
+      `openai-logger-test-${Date.now()}`,
+    );
     createdDirs.length = 0; // Clear array
   });
 
@@ -29,8 +44,9 @@ describe('OpenAILogger', () => {
       path.resolve(process.cwd(), 'relative-logs'),
       path.resolve(process.cwd(), 'custom-logs'),
       path.resolve(process.cwd(), 'test-relative-logs'),
-      path.join(os.homedir(), 'custom-logs'),
-      path.join(os.homedir(), 'test-openai-logs'),
+      path.join(fakeHome, 'custom-logs'),
+      path.join(fakeHome, 'test-openai-logs'),
+      fakeHome,
     ].map(async (dir) => {
       try {
         await fs.rm(dir, { recursive: true, force: true });
@@ -40,6 +56,7 @@ describe('OpenAILogger', () => {
     });
 
     await Promise.all(cleanupPromises);
+    process.env.HOME = originalHome;
     process.chdir(originalCwd);
   });
 

@@ -232,13 +232,12 @@ describe('mcp-client', () => {
           false,
         );
 
-        expect(transport).toEqual(
-          new StreamableHTTPClientTransport(new URL('http://test-server'), {
-            requestInit: {
-              headers: { Authorization: 'derp' },
-            },
-          }),
-        );
+        const httpTransport = transport as StreamableHTTPClientTransport;
+        expect(httpTransport).toBeInstanceOf(StreamableHTTPClientTransport);
+        expect(httpTransport['_url'].href).toBe('http://test-server/');
+        expect(httpTransport['_requestInit']).toEqual({
+          headers: { Authorization: 'derp' },
+        });
       });
     });
 
@@ -266,13 +265,12 @@ describe('mcp-client', () => {
           false,
         );
 
-        expect(transport).toEqual(
-          new SSEClientTransport(new URL('http://test-server'), {
-            requestInit: {
-              headers: { Authorization: 'derp' },
-            },
-          }),
-        );
+        const sseTransport = transport as SSEClientTransport;
+        expect(sseTransport).toBeInstanceOf(SSEClientTransport);
+        expect(sseTransport['_url'].href).toBe('http://test-server/');
+        expect(sseTransport['_requestInit']).toEqual({
+          headers: { Authorization: 'derp' },
+        });
       });
     });
 

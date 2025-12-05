@@ -127,18 +127,14 @@ export class McpPromptLoader implements ICommandLoader {
               const textContent =
                 Array.isArray(rawContent) && rawContent.length > 0
                   ? rawContent.find(
-                      (item): item is { type: 'text'; text: string } =>
+                      (item): item is { type?: string; text: string } =>
                         !!item &&
                         typeof item === 'object' &&
-                        'type' in item &&
-                        (item as { type?: unknown }).type === 'text' &&
                         'text' in item &&
                         typeof (item as { text?: unknown }).text === 'string',
                     )
                   : rawContent &&
                       typeof rawContent === 'object' &&
-                      'type' in rawContent &&
-                      (rawContent as { type?: unknown }).type === 'text' &&
                       'text' in rawContent &&
                       typeof (rawContent as { text?: unknown }).text ===
                         'string'

@@ -88,9 +88,9 @@ export function getSandboxEnv(stripPrefix = false): string {
     return 'no sandbox';
   }
 
-  // For bug reports, remove qwen- prefix
+  // For bug reports, remove legacy prefixes (qwen-, qwen-code-, papert-code-)
   if (stripPrefix) {
-    return sandbox.replace(/^qwen-(?:code-)?/, '');
+    return sandbox.replace(/^(?:qwen-(?:code-)?|papert-code-)/, '');
   }
 
   return sandbox;

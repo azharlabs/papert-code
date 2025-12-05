@@ -63,6 +63,20 @@ vi.mock('./open-files-manager', () => {
   return { OpenFilesManager };
 });
 
+const canListenOnLoopback = await new Promise<boolean>((resolve) => {
+  const server = http.createServer();
+  server.once('error', () => resolve(false));
+  try {
+    server.listen(0, '127.0.0.1', () =>
+      server.close(() => resolve(true)),
+    );
+  } catch (_error) {
+    resolve(false);
+  }
+});
+
+const describeIfCanListen = canListenOnLoopback ? describe : describe.skip;
+
 const getPortFromMock = (
   replaceMock: ReturnType<
     () => vscode.ExtensionContext['environmentVariableCollection']['replace']
@@ -78,7 +92,7 @@ const getPortFromMock = (
   return port;
 };
 
-describe('IDEServer', () => {
+describeIfCanListen('IDEServer', () => {
   let ideServer: IDEServer;
   let mockContext: vscode.ExtensionContext;
   let mockLog: (message: string) => void;
@@ -482,7 +496,7 @@ const request = (
     req.end();
   });
 
-describe('IDEServer HTTP endpoints', () => {
+describeIfCanListen('IDEServer HTTP endpoints', () => {
   let ideServer: IDEServer;
   let mockContext: vscode.ExtensionContext;
   let mockLog: (message: string) => void;

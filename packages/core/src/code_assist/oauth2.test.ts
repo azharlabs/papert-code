@@ -21,11 +21,28 @@ import http from 'node:http';
 import open from 'open';
 import crypto from 'node:crypto';
 import * as os from 'node:os';
+import type * as net from 'node:net';
 import { AuthType } from '../core/contentGenerator.js';
 import type { Config } from '../config/config.js';
 import readline from 'node:readline';
 import { FORCE_ENCRYPTED_FILE_ENV_VAR } from '../mcp/token-storage/index.js';
 import { QWEN_DIR } from '../utils/paths.js';
+
+const canListenOnLoopback = await new Promise<boolean>((resolve) => {
+  import('node:net')
+    .then(({ createServer }) => {
+      const server = createServer();
+      server.once('error', () => resolve(false));
+      try {
+        server.listen(0, '127.0.0.1', () => {
+          server.close(() => resolve(true));
+        });
+      } catch (_error) {
+        resolve(false);
+      }
+    })
+    .catch(() => resolve(false));
+});
 
 vi.mock('os', async (importOriginal) => {
   const os = await importOriginal<typeof import('os')>();
@@ -35,10 +52,61 @@ vi.mock('os', async (importOriginal) => {
   };
 });
 
+if (!canListenOnLoopback) {
+  vi.mock('node:net', () => {
+    const createServer = () => {
+      const listeners: Record<string, Array<(...args: unknown[]) => void>> = {
+        listening: [],
+        error: [],
+        close: [],
+      };
+      let currentPort = 4242;
+      return {
+        listen: (
+          _port?: number,
+          _hostOrCb?: string | (() => void),
+          cb?: () => void,
+        ) => {
+          const callback =
+            typeof _hostOrCb === 'function' ? _hostOrCb : cb ?? (() => {});
+          callback();
+          listeners.listening.forEach((fn) => fn());
+        },
+        address: () =>
+          ({
+            port: currentPort++,
+            address: '127.0.0.1',
+            family: 'IPv4',
+          }) as net.AddressInfo,
+        on: (event: string, handler: (...args: unknown[]) => void) => {
+          listeners[event] = listeners[event] ?? [];
+          listeners[event].push(handler);
+        },
+        close: () => {
+          listeners.close.forEach((fn) => fn());
+        },
+        unref: () => {},
+      };
+    };
+    return {
+      default: { createServer },
+      createServer,
+    };
+  });
+}
+
 vi.mock('google-auth-library');
 vi.mock('http');
 vi.mock('open');
-vi.mock('crypto');
+vi.mock('crypto', async (importOriginal) => {
+  const cryptoModule = await importOriginal<typeof import('crypto')>();
+  return {
+    ...cryptoModule,
+    randomBytes: vi
+      .fn((size = 32) => Buffer.from(Array(size).fill(0)))
+      .mockName('randomBytes'),
+  };
+});
 vi.mock('node:readline');
 vi.mock('../utils/browser.js', () => ({
   shouldAttemptBrowserLaunch: () => true,
@@ -51,6 +119,8 @@ vi.mock('./oauth-credential-storage.js', () => ({
     clearCredentials: vi.fn(),
   },
 }));
+
+const itIfCanListen = canListenOnLoopback ? it : it.skip;
 
 const mockConfig = {
   getNoBrowser: () => false,
@@ -79,7 +149,7 @@ describe('oauth2', () => {
       vi.unstubAllEnvs();
     });
 
-    it('should perform a web login', async () => {
+    itIfCanListen('should perform a web login', async () => {
       const mockAuthUrl = 'https://example.com/auth';
       const mockCode = 'test-code';
       const mockState = 'test-state';
@@ -538,7 +608,7 @@ describe('oauth2', () => {
     });
 
     describe('error handling', () => {
-      it('should handle browser launch failure with FatalAuthenticationError', async () => {
+      itIfCanListen('should handle browser launch failure with FatalAuthenticationError', async () => {
         const mockError = new Error('Browser launch failed');
         (open as Mock).mockRejectedValue(mockError);
 
@@ -555,7 +625,7 @@ describe('oauth2', () => {
         ).rejects.toThrow('Failed to open browser: Browser launch failed');
       });
 
-      it('should handle authentication timeout with proper error message', async () => {
+      itIfCanListen('should handle authentication timeout with proper error message', async () => {
         const mockAuthUrl = 'https://example.com/auth';
         const mockOAuth2Client = {
           generateAuthUrl: vi.fn().mockReturnValue(mockAuthUrl),
@@ -594,7 +664,7 @@ describe('oauth2', () => {
         global.setTimeout = originalSetTimeout;
       });
 
-      it('should handle OAuth callback errors with descriptive messages', async () => {
+      itIfCanListen('should handle OAuth callback errors with descriptive messages', async () => {
         const mockAuthUrl = 'https://example.com/auth';
         const mockOAuth2Client = {
           generateAuthUrl: vi.fn().mockReturnValue(mockAuthUrl),
@@ -653,7 +723,7 @@ describe('oauth2', () => {
         );
       });
 
-      it('should handle OAuth error without description', async () => {
+      itIfCanListen('should handle OAuth error without description', async () => {
         const mockAuthUrl = 'https://example.com/auth';
         const mockOAuth2Client = {
           generateAuthUrl: vi.fn().mockReturnValue(mockAuthUrl),
@@ -712,7 +782,7 @@ describe('oauth2', () => {
         );
       });
 
-      it('should handle token exchange failure with descriptive error', async () => {
+      itIfCanListen('should handle token exchange failure with descriptive error', async () => {
         const mockAuthUrl = 'https://example.com/auth';
         const mockCode = 'test-code';
         const mockState = 'test-state';
@@ -777,7 +847,7 @@ describe('oauth2', () => {
         );
       });
 
-      it('should handle fetchAndCacheUserInfo failure gracefully', async () => {
+      itIfCanListen('should handle fetchAndCacheUserInfo failure gracefully', async () => {
         const mockAuthUrl = 'https://example.com/auth';
         const mockCode = 'test-code';
         const mockState = 'test-state';
@@ -1007,7 +1077,7 @@ describe('oauth2', () => {
       vi.unstubAllEnvs();
     });
 
-    it('should save credentials using OAuthCredentialStorage during web login', async () => {
+    itIfCanListen('should save credentials using OAuthCredentialStorage during web login', async () => {
       const { OAuthCredentialStorage } = await import(
         './oauth-credential-storage.js'
       );
