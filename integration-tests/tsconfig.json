@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "@papert-code/sdk-typescript": [
+        "../packages/sdk-typescript/dist/index.d.ts"
+      ]
+    }
+  },
+  "include": ["**/*.ts"],
+  "references": [{ "path": "../packages/core" }]
+}
