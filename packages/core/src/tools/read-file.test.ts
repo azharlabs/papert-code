@@ -25,6 +25,7 @@ vi.mock('../telemetry/loggers.js', () => ({
 describe('ReadFileTool', () => {
   let tempRootDir: string;
   let tool: ReadFileTool;
+  let mockConfigInstance: Config;
   const abortSignal = new AbortController().signal;
 
   beforeEach(async () => {
@@ -33,7 +34,7 @@ describe('ReadFileTool', () => {
       path.join(os.tmpdir(), 'read-file-tool-root-'),
     );
 
-    const mockConfigInstance = {
+    mockConfigInstance = {
       getFileService: () => new FileDiscoveryService(tempRootDir),
       getFileSystemService: () => new StandardFileSystemService(),
       getTargetDir: () => tempRootDir,
@@ -43,6 +44,7 @@ describe('ReadFileTool', () => {
       },
       getTruncateToolOutputThreshold: () => 2500,
       getTruncateToolOutputLines: () => 500,
+      refreshContextMemory: vi.fn(),
     } as unknown as Config;
     tool = new ReadFileTool(mockConfigInstance);
   });
@@ -126,6 +128,19 @@ describe('ReadFileTool', () => {
       expect(() => tool.build(params)).toThrow(
         'Limit must be a positive number',
       );
+    });
+  });
+
+  it('calls refreshContextMemory with JIT path before reading', async () => {
+    const filePath = path.join(tempRootDir, 'jit.txt');
+    await fsp.writeFile(filePath, 'hello');
+    const invocation = tool.build({ absolute_path: filePath }) as ToolInvocation;
+
+    await invocation.execute();
+
+    expect(mockConfigInstance.refreshContextMemory).toHaveBeenCalledWith({
+      force: true,
+      jitPaths: [filePath],
     });
   });
 

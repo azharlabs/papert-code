@@ -651,6 +651,11 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
    * @returns Result of the edit operation
    */
   async execute(signal: AbortSignal): Promise<ToolResult> {
+    await this.config.refreshContextMemory({
+      force: true,
+      jitPaths: [this.params.file_path],
+    });
+
     let editData: CalculatedEdit;
     try {
       editData = await this.calculateEdit(this.params, signal);

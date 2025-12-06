@@ -60,6 +60,7 @@ describe('ReadManyFilesTool', () => {
   let tempRootDir: string;
   let tempDirOutsideRoot: string;
   let mockReadFileFn: Mock;
+  let mockConfig: Config;
 
   beforeEach(async () => {
     tempRootDir = fs.realpathSync(
@@ -70,7 +71,7 @@ describe('ReadManyFilesTool', () => {
     );
     fs.writeFileSync(path.join(tempRootDir, '.papertignore'), 'foo.*');
     const fileService = new FileDiscoveryService(tempRootDir);
-    const mockConfig = {
+    mockConfig = {
       getFileService: () => fileService,
       getFileSystemService: () => new StandardFileSystemService(),
 
@@ -90,6 +91,7 @@ describe('ReadManyFilesTool', () => {
       }),
       getTruncateToolOutputThreshold: () => 2500,
       getTruncateToolOutputLines: () => 500,
+      refreshContextMemory: vi.fn(),
     } as Partial<Config> as Config;
     tool = new ReadManyFilesTool(mockConfig);
 
@@ -223,6 +225,19 @@ describe('ReadManyFilesTool', () => {
       fs.mkdirSync(path.dirname(fullPath), { recursive: true });
       fs.writeFileSync(fullPath, data);
     };
+
+    it('calls refreshContextMemory with discovered files', async () => {
+      createFile('file1.txt', 'Content of file1');
+      const params = { paths: ['file1.txt'] };
+      const invocation = tool.build(params);
+      const result = await invocation.execute(new AbortController().signal);
+      expect(result.error).toBeUndefined();
+      const expectedPath = path.join(tempRootDir, 'file1.txt');
+      expect(mockConfig.refreshContextMemory).toHaveBeenCalledWith({
+        force: true,
+        jitPaths: [expectedPath],
+      });
+    });
 
     it('should read a single specified file', async () => {
       createFile('file1.txt', 'Content of file1');
@@ -500,11 +515,12 @@ describe('ReadManyFilesTool', () => {
           getDefaultExcludePatterns: () => [],
           getGlobExcludes: () => COMMON_IGNORE_PATTERNS,
           buildExcludePatterns: () => [],
-          getReadManyFilesExcludes: () => [],
-        }),
-        getTruncateToolOutputThreshold: () => 2500,
-        getTruncateToolOutputLines: () => 500,
-      } as Partial<Config> as Config;
+        getReadManyFilesExcludes: () => [],
+      }),
+      getTruncateToolOutputThreshold: () => 2500,
+      getTruncateToolOutputLines: () => 500,
+      refreshContextMemory: vi.fn(),
+    } as Partial<Config> as Config;
       tool = new ReadManyFilesTool(mockConfig);
 
       fs.writeFileSync(path.join(tempDir1, 'file1.txt'), 'Content1');

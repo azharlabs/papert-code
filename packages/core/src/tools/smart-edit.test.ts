@@ -105,6 +105,7 @@ describe('SmartEditTool', () => {
       getGeminiMdFileCount: () => 0,
       setGeminiMdFileCount: vi.fn(),
       getToolRegistry: () => ({}) as any,
+      refreshContextMemory: vi.fn(),
     } as unknown as Config;
 
     (mockConfig.getApprovalMode as Mock).mockClear();
@@ -365,6 +366,22 @@ describe('SmartEditTool', () => {
 
     beforeEach(() => {
       filePath = path.join(rootDir, testFile);
+    });
+
+    it('calls refreshContextMemory with JIT path before editing', async () => {
+      fs.writeFileSync(filePath, 'Hello World');
+      const params: EditToolParams = {
+        file_path: filePath,
+        instruction: 'Replace Hello',
+        old_string: 'Hello',
+        new_string: 'Hi',
+      };
+      const invocation = tool.build(params);
+      await invocation.execute(new AbortController().signal);
+      expect(mockConfig.refreshContextMemory).toHaveBeenCalledWith({
+        force: true,
+        jitPaths: [filePath],
+      });
     });
 
     it('should reject when calculateEdit fails after an abort signal', async () => {

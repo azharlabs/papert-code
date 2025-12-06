@@ -87,6 +87,7 @@ describe('EditTool', () => {
       getGeminiMdFileCount: () => 0,
       setGeminiMdFileCount: vi.fn(),
       getToolRegistry: () => ({}) as any, // Minimal mock for ToolRegistry
+      refreshContextMemory: vi.fn(),
     } as unknown as Config;
 
     // Reset mocks before each test
@@ -363,6 +364,20 @@ describe('EditTool', () => {
 
     beforeEach(() => {
       filePath = path.join(rootDir, testFile);
+    });
+
+    it('calls refreshContextMemory with JIT path before editing', async () => {
+      const params: EditToolParams = {
+        file_path: filePath,
+        old_string: '',
+        new_string: 'hello',
+      };
+      const invocation = tool.build(params);
+      await invocation.execute(new AbortController().signal);
+      expect(mockConfig.refreshContextMemory).toHaveBeenCalledWith({
+        force: true,
+        jitPaths: [filePath],
+      });
     });
 
     it('should throw error if file path is not absolute', async () => {

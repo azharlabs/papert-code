@@ -277,6 +277,14 @@ ${finalExclusionPatternsForDescription
     }
 
     const sortedFiles = Array.from(filesToConsider).sort();
+
+    if (sortedFiles.length > 0) {
+      await this.config.refreshContextMemory({
+        force: true,
+        jitPaths: sortedFiles,
+      });
+    }
+
     const truncateToolOutputLines = this.config.getTruncateToolOutputLines();
     const file_line_limit = Number.isFinite(truncateToolOutputLines)
       ? Math.floor(truncateToolOutputLines / Math.max(1, sortedFiles.length))

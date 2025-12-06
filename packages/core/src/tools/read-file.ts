@@ -76,6 +76,11 @@ class ReadFileToolInvocation extends BaseToolInvocation<
   }
 
   async execute(): Promise<ToolResult> {
+    await this.config.refreshContextMemory({
+      force: true,
+      jitPaths: [this.params.absolute_path],
+    });
+
     const result = await processSingleFileContent(
       this.params.absolute_path,
       this.config,

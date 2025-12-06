@@ -100,6 +100,7 @@ import {
   type ResumedSessionData,
 } from '../services/sessionService.js';
 import { randomUUID } from 'node:crypto';
+import { ContextManager } from '../services/contextManager.js';
 
 // Re-export types
 export type { AnyToolInvocation, FileFilteringOptions, MCPOAuthConfig };
@@ -464,6 +465,7 @@ export class Config {
   private readonly enableToolOutputTruncation: boolean;
   private readonly eventEmitter?: EventEmitter;
   private readonly useSmartEdit: boolean;
+  private contextManager?: ContextManager;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId ?? randomUUID();
@@ -620,6 +622,8 @@ export class Config {
     }
 
     this.toolRegistry = await this.createToolRegistry();
+
+    await this.refreshContextMemory();
 
     await this.geminiClient.initialize();
 
@@ -895,6 +899,70 @@ export class Config {
 
   setGeminiMdFileCount(count: number): void {
     this.geminiMdFileCount = count;
+  }
+
+  getContextManager(): ContextManager {
+    if (!this.contextManager) {
+      this.contextManager = new ContextManager(this);
+    }
+    return this.contextManager;
+  }
+
+  /**
+   * Loads global + environment context into userMemory.
+   * If userMemory is already set and force is false, it will not be overwritten.
+   */
+  async refreshContextMemory(options?: {
+    force?: boolean;
+    jitPaths?: string[];
+  }): Promise<void> {
+    const force = options?.force ?? false;
+    const jitPaths = options?.jitPaths ?? [];
+
+    if (!force && this.userMemory?.trim()) {
+      return;
+    }
+
+    const cm = this.getContextManager();
+    const segments: string[] = [];
+
+    // Global (Tier 1)
+    try {
+      const globalMemory = await cm.loadGlobalMemory();
+      if (globalMemory) {
+        segments.push(globalMemory);
+      }
+    } catch (error) {
+      console.warn('[ContextManager] Failed to load global memory', error);
+    }
+
+    // Environment (Tier 2) and optional JIT (Tier 3) only if trusted
+    if (this.isTrustedFolder()) {
+      try {
+        const envMemory = await cm.loadEnvironmentMemory(
+          this.workspaceContext.getDirectories(),
+          this.getExtensionContextFilePaths(),
+        );
+        if (envMemory) {
+          segments.push(envMemory);
+        }
+
+        for (const p of jitPaths) {
+          const jit = await cm.discoverContext(p, [
+            ...this.workspaceContext.getDirectories(),
+          ]);
+          if (jit) {
+            segments.push(jit);
+          }
+        }
+      } catch (error) {
+        console.warn('[ContextManager] Failed to load environment memory', error);
+      }
+    }
+
+    const combined = segments.filter(Boolean).join('\n\n');
+    this.setUserMemory(combined);
+    this.setGeminiMdFileCount(cm.getLoadedPaths().size);
   }
 
   getApprovalMode(): ApprovalMode {
