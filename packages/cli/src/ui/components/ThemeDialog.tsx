@@ -238,17 +238,18 @@ export function ThemeDialog({
                   paddingRight={1}
                   flexDirection="column"
                 >
-                  {colorizeCode(
-                    `# function
+                  {colorizeCode({
+                    code: `# function
 def fibonacci(n):
     a, b = 0, 1
     for _ in range(n):
         a, b = b, a + b
     return a`,
-                    'python',
-                    codeBlockHeight,
-                    colorizeCodeWidth,
-                  )}
+                    language: 'python',
+                    availableHeight: codeBlockHeight,
+                    maxWidth: colorizeCodeWidth,
+                    settings,
+                  })}
                   <Box marginTop={1} />
                   <DiffRenderer
                     diffContent={`--- a/util.py

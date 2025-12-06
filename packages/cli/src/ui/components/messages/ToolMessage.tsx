@@ -227,6 +227,9 @@ export interface ToolMessageProps extends IndividualToolCallDisplay {
   activeShellPtyId?: number | null;
   embeddedShellFocused?: boolean;
   config?: Config;
+  isFirst?: boolean;
+  borderColor?: string;
+  borderDimColor?: boolean;
 }
 
 export const ToolMessage: React.FC<ToolMessageProps> = ({
@@ -242,6 +245,8 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
   embeddedShellFocused,
   ptyId,
   config,
+  borderColor,
+  borderDimColor,
 }) => {
   const isThisShellFocused =
     (name === SHELL_COMMAND_NAME || name === 'Shell') &&
@@ -299,13 +304,25 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
     renderOutputAsMarkdown = false;
   }
 
-  const childWidth = terminalWidth - 3; // account for padding.
+  const childWidth = Math.max(terminalWidth - 2, 1); // account for outer padding.
 
   // Use the custom hook to determine the display type
   const displayRenderer = useResultDisplayRenderer(resultDisplay);
 
   return (
-    <Box paddingX={1} paddingY={0} flexDirection="column">
+    <Box
+      paddingX={1}
+      paddingY={0}
+      flexDirection="column"
+      width={terminalWidth}
+      borderStyle="round"
+      borderColor={borderColor ?? theme.border.default}
+      borderDimColor={borderDimColor}
+      borderBottom={false}
+      borderLeft={true}
+      borderRight={true}
+      borderTop={true}
+    >
       <Box minHeight={1}>
         <ToolStatusIndicator status={status} name={name} />
         <ToolInfo

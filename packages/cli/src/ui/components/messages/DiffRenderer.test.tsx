@@ -5,10 +5,10 @@
  */
 
 import { OverflowProvider } from '../../contexts/OverflowContext.js';
-import { render } from 'ink-testing-library';
 import { DiffRenderer } from './DiffRenderer.js';
 import * as CodeColorizer from '../../utils/CodeColorizer.js';
 import { vi } from 'vitest';
+import { renderWithProviders } from '../../../test-utils/render.js';
 
 describe('<OverflowProvider><DiffRenderer /></OverflowProvider>', () => {
   const mockColorizeCode = vi.spyOn(CodeColorizer, 'colorizeCode');
@@ -30,7 +30,7 @@ index 0000000..e69de29
 @@ -0,0 +1 @@
 +print("hello world")
 `;
-    render(
+    renderWithProviders(
       <OverflowProvider>
         <DiffRenderer
           diffContent={newFileDiffContent}
@@ -39,13 +39,14 @@ index 0000000..e69de29
         />
       </OverflowProvider>,
     );
-    expect(mockColorizeCode).toHaveBeenCalledWith(
-      'print("hello world")',
-      'python',
-      undefined,
-      80,
-      undefined,
-    );
+    expect(mockColorizeCode).toHaveBeenCalledWith({
+      code: 'print("hello world")',
+      language: 'python',
+      availableHeight: undefined,
+      maxWidth: 80,
+      theme: undefined,
+      settings: expect.anything(),
+    });
   });
 
   it('should call colorizeCode with null language for new file with unknown extension', () => {
@@ -58,7 +59,7 @@ index 0000000..e69de29
 @@ -0,0 +1 @@
 +some content
 `;
-    render(
+    renderWithProviders(
       <OverflowProvider>
         <DiffRenderer
           diffContent={newFileDiffContent}
@@ -67,13 +68,14 @@ index 0000000..e69de29
         />
       </OverflowProvider>,
     );
-    expect(mockColorizeCode).toHaveBeenCalledWith(
-      'some content',
-      null,
-      undefined,
-      80,
-      undefined,
-    );
+    expect(mockColorizeCode).toHaveBeenCalledWith({
+      code: 'some content',
+      language: null,
+      availableHeight: undefined,
+      maxWidth: 80,
+      theme: undefined,
+      settings: expect.anything(),
+    });
   });
 
   it('should call colorizeCode with null language for new file if no filename is provided', () => {
@@ -86,18 +88,19 @@ index 0000000..e69de29
 @@ -0,0 +1 @@
 +some text content
 `;
-    render(
+    renderWithProviders(
       <OverflowProvider>
         <DiffRenderer diffContent={newFileDiffContent} terminalWidth={80} />
       </OverflowProvider>,
     );
-    expect(mockColorizeCode).toHaveBeenCalledWith(
-      'some text content',
-      null,
-      undefined,
-      80,
-      undefined,
-    );
+    expect(mockColorizeCode).toHaveBeenCalledWith({
+      code: 'some text content',
+      language: null,
+      availableHeight: undefined,
+      maxWidth: 80,
+      theme: undefined,
+      settings: expect.anything(),
+    });
   });
 
   it('should render diff content for existing file (not calling colorizeCode directly for the whole block)', () => {
@@ -110,7 +113,7 @@ index 0000001..0000002 100644
 -old line
 +new line
 `;
-    const { lastFrame } = render(
+    const { lastFrame } = renderWithProviders(
       <OverflowProvider>
         <DiffRenderer
           diffContent={existingFileDiffContent}
@@ -121,12 +124,14 @@ index 0000001..0000002 100644
     );
     // colorizeCode is used internally by the line-by-line rendering, not for the whole block
     expect(mockColorizeCode).not.toHaveBeenCalledWith(
-      expect.stringContaining('old line'),
-      expect.anything(),
+      expect.objectContaining({
+        code: expect.stringContaining('old line'),
+      }),
     );
     expect(mockColorizeCode).not.toHaveBeenCalledWith(
-      expect.stringContaining('new line'),
-      expect.anything(),
+      expect.objectContaining({
+        code: expect.stringContaining('new line'),
+      }),
     );
     const output = lastFrame();
     const lines = output!.split('\n');
@@ -140,7 +145,7 @@ index 1234567..1234567 100644
 --- a/file.txt
 +++ b/file.txt
 `;
-    const { lastFrame } = render(
+    const { lastFrame } = renderWithProviders(
       <OverflowProvider>
         <DiffRenderer
           diffContent={noChangeDiff}
@@ -154,7 +159,7 @@ index 1234567..1234567 100644
   });
 
   it('should handle empty diff content', () => {
-    const { lastFrame } = render(
+    const { lastFrame } = renderWithProviders(
       <OverflowProvider>
         <DiffRenderer diffContent="" terminalWidth={80} />
       </OverflowProvider>,
@@ -177,7 +182,7 @@ index 123..456 100644
  context line 10
  context line 11
 `;
-    const { lastFrame } = render(
+    const { lastFrame } = renderWithProviders(
       <OverflowProvider>
         <DiffRenderer
           diffContent={diffWithGap}
@@ -214,7 +219,7 @@ index abc..def 100644
  context line 14
  context line 15
 `;
-    const { lastFrame } = render(
+    const { lastFrame } = renderWithProviders(
       <OverflowProvider>
         <DiffRenderer
           diffContent={diffWithSmallGap}
@@ -286,7 +291,7 @@ index 123..789 100644
     ])(
       'with terminalWidth $terminalWidth and height $height',
       ({ terminalWidth, height, expected }) => {
-        const { lastFrame } = render(
+        const { lastFrame } = renderWithProviders(
           <OverflowProvider>
             <DiffRenderer
               diffContent={diffWithMultipleHunks}
@@ -318,7 +323,7 @@ fileDiff Index: file.txt
 +const anotherNew = 'test';
 \\ No newline at end of file  
 `;
-    const { lastFrame } = render(
+    const { lastFrame } = renderWithProviders(
       <OverflowProvider>
         <DiffRenderer
           diffContent={newFileDiff}
@@ -348,7 +353,7 @@ fileDiff Index: Dockerfile
 +RUN npm run build
 \\ No newline at end of file  
 `;
-    const { lastFrame } = render(
+    const { lastFrame } = renderWithProviders(
       <OverflowProvider>
         <DiffRenderer
           diffContent={newFileDiff}
