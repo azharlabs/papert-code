@@ -7,6 +7,7 @@
 import type {
   Content,
   GenerateContentConfig,
+  GenerateContentResponse,
   Part,
   EmbedContentParameters,
   FunctionDeclaration,
@@ -74,6 +75,25 @@ export class BaseLlmClient {
     private readonly contentGenerator: ContentGenerator,
     private readonly config: Config,
   ) {}
+
+  async generateContent(options: {
+    modelConfigKey: { model: string };
+    contents: Content[];
+    abortSignal?: AbortSignal;
+    promptId?: string;
+  }): Promise<GenerateContentResponse> {
+    const { modelConfigKey, contents, abortSignal, promptId } = options;
+    return this.contentGenerator.generateContent(
+      {
+        model: modelConfigKey.model,
+        contents,
+        config: {
+          abortSignal,
+        },
+      },
+      promptId ?? 'base-llm-client',
+    );
+  }
 
   async generateJson(
     options: GenerateJsonOptions,

@@ -46,6 +46,7 @@ function createConfig(
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'papert-context-'));
   return new Config({
     targetDir: dir,
+    cwd: dir,
     includeDirectories: [dir],
     debugMode: false,
     generationConfig: {

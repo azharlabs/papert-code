@@ -51,7 +51,7 @@ export interface ChatRecord {
    */
   type: 'user' | 'assistant' | 'tool_result' | 'system';
   /** Optional system subtype for distinguishing system behaviors */
-  subtype?: 'chat_compression' | 'slash_command' | 'ui_telemetry';
+  subtype?: 'chat_compression' | 'slash_command' | 'ui_telemetry' | 'summary';
   /** Working directory at time of message */
   cwd: string;
   /** CLI version for compatibility tracking */
@@ -127,7 +127,7 @@ export interface UiTelemetryRecordPayload {
   uiEvent: UiEvent;
 }
 
-export interface ConversationRecord {
+export interface ChatConversationRecord {
   sessionId: string;
   projectHash: string;
   startTime: string;
@@ -135,6 +135,8 @@ export interface ConversationRecord {
   messages: ChatRecord[];
   summary?: string;
 }
+
+export type MessageRecord = ChatRecord;
 
 /**
  * Service for recording the current chat session to disk.
@@ -434,22 +436,22 @@ export class ChatRecordingService {
       };
       this.appendRecord(record);
 
-       // Also emit a sidecar summary file for quick access.
-       const summaryFile = `${this.ensureConversationFile()}.summary.json`;
-       fs.writeFileSync(
-         summaryFile,
-         JSON.stringify(
+      // Also emit a sidecar summary file for quick access.
+      const summaryFile = `${this.ensureConversationFile()}.summary.json`;
+      fs.writeFileSync(
+        summaryFile,
+        JSON.stringify(
           {
-             sessionId: this.getSessionId(),
-             projectHash: this.projectHash,
-             summary,
-             timestamp: new Date().toISOString(),
-           },
-           null,
-           2,
-         ),
-         'utf-8',
-       );
+            sessionId: this.getSessionId(),
+            projectHash: this.projectHash,
+            summary,
+            timestamp: new Date().toISOString(),
+          },
+          null,
+          2,
+        ),
+        'utf-8',
+      );
     } catch (error) {
       console.error('Error saving session summary:', error);
     }
@@ -458,7 +460,7 @@ export class ChatRecordingService {
   /**
    * Reads the current conversation with metadata.
    */
-  getConversation(): ConversationRecord | null {
+  getConversation(): ChatConversationRecord | null {
     try {
       const conversationFile = this.ensureConversationFile();
       if (!fs.existsSync(conversationFile)) {

@@ -134,9 +134,11 @@ describe('ReadFileTool', () => {
   it('calls refreshContextMemory with JIT path before reading', async () => {
     const filePath = path.join(tempRootDir, 'jit.txt');
     await fsp.writeFile(filePath, 'hello');
-    const invocation = tool.build({ absolute_path: filePath }) as ToolInvocation;
+    const invocation = tool.build({
+      absolute_path: filePath,
+    }) as ToolInvocation<ReadFileToolParams, ToolResult>;
 
-    await invocation.execute();
+    await invocation.execute(new AbortController().signal);
 
     expect(mockConfigInstance.refreshContextMemory).toHaveBeenCalledWith({
       force: true,

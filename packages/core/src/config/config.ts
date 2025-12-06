@@ -944,7 +944,7 @@ export class Config {
     if (this.isTrustedFolder()) {
       try {
         const envMemory = await cm.loadEnvironmentMemory(
-          this.workspaceContext.getDirectories(),
+          [...this.workspaceContext.getDirectories()],
           this.getExtensionContextFilePaths(),
         );
         if (envMemory) {

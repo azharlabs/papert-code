@@ -13,7 +13,7 @@ import type { Config } from '../config/config.js';
 import {
   ChatRecordingService,
   type ChatRecord,
-  type ConversationRecord,
+  type ChatConversationRecord,
 } from './chatRecordingService.js';
 import * as jsonl from '../utils/jsonl-utils.js';
 import type { Part } from '@google/genai';
@@ -151,15 +151,15 @@ describe('ChatRecordingService', () => {
       vi.spyOn(fs, 'readFileSync').mockReturnValue(fileContent);
 
       const conversation =
-        chatRecordingService.getConversation() as ConversationRecord;
+        chatRecordingService.getConversation() as ChatConversationRecord;
       expect(conversation.summary).toBe('Done');
       expect(conversation.messages).toHaveLength(1);
 
       // Ensure summary sidecar was written
-      const writeCalls = (fs.writeFileSync as unknown as jest.Mock).mock.calls;
+      const writeCalls = vi.mocked(fs.writeFileSync).mock.calls;
       expect(
         writeCalls.some(
-          (args: unknown[]) =>
+          (args) =>
             typeof args[0] === 'string' &&
             (args[0] as string).includes('.summary.json'),
         ),
