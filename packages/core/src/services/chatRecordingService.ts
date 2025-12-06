@@ -17,6 +17,7 @@ import {
 } from '@google/genai';
 import * as jsonl from '../utils/jsonl-utils.js';
 import { getGitBranch } from '../utils/gitUtils.js';
+import { getProjectHash } from '../utils/paths.js';
 import type {
   ChatCompressionInfo,
   ToolCallResponseInfo,
@@ -57,6 +58,8 @@ export interface ChatRecord {
   version: string;
   /** Current git branch, if available */
   gitBranch?: string;
+  /** Project hash for grouping conversations (optional). */
+  projectHash?: string;
 
   // Content field - raw API format for history reconstruction
 
@@ -124,6 +127,15 @@ export interface UiTelemetryRecordPayload {
   uiEvent: UiEvent;
 }
 
+export interface ConversationRecord {
+  sessionId: string;
+  projectHash: string;
+  startTime: string;
+  lastUpdated: string;
+  messages: ChatRecord[];
+  summary?: string;
+}
+
 /**
  * Service for recording the current chat session to disk.
  *
@@ -152,11 +164,13 @@ export class ChatRecordingService {
   /** UUID of the last written record in the chain */
   private lastRecordUuid: string | null = null;
   private readonly config: Config;
+  private readonly projectHash: string;
 
   constructor(config: Config) {
     this.config = config;
     this.lastRecordUuid =
       config.getResumedSessionData()?.lastCompletedUuid ?? null;
+    this.projectHash = getProjectHash(this.config.getProjectRoot());
   }
 
   /**
@@ -173,8 +187,7 @@ export class ChatRecordingService {
    * @throws Error if the directory cannot be created.
    */
   private ensureChatsDir(): string {
-    const projectDir = this.config.storage.getProjectDir();
-    const chatsDir = path.join(projectDir, 'chats');
+    const chatsDir = path.join(this.config.storage.getProjectTempDir(), 'chats');
 
     try {
       fs.mkdirSync(chatsDir, { recursive: true });
@@ -234,6 +247,9 @@ export class ChatRecordingService {
       cwd: this.config.getProjectRoot(),
       version: this.config.getCliVersion() || 'unknown',
       gitBranch: getGitBranch(this.config.getProjectRoot()),
+      // Included to aid downstream grouping when reconstructing conversations.
+      // Not part of the wire format used elsewhere.
+      projectHash: this.projectHash,
     };
   }
 
@@ -403,6 +419,89 @@ export class ChatRecordingService {
       this.appendRecord(record);
     } catch (error) {
       console.error('Error saving ui telemetry record:', error);
+    }
+  }
+
+  /**
+   * Saves a session summary by appending a summary system record.
+   */
+  saveSummary(summary: string): void {
+    try {
+      const record: ChatRecord = {
+        ...this.createBaseRecord('system'),
+        subtype: 'summary',
+        message: createUserContent([{ text: summary }]),
+      };
+      this.appendRecord(record);
+
+       // Also emit a sidecar summary file for quick access.
+       const summaryFile = `${this.ensureConversationFile()}.summary.json`;
+       fs.writeFileSync(
+         summaryFile,
+         JSON.stringify(
+          {
+             sessionId: this.getSessionId(),
+             projectHash: this.projectHash,
+             summary,
+             timestamp: new Date().toISOString(),
+           },
+           null,
+           2,
+         ),
+         'utf-8',
+       );
+    } catch (error) {
+      console.error('Error saving session summary:', error);
+    }
+  }
+
+  /**
+   * Reads the current conversation with metadata.
+   */
+  getConversation(): ConversationRecord | null {
+    try {
+      const conversationFile = this.ensureConversationFile();
+      if (!fs.existsSync(conversationFile)) {
+        return null;
+      }
+
+      const content = fs.readFileSync(conversationFile, 'utf-8');
+      const records: ChatRecord[] = content
+        .split('\n')
+        .filter((line) => line.trim().length > 0)
+        .map((line) => JSON.parse(line) as ChatRecord);
+
+      if (records.length === 0) {
+        return null;
+      }
+
+      const summaryRecord = records.find(
+        (r) => r.type === 'system' && r.subtype === 'summary',
+      );
+      const summary =
+        summaryRecord?.message?.parts?.find(
+          (p) => typeof (p as { text?: string }).text === 'string',
+        )?.text ?? undefined;
+
+      const messages = records.filter(
+        (r) => !(r.type === 'system' && r.subtype === 'summary'),
+      );
+
+      const startTime = records[0]?.timestamp ?? new Date().toISOString();
+      const lastUpdated =
+        records[records.length - 1]?.timestamp ?? startTime;
+
+      return {
+        sessionId: this.getSessionId(),
+        projectHash: this.projectHash,
+        startTime,
+        lastUpdated,
+        messages,
+        summary,
+      };
+    } catch (error) {
+      console.error('Error reading conversation:', error);
+      return null;
     }
   }
 }

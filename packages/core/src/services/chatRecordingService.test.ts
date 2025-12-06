@@ -13,6 +13,7 @@ import type { Config } from '../config/config.js';
 import {
   ChatRecordingService,
   type ChatRecord,
+  type ConversationRecord,
 } from './chatRecordingService.js';
 import * as jsonl from '../utils/jsonl-utils.js';
 import type { Part } from '@google/genai';
@@ -128,6 +129,41 @@ describe('ChatRecordingService', () => {
 
       expect(user2.uuid).toBe('00000000-0000-0000-0000-000000000003');
       expect(user2.parentUuid).toBe('00000000-0000-0000-0000-000000000002');
+    });
+  });
+
+  describe('saveSummary/getConversation', () => {
+    it('appends a summary record and returns conversation metadata', () => {
+      chatRecordingService.recordUserMessage([{ text: 'Hi' }]);
+      chatRecordingService.saveSummary('Done');
+
+      // Build conversation from written records (mocked writeLineSync)
+      const writes = vi.mocked(jsonl.writeLineSync).mock.calls.map(
+        (call) => call[1] as ChatRecord,
+      );
+      expect(
+        writes.some((r) => r.type === 'system' && r.subtype === 'summary'),
+      ).toBe(true);
+
+      // Simulate file content for getConversation
+      const fileContent = writes.map((r) => JSON.stringify(r)).join('\n');
+      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+      vi.spyOn(fs, 'readFileSync').mockReturnValue(fileContent);
+
+      const conversation =
+        chatRecordingService.getConversation() as ConversationRecord;
+      expect(conversation.summary).toBe('Done');
+      expect(conversation.messages).toHaveLength(1);
+
+      // Ensure summary sidecar was written
+      const writeCalls = (fs.writeFileSync as unknown as jest.Mock).mock.calls;
+      expect(
+        writeCalls.some(
+          (args: unknown[]) =>
+            typeof args[0] === 'string' &&
+            (args[0] as string).includes('.summary.json'),
+        ),
+      ).toBe(true);
     });
   });
 

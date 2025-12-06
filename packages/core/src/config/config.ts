@@ -101,6 +101,7 @@ import {
 } from '../services/sessionService.js';
 import { randomUUID } from 'node:crypto';
 import { ContextManager } from '../services/contextManager.js';
+import { generateAndSaveSummary } from '../services/sessionSummaryUtils.js';
 
 // Re-export types
 export type { AnyToolInvocation, FileFilteringOptions, MCPOAuthConfig };
@@ -466,6 +467,7 @@ export class Config {
   private readonly eventEmitter?: EventEmitter;
   private readonly useSmartEdit: boolean;
   private contextManager?: ContextManager;
+  private sessionSummaryHandlersRegistered = false;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId ?? randomUUID();
@@ -626,6 +628,8 @@ export class Config {
     await this.refreshContextMemory();
 
     await this.geminiClient.initialize();
+
+    this.registerSessionSummaryHandlers();
 
     logStartSession(this, new StartSessionEvent(this));
   }
@@ -1309,6 +1313,27 @@ export class Config {
       this.chatRecordingService = new ChatRecordingService(this);
     }
     return this.chatRecordingService;
+  }
+
+  private registerSessionSummaryHandlers(): void {
+    if (this.sessionSummaryHandlersRegistered) {
+      return;
+    }
+
+    // Avoid registering during tests to prevent unwanted network calls.
+    if (process.env['VITEST'] || process.env['NODE_ENV'] === 'test') {
+      return;
+    }
+
+    const handler = () => {
+      void generateAndSaveSummary(this);
+    };
+
+    process.once('beforeExit', handler);
+    process.once('SIGINT', handler);
+    process.once('SIGTERM', handler);
+
+    this.sessionSummaryHandlersRegistered = true;
   }
 
   /**
