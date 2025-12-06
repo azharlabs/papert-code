@@ -13,7 +13,7 @@ npm install -g @papert-code/papert-code
 To verify the installation
 
 ```bash
-qwen --version
+papert --version
 ```
 
 ## Overview of sandboxing
@@ -47,11 +47,11 @@ Cross-platform sandboxing with complete process isolation.
 
 ```bash
 # Enable sandboxing with command flag
-qwen -s -p "analyze the code structure"
+papert -s -p "analyze the code structure"
 
 # Use environment variable
 export GEMINI_SANDBOX=true
-qwen -p "run the test suite"
+papert -p "run the test suite"
 
 # Configure in settings.json
 {
@@ -128,7 +128,7 @@ export SANDBOX_SET_UID_GID=false  # Disable UID/GID mapping
 ### Debug mode
 
 ```bash
-DEBUG=1 qwen -s -p "debug command"
+DEBUG=1 papert -s -p "debug command"
 ```
 
 **Note:** If you have `DEBUG=true` in a project's `.env` file, it won't affect the CLI due to automatic exclusion. Use `.papert/.env` files for Qwen Code-specific debug settings.
@@ -137,10 +137,10 @@ DEBUG=1 qwen -s -p "debug command"
 
 ```bash
 # Check environment
-qwen -s -p "run shell command: env | grep SANDBOX"
+papert -s -p "run shell command: env | grep SANDBOX"
 
 # List mounts
-qwen -s -p "run shell command: mount | grep workspace"
+papert -s -p "run shell command: mount | grep workspace"
 ```
 
 ## Security notes

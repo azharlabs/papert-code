@@ -756,18 +756,18 @@ or, using positional arguments:
 
 When you run this command, the CLI executes the `prompts/get` method on the MCP server with the provided arguments. The server is responsible for substituting the arguments into the prompt template and returning the final prompt text. The CLI then sends this prompt to the model for execution. This provides a convenient way to automate and share common workflows.
 
-## Managing MCP Servers with `qwen mcp`
+## Managing MCP Servers with `papert mcp`
 
 While you can always configure MCP servers by manually editing your `settings.json` file, the CLI provides a convenient set of commands to manage your server configurations programmatically. These commands streamline the process of adding, listing, and removing MCP servers without needing to directly edit JSON files.
 
-### Adding a Server (`qwen mcp add`)
+### Adding a Server (`papert mcp add`)
 
 The `add` command configures a new MCP server in your `settings.json`. Based on the scope (`-s, --scope`), it will be added to either the user config `~/.papert/settings.json` or the project config `.papert/settings.json` file.
 
 **Command:**
 
 ```bash
-qwen mcp add [options] <name> <commandOrUrl> [args...]
+papert mcp add [options] <name> <commandOrUrl> [args...]
 ```
 
 - `<name>`: A unique name for the server.
@@ -792,13 +792,13 @@ This is the default transport for running local servers.
 
 ```bash
 # Basic syntax
-qwen mcp add <name> <command> [args...]
+papert mcp add <name> <command> [args...]
 
 # Example: Adding a local server
-qwen mcp add my-stdio-server -e API_KEY=123 /path/to/server arg1 arg2 arg3
+papert mcp add my-stdio-server -e API_KEY=123 /path/to/server arg1 arg2 arg3
 
 # Example: Adding a local python server
-qwen mcp add python-server python server.py --port 8080
+papert mcp add python-server python server.py --port 8080
 ```
 
 #### Adding an HTTP server
@@ -807,13 +807,13 @@ This transport is for servers that use the streamable HTTP transport.
 
 ```bash
 # Basic syntax
-qwen mcp add --transport http <name> <url>
+papert mcp add --transport http <name> <url>
 
 # Example: Adding an HTTP server
-qwen mcp add --transport http http-server https://api.example.com/mcp/
+papert mcp add --transport http http-server https://api.example.com/mcp/
 
 # Example: Adding an HTTP server with an authentication header
-qwen mcp add --transport http secure-http https://api.example.com/mcp/ --header "Authorization: Bearer abc123"
+papert mcp add --transport http secure-http https://api.example.com/mcp/ --header "Authorization: Bearer abc123"
 ```
 
 #### Adding an SSE server
@@ -822,23 +822,23 @@ This transport is for servers that use Server-Sent Events (SSE).
 
 ```bash
 # Basic syntax
-qwen mcp add --transport sse <name> <url>
+papert mcp add --transport sse <name> <url>
 
 # Example: Adding an SSE server
-qwen mcp add --transport sse sse-server https://api.example.com/sse/
+papert mcp add --transport sse sse-server https://api.example.com/sse/
 
 # Example: Adding an SSE server with an authentication header
-qwen mcp add --transport sse secure-sse https://api.example.com/sse/ --header "Authorization: Bearer abc123"
+papert mcp add --transport sse secure-sse https://api.example.com/sse/ --header "Authorization: Bearer abc123"
 ```
 
-### Listing Servers (`qwen mcp list`)
+### Listing Servers (`papert mcp list`)
 
 To view all MCP servers currently configured, use the `list` command. It displays each server's name, configuration details, and connection status.
 
 **Command:**
 
 ```bash
-qwen mcp list
+papert mcp list
 ```
 
 **Example Output:**
@@ -849,20 +849,20 @@ qwen mcp list
 ✗ sse-server: https://api.example.com/sse (sse) - Disconnected
 ```
 
-### Removing a Server (`qwen mcp remove`)
+### Removing a Server (`papert mcp remove`)
 
 To delete a server from your configuration, use the `remove` command with the server's name.
 
 **Command:**
 
 ```bash
-qwen mcp remove <name>
+papert mcp remove <name>
 ```
 
 **Example:**
 
 ```bash
-qwen mcp remove my-server
+papert mcp remove my-server
 ```
 
 This will find and delete the "my-server" entry from the `mcpServers` object in the appropriate `settings.json` file based on the scope (`-s, --scope`).

@@ -1,15 +1,15 @@
-# Welcome to Qwen Code documentation
+# Welcome to Papert Code documentation
 
-Qwen Code is a powerful command-line AI workflow tool adapted from [**Gemini CLI**](https://github.com/google-gemini/gemini-cli) ([details](./README.gemini.md)), specifically optimized for [Qwen3-Coder](https://github.com/azharlabs/papert-code) models. It enhances your development workflow with advanced code understanding, automated tasks, and intelligent assistance.
+Papert Code is a terminal-native AI coding companion adapted from [**Gemini CLI**](https://github.com/google-gemini/gemini-cli) ([details](./README.gemini.md)). It keeps the upstream capabilities while adding Papert defaults and integrations for everyday coding, testing, and automation tasks.
 
-## 🚀 Why Choose Qwen Code?
+## 🚀 Why Choose Papert Code?
 
-- 🎯 **Free Tier:** Up to 60 requests/min and 2,000 requests/day with your [QwenChat](https://chat.qwen.ai/) account.
-- 🧠 **Advanced Model:** Specially optimized for [Qwen3-Coder](https://github.com/azharlabs/papert-code) for superior code understanding and assistance.
-- 🏆 **Comprehensive Features:** Includes subagents, Plan Mode, TodoWrite, vision model support, and full OpenAI API compatibility—all seamlessly integrated.
-- 🔧 **Built-in & Extensible Tools:** Includes file system operations, shell command execution, web fetch/search, and more—all easily extended via the Model Context Protocol (MCP) for custom integrations.
-- 💻 **Developer-Centric:** Built for terminal-first workflows—perfect for command-line enthusiasts.
-- 🛡️ **Open Source:** Apache 2.0 licensed for maximum freedom and transparency.
+- 💻 **Terminal-first agent:** Launch the `papert` CLI for multi-turn, code-aware sessions.
+- 🧠 **Codebase awareness:** Reads and edits files, runs ripgrep queries, executes shell commands, and respects `.gitignore` + `.papertignore`.
+- 🛡️ **Safety controls:** Structured plans, explicit approval modes (`plan`, `default`, `auto-edit`, `yolo`), and sandbox support.
+- 🔧 **Extensible tooling:** Built-in tools plus user commands, subagents, and Model Context Protocol (MCP) servers.
+- 🌐 **Provider flexibility:** Works with any OpenAI-compatible API; pick your own model, base URL, and keys.
+- 👐 **Open source:** Apache 2.0 licensed and maintained as a community fork.
 
 ## Installation
 
@@ -25,7 +25,7 @@ curl -qL https://www.npmjs.com/install.sh | sh
 
 ```bash
 npm install -g @papert-code/papert-code@latest
-qwen --version
+papert --version
 ```
 
 ### Install from source
@@ -46,8 +46,8 @@ brew install papert-code
 ## Quick Start
 
 ```bash
-# Start Qwen Code
-qwen
+# Start Papert Code
+papert
 
 # Example commands
 > Explain this codebase structure
@@ -78,8 +78,7 @@ Create or edit `.papert/settings.json` in your home directory:
 > 📝 **Note**: Session token limit applies to a single conversation, not cumulative API calls.
 
 ### Vision Model Configuration
-
-Qwen Code includes intelligent vision model auto-switching that detects images in your input and can automatically switch to vision-capable models for multimodal analysis. **This feature is enabled by default** - when you include images in your queries, you'll see a dialog asking how you'd like to handle the vision model switch.
+Papert Code includes intelligent vision model auto-switching that detects images in your input and can automatically switch to vision-capable models for multimodal analysis. **This feature is enabled by default** - when you include images in your queries, you'll see a dialog asking how you'd like to handle the vision model switch.
 
 #### Skip the Switch Dialog (Optional)
 
@@ -106,13 +105,13 @@ You can also set the behavior via command line:
 
 ```bash
 # Switch once per query
-qwen --vlm-switch-mode once
+papert --vlm-switch-mode once
 
 # Switch for entire session
-qwen --vlm-switch-mode session
+papert --vlm-switch-mode session
 
 # Never switch automatically
-qwen --vlm-switch-mode persist
+papert --vlm-switch-mode persist
 ```
 
 #### Disable Vision Models (Optional)
@@ -131,33 +130,7 @@ To completely disable vision model support, add to your `.papert/settings.json`:
 
 ### Authorization
 
-Choose your preferred authentication method based on your needs:
-
-#### 1. Qwen OAuth (🚀 Recommended - Start in 30 seconds)
-
-The easiest way to get started - completely free with generous quotas:
-
-```bash
-# Just run this command and follow the browser authentication
-qwen
-```
-
-**What happens:**
-
-1. **Instant Setup**: CLI opens your browser automatically
-2. **One-Click Login**: Authenticate with your qwen.ai account
-3. **Automatic Management**: Credentials cached locally for future use
-4. **No Configuration**: Zero setup required - just start coding!
-
-**Free Tier Benefits:**
-
-- ✅ **2,000 requests/day** (no token counting needed)
-- ✅ **60 requests/minute** rate limit
-- ✅ **Automatic credential refresh**
-- ✅ **Zero cost** for individual users
-- ℹ️ **Note**: Model fallback may occur to maintain service quality
-
-#### 2. OpenAI-Compatible API
+Papert Code uses your chosen OpenAI-compatible provider. Supply your API key and base URL, or follow your provider's OAuth/device flow if they require it. There is no Papert-specific account system.
 
 Use API keys for OpenAI or other compatible providers:
 
@@ -237,7 +210,7 @@ export OPENAI_MODEL="qwen/qwen3-coder:free"
 
 ```bash
 cd your-project/
-qwen
+papert
 
 # Architecture analysis
 > Describe the main pieces of this system's architecture
@@ -335,7 +308,7 @@ qwen
 - `/clear` (aliases: `/reset`, `/new`) - Clear conversation history and start a fresh session
 - `/compress` - Compress history to save tokens
 - `/stats` - Show current session information
-- `/exit` or `/quit` - Exit Qwen Code
+- `/exit` or `/quit` - Exit Papert Code
 
 ### Keyboard Shortcuts
 

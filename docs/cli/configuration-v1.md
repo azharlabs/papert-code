@@ -483,7 +483,7 @@ Arguments passed directly when running the CLI can override other configurations
   - Starts an interactive session with the provided prompt as the initial input.
   - The prompt is processed within the interactive session, not before it.
   - Cannot be used when piping input from stdin.
-  - Example: `qwen -i "explain this code"`
+  - Example: `papert -i "explain this code"`
 - **`--sandbox`** (**`-s`**):
   - Enables sandbox mode for this session.
 - **`--sandbox-image`**:
@@ -505,10 +505,10 @@ Arguments passed directly when running the CLI can override other configurations
     - `auto-edit`: Automatically approve edit tools (edit, write_file) while prompting for others.
     - `yolo`: Automatically approve all tool calls (equivalent to `--yolo`).
   - Cannot be used together with `--yolo`. Use `--approval-mode=yolo` instead of `--yolo` for the new unified approach.
-  - Example: `qwen --approval-mode auto-edit`
+  - Example: `papert --approval-mode auto-edit`
 - **`--allowed-tools <tool1,tool2,...>`**:
   - A comma-separated list of tool names that will bypass the confirmation dialog.
-  - Example: `qwen --allowed-tools "ShellTool(git status)"`
+  - Example: `papert --allowed-tools "ShellTool(git status)"`
 - **`--telemetry`**:
   - Enables [telemetry](../telemetry.md).
 - **`--telemetry-target`**:
@@ -523,8 +523,8 @@ Arguments passed directly when running the CLI can override other configurations
   - Enables [checkpointing](../checkpointing.md).
 - **`--extensions <extension_name ...>`** (**`-e <extension_name ...>`**):
   - Specifies a list of extensions to use for the session. If not provided, all available extensions are used.
-  - Use the special term `qwen -e none` to disable all extensions.
-  - Example: `qwen -e my-extension -e my-other-extension`
+  - Use the special term `papert -e none` to disable all extensions.
+  - Example: `papert -e my-extension -e my-other-extension`
 - **`--list-extensions`** (**`-l`**):
   - Lists all available extensions and exits.
 - **`--proxy`**:
@@ -543,10 +543,10 @@ Arguments passed directly when running the CLI can override other configurations
   - Enables logging of OpenAI API calls for debugging and analysis. This flag overrides the `enableOpenAILogging` setting in `settings.json`.
 - **`--openai-logging-dir <directory>`**:
   - Sets a custom directory path for OpenAI API logs. This flag overrides the `openAILoggingDir` setting in `settings.json`. Supports absolute paths, relative paths, and `~` expansion.
-  - **Example:** `qwen --openai-logging-dir "~/qwen-logs" --openai-logging`
+  - **Example:** `papert --openai-logging-dir "~/papert-logs" --openai-logging`
 - **`--tavily-api-key <api_key>`**:
   - Sets the Tavily API key for web search functionality for this session.
-  - Example: `qwen --tavily-api-key tvly-your-api-key-here`
+  - Example: `papert --tavily-api-key tvly-your-api-key-here`
 
 ## Context Files (Hierarchical Instructional Context)
 
@@ -634,7 +634,7 @@ FROM papert-code-sandbox
 When `.papert/sandbox.Dockerfile` exists, you can use `BUILD_SANDBOX` environment variable when running Qwen Code to automatically build the custom sandbox image:
 
 ```bash
-BUILD_SANDBOX=1 qwen -s
+BUILD_SANDBOX=1 papert -s
 ```
 
 ## Usage Statistics

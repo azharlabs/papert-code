@@ -1,40 +1,9 @@
 # Authentication Setup
 
-Qwen Code supports two main authentication methods to access AI models. Choose the method that best fits your use case:
+Papert Code uses OpenAI-compatible authentication. Configure the provider and credentials that work best for your workflow.
 
-1.  **Qwen OAuth (Recommended):**
-    - Use this option to log in with your qwen.ai account.
-    - During initial startup, Qwen Code will direct you to the qwen.ai authentication page. Once authenticated, your credentials will be cached locally so the web login can be skipped on subsequent runs.
-    - **Requirements:**
-      - Valid qwen.ai account
-      - Internet connection for initial authentication
-    - **Benefits:**
-      - Seamless access to Qwen models
-      - Automatic credential refresh
-      - No manual API key management required
-
-    **Getting Started:**
-
-    ```bash
-    # Start Qwen Code and follow the OAuth flow
-    qwen
-    ```
-
-    The CLI will automatically open your browser and guide you through the authentication process.
-
-    **For users who authenticate using their qwen.ai account:**
-
-    **Quota:**
-    - 60 requests per minute
-    - 2,000 requests per day
-    - Token usage is not applicable
-
-    **Cost:** Free
-
-    **Notes:** A specific quota for different models is not specified; model fallback may occur to preserve shared experience quality.
-
-2.  **<a id="openai-api"></a>OpenAI-Compatible API:**
-    - Use API keys for OpenAI or other compatible providers.
+**<a id="openai-api"></a>OpenAI-Compatible API:**
+    - Use API keys (or provider-specific OAuth/device flows) for OpenAI-compatible providers.
     - This method allows you to use various AI models through API keys.
 
     **Configuration Methods:**
@@ -77,11 +46,11 @@ This will allow you to reconfigure your authentication method without restarting
 
 ### Persisting Environment Variables with `.env` Files
 
-You can create a **`.papert/.env`** file in your project directory or in your home directory. Creating a plain **`.env`** file also works, but `.papert/.env` is recommended to keep Qwen Code variables isolated from other tools.
+You can create a **`.papert/.env`** file in your project directory or in your home directory. Creating a plain **`.env`** file also works, but `.papert/.env` is recommended to keep Papert Code variables isolated from other tools.
 
 **Important:** Some environment variables (like `DEBUG` and `DEBUG_MODE`) are automatically excluded from project `.env` files to prevent interference with papert-code behavior. Use `.papert/.env` files for papert-code specific variables.
 
-Qwen Code automatically loads environment variables from the **first** `.env` file it finds, using the following search order:
+Papert Code automatically loads environment variables from the **first** `.env` file it finds, using the following search order:
 
 1. Starting in the **current directory** and moving upward toward `/`, for each directory it checks:
    1. `.papert/.env`
@@ -118,7 +87,7 @@ EOF
 
 ## Non-Interactive Mode / Headless Environments
 
-When running Qwen Code in a non-interactive environment, you cannot use the OAuth login flow.
+When running Papert Code in a non-interactive environment, you cannot use an interactive OAuth login flow.
 Instead, you must configure authentication using environment variables.
 
 The CLI will automatically detect if it is running in a non-interactive terminal and will use the
@@ -133,5 +102,5 @@ OpenAI-compatible API method if configured:
 
 If none of these environment variables are set in a non-interactive session, the CLI will exit with an error.
 
-For comprehensive guidance on using Qwen COde programmatically and in
+For comprehensive guidance on using Papert Code programmatically and in
 automation workflows, see the [Headless Mode Guide](../headless.md).

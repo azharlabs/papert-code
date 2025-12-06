@@ -204,7 +204,7 @@ Settings are organized into categories. All settings should be placed within the
   - **Description:** Custom directory path for OpenAI API logs. If not specified, defaults to `logs/openai` in the current working directory. Supports absolute paths, relative paths (resolved from current working directory), and `~` expansion (home directory).
   - **Default:** `undefined`
   - **Examples:**
-    - `"~/qwen-logs"` - Logs to `~/qwen-logs` directory
+    - `"~/papert-logs"` - Logs to `~/papert-logs` directory
     - `"./custom-logs"` - Logs to `./custom-logs` relative to current directory
     - `"/tmp/openai-logs"` - Logs to absolute path `/tmp/openai-logs`
 
@@ -440,7 +440,7 @@ Here is an example of a `settings.json` file with the nested structure, new as o
     "name": "qwen3-coder-plus",
     "maxSessionTurns": 10,
     "enableOpenAILogging": false,
-    "openAILoggingDir": "~/qwen-logs",
+    "openAILoggingDir": "~/papert-logs",
     "summarizeToolOutput": {
       "run_shell_command": {
         "tokenBudget": 100
@@ -522,7 +522,7 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
   - `<profile_name>`: Uses a custom profile. To define a custom profile, create a file named `sandbox-macos-<profile_name>.sb` in your project's `.papert/` directory (e.g., `my-project/.papert/sandbox-macos-custom.sb`).
 - **`DEBUG` or `DEBUG_MODE`** (often used by underlying libraries or the CLI itself):
   - Set to `true` or `1` to enable verbose debug logging, which can be helpful for troubleshooting.
-  - **Note:** These variables are automatically excluded from project `.env` files by default to prevent interference with the CLI behavior. Use `.papert/.env` files if you need to set these for Qwen Code specifically.
+  - **Note:** These variables are automatically excluded from project `.env` files by default to prevent interference with the CLI behavior. Use `.papert/.env` files if you need to set these specifically for Papert Code.
 - **`NO_COLOR`**:
   - Set to any value to disable all color output in the CLI.
 - **`CLI_TITLE`**:
@@ -530,7 +530,7 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
 - **`TAVILY_API_KEY`**:
   - Your API key for the Tavily web search service.
   - Used to enable the `web_search` tool functionality.
-  - **Note:** For Qwen OAuth users, DashScope provider is automatically available without any configuration. For other authentication types, configure Tavily or Google providers to enable web search.
+  - **Note:** Some providers (e.g., DashScope) include web search access. Otherwise, configure Tavily or Google providers to enable web search.
   - Example: `export TAVILY_API_KEY="tvly-your-api-key-here"`
 
 ## Command-Line Arguments
@@ -538,19 +538,19 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
 Arguments passed directly when running the CLI can override other configurations for that specific session.
 
 - **`--model <model_name>`** (**`-m <model_name>`**):
-  - Specifies the Qwen model to use for this session.
+  - Specifies the model to use for this session.
   - Example: `npm start -- --model qwen3-coder-plus`
 - **`--prompt <your_prompt>`** (**`-p <your_prompt>`**):
-  - Used to pass a prompt directly to the command. This invokes Qwen Code in a non-interactive mode.
+  - Used to pass a prompt directly to the command. This invokes Papert Code in a non-interactive mode.
   - For scripting examples, use the `--output-format json` flag to get structured output.
 - **`--prompt-interactive <your_prompt>`** (**`-i <your_prompt>`**):
   - Starts an interactive session with the provided prompt as the initial input.
   - The prompt is processed within the interactive session, not before it.
   - Cannot be used when piping input from stdin.
-  - Example: `qwen -i "explain this code"`
+  - Example: `papert -i "explain this code"`
 - **`--continue`**:
   - Resume the most recent session for the current project (current working directory).
-  - Works in interactive and headless modes (e.g., `qwen --continue -p "Keep going"`).
+  - Works in interactive and headless modes (e.g., `papert --continue -p "Keep going"`).
 - **`--resume [sessionId]`**:
   - Resume a specific session for the current project. When called without an ID, an interactive picker lists only this project's sessions with prompt preview, timestamps, message count, and optional git branch.
   - If an ID is provided and not found for this project, the CLI exits with an error.
@@ -594,10 +594,10 @@ Arguments passed directly when running the CLI can override other configurations
     - `auto-edit`: Automatically approve edit tools (edit, write_file) while prompting for others.
     - `yolo`: Automatically approve all tool calls (equivalent to `--yolo`).
   - Cannot be used together with `--yolo`. Use `--approval-mode=yolo` instead of `--yolo` for the new unified approach.
-  - Example: `qwen --approval-mode auto-edit`
+  - Example: `papert --approval-mode auto-edit`
 - **`--allowed-tools <tool1,tool2,...>`**:
   - A comma-separated list of tool names that will bypass the confirmation dialog.
-  - Example: `qwen --allowed-tools "Shell(git status)"`
+  - Example: `papert --allowed-tools "Shell(git status)"`
 - **`--telemetry`**:
   - Enables [telemetry](../telemetry.md).
 - **`--telemetry-target`**:
@@ -612,8 +612,8 @@ Arguments passed directly when running the CLI can override other configurations
   - Enables [checkpointing](../checkpointing.md).
 - **`--extensions <extension_name ...>`** (**`-e <extension_name ...>`**):
   - Specifies a list of extensions to use for the session. If not provided, all available extensions are used.
-  - Use the special term `qwen -e none` to disable all extensions.
-  - Example: `qwen -e my-extension -e my-other-extension`
+  - Use the special term `papert -e none` to disable all extensions.
+  - Example: `papert -e my-extension -e my-other-extension`
 - **`--list-extensions`** (**`-l`**):
   - Lists all available extensions and exits.
 - **`--proxy`**:
@@ -632,10 +632,10 @@ Arguments passed directly when running the CLI can override other configurations
   - Enables logging of OpenAI API calls for debugging and analysis. This flag overrides the `enableOpenAILogging` setting in `settings.json`.
 - **`--openai-logging-dir <directory>`**:
   - Sets a custom directory path for OpenAI API logs. This flag overrides the `openAILoggingDir` setting in `settings.json`. Supports absolute paths, relative paths, and `~` expansion.
-  - **Example:** `qwen --openai-logging-dir "~/qwen-logs" --openai-logging`
+  - **Example:** `papert --openai-logging-dir "~/papert-logs" --openai-logging`
 - **`--tavily-api-key <api_key>`**:
   - Sets the Tavily API key for web search functionality for this session.
-  - Example: `qwen --tavily-api-key tvly-your-api-key-here`
+  - Example: `papert --tavily-api-key tvly-your-api-key-here`
 
 ## Context Files (Hierarchical Instructional Context)
 
@@ -695,7 +695,7 @@ This example demonstrates how you can provide general project context, specific 
   - Use `/memory show` to display the combined instructional context currently loaded, allowing you to verify the hierarchy and content being used by the AI.
   - See the [Commands documentation](./commands.md#memory) for full details on the `/memory` command and its sub-commands (`show` and `refresh`).
 
-By understanding and utilizing these configuration layers and the hierarchical nature of context files, you can effectively manage the AI's memory and tailor Qwen Code's responses to your specific needs and projects.
+By understanding and utilizing these configuration layers and the hierarchical nature of context files, you can effectively manage the AI's memory and tailor Papert Code's responses to your specific needs and projects.
 
 ## Sandboxing
 
@@ -720,10 +720,10 @@ FROM papert-code-sandbox
 # COPY ./my-config /app/my-config
 ```
 
-When `.papert/sandbox.Dockerfile` exists, you can use `BUILD_SANDBOX` environment variable when running Qwen Code to automatically build the custom sandbox image:
+When `.papert/sandbox.Dockerfile` exists, you can use the `BUILD_SANDBOX` environment variable when running Papert Code to automatically build the custom sandbox image:
 
 ```bash
-BUILD_SANDBOX=1 qwen -s
+BUILD_SANDBOX=1 papert -s
 ```
 
 ## Usage Statistics

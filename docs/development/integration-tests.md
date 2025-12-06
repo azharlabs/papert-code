@@ -89,7 +89,7 @@ The verbose output is formatted to clearly identify the source of the logs:
 
 ```
 --- TEST: <log dir>:<test-name> ---
-... output from the qwen command ...
+... output from the papert command ...
 --- END TEST: <log dir>:<test-name> ---
 ```
 

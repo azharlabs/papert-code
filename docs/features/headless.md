@@ -47,7 +47,7 @@ The headless mode provides a headless interface to Qwen Code that:
 Use the `--prompt` (or `-p`) flag to run in headless mode:
 
 ```bash
-qwen --prompt "What is machine learning?"
+papert --prompt "What is machine learning?"
 ```
 
 ### Stdin Input
@@ -55,7 +55,7 @@ qwen --prompt "What is machine learning?"
 Pipe input to Qwen Code from your terminal:
 
 ```bash
-echo "Explain this code" | qwen
+echo "Explain this code" | papert
 ```
 
 ### Combining with File Input
@@ -63,7 +63,7 @@ echo "Explain this code" | qwen
 Read from files and process with Qwen Code:
 
 ```bash
-cat README.md | qwen --prompt "Summarize this documentation"
+cat README.md | papert --prompt "Summarize this documentation"
 ```
 
 ### Resume Previous Sessions (Headless)
@@ -72,10 +72,10 @@ Reuse conversation context from the current project in headless scripts:
 
 ```bash
 # Continue the most recent session for this project and run a new prompt
-qwen --continue -p "Run the tests again and summarize failures"
+papert --continue -p "Run the tests again and summarize failures"
 
 # Resume a specific session ID directly (no UI)
-qwen --resume 123e4567-e89b-12d3-a456-426614174000 -p "Apply the follow-up refactor"
+papert --resume 123e4567-e89b-12d3-a456-426614174000 -p "Apply the follow-up refactor"
 ```
 
 Notes:
@@ -92,7 +92,7 @@ Qwen Code supports multiple output formats for different use cases:
 Standard human-readable output:
 
 ```bash
-qwen -p "What is the capital of France?"
+papert -p "What is the capital of France?"
 ```
 
 Response format:
@@ -110,7 +110,7 @@ The JSON output is an array of message objects. The output includes multiple mes
 #### Example Usage
 
 ```bash
-qwen -p "What is the capital of France?" --output-format json
+papert -p "What is the capital of France?" --output-format json
 ```
 
 Output (at end of execution):
@@ -162,7 +162,7 @@ Output (at end of execution):
 Stream-JSON format emits JSON messages immediately as they occur during execution, enabling real-time monitoring. This format uses line-delimited JSON where each message is a complete JSON object on a single line.
 
 ```bash
-qwen -p "Explain TypeScript" --output-format stream-json
+papert -p "Explain TypeScript" --output-format stream-json
 ```
 
 Output (streaming as events occur):
@@ -176,7 +176,7 @@ Output (streaming as events occur):
 When combined with `--include-partial-messages`, additional stream events are emitted in real-time (message_start, content_block_delta, etc.) for real-time UI updates.
 
 ```bash
-qwen -p "Write a Python script" --output-format stream-json --include-partial-messages
+papert -p "Write a Python script" --output-format stream-json --include-partial-messages
 ```
 
 ### Input Format
@@ -194,20 +194,20 @@ Save output to files or pipe to other commands:
 
 ```bash
 # Save to file
-qwen -p "Explain Docker" > docker-explanation.txt
-qwen -p "Explain Docker" --output-format json > docker-explanation.json
+papert -p "Explain Docker" > docker-explanation.txt
+papert -p "Explain Docker" --output-format json > docker-explanation.json
 
 # Append to file
-qwen -p "Add more details" >> docker-explanation.txt
+papert -p "Add more details" >> docker-explanation.txt
 
 # Pipe to other tools
-qwen -p "What is Kubernetes?" --output-format json | jq '.response'
-qwen -p "Explain microservices" | wc -w
-qwen -p "List programming languages" | grep -i "python"
+papert -p "What is Kubernetes?" --output-format json | jq '.response'
+papert -p "Explain microservices" | wc -w
+papert -p "List programming languages" | grep -i "python"
 
 # Stream-JSON output for real-time processing
-qwen -p "Explain Docker" --output-format stream-json | jq '.type'
-qwen -p "Write code" --output-format stream-json --include-partial-messages | jq '.event.type'
+papert -p "Explain Docker" --output-format stream-json | jq '.type'
+papert -p "Write code" --output-format stream-json --include-partial-messages | jq '.event.type'
 ```
 
 ## Configuration Options
@@ -216,17 +216,17 @@ Key command-line options for headless usage:
 
 | Option                       | Description                                         | Example                                                                  |
 | ---------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------ |
-| `--prompt`, `-p`             | Run in headless mode                                | `qwen -p "query"`                                                        |
-| `--output-format`, `-o`      | Specify output format (text, json, stream-json)     | `qwen -p "query" --output-format json`                                   |
-| `--input-format`             | Specify input format (text, stream-json)            | `qwen --input-format text --output-format stream-json`                   |
-| `--include-partial-messages` | Include partial messages in stream-json output      | `qwen -p "query" --output-format stream-json --include-partial-messages` |
-| `--debug`, `-d`              | Enable debug mode                                   | `qwen -p "query" --debug`                                                |
-| `--all-files`, `-a`          | Include all files in context                        | `qwen -p "query" --all-files`                                            |
-| `--include-directories`      | Include additional directories                      | `qwen -p "query" --include-directories src,docs`                         |
-| `--yolo`, `-y`               | Auto-approve all actions                            | `qwen -p "query" --yolo`                                                 |
-| `--approval-mode`            | Set approval mode                                   | `qwen -p "query" --approval-mode auto_edit`                              |
-| `--continue`                 | Resume the most recent session for this project     | `qwen --continue -p "Pick up where we left off"`                         |
-| `--resume [sessionId]`       | Resume a specific session (or choose interactively) | `qwen --resume 123e... -p "Finish the refactor"`                         |
+| `--prompt`, `-p`             | Run in headless mode                                | `papert -p "query"`                                                        |
+| `--output-format`, `-o`      | Specify output format (text, json, stream-json)     | `papert -p "query" --output-format json`                                   |
+| `--input-format`             | Specify input format (text, stream-json)            | `papert --input-format text --output-format stream-json`                   |
+| `--include-partial-messages` | Include partial messages in stream-json output      | `papert -p "query" --output-format stream-json --include-partial-messages` |
+| `--debug`, `-d`              | Enable debug mode                                   | `papert -p "query" --debug`                                                |
+| `--all-files`, `-a`          | Include all files in context                        | `papert -p "query" --all-files`                                            |
+| `--include-directories`      | Include additional directories                      | `papert -p "query" --include-directories src,docs`                         |
+| `--yolo`, `-y`               | Auto-approve all actions                            | `papert -p "query" --yolo`                                                 |
+| `--approval-mode`            | Set approval mode                                   | `papert -p "query" --approval-mode auto_edit`                              |
+| `--continue`                 | Resume the most recent session for this project     | `papert --continue -p "Pick up where we left off"`                         |
+| `--resume [sessionId]`       | Resume a specific session (or choose interactively) | `papert --resume 123e... -p "Finish the refactor"`                         |
 
 For complete details on all available configuration options, settings files, and environment variables, see the [Configuration Guide](./cli/configuration.md).
 
@@ -235,20 +235,20 @@ For complete details on all available configuration options, settings files, and
 ### Code review
 
 ```bash
-cat src/auth.py | qwen -p "Review this authentication code for security issues" > security-review.txt
+cat src/auth.py | papert -p "Review this authentication code for security issues" > security-review.txt
 ```
 
 ### Generate commit messages
 
 ```bash
-result=$(git diff --cached | qwen -p "Write a concise commit message for these changes" --output-format json)
+result=$(git diff --cached | papert -p "Write a concise commit message for these changes" --output-format json)
 echo "$result" | jq -r '.response'
 ```
 
 ### API documentation
 
 ```bash
-result=$(cat api/routes.js | qwen -p "Generate OpenAPI spec for these routes" --output-format json)
+result=$(cat api/routes.js | papert -p "Generate OpenAPI spec for these routes" --output-format json)
 echo "$result" | jq -r '.response' > openapi.json
 ```
 
@@ -257,7 +257,7 @@ echo "$result" | jq -r '.response' > openapi.json
 ```bash
 for file in src/*.py; do
     echo "Analyzing $file..."
-    result=$(cat "$file" | qwen -p "Find potential bugs and suggest improvements" --output-format json)
+    result=$(cat "$file" | papert -p "Find potential bugs and suggest improvements" --output-format json)
     echo "$result" | jq -r '.response' > "reports/$(basename "$file").analysis"
     echo "Completed analysis for $(basename "$file")" >> reports/progress.log
 done
@@ -266,20 +266,20 @@ done
 ### PR code review
 
 ```bash
-result=$(git diff origin/main...HEAD | qwen -p "Review these changes for bugs, security issues, and code quality" --output-format json)
+result=$(git diff origin/main...HEAD | papert -p "Review these changes for bugs, security issues, and code quality" --output-format json)
 echo "$result" | jq -r '.response' > pr-review.json
 ```
 
 ### Log analysis
 
 ```bash
-grep "ERROR" /var/log/app.log | tail -20 | qwen -p "Analyze these errors and suggest root cause and fixes" > error-analysis.txt
+grep "ERROR" /var/log/app.log | tail -20 | papert -p "Analyze these errors and suggest root cause and fixes" > error-analysis.txt
 ```
 
 ### Release notes generation
 
 ```bash
-result=$(git log --oneline v1.0.0..HEAD | qwen -p "Generate release notes from these commits" --output-format json)
+result=$(git log --oneline v1.0.0..HEAD | papert -p "Generate release notes from these commits" --output-format json)
 response=$(echo "$result" | jq -r '.response')
 echo "$response"
 echo "$response" >> CHANGELOG.md
@@ -288,7 +288,7 @@ echo "$response" >> CHANGELOG.md
 ### Model and tool usage tracking
 
 ```bash
-result=$(qwen -p "Explain this database schema" --include-directories db --output-format json)
+result=$(papert -p "Explain this database schema" --include-directories db --output-format json)
 total_tokens=$(echo "$result" | jq -r '.stats.models // {} | to_entries | map(.value.tokens.total) | add // 0')
 models_used=$(echo "$result" | jq -r '.stats.models // {} | keys | join(", ") | if . == "" then "none" else . end')
 tool_calls=$(echo "$result" | jq -r '.stats.tools.totalCalls // 0')

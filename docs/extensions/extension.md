@@ -4,7 +4,7 @@ Qwen Code extensions package prompts, MCP servers, and custom commands into a fa
 
 ## Extension management
 
-We offer a suite of extension management tools using `qwen extensions` commands.
+We offer a suite of extension management tools using `papert extensions` commands.
 
 Note that these commands are not supported from within the CLI, although you can list installed extensions using the `/extensions list` subcommand.
 
@@ -12,44 +12,44 @@ Note that all of these commands will only be reflected in active CLI sessions on
 
 ### Installing an extension
 
-You can install an extension using `qwen extensions install` with either a GitHub URL or a local path`.
+You can install an extension using `papert extensions install` with either a GitHub URL or a local path`.
 
-Note that we create a copy of the installed extension, so you will need to run `qwen extensions update` to pull in changes from both locally-defined extensions and those on GitHub.
+Note that we create a copy of the installed extension, so you will need to run `papert extensions update` to pull in changes from both locally-defined extensions and those on GitHub.
 
 ```
-qwen extensions install https://github.com/qwen-cli-extensions/security
+papert extensions install https://github.com/papert-cli-extensions/security
 ```
 
 This will install the Qwen Code Security extension, which offers support for a `/security:analyze` command.
 
 ### Uninstalling an extension
 
-To uninstall, run `qwen extensions uninstall extension-name`, so, in the case of the install example:
+To uninstall, run `papert extensions uninstall extension-name`, so, in the case of the install example:
 
 ```
-qwen extensions uninstall qwen-cli-security
+papert extensions uninstall papert-cli-security
 ```
 
 ### Disabling an extension
 
 Extensions are, by default, enabled across all workspaces. You can disable an extension entirely or for specific workspace.
 
-For example, `qwen extensions disable extension-name` will disable the extension at the user level, so it will be disabled everywhere. `qwen extensions disable extension-name --scope=workspace` will only disable the extension in the current workspace.
+For example, `papert extensions disable extension-name` will disable the extension at the user level, so it will be disabled everywhere. `papert extensions disable extension-name --scope=workspace` will only disable the extension in the current workspace.
 
 ### Enabling an extension
 
-You can enable extensions using `qwen extensions enable extension-name`. You can also enable an extension for a specific workspace using `qwen extensions enable extension-name --scope=workspace` from within that workspace.
+You can enable extensions using `papert extensions enable extension-name`. You can also enable an extension for a specific workspace using `papert extensions enable extension-name --scope=workspace` from within that workspace.
 
 This is useful if you have an extension disabled at the top-level and only enabled in specific places.
 
 ### Updating an extension
 
-For extensions installed from a local path or a git repository, you can explicitly update to the latest version (as reflected in the `papert-extension.json` `version` field) with `qwen extensions update extension-name`.
+For extensions installed from a local path or a git repository, you can explicitly update to the latest version (as reflected in the `papert-extension.json` `version` field) with `papert extensions update extension-name`.
 
 You can update all extensions with:
 
 ```
-qwen extensions update --all
+papert extensions update --all
 ```
 
 ## Extension creation
@@ -63,17 +63,17 @@ We offer several example extensions `context`, `custom-commands`, `exclude-tools
 To copy one of these examples into a development directory using the type of your choosing, run:
 
 ```
-qwen extensions new path/to/directory custom-commands
+papert extensions new path/to/directory custom-commands
 ```
 
 ### Link a local extension
 
-The `qwen extensions link` command will create a symbolic link from the extension installation directory to the development path.
+The `papert extensions link` command will create a symbolic link from the extension installation directory to the development path.
 
-This is useful so you don't have to run `qwen extensions update` every time you make changes you'd like to test.
+This is useful so you don't have to run `papert extensions update` every time you make changes you'd like to test.
 
 ```
-qwen extensions link path/to/directory
+papert extensions link path/to/directory
 ```
 
 ## How it works

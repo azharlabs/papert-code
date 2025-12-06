@@ -1,12 +1,12 @@
-# Qwen Code Companion Plugin: Interface Specification
+# Papert Code Companion Plugin: Interface Specification
 
 > Last Updated: September 15, 2025
 
-This document defines the contract for building a companion plugin to enable Qwen Code's IDE mode. For VS Code, these features (native diffing, context awareness) are provided by the official extension ([marketplace](https://marketplace.visualstudio.com/items?itemName=qwenlm.papert-code-vscode-ide-companion)). This specification is for contributors who wish to bring similar functionality to other editors like JetBrains IDEs, Sublime Text, etc.
+This document defines the contract for building a companion plugin to enable Papert Code's IDE mode. For VS Code, these features (native diffing, context awareness) are provided by the official extension ([marketplace](https://marketplace.visualstudio.com/items?itemName=qwenlm.papert-code-vscode-ide-companion)). This specification is for contributors who wish to bring similar functionality to other editors like JetBrains IDEs, Sublime Text, etc.
 
 ## I. The Communication Interface
 
-Qwen Code and the IDE plugin communicate through a local communication channel.
+Papert Code and the IDE plugin communicate through a local communication channel.
 
 ### 1. Transport Layer: MCP over HTTP
 
@@ -18,10 +18,10 @@ The plugin **MUST** run a local HTTP server that implements the **Model Context 
 
 ### 2. Discovery Mechanism: The Port File
 
-For Qwen Code to connect, it needs to discover which IDE instance it's running in and what port your server is using. The plugin **MUST** facilitate this by creating a "discovery file."
+For Papert Code to connect, it needs to discover which IDE instance it's running in and what port your server is using. The plugin **MUST** facilitate this by creating a "discovery file."
 
 - **How the CLI Finds the File:** The CLI determines the Process ID (PID) of the IDE it's running in by traversing the process tree. It then looks for a discovery file that contains this PID in its name.
-- **File Location:** The file must be created in a specific directory: `os.tmpdir()/qwen/ide/`. Your plugin must create this directory if it doesn't exist.
+- **File Location:** The file must be created in a specific directory: `os.tmpdir()/gemini/ide/` (retained for compatibility with the upstream Gemini CLI). Your plugin must create this directory if it doesn't exist.
 - **File Naming Convention:** The filename is critical and **MUST** follow the pattern:
   `papert-code-ide-server-${PID}-${PORT}.json`
   - `${PID}`: The process ID of the parent IDE process. Your plugin must determine this PID and include it in the filename.

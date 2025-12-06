@@ -17,13 +17,13 @@ Qwen Code can be run in a non-interactive mode, which is useful for scripting an
 The following example pipes a command to Qwen Code from your terminal:
 
 ```bash
-echo "What is fine tuning?" | qwen
+echo "What is fine tuning?" | papert
 ```
 
 You can also use the `--prompt` or `-p` flag:
 
 ```bash
-qwen -p "What is fine tuning?"
+papert -p "What is fine tuning?"
 ```
 
 For comprehensive documentation on headless usage, scripting, automation, and advanced examples, see the **[Headless Mode](../headless.md)** guide.

@@ -21,7 +21,7 @@ This is the recommended way for end-users to install Qwen Code. It involves down
   Then, run the CLI from anywhere:
 
   ```bash
-  qwen
+  papert
   ```
 
 - **NPX execution:**
@@ -46,7 +46,7 @@ For security and isolation, Qwen Code can be run inside a container. This is the
 - **Using the `--sandbox` flag:**
   If you have Qwen Code installed locally (using the standard installation described above), you can instruct it to run inside the sandbox container.
   ```bash
-  qwen --sandbox -y -p "your prompt here"
+  papert --sandbox -y -p "your prompt here"
   ```
 
 ---
@@ -68,8 +68,8 @@ Contributors to the project will want to run the CLI directly from the source co
   # Link the local cli package to your global node_modules
   npm link packages/cli
 
-  # Now you can run your local version using the `qwen` command
-  qwen
+  # Now you can run your local version using the `papert` command
+  papert
   ```
 
 ---

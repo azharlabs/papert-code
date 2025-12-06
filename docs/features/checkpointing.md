@@ -27,7 +27,7 @@ The Checkpointing feature is disabled by default. To enable it, you can either u
 You can enable checkpointing for the current session by using the `--checkpointing` flag when starting Qwen Code:
 
 ```bash
-qwen --checkpointing
+papert --checkpointing
 ```
 
 ### Using the `settings.json` File

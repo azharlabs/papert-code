@@ -13,7 +13,7 @@ The easiest way to start is by using one of the built-in templates. We'll use th
 Run the following command to create a new directory called `my-first-extension` with the template files:
 
 ```bash
-qwen extensions new my-first-extension mcp-server
+papert extensions new my-first-extension mcp-server
 ```
 
 This will create a new directory with the following structure:
@@ -133,7 +133,7 @@ Before you can use the extension, you need to compile the TypeScript code and li
     The `link` command creates a symbolic link from the Qwen Code extensions directory to your development directory. This means any changes you make will be reflected immediately without needing to reinstall.
 
     ```bash
-    qwen extensions link .
+    papert extensions link .
     ```
 
 Now, restart your Qwen Code session. The new `fetch_posts` tool will be available. You can test it by asking: "fetch posts".

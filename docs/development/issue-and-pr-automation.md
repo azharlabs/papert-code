@@ -16,7 +16,7 @@ Here is a breakdown of the specific automation workflows that run in our reposit
 
 This is the first bot you will interact with when you create an issue. Its job is to perform an initial analysis and apply the correct labels.
 
-- **Workflow File**: `.github/workflows/qwen-automated-issue-triage.yml`
+- **Workflow File**: `.github/workflows/papert-automated-issue-triage.yml`
 - **When it runs**: Immediately after an issue is created or reopened.
 - **What it does**:
   - It uses a Qwen model to analyze the issue's title and body against a detailed set of guidelines.
@@ -47,7 +47,7 @@ This workflow ensures that all changes meet our quality standards before they ca
 
 This workflow runs periodically to ensure all open PRs are correctly linked to issues and have consistent labels.
 
-- **Workflow File**: `.github/workflows/qwen-scheduled-pr-triage.yml`
+- **Workflow File**: `.github/workflows/papert-scheduled-pr-triage.yml`
 - **When it runs**: Every 15 minutes on all open pull requests.
 - **What it does**:
   - **Checks for a linked issue**: The bot scans your PR description for a keyword that links it to an issue (e.g., `Fixes #123`, `Closes #456`).
@@ -61,7 +61,7 @@ This workflow runs periodically to ensure all open PRs are correctly linked to i
 
 This is a fallback workflow to ensure that no issue gets missed by the triage process.
 
-- **Workflow File**: `.github/workflows/qwen-scheduled-issue-triage.yml`
+- **Workflow File**: `.github/workflows/papert-scheduled-issue-triage.yml`
 - **When it runs**: Every hour on all open issues.
 - **What it does**:
   - It actively seeks out issues that either have no labels at all or still have the `status/need-triage` label.
