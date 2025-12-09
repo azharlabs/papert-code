@@ -84,7 +84,7 @@ describe('loadIgnoreRules', () => {
     const ignore = loadIgnoreRules({
       projectRoot: tmpDir,
       useGitignore: true,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
     });
     const fileFilter = ignore.getFileFilter();
@@ -99,7 +99,7 @@ describe('loadIgnoreRules', () => {
     const ignore = loadIgnoreRules({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: true,
+      usePapertignore: true,
       ignoreDirs: [],
     });
     const fileFilter = ignore.getFileFilter();
@@ -115,7 +115,7 @@ describe('loadIgnoreRules', () => {
     const ignore = loadIgnoreRules({
       projectRoot: tmpDir,
       useGitignore: true,
-      useQwenignore: true,
+      usePapertignore: true,
       ignoreDirs: [],
     });
     const fileFilter = ignore.getFileFilter();
@@ -129,7 +129,7 @@ describe('loadIgnoreRules', () => {
     const ignore = loadIgnoreRules({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: ['logs/'],
     });
     const dirFilter = ignore.getDirectoryFilter();
@@ -142,7 +142,7 @@ describe('loadIgnoreRules', () => {
     const ignore = loadIgnoreRules({
       projectRoot: tmpDir,
       useGitignore: true,
-      useQwenignore: true,
+      usePapertignore: true,
       ignoreDirs: [],
     });
     const fileFilter = ignore.getFileFilter();
@@ -154,7 +154,7 @@ describe('loadIgnoreRules', () => {
     const ignore = loadIgnoreRules({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
     });
     const dirFilter = ignore.getDirectoryFilter();

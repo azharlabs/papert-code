@@ -1,7 +1,7 @@
 {
   "name": "papert-code-vscode-ide-companion",
-  "displayName": "Qwen Code Companion",
-  "description": "Enable Qwen Code with direct access to your VS Code workspace.",
+  "displayName": "Papert Code Companion",
+  "description": "Enable Papert Code with direct access to your VS Code workspace.",
   "version": "0.4.0",
   "publisher": "azharlabs",
   "icon": "assets/icon.png",
@@ -20,9 +20,9 @@
   ],
   "keywords": [
     "papert-code",
-    "qwen code",
-    "qwen",
-    "qwen code",
+    "papert code",
+    "papert",
+    "papert code",
     "cli",
     "ide integration",
     "ide companion"
@@ -33,63 +33,63 @@
   "contributes": {
     "languages": [
       {
-        "id": "qwen-diff-editable"
+        "id": "papert-diff-editable"
       }
     ],
     "commands": [
       {
-        "command": "qwen.diff.accept",
-        "title": "Qwen Code: Accept Current Diff",
+        "command": "papert.diff.accept",
+        "title": "Papert Code: Accept Current Diff",
         "icon": "$(check)"
       },
       {
-        "command": "qwen.diff.cancel",
-        "title": "Qwen Code: Close Diff Editor",
+        "command": "papert.diff.cancel",
+        "title": "Papert Code: Close Diff Editor",
         "icon": "$(close)"
       },
       {
-        "command": "papert-code.runQwenCode",
-        "title": "Qwen Code: Run"
+        "command": "papert-code.runPapertCode",
+        "title": "Papert Code: Run"
       },
       {
         "command": "papert-code.showNotices",
-        "title": "Qwen Code: View Third-Party Notices"
+        "title": "Papert Code: View Third-Party Notices"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "qwen.diff.accept",
-          "when": "qwen.diff.isVisible"
+          "command": "papert.diff.accept",
+          "when": "papert.diff.isVisible"
         },
         {
-          "command": "qwen.diff.cancel",
-          "when": "qwen.diff.isVisible"
+          "command": "papert.diff.cancel",
+          "when": "papert.diff.isVisible"
         }
       ],
       "editor/title": [
         {
-          "command": "qwen.diff.accept",
-          "when": "qwen.diff.isVisible",
+          "command": "papert.diff.accept",
+          "when": "papert.diff.isVisible",
           "group": "navigation"
         },
         {
-          "command": "qwen.diff.cancel",
-          "when": "qwen.diff.isVisible",
+          "command": "papert.diff.cancel",
+          "when": "papert.diff.isVisible",
           "group": "navigation"
         }
       ]
     },
     "keybindings": [
       {
-        "command": "qwen.diff.accept",
+        "command": "papert.diff.accept",
         "key": "ctrl+s",
-        "when": "qwen.diff.isVisible"
+        "when": "papert.diff.isVisible"
       },
       {
-        "command": "qwen.diff.accept",
+        "command": "papert.diff.accept",
         "key": "cmd+s",
-        "when": "qwen.diff.isVisible"
+        "when": "papert.diff.isVisible"
       }
     ]
   },

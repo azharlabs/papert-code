@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -71,7 +71,7 @@ describe('SubagentManager', () => {
       errors: [],
       warnings: [],
     });
-    mockValidateOrThrow.mockImplementation(() => {});
+    mockValidateOrThrow.mockImplementation(() => { });
 
     // Setup yaml parser mocks with sophisticated behavior
     mockParseYaml.mockImplementation((yamlString: string) => {
@@ -365,7 +365,7 @@ You are a helpful assistant.
     });
 
     it('should not warn when filename matches subagent name', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
       const matchingPath = '/test/project/.papert/agents/test-agent.md';
 
       const config = manager.parseSubagentContent(

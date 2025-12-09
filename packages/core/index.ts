@@ -7,8 +7,8 @@
 export * from './src/index.js';
 export { Storage } from './src/config/storage.js';
 export {
-  DEFAULT_QWEN_MODEL,
-  DEFAULT_QWEN_EMBEDDING_MODEL,
+  DEFAULT_PAPERT_MODEL,
+  DEFAULT_PAPERT_EMBEDDING_MODEL,
   DEFAULT_GEMINI_MODEL,
   DEFAULT_GEMINI_MODEL_AUTO,
   DEFAULT_GEMINI_FLASH_MODEL,
@@ -47,5 +47,5 @@ export { makeFakeConfig } from './src/test-utils/config.js';
 export * from './src/utils/pathReader.js';
 export * from './src/utils/request-tokenizer/supportedImageFormats.js';
 export { ClearcutLogger } from './src/telemetry/clearcut-logger/clearcut-logger.js';
-export { QwenLogger } from './src/telemetry/qwen-logger/qwen-logger.js';
+export { PapertLogger } from './src/telemetry/papert-logger/papert-logger.js';
 export { logModelSlashCommand } from './src/telemetry/loggers.js';

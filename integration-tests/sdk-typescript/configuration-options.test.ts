@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Papert Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -438,13 +438,13 @@ describe('Configuration Options (E2E)', () => {
       }
     });
 
-    // Skip in containerized sandbox environments - qwen-oauth requires user interaction
+    // Skip in containerized sandbox environments - papert-oauth requires user interaction
     // which is not possible in Docker/Podman CI environments
     it.skipIf(
       process.env['SANDBOX'] === 'sandbox:docker' ||
-        process.env['SANDBOX'] === 'sandbox:podman',
-    )('should accept authType: qwen-oauth', async () => {
-      // Note: qwen-oauth requires credentials in ~/.papert and user interaction
+      process.env['SANDBOX'] === 'sandbox:podman',
+    )('should accept authType: papert-oauth', async () => {
+      // Note: papert-oauth requires credentials in ~/.papert and user interaction
       // Without credentials, the auth process will timeout waiting for user
       // This test verifies the option is accepted and passed correctly to CLI
 
@@ -455,7 +455,7 @@ describe('Configuration Options (E2E)', () => {
         options: {
           ...SHARED_TEST_OPTIONS,
           cwd: testDir,
-          authType: 'qwen-oauth',
+          authType: 'papert-oauth',
           debug: true,
           logLevel: 'debug',
           stderr: (msg: string) => {

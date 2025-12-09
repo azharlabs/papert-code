@@ -14,7 +14,7 @@ import {
   DEFAULT_CONTEXT_FILENAME,
 } from '../tools/memoryTool.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
-import { QWEN_DIR } from './paths.js';
+import { PAPERT_DIR } from './paths.js';
 
 vi.mock('os', async (importOriginal) => {
   const actualOs = await importOriginal<typeof os>();
@@ -104,7 +104,7 @@ describe('loadServerHierarchicalMemory', () => {
         'Src directory memory',
       ); // Untrusted
 
-      const filepath = path.join(homedir, QWEN_DIR, DEFAULT_CONTEXT_FILENAME);
+      const filepath = path.join(homedir, PAPERT_DIR, DEFAULT_CONTEXT_FILENAME);
       await createTestFile(filepath, 'default context content'); // In user home dir (outside untrusted space).
       const { fileCount, memoryContent } = await loadServerHierarchicalMemory(
         cwd,
@@ -138,7 +138,7 @@ describe('loadServerHierarchicalMemory', () => {
 
   it('should load only the global context file if present and others are not (default filename)', async () => {
     const defaultContextFile = await createTestFile(
-      path.join(homedir, QWEN_DIR, DEFAULT_CONTEXT_FILENAME),
+      path.join(homedir, PAPERT_DIR, DEFAULT_CONTEXT_FILENAME),
       'default context content',
     );
 
@@ -162,7 +162,7 @@ describe('loadServerHierarchicalMemory', () => {
     setGeminiMdFilename(customFilename);
 
     const customContextFile = await createTestFile(
-      path.join(homedir, QWEN_DIR, customFilename),
+      path.join(homedir, PAPERT_DIR, customFilename),
       'custom context content',
     );
 
@@ -286,7 +286,7 @@ describe('loadServerHierarchicalMemory', () => {
 
   it('should load and correctly order global, upward, and downward ORIGINAL_GEMINI_MD_FILENAME files', async () => {
     const defaultContextFile = await createTestFile(
-      path.join(homedir, QWEN_DIR, DEFAULT_CONTEXT_FILENAME),
+      path.join(homedir, PAPERT_DIR, DEFAULT_CONTEXT_FILENAME),
       'default context content',
     );
     const rootGeminiFile = await createTestFile(
@@ -344,7 +344,7 @@ describe('loadServerHierarchicalMemory', () => {
       'tree',
       {
         respectGitIgnore: true,
-        respectQwenIgnore: true,
+        respectPapertIgnore: true,
       },
       200, // maxDirs parameter
     );
@@ -358,7 +358,7 @@ describe('loadServerHierarchicalMemory', () => {
   it('should respect the maxDirs parameter during downward scan', async () => {
     const consoleDebugSpy = vi
       .spyOn(console, 'debug')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     // Create directories in parallel for better performance
     const dirPromises = Array.from({ length: 2 }, (_, i) =>
@@ -377,7 +377,7 @@ describe('loadServerHierarchicalMemory', () => {
       'tree', // importFormat
       {
         respectGitIgnore: true,
-        respectQwenIgnore: true,
+        respectPapertIgnore: true,
       },
       1, // maxDirs
     );

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -86,14 +86,14 @@ describe('modelCommand', () => {
     });
   });
 
-  it('should return dialog action for QWEN_OAUTH auth type', async () => {
+  it('should return dialog action for PAPERT_OAUTH auth type', async () => {
     mockGetAvailableModelsForAuthType.mockReturnValue([
-      { id: 'qwen3-coder-plus', label: 'qwen3-coder-plus' },
+      { id: 'papert3-coder-plus', label: 'papert3-coder-plus' },
     ]);
 
     const mockConfig = createMockConfig({
       model: 'test-model',
-      authType: AuthType.QWEN_OAUTH,
+      authType: AuthType.PAPERT_OAUTH,
     });
     mockContext.services.config = mockConfig as Config;
 

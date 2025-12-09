@@ -1,7 +1,7 @@
 {
   "name": "@papert-code/papert-code",
   "version": "0.3.1",
-  "description": "Qwen Code",
+  "description": "Papert Code",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/azharlabs/papert-code.git"

@@ -24,7 +24,7 @@ export const ToolsList: React.FC<ToolsListProps> = ({
 }) => (
   <Box flexDirection="column" marginBottom={1}>
     <Text bold color={theme.text.primary}>
-      {t('Available Qwen Code CLI tools:')}
+      {t('Available Papert Code CLI tools:')}
     </Text>
     <Box height={1} />
     {tools.length > 0 ? (

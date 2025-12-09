@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -166,8 +166,8 @@ describe('systemInfo', () => {
       expect(getSandboxEnv(false)).toBe('papert-code-test-sandbox');
     });
 
-    it('should handle qwen- prefix removal', () => {
-      process.env['SANDBOX'] = 'qwen-custom-sandbox';
+    it('should handle papert- prefix removal', () => {
+      process.env['SANDBOX'] = 'papert-custom-sandbox';
       expect(getSandboxEnv(true)).toBe('custom-sandbox');
     });
   });

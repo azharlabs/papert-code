@@ -12,7 +12,7 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import { promises as fs } from 'node:fs';
 
-const QWEN_DIR = '.papert';
+const PAPERT_DIR = '.papert';
 const KEYCHAIN_SERVICE_NAME = 'papert-code-oauth';
 const MAIN_ACCOUNT_KEY = 'main-account';
 
@@ -86,8 +86,8 @@ export class OAuthCredentialStorage {
       await this.storage.deleteCredentials(MAIN_ACCOUNT_KEY);
 
       // Also try to remove the old file if it exists
-      const oldFilePath = path.join(os.homedir(), QWEN_DIR, OAUTH_FILE);
-      await fs.rm(oldFilePath, { force: true }).catch(() => {});
+      const oldFilePath = path.join(os.homedir(), PAPERT_DIR, OAUTH_FILE);
+      await fs.rm(oldFilePath, { force: true }).catch(() => { });
     } catch (error: unknown) {
       console.error(error);
       throw new Error('Failed to clear OAuth credentials');
@@ -98,7 +98,7 @@ export class OAuthCredentialStorage {
    * Migrate credentials from old file-based storage to keychain
    */
   private static async migrateFromFileStorage(): Promise<Credentials | null> {
-    const oldFilePath = path.join(os.homedir(), QWEN_DIR, OAUTH_FILE);
+    const oldFilePath = path.join(os.homedir(), PAPERT_DIR, OAUTH_FILE);
 
     let credsJson: string;
     try {
@@ -123,7 +123,7 @@ export class OAuthCredentialStorage {
     await this.saveCredentials(credentials);
 
     // Remove old file after successful migration
-    await fs.rm(oldFilePath, { force: true }).catch(() => {});
+    await fs.rm(oldFilePath, { force: true }).catch(() => { });
 
     return credentials;
   }

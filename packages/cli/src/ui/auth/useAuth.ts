@@ -15,12 +15,12 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import type { LoadedSettings, SettingScope } from '../../config/settings.js';
 import type { OpenAICredentials } from '../components/OpenAIKeyPrompt.js';
-import { useQwenAuth } from '../hooks/useQwenAuth.js';
+import { usePapertAuth } from '../hooks/usePapertAuth.js';
 import { AuthState, MessageType } from '../types.js';
 import type { HistoryItem } from '../types.js';
 import { t } from '../../i18n/index.js';
 
-export type { QwenAuthState } from '../hooks/useQwenAuth.js';
+export type { PapertAuthState } from '../hooks/usePapertAuth.js';
 
 export const useAuthCommand = (
   settings: LoadedSettings,
@@ -42,7 +42,7 @@ export const useAuthCommand = (
     undefined,
   );
 
-  const { qwenAuthState, cancelQwenAuth } = useQwenAuth(
+  const { papertAuthState, cancelPapertAuth } = usePapertAuth(
     pendingAuthType,
     isAuthenticating,
   );
@@ -89,9 +89,9 @@ export const useAuthCommand = (
       try {
         settings.setValue(scope, 'security.auth.selectedType', authType);
 
-        // Only update credentials if not switching to QWEN_OAUTH,
-        // so that OpenAI credentials are preserved when switching to QWEN_OAUTH.
-        if (authType !== AuthType.QWEN_OAUTH && credentials) {
+        // Only update credentials if not switching to PAPERT_OAUTH,
+        // so that OpenAI credentials are preserved when switching to PAPERT_OAUTH.
+        if (authType !== AuthType.PAPERT_OAUTH && credentials) {
           if (credentials?.apiKey != null) {
             settings.setValue(
               scope,
@@ -195,8 +195,8 @@ export const useAuthCommand = (
   }, []);
 
   const cancelAuthentication = useCallback(() => {
-    if (isAuthenticating && pendingAuthType === AuthType.QWEN_OAUTH) {
-      cancelQwenAuth();
+    if (isAuthenticating && pendingAuthType === AuthType.PAPERT_OAUTH) {
+      cancelPapertAuth();
     }
 
     // Log authentication cancellation
@@ -209,7 +209,7 @@ export const useAuthCommand = (
     setIsAuthenticating(false);
     setIsAuthDialogOpen(true);
     setAuthError(null);
-  }, [isAuthenticating, pendingAuthType, cancelQwenAuth, config]);
+  }, [isAuthenticating, pendingAuthType, cancelPapertAuth, config]);
 
   /**
    /**
@@ -222,19 +222,19 @@ export const useAuthCommand = (
     * or broken authentication cycles.
     */
   useEffect(() => {
-    const defaultAuthType = process.env['QWEN_DEFAULT_AUTH_TYPE'];
+    const defaultAuthType = process.env['PAPERT_DEFAULT_AUTH_TYPE'];
     if (
       defaultAuthType &&
-      ![AuthType.QWEN_OAUTH, AuthType.USE_OPENAI].includes(
+      ![AuthType.PAPERT_OAUTH, AuthType.USE_OPENAI].includes(
         defaultAuthType as AuthType,
       )
     ) {
       onAuthError(
         t(
-          'Invalid QWEN_DEFAULT_AUTH_TYPE value: "{{value}}". Valid values are: {{validValues}}',
+          'Invalid PAPERT_DEFAULT_AUTH_TYPE value: "{{value}}". Valid values are: {{validValues}}',
           {
             value: defaultAuthType,
-            validValues: [AuthType.QWEN_OAUTH, AuthType.USE_OPENAI].join(', '),
+            validValues: [AuthType.PAPERT_OAUTH, AuthType.USE_OPENAI].join(', '),
           },
         ),
       );
@@ -249,7 +249,7 @@ export const useAuthCommand = (
     isAuthDialogOpen,
     isAuthenticating,
     pendingAuthType,
-    qwenAuthState,
+    papertAuthState,
     handleAuthSelect,
     openAuthDialog,
     cancelAuthentication,

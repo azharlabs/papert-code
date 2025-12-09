@@ -1,27 +1,30 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import path from 'node:path';
+import {
+  PAPERT_DIR,
+  PAPERT_CREDENTIAL_FILENAME,
+  PAPERT_LOCK_FILENAME,
+} from '../utils/paths.js';
 import { promises as fs, unlinkSync } from 'node:fs';
 import * as os from 'os';
 import { randomUUID } from 'node:crypto';
 
-import type { IQwenOAuth2Client } from './qwenOAuth2.js';
+import type { IPapertOAuth2Client } from './papertOAuth2.js';
 import {
-  type QwenCredentials,
+  type PapertCredentials,
   type TokenRefreshData,
   type ErrorData,
   isErrorResponse,
   CredentialsClearRequiredError,
-} from './qwenOAuth2.js';
+} from './papertOAuth2.js';
 
 // File System Configuration
-const QWEN_DIR = '.papert';
-const QWEN_CREDENTIAL_FILENAME = 'oauth_creds.json';
-const QWEN_LOCK_FILENAME = 'oauth_creds.lock';
+// Constants imported from ../utils/paths.js
 
 // Token and Cache Configuration
 const TOKEN_REFRESH_BUFFER_MS = 30 * 1000; // 30 seconds
@@ -71,24 +74,24 @@ export class TokenManagerError extends Error {
  * Interface for the memory cache state
  */
 interface MemoryCache {
-  credentials: QwenCredentials | null;
+  credentials: PapertCredentials | null;
   fileModTime: number;
   lastCheck: number;
 }
 
 /**
- * Validates that the given data is a valid QwenCredentials object
+ * Validates that the given data is a valid PapertCredentials object
  *
  * @param data - The data to validate
  * @returns The validated credentials object
  * @throws Error if the data is invalid
  */
-function validateCredentials(data: unknown): QwenCredentials {
+function validateCredentials(data: unknown): PapertCredentials {
   if (!data || typeof data !== 'object') {
     throw new Error('Invalid credentials format');
   }
 
-  const creds = data as Partial<QwenCredentials>;
+  const creds = data as Partial<PapertCredentials>;
   const requiredFields = [
     'access_token',
     'refresh_token',
@@ -107,7 +110,7 @@ function validateCredentials(data: unknown): QwenCredentials {
     throw new Error('Invalid credentials: missing expiry_date');
   }
 
-  return creds as QwenCredentials;
+  return creds as PapertCredentials;
 }
 
 /**
@@ -128,7 +131,7 @@ export class SharedTokenManager {
   /**
    * Promise tracking any ongoing token refresh operation
    */
-  private refreshPromise: Promise<QwenCredentials> | null = null;
+  private refreshPromise: Promise<PapertCredentials> | null = null;
 
   /**
    * Promise tracking any ongoing file check operation to prevent concurrent checks
@@ -198,18 +201,18 @@ export class SharedTokenManager {
   /**
    * Get valid OAuth credentials, refreshing them if necessary
    *
-   * @param qwenClient - The OAuth2 client instance
+   * @param papertClient - The OAuth2 client instance
    * @param forceRefresh - If true, refresh token even if current one is still valid
    * @returns Promise resolving to valid credentials
    * @throws TokenManagerError if unable to obtain valid credentials
    */
   async getValidCredentials(
-    qwenClient: IQwenOAuth2Client,
+    papertClient: IPapertOAuth2Client,
     forceRefresh = false,
-  ): Promise<QwenCredentials> {
+  ): Promise<PapertCredentials> {
     try {
       // Check if credentials file has been updated by other sessions
-      await this.checkAndReloadIfNeeded(qwenClient);
+      await this.checkAndReloadIfNeeded(papertClient);
 
       // Return valid cached credentials if available (unless force refresh is requested)
       if (
@@ -226,7 +229,7 @@ export class SharedTokenManager {
       if (!currentRefreshPromise) {
         // Start new refresh operation with distributed locking
         currentRefreshPromise = this.performTokenRefresh(
-          qwenClient,
+          papertClient,
           forceRefresh,
         );
         this.refreshPromise = currentRefreshPromise;
@@ -260,7 +263,7 @@ export class SharedTokenManager {
    * Uses promise-based locking to prevent concurrent file checks
    */
   private async checkAndReloadIfNeeded(
-    qwenClient?: IQwenOAuth2Client,
+    papertClient?: IPapertOAuth2Client,
   ): Promise<void> {
     // If there's already an ongoing check, wait for it to complete
     if (this.checkPromise) {
@@ -281,7 +284,7 @@ export class SharedTokenManager {
     }
 
     // Start the check operation and store the promise
-    this.checkPromise = this.performFileCheck(qwenClient, now);
+    this.checkPromise = this.performFileCheck(papertClient, now);
 
     try {
       await this.checkPromise;
@@ -325,7 +328,7 @@ export class SharedTokenManager {
    * This is separated to enable proper promise-based synchronization
    */
   private async performFileCheck(
-    qwenClient: IQwenOAuth2Client | undefined,
+    papertClient: IPapertOAuth2Client | undefined,
     checkTime: number,
   ): Promise<void> {
     // Update lastCheck atomically at the start to prevent other calls from proceeding
@@ -343,7 +346,7 @@ export class SharedTokenManager {
 
       // Reload credentials if file has been modified since last cache
       if (fileModTime > this.memoryCache.fileModTime) {
-        await this.reloadCredentialsFromFile(qwenClient);
+        await this.reloadCredentialsFromFile(papertClient);
         // Update fileModTime only after successful reload
         this.memoryCache.fileModTime = fileModTime;
       }
@@ -373,7 +376,7 @@ export class SharedTokenManager {
   /**
    * Force a file check without time-based throttling (used during refresh operations)
    */
-  private async forceFileCheck(qwenClient?: IQwenOAuth2Client): Promise<void> {
+  private async forceFileCheck(papertClient?: IPapertOAuth2Client): Promise<void> {
     try {
       const filePath = this.getCredentialFilePath();
       const stats = await fs.stat(filePath);
@@ -381,7 +384,7 @@ export class SharedTokenManager {
 
       // Reload credentials if file has been modified since last cache
       if (fileModTime > this.memoryCache.fileModTime) {
-        await this.reloadCredentialsFromFile(qwenClient);
+        await this.reloadCredentialsFromFile(papertClient);
         // Update cache state atomically
         this.memoryCache.fileModTime = fileModTime;
         this.memoryCache.lastCheck = Date.now();
@@ -409,10 +412,10 @@ export class SharedTokenManager {
   }
 
   /**
-   * Load credentials from the file system into memory cache and sync with qwenClient
+   * Load credentials from the file system into memory cache and sync with papertClient
    */
   private async reloadCredentialsFromFile(
-    qwenClient?: IQwenOAuth2Client,
+    papertClient?: IPapertOAuth2Client,
   ): Promise<void> {
     try {
       const filePath = this.getCredentialFilePath();
@@ -426,10 +429,10 @@ export class SharedTokenManager {
       // Update memory cache first
       this.memoryCache.credentials = credentials;
 
-      // Sync with qwenClient atomically - rollback on failure
+      // Sync with papertClient atomically - rollback on failure
       try {
-        if (qwenClient) {
-          qwenClient.setCredentials(credentials);
+        if (papertClient) {
+          papertClient.setCredentials(credentials);
         }
       } catch (clientError) {
         // Rollback memory cache on client sync failure
@@ -452,21 +455,21 @@ export class SharedTokenManager {
   /**
    * Refresh the OAuth token using file locking to prevent concurrent refreshes
    *
-   * @param qwenClient - The OAuth2 client instance
+   * @param papertClient - The OAuth2 client instance
    * @param forceRefresh - If true, skip checking if token is already valid after getting lock
    * @returns Promise resolving to refreshed credentials
    * @throws TokenManagerError if refresh fails or lock cannot be acquired
    */
   private async performTokenRefresh(
-    qwenClient: IQwenOAuth2Client,
+    papertClient: IPapertOAuth2Client,
     forceRefresh = false,
-  ): Promise<QwenCredentials> {
+  ): Promise<PapertCredentials> {
     const startTime = Date.now();
     const lockPath = this.getLockFilePath();
 
     try {
       // Check if we have a refresh token before attempting refresh
-      const currentCredentials = qwenClient.getCredentials();
+      const currentCredentials = papertClient.getCredentials();
       if (!currentCredentials.refresh_token) {
         // console.debug('create a NO_REFRESH_TOKEN error');
         throw new TokenManagerError(
@@ -489,7 +492,7 @@ export class SharedTokenManager {
 
       // Double-check if another process already refreshed the token (unless force refresh is requested)
       // Skip the time-based throttling since we're already in a locked refresh operation
-      await this.forceFileCheck(qwenClient);
+      await this.forceFileCheck(papertClient);
 
       // Use refreshed credentials if they're now valid (unless force refresh is requested)
       if (
@@ -497,12 +500,12 @@ export class SharedTokenManager {
         this.memoryCache.credentials &&
         this.isTokenValid(this.memoryCache.credentials)
       ) {
-        // No need to call qwenClient.setCredentials here as checkAndReloadIfNeeded already did it
+        // No need to call papertClient.setCredentials here as checkAndReloadIfNeeded already did it
         return this.memoryCache.credentials;
       }
 
       // Perform the actual token refresh
-      const response = await qwenClient.refreshAccessToken();
+      const response = await papertClient.refreshAccessToken();
 
       // Check if the token refresh is taking too long
       const totalOperationTime = Date.now() - startTime;
@@ -529,7 +532,7 @@ export class SharedTokenManager {
       }
 
       // Create updated credentials object
-      const credentials: QwenCredentials = {
+      const credentials: PapertCredentials = {
         access_token: tokenData.access_token,
         token_type: tokenData.token_type,
         refresh_token:
@@ -540,7 +543,7 @@ export class SharedTokenManager {
 
       // Update memory cache and client credentials atomically
       this.memoryCache.credentials = credentials;
-      qwenClient.setCredentials(credentials);
+      papertClient.setCredentials(credentials);
 
       // Persist to file and update modification time
       await this.saveCredentialsToFile(credentials);
@@ -600,7 +603,7 @@ export class SharedTokenManager {
    * @param credentials - The credentials to save
    */
   private async saveCredentialsToFile(
-    credentials: QwenCredentials,
+    credentials: PapertCredentials,
   ): Promise<void> {
     const filePath = this.getCredentialFilePath();
     const dirPath = path.dirname(filePath);
@@ -667,7 +670,7 @@ export class SharedTokenManager {
    * @param credentials - The credentials to validate
    * @returns true if token is valid and not expired, false otherwise
    */
-  private isTokenValid(credentials: QwenCredentials): boolean {
+  private isTokenValid(credentials: PapertCredentials): boolean {
     if (!credentials.expiry_date || !credentials.access_token) {
       return false;
     }
@@ -680,7 +683,7 @@ export class SharedTokenManager {
    * @returns The absolute path to the credentials file
    */
   private getCredentialFilePath(): string {
-    return path.join(os.homedir(), QWEN_DIR, QWEN_CREDENTIAL_FILENAME);
+    return path.join(os.homedir(), PAPERT_DIR, PAPERT_CREDENTIAL_FILENAME);
   }
 
   /**
@@ -689,7 +692,7 @@ export class SharedTokenManager {
    * @returns The absolute path to the lock file
    */
   private getLockFilePath(): string {
-    return path.join(os.homedir(), QWEN_DIR, QWEN_LOCK_FILENAME);
+    return path.join(os.homedir(), PAPERT_DIR, PAPERT_LOCK_FILENAME);
   }
 
   /**
@@ -790,7 +793,7 @@ export class SharedTokenManager {
    * @param lastCheck - Last check timestamp (optional, defaults to current time)
    */
   private updateCacheState(
-    credentials: QwenCredentials | null,
+    credentials: PapertCredentials | null,
     fileModTime: number,
     lastCheck?: number,
   ): void {
@@ -815,7 +818,7 @@ export class SharedTokenManager {
    *
    * @returns The currently cached credentials or null
    */
-  getCurrentCredentials(): QwenCredentials | null {
+  getCurrentCredentials(): PapertCredentials | null {
     return this.memoryCache.credentials;
   }
 

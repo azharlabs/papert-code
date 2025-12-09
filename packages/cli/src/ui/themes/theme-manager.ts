@@ -15,8 +15,8 @@ import { DefaultLight } from './default-light.js';
 import { DefaultDark } from './default.js';
 import { ShadesOfPurple } from './shades-of-purple.js';
 import { XCode } from './xcode.js';
-import { QwenLight } from './qwen-light.js';
-import { QwenDark } from './qwen-dark.js';
+import { PapertLight } from './papert-light.js';
+import { PapertDark } from './papert-dark.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -34,7 +34,7 @@ export interface ThemeDisplay {
   isCustom?: boolean;
 }
 
-export const DEFAULT_THEME: Theme = QwenDark;
+export const DEFAULT_THEME: Theme = PapertDark;
 
 class ThemeManager {
   private readonly availableThemes: Theme[];
@@ -52,8 +52,8 @@ class ThemeManager {
       GitHubDark,
       GitHubLight,
       GoogleCode,
-      QwenLight,
-      QwenDark,
+      PapertLight,
+      PapertDark,
       ShadesOfPurple,
       XCode,
       ANSI,
@@ -192,12 +192,12 @@ class ThemeManager {
       }),
     );
 
-    // Separate Qwen themes
-    const qwenThemes = builtInThemes.filter(
-      (theme) => theme.name === QwenLight.name || theme.name === QwenDark.name,
+    // Separate Papert themes
+    const papertThemes = builtInThemes.filter(
+      (theme) => theme.name === PapertLight.name || theme.name === PapertDark.name,
     );
     const otherBuiltInThemes = builtInThemes.filter(
-      (theme) => theme.name !== QwenLight.name && theme.name !== QwenDark.name,
+      (theme) => theme.name !== PapertLight.name && theme.name !== PapertDark.name,
     );
 
     // Sort other themes by type and then name
@@ -226,8 +226,8 @@ class ThemeManager {
       },
     );
 
-    // Combine Qwen themes first, then sorted others
-    return [...qwenThemes, ...sortedOtherThemes];
+    // Combine Papert themes first, then sorted others
+    return [...papertThemes, ...sortedOtherThemes];
   }
 
   /**
@@ -262,7 +262,7 @@ class ThemeManager {
       if (!canonicalPath.startsWith(homeDir)) {
         console.warn(
           `Theme file at "${themePath}" is outside your home directory. ` +
-            `Only load themes from trusted sources.`,
+          `Only load themes from trusted sources.`,
         );
         return undefined;
       }

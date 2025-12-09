@@ -17,8 +17,7 @@ import type {
 } from './types.js';
 
 export class DashScopeOpenAICompatibleProvider
-  implements OpenAICompatibleProvider
-{
+  implements OpenAICompatibleProvider {
   private contentGeneratorConfig: ContentGeneratorConfig;
   private cliConfig: Config;
 
@@ -36,7 +35,7 @@ export class DashScopeOpenAICompatibleProvider
     const authType = contentGeneratorConfig.authType;
     const baseUrl = contentGeneratorConfig.baseUrl;
     return (
-      authType === AuthType.QWEN_OAUTH ||
+      authType === AuthType.PAPERT_OAUTH ||
       baseUrl === 'https://dashscope.aliyuncs.com/compatible-mode/v1' ||
       baseUrl === 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
     );
@@ -44,7 +43,7 @@ export class DashScopeOpenAICompatibleProvider
 
   buildHeaders(): Record<string, string | undefined> {
     const version = this.cliConfig.getCliVersion() || 'unknown';
-    const userAgent = `QwenCode/${version} (${process.platform}; ${process.arch})`;
+    const userAgent = `PapertCode/${version} (${process.platform}; ${process.arch})`;
     const { authType } = this.contentGeneratorConfig;
     return {
       'User-Agent': userAgent,
@@ -157,25 +156,25 @@ export class DashScopeOpenAICompatibleProvider
       messages.length === 0
         ? messages
         : messages.map((message, index) => {
-            const shouldAddCacheControl = Boolean(
-              (index === systemIndex && systemIndex !== -1) ||
-                (index === lastIndex && cacheControl === 'all'),
-            );
+          const shouldAddCacheControl = Boolean(
+            (index === systemIndex && systemIndex !== -1) ||
+            (index === lastIndex && cacheControl === 'all'),
+          );
 
-            if (
-              !shouldAddCacheControl ||
-              !('content' in message) ||
-              message.content === null ||
-              message.content === undefined
-            ) {
-              return message;
-            }
+          if (
+            !shouldAddCacheControl ||
+            !('content' in message) ||
+            message.content === null ||
+            message.content === undefined
+          ) {
+            return message;
+          }
 
-            return {
-              ...message,
-              content: this.addCacheControlToContent(message.content),
-            } as OpenAI.Chat.ChatCompletionMessageParam;
-          });
+          return {
+            ...message,
+            content: this.addCacheControlToContent(message.content),
+          } as OpenAI.Chat.ChatCompletionMessageParam;
+        });
 
     const updatedTools =
       cacheControl === 'all' && request.tools?.length
@@ -282,11 +281,11 @@ export class DashScopeOpenAICompatibleProvider
       return true;
     }
 
-    if (normalized.startsWith('qwen-vl')) {
+    if (normalized.startsWith('papert-vl')) {
       return true;
     }
 
-    if (normalized.startsWith('qwen3-vl-plus')) {
+    if (normalized.startsWith('papert3-vl-plus')) {
       return true;
     }
 

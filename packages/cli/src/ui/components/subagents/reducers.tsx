@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,7 +14,7 @@ import { getStepKind, getTotalSteps } from './utils.js';
 export const initialWizardState: CreationWizardState = {
   currentStep: WIZARD_STEPS.LOCATION_SELECTION,
   location: 'project',
-  generationMethod: 'qwen',
+  generationMethod: 'papert',
   userDescription: '',
   generatedSystemPrompt: '',
   generatedDescription: '',

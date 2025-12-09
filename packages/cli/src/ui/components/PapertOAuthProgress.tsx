@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -15,17 +15,17 @@ import type { DeviceAuthorizationData } from '@papert-code/papert-code-core';
 import { useKeypress } from '../hooks/useKeypress.js';
 import { t } from '../../i18n/index.js';
 
-interface QwenOAuthProgressProps {
+interface PapertOAuthProgressProps {
   onTimeout: () => void;
   onCancel: () => void;
   deviceAuth?: DeviceAuthorizationData;
   authStatus?:
-    | 'idle'
-    | 'polling'
-    | 'success'
-    | 'error'
-    | 'timeout'
-    | 'rate_limit';
+  | 'idle'
+  | 'polling'
+  | 'success'
+  | 'error'
+  | 'timeout'
+  | 'rate_limit';
   authMessage?: string | null;
 }
 
@@ -53,7 +53,7 @@ function QrCodeDisplay({
       width="100%"
     >
       <Text bold color={Colors.AccentBlue}>
-        {t('Qwen OAuth Authentication')}
+        {t('Papert OAuth Authentication')}
       </Text>
 
       <Box marginTop={1}>
@@ -121,13 +121,13 @@ function StatusDisplay({
   );
 }
 
-export function QwenOAuthProgress({
+export function PapertOAuthProgress({
   onTimeout,
   onCancel,
   deviceAuth,
   authStatus,
   authMessage,
-}: QwenOAuthProgressProps): React.JSX.Element {
+}: PapertOAuthProgressProps): React.JSX.Element {
   const defaultTimeout = deviceAuth?.expires_in || 300; // Default 5 minutes
   const [timeRemaining, setTimeRemaining] = useState<number>(defaultTimeout);
   const [dots, setDots] = useState<string>('');
@@ -219,7 +219,7 @@ export function QwenOAuthProgress({
         width="100%"
       >
         <Text bold color={Colors.AccentRed}>
-          {t('Qwen OAuth Authentication Timeout')}
+          {t('Papert OAuth Authentication Timeout')}
         </Text>
 
         <Box marginTop={1}>
@@ -253,7 +253,7 @@ export function QwenOAuthProgress({
         width="100%"
       >
         <Text bold color={Colors.AccentRed}>
-          Qwen OAuth Authentication Error
+          Papert OAuth Authentication Error
         </Text>
 
         <Box marginTop={1}>
@@ -285,7 +285,7 @@ export function QwenOAuthProgress({
         <Box>
           <Text>
             <Spinner type="dots" />
-            {t('Waiting for Qwen OAuth authentication...')}
+            {t('Waiting for Papert OAuth authentication...')}
           </Text>
         </Box>
         <Box marginTop={1} justifyContent="space-between">

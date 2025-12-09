@@ -189,13 +189,13 @@ class GrepToolInvocation extends BaseToolInvocation<
       rgArgs.push('--no-ignore-vcs');
     }
 
-    if (filteringOptions.respectQwenIgnore) {
-      const qwenIgnorePath = path.join(
+    if (filteringOptions.respectPapertIgnore) {
+      const papertIgnorePath = path.join(
         this.config.getTargetDir(),
         '.papertignore',
       );
-      if (fs.existsSync(qwenIgnorePath)) {
-        rgArgs.push('--ignore-file', qwenIgnorePath);
+      if (fs.existsSync(papertIgnorePath)) {
+        rgArgs.push('--ignore-file', papertIgnorePath);
       }
     }
 
@@ -221,9 +221,9 @@ class GrepToolInvocation extends BaseToolInvocation<
       respectGitIgnore:
         options?.respectGitIgnore ??
         DEFAULT_FILE_FILTERING_OPTIONS.respectGitIgnore,
-      respectQwenIgnore:
-        options?.respectQwenIgnore ??
-        DEFAULT_FILE_FILTERING_OPTIONS.respectQwenIgnore,
+      respectPapertIgnore:
+        options?.respectPapertIgnore ??
+        DEFAULT_FILE_FILTERING_OPTIONS.respectPapertIgnore,
     };
   }
 

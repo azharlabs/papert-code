@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Papert Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -290,7 +290,7 @@ describe('extractUsageFromGeminiClient', () => {
         throw new Error('Test error');
       }),
     };
-    const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => { });
     const result = extractUsageFromGeminiClient(client);
     expect(result).toBeUndefined();
     expect(consoleSpy).toHaveBeenCalled();
@@ -531,7 +531,7 @@ describe('buildSystemMessage', () => {
       model: 'test-model',
       permission_mode: 'auto',
       slash_commands: ['commit', 'help', 'memory'],
-      qwen_code_version: '1.0.0',
+      papert_code_version: '1.0.0',
       agents: [],
     });
   });
@@ -578,7 +578,7 @@ describe('buildSystemMessage', () => {
       'auto' as PermissionMode,
     );
 
-    expect(result.qwen_code_version).toBe('unknown');
+    expect(result.papert_code_version).toBe('unknown');
   });
 });
 

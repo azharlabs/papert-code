@@ -12,7 +12,7 @@ import { DescriptiveRadioButtonSelect } from './shared/DescriptiveRadioButtonSel
 import { ConfigContext } from '../contexts/ConfigContext.js';
 import type { Config } from '@papert-code/papert-code-core';
 import {
-  AVAILABLE_MODELS_QWEN,
+  AVAILABLE_MODELS_PAPERT,
   MAINLINE_CODER,
   MAINLINE_VLM,
 } from '../models/availableModels.js';
@@ -38,23 +38,23 @@ const renderComponent = (
 
   const mockConfig = contextValue
     ? ({
-        // --- Functions used by ModelDialog ---
-        getModel: vi.fn(() => MAINLINE_CODER),
-        setModel: vi.fn(),
-        getAuthType: vi.fn(() => 'qwen-oauth'),
+      // --- Functions used by ModelDialog ---
+      getModel: vi.fn(() => MAINLINE_CODER),
+      setModel: vi.fn(),
+      getAuthType: vi.fn(() => 'papert-oauth'),
 
-        // --- Functions used by ClearcutLogger ---
-        getUsageStatisticsEnabled: vi.fn(() => true),
-        getSessionId: vi.fn(() => 'mock-session-id'),
-        getDebugMode: vi.fn(() => false),
-        getContentGeneratorConfig: vi.fn(() => ({ authType: 'mock' })),
-        getUseSmartEdit: vi.fn(() => false),
-        getUseModelRouter: vi.fn(() => false),
-        getProxy: vi.fn(() => undefined),
+      // --- Functions used by ClearcutLogger ---
+      getUsageStatisticsEnabled: vi.fn(() => true),
+      getSessionId: vi.fn(() => 'mock-session-id'),
+      getDebugMode: vi.fn(() => false),
+      getContentGeneratorConfig: vi.fn(() => ({ authType: 'mock' })),
+      getUseSmartEdit: vi.fn(() => false),
+      getUseModelRouter: vi.fn(() => false),
+      getProxy: vi.fn(() => undefined),
 
-        // --- Spread test-specific overrides ---
-        ...contextValue,
-      } as unknown as Config)
+      // --- Spread test-specific overrides ---
+      ...contextValue,
+    } as unknown as Config)
     : undefined;
 
   const renderResult = render(
@@ -90,7 +90,7 @@ describe('<ModelDialog />', () => {
     expect(mockedSelect).toHaveBeenCalledTimes(1);
 
     const props = mockedSelect.mock.calls[0][0];
-    expect(props.items).toHaveLength(AVAILABLE_MODELS_QWEN.length);
+    expect(props.items).toHaveLength(AVAILABLE_MODELS_PAPERT.length);
     expect(props.items[0].value).toBe(MAINLINE_CODER);
     expect(props.items[1].value).toBe(MAINLINE_VLM);
     expect(props.showNumbers).toBe(true);
@@ -192,7 +192,7 @@ describe('<ModelDialog />', () => {
 
   it('updates initialIndex when config context changes', () => {
     const mockGetModel = vi.fn(() => MAINLINE_CODER);
-    const mockGetAuthType = vi.fn(() => 'qwen-oauth');
+    const mockGetAuthType = vi.fn(() => 'papert-oauth');
     const { rerender } = render(
       <ConfigContext.Provider
         value={

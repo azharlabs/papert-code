@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -46,8 +46,8 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
       timeout: 60000,
       maxRetries: 2,
-      model: 'qwen-max',
-      authType: AuthType.QWEN_OAUTH,
+      model: 'papert-max',
+      authType: AuthType.PAPERT_OAUTH,
     } as ContentGeneratorConfig;
 
     // Mock Config
@@ -72,9 +72,9 @@ describe('DashScopeOpenAICompatibleProvider', () => {
   });
 
   describe('isDashScopeProvider', () => {
-    it('should return true for QWEN_OAUTH auth type', () => {
+    it('should return true for PAPERT_OAUTH auth type', () => {
       const config = {
-        authType: AuthType.QWEN_OAUTH,
+        authType: AuthType.PAPERT_OAUTH,
         baseUrl: 'https://api.openai.com/v1',
       } as ContentGeneratorConfig;
 
@@ -135,10 +135,10 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       const headers = provider.buildHeaders();
 
       expect(headers).toEqual({
-        'User-Agent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
+        'User-Agent': `PapertCode/1.0.0 (${process.platform}; ${process.arch})`,
         'X-DashScope-CacheControl': 'enable',
-        'X-DashScope-UserAgent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
-        'X-DashScope-AuthType': AuthType.QWEN_OAUTH,
+        'X-DashScope-UserAgent': `PapertCode/1.0.0 (${process.platform}; ${process.arch})`,
+        'X-DashScope-AuthType': AuthType.PAPERT_OAUTH,
       });
     });
 
@@ -152,10 +152,10 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       const headers = provider.buildHeaders();
 
       expect(headers['User-Agent']).toBe(
-        `QwenCode/unknown (${process.platform}; ${process.arch})`,
+        `PapertCode/unknown (${process.platform}; ${process.arch})`,
       );
       expect(headers['X-DashScope-UserAgent']).toBe(
-        `QwenCode/unknown (${process.platform}; ${process.arch})`,
+        `PapertCode/unknown (${process.platform}; ${process.arch})`,
       );
     });
   });
@@ -170,10 +170,10 @@ describe('DashScopeOpenAICompatibleProvider', () => {
         timeout: 60000,
         maxRetries: 2,
         defaultHeaders: {
-          'User-Agent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
+          'User-Agent': `PapertCode/1.0.0 (${process.platform}; ${process.arch})`,
           'X-DashScope-CacheControl': 'enable',
-          'X-DashScope-UserAgent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
-          'X-DashScope-AuthType': AuthType.QWEN_OAUTH,
+          'X-DashScope-UserAgent': `PapertCode/1.0.0 (${process.platform}; ${process.arch})`,
+          'X-DashScope-AuthType': AuthType.PAPERT_OAUTH,
         },
       });
 
@@ -229,7 +229,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
   describe('buildRequest', () => {
     const baseRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-      model: 'qwen-max',
+      model: 'papert-max',
       messages: [
         { role: 'system', content: 'You are a helpful assistant.' },
         { role: 'user', content: 'Hello!' },
@@ -396,18 +396,18 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should not add cache control to tool messages when request.tools is undefined', () => {
       const requestWithoutConfiguredTools: OpenAI.Chat.ChatCompletionCreateParams =
-        {
-          ...baseRequest,
-          messages: [
-            { role: 'system', content: 'You are a helpful assistant.' },
-            {
-              role: 'tool',
-              content: 'Tool output',
-              tool_call_id: 'call_1',
-            },
-            { role: 'user', content: 'Hello!' },
-          ],
-        };
+      {
+        ...baseRequest,
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant.' },
+          {
+            role: 'tool',
+            content: 'Tool output',
+            tool_call_id: 'call_1',
+          },
+          { role: 'user', content: 'Hello!' },
+        ],
+      };
 
       const result = provider.buildRequest(
         requestWithoutConfiguredTools,
@@ -446,7 +446,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
       const result = provider.buildRequest(complexRequest, 'test-prompt-id');
 
-      expect(result.model).toBe('qwen-max');
+      expect(result.model).toBe('papert-max');
       expect(result.temperature).toBe(0.8);
       expect(result.max_tokens).toBe(1000);
       expect(result.top_p).toBe(0.9);
@@ -462,7 +462,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
           typeof mockCliConfig.getContentGeneratorConfig
         >
       ).mockReturnValue({
-        model: 'qwen-max',
+        model: 'papert-max',
         disableCacheControl: true,
       });
 
@@ -475,7 +475,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle messages with array content for streaming requests', () => {
       const requestWithArrayContent: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: 'papert-max',
         stream: true, // This will trigger cache control on last message
         messages: [
           {
@@ -507,7 +507,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle empty messages array', () => {
       const emptyRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: 'papert-max',
         messages: [],
       };
 
@@ -519,7 +519,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle messages without content for streaming requests', () => {
       const requestWithoutContent: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: 'papert-max',
         stream: true, // This will trigger cache control on last message
         messages: [
           { role: 'assistant', content: null },
@@ -547,7 +547,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should add cache control to last text item in mixed content for streaming requests', () => {
       const requestWithMixedContent: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: 'papert-max',
         stream: true, // This will trigger cache control on last message
         messages: [
           {
@@ -589,7 +589,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should add empty text item with cache control if last item is not text for streaming requests', () => {
       const requestWithNonTextLast: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: 'papert-max',
         stream: true, // This will trigger cache control on last message
         messages: [
           {
@@ -626,7 +626,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
   describe('cache control edge cases', () => {
     it('should handle request with only system message', () => {
       const systemOnlyRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: 'papert-max',
         messages: [{ role: 'system', content: 'System prompt' }],
       };
 
@@ -644,7 +644,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle request without system message for streaming requests', () => {
       const noSystemRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: 'papert-max',
         stream: true, // This will trigger cache control on last message
         messages: [
           { role: 'user', content: 'First message' },
@@ -671,7 +671,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle empty content array for streaming requests', () => {
       const emptyContentRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: 'papert-max',
         stream: true, // This will trigger cache control on last message
         messages: [
           {
@@ -699,9 +699,9 @@ describe('DashScopeOpenAICompatibleProvider', () => {
   });
 
   describe('output token limits', () => {
-    it('should limit max_tokens when it exceeds model limit for qwen3-coder-plus', () => {
+    it('should limit max_tokens when it exceeds model limit for papert3-coder-plus', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-coder-plus',
+        model: 'papert3-coder-plus',
         messages: [{ role: 'user', content: 'Hello' }],
         max_tokens: 100000, // Exceeds the 65536 limit
       };
@@ -711,9 +711,9 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       expect(result.max_tokens).toBe(65536); // Should be limited to model's output limit
     });
 
-    it('should limit max_tokens when it exceeds model limit for qwen-vl-max-latest', () => {
+    it('should limit max_tokens when it exceeds model limit for papert-vl-max-latest', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-vl-max-latest',
+        model: 'papert-vl-max-latest',
         messages: [{ role: 'user', content: 'Hello' }],
         max_tokens: 20000, // Exceeds the 8192 limit
       };
@@ -725,7 +725,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should not modify max_tokens when it is within model limit', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-coder-plus',
+        model: 'papert3-coder-plus',
         messages: [{ role: 'user', content: 'Hello' }],
         max_tokens: 1000, // Within the 65536 limit
       };
@@ -737,7 +737,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should not add max_tokens when not present in request', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-coder-plus',
+        model: 'papert3-coder-plus',
         messages: [{ role: 'user', content: 'Hello' }],
         // No max_tokens parameter
       };
@@ -749,7 +749,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle null max_tokens parameter', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-coder-plus',
+        model: 'papert3-coder-plus',
         messages: [{ role: 'user', content: 'Hello' }],
         max_tokens: null,
       };
@@ -773,7 +773,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should preserve other request parameters when limiting max_tokens', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-coder-plus',
+        model: 'papert3-coder-plus',
         messages: [{ role: 'user', content: 'Hello' }],
         max_tokens: 100000, // Will be limited
         temperature: 0.8,
@@ -800,7 +800,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should work with vision models and output token limits', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-vl-max-latest',
+        model: 'papert-vl-max-latest',
         messages: [
           {
             role: 'user',
@@ -825,9 +825,9 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       ).toBe(true); // Vision-specific parameter should be preserved
     });
 
-    it('should set high resolution flag for qwen3-vl-plus', () => {
+    it('should set high resolution flag for papert3-vl-plus', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-vl-plus',
+        model: 'papert3-vl-plus',
         messages: [
           {
             role: 'user',
@@ -881,7 +881,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle streaming requests with output token limits', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-coder-plus',
+        model: 'papert3-coder-plus',
         messages: [{ role: 'user', content: 'Hello' }],
         max_tokens: 100000, // Exceeds the 65536 limit
         stream: true,

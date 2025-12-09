@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -25,7 +25,7 @@ export class EnhancedErrorHandler implements ErrorHandler {
       error: unknown,
       request: GenerateContentParameters,
     ) => boolean = () => false,
-  ) {}
+  ) { }
 
   handle(
     error: unknown,
@@ -119,9 +119,9 @@ export class EnhancedErrorHandler implements ErrorHandler {
 
     const streamingSpecificTips = context.isStreaming
       ? [
-          '- Check network stability for streaming connections',
-          '- Consider using non-streaming mode for very long inputs',
-        ]
+        '- Check network stability for streaming connections',
+        '- Consider using non-streaming mode for very long inputs',
+      ]
       : ['- Consider using streaming mode for long responses'];
 
     return `${baseTitle}\n${[...baseTips, ...streamingSpecificTips].join('\n')}`;

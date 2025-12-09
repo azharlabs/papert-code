@@ -91,7 +91,7 @@ import {
   DEFAULT_FILE_FILTERING_OPTIONS,
   DEFAULT_MEMORY_FILE_FILTERING_OPTIONS,
 } from './constants.js';
-import { DEFAULT_QWEN_EMBEDDING_MODEL, DEFAULT_QWEN_MODEL } from './models.js';
+import { DEFAULT_PAPERT_EMBEDDING_MODEL, DEFAULT_PAPERT_MODEL } from './models.js';
 import { Storage } from './storage.js';
 import { DEFAULT_DASHSCOPE_BASE_URL } from '../core/openaiContentGenerator/constants.js';
 import { ChatRecordingService } from '../services/chatRecordingService.js';
@@ -241,7 +241,7 @@ export class MCPServerConfig {
     readonly targetAudience?: string,
     /* targetServiceAccount format: <service-account-name>@<project-num>.iam.gserviceaccount.com */
     readonly targetServiceAccount?: string,
-  ) {}
+  ) { }
 }
 
 export enum AuthProviderType {
@@ -283,7 +283,7 @@ export interface ConfigParameters {
   usageStatisticsEnabled?: boolean;
   fileFiltering?: {
     respectGitIgnore?: boolean;
-    respectQwenIgnore?: boolean;
+    respectPapertIgnore?: boolean;
     enableRecursiveFileSearch?: boolean;
     disableFuzzySearch?: boolean;
   };
@@ -403,7 +403,7 @@ export class Config {
   private baseLlmClient!: BaseLlmClient;
   private readonly fileFiltering: {
     respectGitIgnore: boolean;
-    respectQwenIgnore: boolean;
+    respectPapertIgnore: boolean;
     enableRecursiveFileSearch: boolean;
     disableFuzzySearch: boolean;
   };
@@ -472,7 +472,7 @@ export class Config {
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId ?? randomUUID();
     this.sessionData = params.sessionData;
-    this.embeddingModel = params.embeddingModel ?? DEFAULT_QWEN_EMBEDDING_MODEL;
+    this.embeddingModel = params.embeddingModel ?? DEFAULT_PAPERT_EMBEDDING_MODEL;
     this.fileSystemService = new StandardFileSystemService();
     this.sandbox = params.sandbox;
     this.targetDir = path.resolve(params.targetDir);
@@ -514,14 +514,14 @@ export class Config {
     };
     this.gitCoAuthor = {
       enabled: params.gitCoAuthor?.enabled ?? true,
-      name: params.gitCoAuthor?.name ?? 'Qwen-Coder',
+      name: params.gitCoAuthor?.name ?? 'Papert-Coder',
       email: params.gitCoAuthor?.email ?? 'papert-coder@alibabacloud.com',
     };
     this.usageStatisticsEnabled = params.usageStatisticsEnabled ?? true;
 
     this.fileFiltering = {
       respectGitIgnore: params.fileFiltering?.respectGitIgnore ?? true,
-      respectQwenIgnore: params.fileFiltering?.respectQwenIgnore ?? true,
+      respectPapertIgnore: params.fileFiltering?.respectPapertIgnore ?? true,
       enableRecursiveFileSearch:
         params.fileFiltering?.enableRecursiveFileSearch ?? true,
       disableFuzzySearch: params.fileFiltering?.disableFuzzySearch ?? false,
@@ -742,7 +742,7 @@ export class Config {
   }
 
   getModel(): string {
-    return this.contentGeneratorConfig?.model || DEFAULT_QWEN_MODEL;
+    return this.contentGeneratorConfig?.model || DEFAULT_PAPERT_MODEL;
   }
 
   async setModel(
@@ -1049,14 +1049,14 @@ export class Config {
   getFileFilteringRespectGitIgnore(): boolean {
     return this.fileFiltering.respectGitIgnore;
   }
-  getFileFilteringRespectQwenIgnore(): boolean {
-    return this.fileFiltering.respectQwenIgnore;
+  getFileFilteringRespectPapertIgnore(): boolean {
+    return this.fileFiltering.respectPapertIgnore;
   }
 
   getFileFilteringOptions(): FileFilteringOptions {
     return {
       respectGitIgnore: this.fileFiltering.respectGitIgnore,
-      respectQwenIgnore: this.fileFiltering.respectQwenIgnore,
+      respectPapertIgnore: this.fileFiltering.respectPapertIgnore,
     };
   }
 
@@ -1275,8 +1275,8 @@ export class Config {
     return Math.min(
       // Estimate remaining context window in characters (1 token ~= 4 chars).
       4 *
-        (tokenLimit(this.getModel()) -
-          uiTelemetryService.getLastPromptTokenCount()),
+      (tokenLimit(this.getModel()) -
+        uiTelemetryService.getLastPromptTokenCount()),
       this.truncateToolOutputThreshold,
     );
   }
@@ -1370,8 +1370,8 @@ export class Config {
         // Log warning and skip this tool instead of crashing
         console.warn(
           `[Config] Skipping tool registration: ${className} is missing static Name property. ` +
-            `Tools must define a static Name property to be registered. ` +
-            `Location: config.ts:registerCoreTool`,
+          `Tools must define a static Name property to be registered. ` +
+          `Location: config.ts:registerCoreTool`,
         );
         return;
       }
@@ -1433,7 +1433,7 @@ export class Config {
     !this.sdkMode && registerCoreTool(ExitPlanModeTool, this);
     registerCoreTool(WebFetchTool, this);
     // Conditionally register web search tool if web search provider is configured
-    // buildWebSearchConfig ensures qwen-oauth users get dashscope provider, so
+    // buildWebSearchConfig ensures papert-oauth users get dashscope provider, so
     // if tool is registered, config must exist
     if (this.getWebSearchConfig()) {
       registerCoreTool(WebSearchTool, this);

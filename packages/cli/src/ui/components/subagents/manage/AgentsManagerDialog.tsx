@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -165,8 +165,8 @@ export function AgentsManagerDialog({
     // Use agent color for the Agent Viewer header
     const headerColor =
       currentStep === MANAGEMENT_STEPS.AGENT_VIEWER &&
-      selectedAgent &&
-      shouldShowColor(selectedAgent.color)
+        selectedAgent &&
+        shouldShowColor(selectedAgent.color)
         ? getColorForDisplay(selectedAgent.color)
         : undefined;
 

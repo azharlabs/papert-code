@@ -33,7 +33,7 @@ export interface LSToolParams {
    */
   file_filtering_options?: {
     respect_git_ignore?: boolean;
-    respect_qwen_ignore?: boolean;
+    respect_papert_ignore?: boolean;
   };
 }
 
@@ -169,16 +169,16 @@ class LSToolInvocation extends BaseToolInvocation<LSToolParams, ToolResult> {
       );
 
       const fileDiscovery = this.config.getFileService();
-      const { filteredPaths, gitIgnoredCount, qwenIgnoredCount } =
+      const { filteredPaths, gitIgnoredCount, papertIgnoredCount } =
         fileDiscovery.filterFilesWithReport(relativePaths, {
           respectGitIgnore:
             this.params.file_filtering_options?.respect_git_ignore ??
             this.config.getFileFilteringOptions().respectGitIgnore ??
             DEFAULT_FILE_FILTERING_OPTIONS.respectGitIgnore,
-          respectQwenIgnore:
-            this.params.file_filtering_options?.respect_qwen_ignore ??
-            this.config.getFileFilteringOptions().respectQwenIgnore ??
-            DEFAULT_FILE_FILTERING_OPTIONS.respectQwenIgnore,
+          respectPapertIgnore:
+            this.params.file_filtering_options?.respect_papert_ignore ??
+            this.config.getFileFilteringOptions().respectPapertIgnore ??
+            DEFAULT_FILE_FILTERING_OPTIONS.respectPapertIgnore,
         });
 
       const entries = [];
@@ -222,8 +222,8 @@ class LSToolInvocation extends BaseToolInvocation<LSToolParams, ToolResult> {
       if (gitIgnoredCount > 0) {
         ignoredMessages.push(`${gitIgnoredCount} git-ignored`);
       }
-      if (qwenIgnoredCount > 0) {
-        ignoredMessages.push(`${qwenIgnoredCount} qwen-ignored`);
+      if (papertIgnoredCount > 0) {
+        ignoredMessages.push(`${papertIgnoredCount} papert-ignored`);
       }
       if (ignoredMessages.length > 0) {
         resultMessage += `\n\n(${ignoredMessages.join(', ')})`;
@@ -285,7 +285,7 @@ export class LSTool extends BaseDeclarativeTool<LSToolParams, ToolResult> {
                   'Optional: Whether to respect .gitignore patterns when listing files. Only available in git repositories. Defaults to true.',
                 type: 'boolean',
               },
-              respect_qwen_ignore: {
+              respect_papert_ignore: {
                 description:
                   'Optional: Whether to respect .papertignore patterns when listing files. Defaults to true.',
                 type: 'boolean',

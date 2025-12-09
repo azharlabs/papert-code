@@ -26,7 +26,7 @@ describe('bugCommand', () => {
       nodeVersion: 'v20.0.0',
       npmVersion: '10.0.0',
       sandboxEnv: 'test',
-      modelVersion: 'qwen3-coder-plus',
+      modelVersion: 'papert3-coder-plus',
       selectedAuthType: '',
       ideClient: 'VSCode',
       sessionId: 'test-session-id',
@@ -36,7 +36,7 @@ describe('bugCommand', () => {
           ? GIT_COMMIT_INFO
           : undefined,
     });
-    vi.stubEnv('SANDBOX', 'qwen-test');
+    vi.stubEnv('SANDBOX', 'papert-test');
   });
 
   afterEach(() => {
@@ -62,7 +62,7 @@ describe('bugCommand', () => {
         : '';
     const expectedInfo = `
 * **CLI Version:** 0.1.0
-${gitCommitLine}* **Model:** qwen3-coder-plus
+${gitCommitLine}* **Model:** papert3-coder-plus
 * **Sandbox:** test
 * **OS Platform:** test-platform
 * **OS Arch:** x64
@@ -101,7 +101,7 @@ ${gitCommitLine}* **Model:** qwen3-coder-plus
         : '';
     const expectedInfo = `
 * **CLI Version:** 0.1.0
-${gitCommitLine}* **Model:** qwen3-coder-plus
+${gitCommitLine}* **Model:** papert3-coder-plus
 * **Sandbox:** test
 * **OS Platform:** test-platform
 * **OS Arch:** x64
@@ -129,7 +129,7 @@ ${gitCommitLine}* **Model:** qwen3-coder-plus
       nodeVersion: 'v20.0.0',
       npmVersion: '10.0.0',
       sandboxEnv: 'test',
-      modelVersion: 'qwen3-coder-plus',
+      modelVersion: 'papert3-coder-plus',
       selectedAuthType: AuthType.USE_OPENAI,
       ideClient: 'VSCode',
       sessionId: 'test-session-id',
@@ -158,7 +158,7 @@ ${gitCommitLine}* **Model:** qwen3-coder-plus
         : '';
     const expectedInfo = `
 * **CLI Version:** 0.1.0
-${gitCommitLine}* **Model:** qwen3-coder-plus
+${gitCommitLine}* **Model:** papert3-coder-plus
 * **Sandbox:** test
 * **OS Platform:** test-platform
 * **OS Arch:** x64

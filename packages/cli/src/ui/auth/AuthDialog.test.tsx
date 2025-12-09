@@ -65,7 +65,7 @@ describe('AuthDialog', () => {
   beforeEach(() => {
     originalEnv = { ...process.env };
     process.env['GEMINI_API_KEY'] = '';
-    process.env['QWEN_DEFAULT_AUTH_TYPE'] = '';
+    process.env['PAPERT_DEFAULT_AUTH_TYPE'] = '';
     vi.clearAllMocks();
   });
 
@@ -166,9 +166,9 @@ describe('AuthDialog', () => {
       expect(lastFrame()).toContain('OpenAI');
     });
 
-    it('should not show the GEMINI_API_KEY message if QWEN_DEFAULT_AUTH_TYPE is set to something else', () => {
+    it('should not show the GEMINI_API_KEY message if PAPERT_DEFAULT_AUTH_TYPE is set to something else', () => {
       process.env['GEMINI_API_KEY'] = 'foobar';
-      process.env['QWEN_DEFAULT_AUTH_TYPE'] = AuthType.LOGIN_WITH_GOOGLE;
+      process.env['PAPERT_DEFAULT_AUTH_TYPE'] = AuthType.LOGIN_WITH_GOOGLE;
 
       const settings: LoadedSettings = new LoadedSettings(
         {
@@ -210,9 +210,9 @@ describe('AuthDialog', () => {
       );
     });
 
-    it('should show the GEMINI_API_KEY message if QWEN_DEFAULT_AUTH_TYPE is set to use api key', () => {
+    it('should show the GEMINI_API_KEY message if PAPERT_DEFAULT_AUTH_TYPE is set to use api key', () => {
       process.env['GEMINI_API_KEY'] = 'foobar';
-      process.env['QWEN_DEFAULT_AUTH_TYPE'] = AuthType.USE_GEMINI;
+      process.env['PAPERT_DEFAULT_AUTH_TYPE'] = AuthType.USE_GEMINI;
 
       const settings: LoadedSettings = new LoadedSettings(
         {
@@ -255,9 +255,9 @@ describe('AuthDialog', () => {
     });
   });
 
-  describe('QWEN_DEFAULT_AUTH_TYPE environment variable', () => {
-    it('should select the auth type specified by QWEN_DEFAULT_AUTH_TYPE', () => {
-      process.env['QWEN_DEFAULT_AUTH_TYPE'] = AuthType.USE_OPENAI;
+  describe('PAPERT_DEFAULT_AUTH_TYPE environment variable', () => {
+    it('should select the auth type specified by PAPERT_DEFAULT_AUTH_TYPE', () => {
+      process.env['PAPERT_DEFAULT_AUTH_TYPE'] = AuthType.USE_OPENAI;
 
       const settings: LoadedSettings = new LoadedSettings(
         {
@@ -298,7 +298,7 @@ describe('AuthDialog', () => {
       expect(lastFrame()).toContain('● 1. OpenAI');
     });
 
-    it('should fall back to default if QWEN_DEFAULT_AUTH_TYPE is not set', () => {
+    it('should fall back to default if PAPERT_DEFAULT_AUTH_TYPE is not set', () => {
       const settings: LoadedSettings = new LoadedSettings(
         {
           settings: {
@@ -338,8 +338,8 @@ describe('AuthDialog', () => {
       expect(lastFrame()).toContain('● 1. OpenAI (compatible APIs)');
     });
 
-    it('should show an error and fall back to default if QWEN_DEFAULT_AUTH_TYPE is invalid', () => {
-      process.env['QWEN_DEFAULT_AUTH_TYPE'] = 'invalid-auth-type';
+    it('should show an error and fall back to default if PAPERT_DEFAULT_AUTH_TYPE is invalid', () => {
+      process.env['PAPERT_DEFAULT_AUTH_TYPE'] = 'invalid-auth-type';
 
       const settings: LoadedSettings = new LoadedSettings(
         {
@@ -376,7 +376,7 @@ describe('AuthDialog', () => {
 
       const { lastFrame } = renderAuthDialog(settings);
 
-      // Since the auth dialog doesn't show QWEN_DEFAULT_AUTH_TYPE errors anymore,
+      // Since the auth dialog doesn't show PAPERT_DEFAULT_AUTH_TYPE errors anymore,
       // it will just show the default OpenAI option
       expect(lastFrame()).toContain('● 1. OpenAI (compatible APIs)');
     });

@@ -31,7 +31,7 @@ export const AboutBox: React.FC<AboutBoxProps> = (props) => {
     >
       <Box marginBottom={1}>
         <Text bold color={theme.text.accent}>
-          {t('About Qwen Code')}
+          {t('About Papert Code')}
         </Text>
       </Box>
       {fields.map((field: SystemInfoField) => (

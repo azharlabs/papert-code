@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Papert Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -19,8 +19,7 @@ import {
  */
 export class JsonOutputAdapter
   extends BaseJsonOutputAdapter
-  implements JsonOutputAdapterInterface
-{
+  implements JsonOutputAdapterInterface {
   private readonly messages: CLIMessage[] = [];
 
   constructor(config: Config) {

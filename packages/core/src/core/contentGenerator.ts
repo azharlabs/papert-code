@@ -14,7 +14,7 @@ import type {
 } from '@google/genai';
 import { GoogleGenAI } from '@google/genai';
 import { createCodeAssistContentGenerator } from '../code_assist/codeAssist.js';
-import { DEFAULT_QWEN_MODEL } from '../config/models.js';
+import { DEFAULT_PAPERT_MODEL } from '../config/models.js';
 import type { Config } from '../config/config.js';
 
 import type { UserTierId } from '../code_assist/types.js';
@@ -48,7 +48,7 @@ export enum AuthType {
   USE_VERTEX_AI = 'vertex-ai',
   CLOUD_SHELL = 'cloud-shell',
   USE_OPENAI = 'openai',
-  QWEN_OAUTH = 'qwen-oauth',
+  PAPERT_OAUTH = 'papert-oauth',
 }
 
 export type ContentGeneratorConfig = {
@@ -89,13 +89,13 @@ export function createContentGeneratorConfig(
     proxy: config?.getProxy(),
   };
 
-  if (authType === AuthType.QWEN_OAUTH) {
-    // For Qwen OAuth, we'll handle the API key dynamically in createContentGenerator
-    // Set a special marker to indicate this is Qwen OAuth
+  if (authType === AuthType.PAPERT_OAUTH) {
+    // For Papert OAuth, we'll handle the API key dynamically in createContentGenerator
+    // Set a special marker to indicate this is Papert OAuth
     return {
       ...newContentGeneratorConfig,
-      model: DEFAULT_QWEN_MODEL,
-      apiKey: 'QWEN_OAUTH_DYNAMIC_TOKEN',
+      model: DEFAULT_PAPERT_MODEL,
+      apiKey: 'PAPERT_OAUTH_DYNAMIC_TOKEN',
     } as ContentGeneratorConfig;
   }
 
@@ -106,13 +106,13 @@ export function createContentGeneratorConfig(
 
     return {
       ...newContentGeneratorConfig,
-      model: newContentGeneratorConfig?.model || 'qwen3-coder-plus',
+      model: newContentGeneratorConfig?.model || 'papert3-coder-plus',
     } as ContentGeneratorConfig;
   }
 
   return {
     ...newContentGeneratorConfig,
-    model: newContentGeneratorConfig?.model || DEFAULT_QWEN_MODEL,
+    model: newContentGeneratorConfig?.model || DEFAULT_PAPERT_MODEL,
   } as ContentGeneratorConfig;
 }
 
@@ -122,7 +122,7 @@ export async function createContentGenerator(
   isInitialAuth?: boolean,
 ): Promise<ContentGenerator> {
   const version = process.env['CLI_VERSION'] || process.version;
-  const userAgent = `QwenCode/${version} (${process.platform}; ${process.arch})`;
+  const userAgent = `PapertCode/${version} (${process.platform}; ${process.arch})`;
   const baseHeaders: Record<string, string> = {
     'User-Agent': userAgent,
   };
@@ -179,25 +179,25 @@ export async function createContentGenerator(
     return createOpenAIContentGenerator(config, gcConfig);
   }
 
-  if (config.authType === AuthType.QWEN_OAUTH) {
+  if (config.authType === AuthType.PAPERT_OAUTH) {
     // Import required classes dynamically
-    const { getQwenOAuthClient: getQwenOauthClient } = await import(
-      '../qwen/qwenOAuth2.js'
+    const { getPapertOAuthClient: getPapertOauthClient } = await import(
+      '../papert/papertOAuth2.js'
     );
-    const { QwenContentGenerator } = await import(
-      '../qwen/qwenContentGenerator.js'
+    const { PapertContentGenerator } = await import(
+      '../papert/papertContentGenerator.js'
     );
 
     try {
-      // Get the Qwen OAuth client (now includes integrated token management)
+      // Get the Papert OAuth client (now includes integrated token management)
       // If this is initial auth, require cached credentials to detect missing credentials
-      const qwenClient = await getQwenOauthClient(
+      const papertClient = await getPapertOauthClient(
         gcConfig,
         isInitialAuth ? { requireCachedCredentials: true } : undefined,
       );
 
       // Create the content generator with dynamic token management
-      return new QwenContentGenerator(qwenClient, config, gcConfig);
+      return new PapertContentGenerator(papertClient, config, gcConfig);
     } catch (error) {
       throw new Error(
         `${error instanceof Error ? error.message : String(error)}`,

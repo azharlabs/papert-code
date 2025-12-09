@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -252,8 +252,8 @@ export const AgentExecutionDisplay: React.FC<AgentExecutionDisplayProps> = ({
       {(data.status === 'completed' ||
         data.status === 'failed' ||
         data.status === 'cancelled') && (
-        <ResultsSection data={data} displayMode={displayMode} />
-      )}
+          <ResultsSection data={data} displayMode={displayMode} />
+        )}
 
       {/* Footer with keyboard shortcuts */}
       {footerText && (

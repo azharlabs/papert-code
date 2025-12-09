@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Code
+ * Copyright 2025 Papert Code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -76,8 +76,8 @@ function SessionPicker({
   const filteredSessions =
     filterByBranch && currentBranch
       ? sessionState.sessions.filter(
-          (session) => session.gitBranch === currentBranch,
-        )
+        (session) => session.gitBranch === currentBranch,
+      )
       : sessionState.sessions;
 
   const hasSentinel = sessionState.hasMore;
@@ -384,7 +384,7 @@ export async function showResumeSessionPicker(
   const sessionService = new SessionService(cwd);
   const hasSession = await sessionService.loadLastSession();
   if (!hasSession) {
-    console.log('No sessions found. Start a new session with `qwen`.');
+    console.log('No sessions found. Start a new session with `papert`.');
     return undefined;
   }
 

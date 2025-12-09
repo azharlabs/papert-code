@@ -2,7 +2,7 @@
 
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -384,8 +384,8 @@ async function main() {
   const coverage =
     result.stats.totalKeys > 0
       ? ((result.stats.translatedKeys / result.stats.totalKeys) * 100).toFixed(
-          1,
-        )
+        1,
+      )
       : '0.0';
   console.log(`Translation coverage: ${coverage}%\n`);
 

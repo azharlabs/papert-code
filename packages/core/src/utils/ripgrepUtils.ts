@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -114,22 +114,22 @@ export function getBuiltinRipgrep(): string | null {
 
   const vendorPath = isBundled
     ? path.join(
-        __dirname,
-        'vendor',
-        'ripgrep',
-        `${arch}-${platform}`,
-        binaryName,
-      )
+      __dirname,
+      'vendor',
+      'ripgrep',
+      `${arch}-${platform}`,
+      binaryName,
+    )
     : path.join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'vendor',
-        'ripgrep',
-        `${arch}-${platform}`,
-        binaryName,
-      );
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'vendor',
+      'ripgrep',
+      `${arch}-${platform}`,
+      binaryName,
+    );
 
   return vendorPath;
 }

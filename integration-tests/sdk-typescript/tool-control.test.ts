@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Papert Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -36,7 +36,7 @@ describe('Tool Control Parameters (E2E)', () => {
   beforeEach(async () => {
     helper = new SDKTestHelper();
     testDir = await helper.setup('tool-control', {
-      createQwenConfig: false,
+      createPapertConfig: false,
     });
   });
 

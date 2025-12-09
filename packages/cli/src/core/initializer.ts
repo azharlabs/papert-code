@@ -36,7 +36,7 @@ export async function initializeApp(
 ): Promise<InitializationResult> {
   // Initialize i18n system
   const languageSetting =
-    process.env['QWEN_CODE_LANG'] ||
+    process.env['PAPERT_CODE_LANG'] ||
     settings.merged.general?.language ||
     'auto';
   await initializeI18n(languageSetting);

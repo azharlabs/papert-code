@@ -206,7 +206,7 @@ export class ReadFileTool extends BaseDeclarativeTool<
     }
 
     const fileService = this.config.getFileService();
-    if (fileService.shouldQwenIgnoreFile(params.absolute_path)) {
+    if (fileService.shouldPapertIgnoreFile(params.absolute_path)) {
       return `File path '${filePath}' is ignored by .papertignore pattern(s).`;
     }
 

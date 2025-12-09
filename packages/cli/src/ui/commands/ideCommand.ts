@@ -13,7 +13,7 @@ import {
   IdeConnectionType,
 } from '@papert-code/papert-code-core';
 import {
-  QWEN_CODE_COMPANION_EXTENSION_NAME,
+  PAPERT_CODE_COMPANION_EXTENSION_NAME,
   getIdeInstaller,
   IDEConnectionStatus,
   ideContextStore,
@@ -148,7 +148,7 @@ export const ideCommand = async (): Promise<SlashCommand> => {
           type: 'message',
           messageType: 'error',
           content: t(
-            'IDE integration is not supported in your current environment. To use this feature, run Qwen Code in one of these supported IDEs: VS Code or VS Code forks.',
+            'IDE integration is not supported in your current environment. To use this feature, run Papert Code in one of these supported IDEs: VS Code or VS Code forks.',
           ),
         }) as const,
     };
@@ -195,7 +195,7 @@ export const ideCommand = async (): Promise<SlashCommand> => {
         context.ui.addItem(
           {
             type: 'error',
-            text: `No installer is available for ${ideClient.getDetectedIdeDisplayName()}. Please install the '${QWEN_CODE_COMPANION_EXTENSION_NAME}' extension manually from the marketplace.`,
+            text: `No installer is available for ${ideClient.getDetectedIdeDisplayName()}. Please install the '${PAPERT_CODE_COMPANION_EXTENSION_NAME}' extension manually from the marketplace.`,
           },
           Date.now(),
         );

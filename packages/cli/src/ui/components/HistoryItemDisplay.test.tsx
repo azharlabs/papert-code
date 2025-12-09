@@ -93,7 +93,7 @@ describe('<HistoryItemDisplay />', () => {
     const { lastFrame } = renderWithProviders(
       <HistoryItemDisplay {...baseItem} item={item} />,
     );
-    expect(lastFrame()).toContain('About Qwen Code');
+    expect(lastFrame()).toContain('About Papert Code');
   });
 
   it('renders ModelStatsDisplay for "model_stats" type', () => {
@@ -177,7 +177,7 @@ describe('<HistoryItemDisplay />', () => {
             title: 'Run Shell Command',
             command: 'echo "\u001b[31mhello\u001b[0m"',
             rootCommand: 'echo',
-            onConfirm: async () => {},
+            onConfirm: async () => { },
           },
         },
       ],

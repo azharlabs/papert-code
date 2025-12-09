@@ -9,7 +9,7 @@ export default {
   tutorials: 'Tutorials',
   'keyboard-shortcuts': 'Keyboard Shortcuts',
   'trusted-folders': 'Trusted Folders',
-  'qwen-ignore': 'Ignoring Files',
+  'papert-ignore': 'Ignoring Files',
   Uninstall: 'Uninstall',
 };
 

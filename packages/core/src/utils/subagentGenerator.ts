@@ -1,11 +1,11 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import type { Content } from '@google/genai';
-import { DEFAULT_QWEN_MODEL } from '../config/models.js';
+import { DEFAULT_PAPERT_MODEL } from '../config/models.js';
 import type { Config } from '../config/config.js';
 
 const SYSTEM_PROMPT = `You are an elite AI agent architect specializing in crafting high-performance agent configurations. Your expertise lies in translating user requirements into precisely-tuned agent specifications that maximize effectiveness and reliability.
@@ -126,7 +126,7 @@ export async function subagentGenerator(
   const contents: Content[] = [{ role: 'user', parts: [{ text: userPrompt }] }];
 
   const parsedResponse = (await config.getBaseLlmClient().generateJson({
-    model: config.getModel() || DEFAULT_QWEN_MODEL,
+    model: config.getModel() || DEFAULT_PAPERT_MODEL,
     contents,
     schema: RESPONSE_SCHEMA,
     abortSignal,

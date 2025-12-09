@@ -17,8 +17,8 @@ import {
 
 const CLI_IDE_COMPANION_IDENTIFIER =
   'azharlabs.papert-code-vscode-ide-companion';
-const INFO_MESSAGE_SHOWN_KEY = 'qwenCodeInfoMessageShown';
-export const DIFF_SCHEME = 'qwen-diff';
+const INFO_MESSAGE_SHOWN_KEY = 'papertCodeInfoMessageShown';
+export const DIFF_SCHEME = 'papert-diff';
 
 /**
  * IDE environments where the installation greeting is hidden.  In these
@@ -33,7 +33,7 @@ const HIDE_INSTALLATION_GREETING_IDES: ReadonlySet<IdeInfo['name']> = new Set([
 let ideServer: IDEServer;
 let logger: vscode.OutputChannel;
 
-let log: (message: string) => void = () => {};
+let log: (message: string) => void = () => { };
 
 async function checkForUpdates(
   context: vscode.ExtensionContext,
@@ -84,7 +84,7 @@ async function checkForUpdates(
 
     if (latestVersion && semver.gt(latestVersion, currentVersion)) {
       const selection = await vscode.window.showInformationMessage(
-        `A new version (${latestVersion}) of the Qwen Code Companion extension is available.`,
+        `A new version (${latestVersion}) of the Papert Code Companion extension is available.`,
         'Update to latest version',
       );
       if (selection === 'Update to latest version') {
@@ -102,7 +102,7 @@ async function checkForUpdates(
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-  logger = vscode.window.createOutputChannel('Qwen Code Companion');
+  logger = vscode.window.createOutputChannel('Papert Code Companion');
   log = createLogger(context, logger);
   log('Extension activated');
 
@@ -121,13 +121,13 @@ export async function activate(context: vscode.ExtensionContext) {
       DIFF_SCHEME,
       diffContentProvider,
     ),
-    vscode.commands.registerCommand('qwen.diff.accept', (uri?: vscode.Uri) => {
+    vscode.commands.registerCommand('papert.diff.accept', (uri?: vscode.Uri) => {
       const docUri = uri ?? vscode.window.activeTextEditor?.document.uri;
       if (docUri && docUri.scheme === DIFF_SCHEME) {
         diffManager.acceptDiff(docUri);
       }
     }),
-    vscode.commands.registerCommand('qwen.diff.cancel', (uri?: vscode.Uri) => {
+    vscode.commands.registerCommand('papert.diff.cancel', (uri?: vscode.Uri) => {
       const docUri = uri ?? vscode.window.activeTextEditor?.document.uri;
       if (docUri && docUri.scheme === DIFF_SCHEME) {
         diffManager.cancelDiff(docUri);
@@ -149,7 +149,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   if (!context.globalState.get(INFO_MESSAGE_SHOWN_KEY) && infoMessageEnabled) {
     void vscode.window.showInformationMessage(
-      'Qwen Code Companion extension successfully installed.',
+      'Papert Code Companion extension successfully installed.',
     );
     context.globalState.update(INFO_MESSAGE_SHOWN_KEY, true);
   }
@@ -161,11 +161,11 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidGrantWorkspaceTrust(() => {
       ideServer.syncEnvVars();
     }),
-    vscode.commands.registerCommand('papert-code.runQwenCode', async () => {
+    vscode.commands.registerCommand('papert-code.runPapertCode', async () => {
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (!workspaceFolders || workspaceFolders.length === 0) {
         vscode.window.showInformationMessage(
-          'No folder open. Please open a folder to run Qwen Code.',
+          'No folder open. Please open a folder to run Papert Code.',
         );
         return;
       }
@@ -175,18 +175,18 @@ export async function activate(context: vscode.ExtensionContext) {
         selectedFolder = workspaceFolders[0];
       } else {
         selectedFolder = await vscode.window.showWorkspaceFolderPick({
-          placeHolder: 'Select a folder to run Qwen Code in',
+          placeHolder: 'Select a folder to run Papert Code in',
         });
       }
 
       if (selectedFolder) {
-        const qwenCmd = 'qwen';
+        const papertCmd = 'papert';
         const terminal = vscode.window.createTerminal({
-          name: `Qwen Code (${selectedFolder.name})`,
+          name: `Papert Code (${selectedFolder.name})`,
           cwd: selectedFolder.uri.fsPath,
         });
         terminal.show();
-        terminal.sendText(qwenCmd);
+        terminal.sendText(papertCmd);
       }
     }),
     vscode.commands.registerCommand('papert-code.showNotices', async () => {

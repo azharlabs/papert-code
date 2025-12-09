@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -12,7 +12,7 @@ import type * as acp from '../../acp.js';
  * Provides common functionality and access to session context.
  */
 export abstract class BaseEmitter {
-  constructor(protected readonly ctx: SessionContext) {}
+  constructor(protected readonly ctx: SessionContext) { }
 
   /**
    * Sends a session update to the ACP client.

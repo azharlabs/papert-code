@@ -11,7 +11,9 @@ import * as crypto from 'node:crypto';
 import type { Config } from '../config/config.js';
 import { isNodeError } from './errors.js';
 
-export const QWEN_DIR = '.papert';
+export const PAPERT_DIR = '.papert';
+export const PAPERT_CREDENTIAL_FILENAME = 'oauth_creds.json';
+export const PAPERT_LOCK_FILENAME = 'oauth_creds.lock';
 export const GOOGLE_ACCOUNTS_FILENAME = 'google_accounts.json';
 
 /**

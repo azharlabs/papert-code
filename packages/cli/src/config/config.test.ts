@@ -11,7 +11,7 @@ import {
   ShellTool,
   EditTool,
   WriteFileTool,
-  DEFAULT_QWEN_MODEL,
+  DEFAULT_PAPERT_MODEL,
   OutputFormat,
 } from '@papert-code/papert-code-core';
 import { loadCliConfig, parseArguments, type CliArgs } from './config.js';
@@ -101,11 +101,11 @@ vi.mock('@papert-code/papert-code-core', async () => {
     ),
     DEFAULT_MEMORY_FILE_FILTERING_OPTIONS: {
       respectGitIgnore: false,
-      respectQwenIgnore: true,
+      respectPapertIgnore: true,
     },
     DEFAULT_FILE_FILTERING_OPTIONS: {
       respectGitIgnore: true,
-      respectQwenIgnore: true,
+      respectPapertIgnore: true,
     },
   };
 });
@@ -133,7 +133,7 @@ describe('parseArguments', () => {
 
     const mockConsoleError = vi
       .spyOn(console, 'error')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     await expect(parseArguments({} as Settings)).rejects.toThrow(
       'process.exit called',
@@ -165,7 +165,7 @@ describe('parseArguments', () => {
 
     const mockConsoleError = vi
       .spyOn(console, 'error')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     await expect(parseArguments({} as Settings)).rejects.toThrow(
       'process.exit called',
@@ -352,7 +352,7 @@ describe('parseArguments', () => {
 
     const mockConsoleError = vi
       .spyOn(console, 'error')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     await expect(parseArguments({} as Settings)).rejects.toThrow(
       'process.exit called',
@@ -377,7 +377,7 @@ describe('parseArguments', () => {
 
     const mockConsoleError = vi
       .spyOn(console, 'error')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     await expect(parseArguments({} as Settings)).rejects.toThrow(
       'process.exit called',
@@ -402,7 +402,7 @@ describe('parseArguments', () => {
 
     const mockConsoleError = vi
       .spyOn(console, 'error')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     await expect(parseArguments({} as Settings)).rejects.toThrow(
       'process.exit called',
@@ -459,7 +459,7 @@ describe('parseArguments', () => {
 
     const mockConsoleError = vi
       .spyOn(console, 'error')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     await expect(parseArguments({} as Settings)).rejects.toThrow(
       'process.exit called',
@@ -1107,7 +1107,7 @@ describe('loadCliConfig telemetry', () => {
 
     const mockConsoleError = vi
       .spyOn(console, 'error')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     await expect(parseArguments({} as Settings)).rejects.toThrow(
       'process.exit called',
@@ -1189,7 +1189,7 @@ describe('Hierarchical Memory Loading (config.ts) - Placeholder Suite', () => {
       'tree',
       {
         respectGitIgnore: false,
-        respectQwenIgnore: true,
+        respectPapertIgnore: true,
       },
       undefined, // maxDirs
     );
@@ -2078,7 +2078,7 @@ describe('loadCliConfig model selection', () => {
     const config = await loadCliConfig(
       {
         model: {
-          name: 'qwen3-coder-plus',
+          name: 'papert3-coder-plus',
         },
       },
       [],
@@ -2089,7 +2089,7 @@ describe('loadCliConfig model selection', () => {
       argv,
     );
 
-    expect(config.getModel()).toBe('qwen3-coder-plus');
+    expect(config.getModel()).toBe('papert3-coder-plus');
   });
 
   it.skip('uses the default gemini model if nothing is set', async () => {
@@ -2107,16 +2107,16 @@ describe('loadCliConfig model selection', () => {
       argv,
     );
 
-    expect(config.getModel()).toBe(DEFAULT_QWEN_MODEL);
+    expect(config.getModel()).toBe(DEFAULT_PAPERT_MODEL);
   });
 
   it('always prefers model from argvs', async () => {
-    process.argv = ['node', 'script.js', '--model', 'qwen3-coder-plus'];
+    process.argv = ['node', 'script.js', '--model', 'papert3-coder-plus'];
     const argv = await parseArguments({} as Settings);
     const config = await loadCliConfig(
       {
         model: {
-          name: 'qwen3-coder-flash',
+          name: 'papert3-coder-flash',
         },
       },
       [],
@@ -2127,11 +2127,11 @@ describe('loadCliConfig model selection', () => {
       argv,
     );
 
-    expect(config.getModel()).toBe('qwen3-coder-plus');
+    expect(config.getModel()).toBe('papert3-coder-plus');
   });
 
   it('selects the model from argvs if provided', async () => {
-    process.argv = ['node', 'script.js', '--model', 'qwen3-coder-plus'];
+    process.argv = ['node', 'script.js', '--model', 'papert3-coder-plus'];
     const argv = await parseArguments({} as Settings);
     const config = await loadCliConfig(
       {
@@ -2145,7 +2145,7 @@ describe('loadCliConfig model selection', () => {
       argv,
     );
 
-    expect(config.getModel()).toBe('qwen3-coder-plus');
+    expect(config.getModel()).toBe('papert3-coder-plus');
   });
 });
 
@@ -3110,47 +3110,47 @@ describe('loadCliConfig fileFiltering', () => {
     getter: (config: ServerConfig.Config) => boolean;
     value: boolean;
   }> = [
-    {
-      property: 'disableFuzzySearch',
-      getter: (c) => c.getFileFilteringDisableFuzzySearch(),
-      value: true,
-    },
-    {
-      property: 'disableFuzzySearch',
-      getter: (c) => c.getFileFilteringDisableFuzzySearch(),
-      value: false,
-    },
-    {
-      property: 'respectGitIgnore',
-      getter: (c) => c.getFileFilteringRespectGitIgnore(),
-      value: true,
-    },
-    {
-      property: 'respectGitIgnore',
-      getter: (c) => c.getFileFilteringRespectGitIgnore(),
-      value: false,
-    },
-    {
-      property: 'respectQwenIgnore',
-      getter: (c) => c.getFileFilteringRespectQwenIgnore(),
-      value: true,
-    },
-    {
-      property: 'respectQwenIgnore',
-      getter: (c) => c.getFileFilteringRespectQwenIgnore(),
-      value: false,
-    },
-    {
-      property: 'enableRecursiveFileSearch',
-      getter: (c) => c.getEnableRecursiveFileSearch(),
-      value: true,
-    },
-    {
-      property: 'enableRecursiveFileSearch',
-      getter: (c) => c.getEnableRecursiveFileSearch(),
-      value: false,
-    },
-  ];
+      {
+        property: 'disableFuzzySearch',
+        getter: (c) => c.getFileFilteringDisableFuzzySearch(),
+        value: true,
+      },
+      {
+        property: 'disableFuzzySearch',
+        getter: (c) => c.getFileFilteringDisableFuzzySearch(),
+        value: false,
+      },
+      {
+        property: 'respectGitIgnore',
+        getter: (c) => c.getFileFilteringRespectGitIgnore(),
+        value: true,
+      },
+      {
+        property: 'respectGitIgnore',
+        getter: (c) => c.getFileFilteringRespectGitIgnore(),
+        value: false,
+      },
+      {
+        property: 'respectPapertIgnore',
+        getter: (c) => c.getFileFilteringRespectPapertIgnore(),
+        value: true,
+      },
+      {
+        property: 'respectPapertIgnore',
+        getter: (c) => c.getFileFilteringRespectPapertIgnore(),
+        value: false,
+      },
+      {
+        property: 'enableRecursiveFileSearch',
+        getter: (c) => c.getEnableRecursiveFileSearch(),
+        value: true,
+      },
+      {
+        property: 'enableRecursiveFileSearch',
+        getter: (c) => c.getEnableRecursiveFileSearch(),
+        value: false,
+      },
+    ];
 
   it.each(testCases)(
     'should pass $property from settings to config when $value',
@@ -3229,7 +3229,7 @@ describe('Output format', () => {
     });
     const mockConsoleError = vi
       .spyOn(console, 'error')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     await expect(parseArguments({} as Settings)).rejects.toThrow(
       'process.exit called',
     );
@@ -3264,7 +3264,7 @@ describe('parseArguments with positional prompt', () => {
 
     const mockConsoleError = vi
       .spyOn(console, 'error')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     await expect(parseArguments({} as Settings)).rejects.toThrow(
       'process.exit called',

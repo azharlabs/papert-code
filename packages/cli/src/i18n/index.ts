@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -48,7 +48,7 @@ const getLocalePath = (
 
 // Language detection
 export function detectSystemLanguage(): SupportedLanguage {
-  const envLang = process.env['QWEN_CODE_LANG'] || process.env['LANG'];
+  const envLang = process.env['PAPERT_CODE_LANG'] || process.env['LANG'];
   if (envLang?.startsWith('zh')) return 'zh';
   if (envLang?.startsWith('en')) return 'en';
 
@@ -203,7 +203,7 @@ export function setLanguage(lang: SupportedLanguage | 'auto'): void {
     if (fs.existsSync(userJsPath) || fs.existsSync(builtinJsPath)) {
       console.warn(
         `Language file for ${resolvedLang} requires async loading. ` +
-          `Use setLanguageAsync() instead, or call initializeI18n() first.`,
+        `Use setLanguageAsync() instead, or call initializeI18n() first.`,
       );
     }
   }

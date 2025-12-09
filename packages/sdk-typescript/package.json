@@ -32,14 +32,14 @@
     "prepack": "npm run build"
   },
   "keywords": [
-    "qwen",
+    "papert",
     "papert-code",
     "ai",
     "code-assistant",
     "sdk",
     "typescript"
   ],
-  "author": "Qwen Team",
+  "author": "Papert Team",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=18.0.0"

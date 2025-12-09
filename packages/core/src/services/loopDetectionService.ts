@@ -22,7 +22,7 @@ import {
   isFunctionCall,
   isFunctionResponse,
 } from '../utils/messageInspectors.js';
-import { DEFAULT_QWEN_MODEL } from '../config/models.js';
+import { DEFAULT_PAPERT_MODEL } from '../config/models.js';
 
 const TOOL_CALL_LOOP_THRESHOLD = 5;
 const CONTENT_LOOP_THRESHOLD = 10;
@@ -424,7 +424,7 @@ export class LoopDetectionService {
       result = await this.config.getBaseLlmClient().generateJson({
         contents,
         schema,
-        model: this.config.getModel() || DEFAULT_QWEN_MODEL,
+        model: this.config.getModel() || DEFAULT_PAPERT_MODEL,
         systemInstruction: LOOP_DETECTION_SYSTEM_PROMPT,
         abortSignal: signal,
         promptId: this.promptId,
@@ -448,8 +448,8 @@ export class LoopDetectionService {
       } else {
         this.llmCheckInterval = Math.round(
           MIN_LLM_CHECK_INTERVAL +
-            (MAX_LLM_CHECK_INTERVAL - MIN_LLM_CHECK_INTERVAL) *
-              (1 - result['confidence']),
+          (MAX_LLM_CHECK_INTERVAL - MIN_LLM_CHECK_INTERVAL) *
+          (1 - result['confidence']),
         );
       }
     }

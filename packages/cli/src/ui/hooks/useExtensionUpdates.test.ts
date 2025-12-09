@@ -16,7 +16,7 @@ import {
 import { createExtension } from '../../test-utils/createExtension.js';
 import { useExtensionUpdates } from './useExtensionUpdates.js';
 import {
-  QWEN_DIR,
+  PAPERT_DIR,
   type GeminiCLIExtension,
 } from '@papert-code/papert-code-core';
 import { renderHook, waitFor } from '@testing-library/react';
@@ -50,7 +50,7 @@ describe('useExtensionUpdates', () => {
       path.join(os.tmpdir(), 'gemini-cli-test-home-'),
     );
     vi.mocked(os.homedir).mockReturnValue(tempHomeDir);
-    userExtensionsDir = path.join(tempHomeDir, QWEN_DIR, 'extensions');
+    userExtensionsDir = path.join(tempHomeDir, PAPERT_DIR, 'extensions');
     fs.mkdirSync(userExtensionsDir, { recursive: true });
     vi.mocked(checkForAllExtensionUpdates).mockReset();
     vi.mocked(updateExtension).mockReset();

@@ -16,12 +16,12 @@ import {
   isDeviceTokenPending,
   isDeviceTokenSuccess,
   isErrorResponse,
-  QwenOAuth2Client,
+  PapertOAuth2Client,
   type DeviceAuthorizationResponse,
   type DeviceTokenResponse,
   type ErrorData,
-  type QwenCredentials,
-} from './qwenOAuth2.js';
+  type PapertCredentials,
+} from './papertOAuth2.js';
 import {
   SharedTokenManager,
   TokenManagerError,
@@ -29,8 +29,8 @@ import {
 } from './sharedTokenManager.js';
 
 interface MockSharedTokenManager {
-  getValidCredentials(qwenClient: QwenOAuth2Client): Promise<QwenCredentials>;
-  getCurrentCredentials(): QwenCredentials | null;
+  getValidCredentials(papertClient: PapertOAuth2Client): Promise<PapertCredentials>;
+  getCurrentCredentials(): PapertCredentials | null;
   clearCache(): void;
 }
 
@@ -47,10 +47,10 @@ vi.mock('./sharedTokenManager.js', () => ({
     }
 
     async getValidCredentials(
-      qwenClient: QwenOAuth2Client,
-    ): Promise<QwenCredentials> {
+      papertClient: PapertOAuth2Client,
+    ): Promise<PapertCredentials> {
       // Try to get credentials from the client first
-      const clientCredentials = qwenClient.getCredentials();
+      const clientCredentials = papertClient.getCredentials();
       if (clientCredentials && clientCredentials.access_token) {
         return clientCredentials;
       }
@@ -65,7 +65,7 @@ vi.mock('./sharedTokenManager.js', () => ({
       };
     }
 
-    getCurrentCredentials(): QwenCredentials | null {
+    getCurrentCredentials(): PapertCredentials | null {
       // Return null to let the client manage its own credentials
       return null;
     }
@@ -158,8 +158,8 @@ describe('Type Guards', () => {
   describe('isDeviceAuthorizationSuccess', () => {
     it('should return true for successful authorization response', () => {
       const expectedBaseUrl = process.env['DEBUG']
-        ? 'https://pre4-chat.qwen.ai'
-        : 'https://chat.qwen.ai';
+        ? 'https://pre4-chat.papert.ai'
+        : 'https://chat.papert.ai';
 
       const successResponse: DeviceAuthorizationResponse = {
         device_code: 'test-device-code',
@@ -278,8 +278,8 @@ describe('Type Guards', () => {
       const successResponse: DeviceAuthorizationResponse = {
         device_code: 'test-device-code',
         user_code: 'TEST123',
-        verification_uri: 'https://chat.qwen.ai/device',
-        verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+        verification_uri: 'https://chat.papert.ai/device',
+        verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
         expires_in: 1800,
       };
 
@@ -288,13 +288,13 @@ describe('Type Guards', () => {
   });
 });
 
-describe('QwenOAuth2Client', () => {
-  let client: QwenOAuth2Client;
+describe('PapertOAuth2Client', () => {
+  let client: PapertOAuth2Client;
   let originalFetch: typeof global.fetch;
 
   beforeEach(() => {
     // Create client instance
-    client = new QwenOAuth2Client();
+    client = new PapertOAuth2Client();
 
     // Mock fetch
     originalFetch = global.fetch;
@@ -313,8 +313,8 @@ describe('QwenOAuth2Client', () => {
         json: async () => ({
           device_code: 'test-device-code',
           user_code: 'TEST123',
-          verification_uri: 'https://chat.qwen.ai/device',
-          verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+          verification_uri: 'https://chat.papert.ai/device',
+          verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
           expires_in: 1800,
         }),
       };
@@ -330,8 +330,8 @@ describe('QwenOAuth2Client', () => {
       expect(result).toEqual({
         device_code: 'test-device-code',
         user_code: 'TEST123',
-        verification_uri: 'https://chat.qwen.ai/device',
-        verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+        verification_uri: 'https://chat.papert.ai/device',
+        verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
         expires_in: 1800,
       });
     });
@@ -498,7 +498,7 @@ describe('QwenOAuth2Client', () => {
       (
         client as unknown as {
           sharedManager: {
-            getValidCredentials: () => Promise<QwenCredentials>;
+            getValidCredentials: () => Promise<PapertCredentials>;
           };
         }
       ).sharedManager = {
@@ -521,7 +521,7 @@ describe('QwenOAuth2Client', () => {
       (
         client as unknown as {
           sharedManager: {
-            getValidCredentials: () => Promise<QwenCredentials>;
+            getValidCredentials: () => Promise<PapertCredentials>;
           };
         }
       ).sharedManager = {
@@ -742,7 +742,7 @@ describe('QwenOAuth2Client', () => {
   });
 });
 
-describe('getQwenOAuthClient', () => {
+describe('getPapertOAuthClient', () => {
   let mockConfig: Config;
   let originalFetch: typeof global.fetch;
 
@@ -781,8 +781,8 @@ describe('getQwenOAuthClient', () => {
     const originalGetInstance = SharedTokenManager.getInstance;
     SharedTokenManager.getInstance = vi.fn().mockReturnValue(mockTokenManager);
 
-    const client = await import('./qwenOAuth2.js').then((module) =>
-      module.getQwenOAuthClient(mockConfig),
+    const client = await import('./papertOAuth2.js').then((module) =>
+      module.getPapertOAuthClient(mockConfig),
     );
 
     expect(client).toBeInstanceOf(Object);
@@ -797,7 +797,7 @@ describe('getQwenOAuthClient', () => {
       access_token: 'cached-token',
       refresh_token: 'expired-refresh',
       token_type: 'Bearer',
-      expiry_date: Date.now() + 3600000, // Valid expiry time so loadCachedQwenCredentials returns true
+      expiry_date: Date.now() + 3600000, // Valid expiry time so loadCachedPapertCredentials returns true
     };
 
     vi.mocked(fs.promises.readFile).mockResolvedValue(
@@ -826,8 +826,8 @@ describe('getQwenOAuthClient', () => {
 
     // The function should handle the invalid cached credentials and throw the expected error
     await expect(
-      import('./qwenOAuth2.js').then((module) =>
-        module.getQwenOAuthClient(mockConfig),
+      import('./papertOAuth2.js').then((module) =>
+        module.getPapertOAuthClient(mockConfig),
       ),
     ).rejects.toThrow('Device authorization flow failed');
 
@@ -837,7 +837,7 @@ describe('getQwenOAuthClient', () => {
 
 describe('CredentialsClearRequiredError', () => {
   it('should create error with correct name and message', async () => {
-    const { CredentialsClearRequiredError } = await import('./qwenOAuth2.js');
+    const { CredentialsClearRequiredError } = await import('./papertOAuth2.js');
 
     const message = 'Test error message';
     const originalError = { status: 400, response: 'Bad Request' };
@@ -850,7 +850,7 @@ describe('CredentialsClearRequiredError', () => {
   });
 
   it('should work without originalError', async () => {
-    const { CredentialsClearRequiredError } = await import('./qwenOAuth2.js');
+    const { CredentialsClearRequiredError } = await import('./papertOAuth2.js');
 
     const message = 'Test error message';
     const error = new CredentialsClearRequiredError(message);
@@ -861,46 +861,46 @@ describe('CredentialsClearRequiredError', () => {
   });
 });
 
-describe('clearQwenCredentials', () => {
+describe('clearPapertCredentials', () => {
   it('should successfully clear credentials file', async () => {
     const { promises: fs } = await import('node:fs');
-    const { clearQwenCredentials } = await import('./qwenOAuth2.js');
+    const { clearPapertCredentials } = await import('./papertOAuth2.js');
 
     vi.mocked(fs.unlink).mockResolvedValue(undefined);
 
-    await expect(clearQwenCredentials()).resolves.not.toThrow();
+    await expect(clearPapertCredentials()).resolves.not.toThrow();
     expect(fs.unlink).toHaveBeenCalled();
   });
 
   it('should handle file not found error gracefully', async () => {
     const { promises: fs } = await import('node:fs');
-    const { clearQwenCredentials } = await import('./qwenOAuth2.js');
+    const { clearPapertCredentials } = await import('./papertOAuth2.js');
 
     const notFoundError = new Error('File not found');
     (notFoundError as Error & { code: string }).code = 'ENOENT';
     vi.mocked(fs.unlink).mockRejectedValue(notFoundError);
 
-    await expect(clearQwenCredentials()).resolves.not.toThrow();
+    await expect(clearPapertCredentials()).resolves.not.toThrow();
   });
 
   it('should handle other file system errors gracefully', async () => {
     const { promises: fs } = await import('node:fs');
-    const { clearQwenCredentials } = await import('./qwenOAuth2.js');
+    const { clearPapertCredentials } = await import('./papertOAuth2.js');
 
     const permissionError = new Error('Permission denied');
     vi.mocked(fs.unlink).mockRejectedValue(permissionError);
 
     // Should not throw but may log warning
-    await expect(clearQwenCredentials()).resolves.not.toThrow();
+    await expect(clearPapertCredentials()).resolves.not.toThrow();
   });
 });
 
-describe('QwenOAuth2Client - Additional Error Scenarios', () => {
-  let client: QwenOAuth2Client;
+describe('PapertOAuth2Client - Additional Error Scenarios', () => {
+  let client: PapertOAuth2Client;
   let originalFetch: typeof global.fetch;
 
   beforeEach(() => {
-    client = new QwenOAuth2Client();
+    client = new PapertOAuth2Client();
     originalFetch = global.fetch;
     global.fetch = vi.fn();
   });
@@ -934,7 +934,7 @@ describe('QwenOAuth2Client - Additional Error Scenarios', () => {
   });
 });
 
-describe('getQwenOAuthClient - Enhanced Error Scenarios', () => {
+describe('getPapertOAuthClient - Enhanced Error Scenarios', () => {
   let mockConfig: Config;
   let originalFetch: typeof global.fetch;
 
@@ -984,8 +984,8 @@ describe('getQwenOAuthClient - Enhanced Error Scenarios', () => {
     vi.mocked(global.fetch).mockResolvedValue(mockAuthResponse as Response);
 
     await expect(
-      import('./qwenOAuth2.js').then((module) =>
-        module.getQwenOAuthClient(mockConfig),
+      import('./papertOAuth2.js').then((module) =>
+        module.getPapertOAuthClient(mockConfig),
       ),
     ).rejects.toThrow('Device authorization flow failed');
 
@@ -1014,8 +1014,8 @@ describe('getQwenOAuthClient - Enhanced Error Scenarios', () => {
       json: async () => ({
         device_code: 'test-device-code',
         user_code: 'TEST123',
-        verification_uri: 'https://chat.qwen.ai/device',
-        verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+        verification_uri: 'https://chat.papert.ai/device',
+        verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
         expires_in: 0.1, // Very short timeout for testing
       }),
     };
@@ -1033,8 +1033,8 @@ describe('getQwenOAuthClient - Enhanced Error Scenarios', () => {
       .mockResolvedValue(mockPendingResponse as Response);
 
     await expect(
-      import('./qwenOAuth2.js').then((module) =>
-        module.getQwenOAuthClient(mockConfig),
+      import('./papertOAuth2.js').then((module) =>
+        module.getPapertOAuthClient(mockConfig),
       ),
     ).rejects.toThrow('Authorization timeout, please restart the process.');
 
@@ -1063,8 +1063,8 @@ describe('getQwenOAuthClient - Enhanced Error Scenarios', () => {
       json: async () => ({
         device_code: 'test-device-code',
         user_code: 'TEST123',
-        verification_uri: 'https://chat.qwen.ai/device',
-        verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+        verification_uri: 'https://chat.papert.ai/device',
+        verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
         expires_in: 1800,
       }),
     };
@@ -1082,8 +1082,8 @@ describe('getQwenOAuthClient - Enhanced Error Scenarios', () => {
       .mockResolvedValue(mockRateLimitResponse as Response);
 
     await expect(
-      import('./qwenOAuth2.js').then((module) =>
-        module.getQwenOAuthClient(mockConfig),
+      import('./papertOAuth2.js').then((module) =>
+        module.getPapertOAuthClient(mockConfig),
       ),
     ).rejects.toThrow(
       'Too many requests. The server is rate limiting our requests. Please select a different authentication method or try again later.',
@@ -1120,8 +1120,8 @@ describe('getQwenOAuthClient - Enhanced Error Scenarios', () => {
     global.fetch = vi.fn().mockResolvedValue(mockAuthResponse as Response);
 
     await expect(
-      import('./qwenOAuth2.js').then((module) =>
-        module.getQwenOAuthClient(mockConfig),
+      import('./papertOAuth2.js').then((module) =>
+        module.getPapertOAuthClient(mockConfig),
       ),
     ).rejects.toThrow('Device authorization flow failed');
 
@@ -1129,7 +1129,7 @@ describe('getQwenOAuthClient - Enhanced Error Scenarios', () => {
   });
 });
 
-describe('authWithQwenDeviceFlow - Comprehensive Testing', () => {
+describe('authWithPapertDeviceFlow - Comprehensive Testing', () => {
   let mockConfig: Config;
   let originalFetch: typeof global.fetch;
 
@@ -1178,8 +1178,8 @@ describe('authWithQwenDeviceFlow - Comprehensive Testing', () => {
     global.fetch = vi.fn().mockResolvedValue(mockAuthResponse as Response);
 
     await expect(
-      import('./qwenOAuth2.js').then((module) =>
-        module.getQwenOAuthClient(mockConfig),
+      import('./papertOAuth2.js').then((module) =>
+        module.getPapertOAuthClient(mockConfig),
       ),
     ).rejects.toThrow('Device authorization flow failed');
 
@@ -1197,8 +1197,8 @@ describe('authWithQwenDeviceFlow - Comprehensive Testing', () => {
       json: async () => ({
         device_code: 'test-device-code',
         user_code: 'TEST123',
-        verification_uri: 'https://chat.qwen.ai/device',
-        verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+        verification_uri: 'https://chat.papert.ai/device',
+        verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
         expires_in: 1800,
       }),
     };
@@ -1218,8 +1218,8 @@ describe('authWithQwenDeviceFlow - Comprehensive Testing', () => {
       .mockResolvedValueOnce(mockAuthResponse as Response)
       .mockResolvedValue(mockTokenResponse as Response);
 
-    const client = await import('./qwenOAuth2.js').then((module) =>
-      module.getQwenOAuthClient(mockConfig),
+    const client = await import('./papertOAuth2.js').then((module) =>
+      module.getPapertOAuthClient(mockConfig),
     );
 
     expect(client).toBeInstanceOf(Object);
@@ -1246,8 +1246,8 @@ describe('authWithQwenDeviceFlow - Comprehensive Testing', () => {
       json: async () => ({
         device_code: 'test-device-code',
         user_code: 'TEST123',
-        verification_uri: 'https://chat.qwen.ai/device',
-        verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+        verification_uri: 'https://chat.papert.ai/device',
+        verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
         expires_in: 1800,
       }),
     };
@@ -1265,8 +1265,8 @@ describe('authWithQwenDeviceFlow - Comprehensive Testing', () => {
       .mockResolvedValue(mock401Response as Response);
 
     await expect(
-      import('./qwenOAuth2.js').then((module) =>
-        module.getQwenOAuthClient(mockConfig),
+      import('./papertOAuth2.js').then((module) =>
+        module.getPapertOAuthClient(mockConfig),
       ),
     ).rejects.toThrow(
       'Device code expired or invalid, please restart the authorization process.',
@@ -1299,8 +1299,8 @@ describe('authWithQwenDeviceFlow - Comprehensive Testing', () => {
       json: async () => ({
         device_code: 'test-device-code',
         user_code: 'TEST123',
-        verification_uri: 'https://chat.qwen.ai/device',
-        verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+        verification_uri: 'https://chat.papert.ai/device',
+        verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
         expires_in: 1800,
       }),
     };
@@ -1321,8 +1321,8 @@ describe('authWithQwenDeviceFlow - Comprehensive Testing', () => {
       .mockResolvedValueOnce(mockAuthResponse as Response)
       .mockResolvedValue(mockTokenResponse as Response);
 
-    const client = await import('./qwenOAuth2.js').then((module) =>
-      module.getQwenOAuthClient(mockConfig),
+    const client = await import('./papertOAuth2.js').then((module) =>
+      module.getPapertOAuthClient(mockConfig),
     );
 
     expect(client).toBeInstanceOf(Object);
@@ -1367,8 +1367,8 @@ describe('Browser Launch and Error Handling', () => {
       json: async () => ({
         device_code: 'test-device-code',
         user_code: 'TEST123',
-        verification_uri: 'https://chat.qwen.ai/device',
-        verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+        verification_uri: 'https://chat.papert.ai/device',
+        verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
         expires_in: 1800,
       }),
     };
@@ -1388,8 +1388,8 @@ describe('Browser Launch and Error Handling', () => {
       .mockResolvedValueOnce(mockAuthResponse as Response)
       .mockResolvedValue(mockTokenResponse as Response);
 
-    const client = await import('./qwenOAuth2.js').then((module) =>
-      module.getQwenOAuthClient(mockConfig),
+    const client = await import('./papertOAuth2.js').then((module) =>
+      module.getPapertOAuthClient(mockConfig),
     );
 
     expect(client).toBeInstanceOf(Object);
@@ -1420,8 +1420,8 @@ describe('Browser Launch and Error Handling', () => {
       json: async () => ({
         device_code: 'test-device-code',
         user_code: 'TEST123',
-        verification_uri: 'https://chat.qwen.ai/device',
-        verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+        verification_uri: 'https://chat.papert.ai/device',
+        verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
         expires_in: 1800,
       }),
     };
@@ -1441,8 +1441,8 @@ describe('Browser Launch and Error Handling', () => {
       .mockResolvedValueOnce(mockAuthResponse as Response)
       .mockResolvedValue(mockTokenResponse as Response);
 
-    const client = await import('./qwenOAuth2.js').then((module) =>
-      module.getQwenOAuthClient(mockConfig),
+    const client = await import('./papertOAuth2.js').then((module) =>
+      module.getPapertOAuthClient(mockConfig),
     );
 
     expect(client).toBeInstanceOf(Object);
@@ -1450,16 +1450,16 @@ describe('Browser Launch and Error Handling', () => {
 });
 
 describe('Event Emitter Integration', () => {
-  it('should export qwenOAuth2Events as EventEmitter', async () => {
-    const { qwenOAuth2Events } = await import('./qwenOAuth2.js');
-    expect(qwenOAuth2Events).toBeInstanceOf(EventEmitter);
+  it('should export papertOAuth2Events as EventEmitter', async () => {
+    const { papertOAuth2Events } = await import('./papertOAuth2.js');
+    expect(papertOAuth2Events).toBeInstanceOf(EventEmitter);
   });
 
   it('should define correct event enum values', async () => {
-    const { QwenOAuth2Event } = await import('./qwenOAuth2.js');
-    expect(QwenOAuth2Event.AuthUri).toBe('auth-uri');
-    expect(QwenOAuth2Event.AuthProgress).toBe('auth-progress');
-    expect(QwenOAuth2Event.AuthCancel).toBe('auth-cancel');
+    const { PapertOAuth2Event } = await import('./papertOAuth2.js');
+    expect(PapertOAuth2Event.AuthUri).toBe('auth-uri');
+    expect(PapertOAuth2Event.AuthProgress).toBe('auth-progress');
+    expect(PapertOAuth2Event.AuthCancel).toBe('auth-cancel');
   });
 });
 
@@ -1526,7 +1526,7 @@ describe('Utility Functions', () => {
     });
   });
 
-  describe('getQwenCachedCredentialPath', () => {
+  describe('getPapertCachedCredentialPath', () => {
     it('should return correct path to cached credentials', async () => {
       const os = await import('os');
       const path = await import('path');
@@ -1537,13 +1537,13 @@ describe('Utility Functions', () => {
         'oauth_creds.json',
       );
 
-      // Since this is a private function, we test it indirectly through clearQwenCredentials
+      // Since this is a private function, we test it indirectly through clearPapertCredentials
       const { promises: fs } = await import('node:fs');
-      const { clearQwenCredentials } = await import('./qwenOAuth2.js');
+      const { clearPapertCredentials } = await import('./papertOAuth2.js');
 
       vi.mocked(fs.unlink).mockResolvedValue(undefined);
 
-      await clearQwenCredentials();
+      await clearPapertCredentials();
 
       expect(fs.unlink).toHaveBeenCalledWith(expectedPath);
     });
@@ -1551,10 +1551,10 @@ describe('Utility Functions', () => {
 });
 
 describe('Credential Caching Functions', () => {
-  describe('cacheQwenCredentials', () => {
+  describe('cachePapertCredentials', () => {
     it('should create directory and write credentials to file', async () => {
-      // Mock the internal cacheQwenCredentials function by creating client and calling refresh
-      const client = new QwenOAuth2Client();
+      // Mock the internal cachePapertCredentials function by creating client and calling refresh
+      const client = new PapertOAuth2Client();
       client.setCredentials({
         refresh_token: 'test-refresh',
       });
@@ -1579,7 +1579,7 @@ describe('Credential Caching Functions', () => {
     });
   });
 
-  describe('loadCachedQwenCredentials', () => {
+  describe('loadCachedPapertCredentials', () => {
     it('should load and validate cached credentials successfully', async () => {
       const { promises: fs } = await import('node:fs');
       const mockCredentials = {
@@ -1591,7 +1591,7 @@ describe('Credential Caching Functions', () => {
 
       vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockCredentials));
 
-      // Test through getQwenOAuthClient which calls loadCachedQwenCredentials
+      // Test through getPapertOAuthClient which calls loadCachedPapertCredentials
       const mockConfig = {
         isBrowserLaunchSuppressed: vi.fn().mockReturnValue(true),
       } as unknown as Config;
@@ -1614,8 +1614,8 @@ describe('Credential Caching Functions', () => {
         json: async () => ({
           device_code: 'test-device-code',
           user_code: 'TEST123',
-          verification_uri: 'https://chat.qwen.ai/device',
-          verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+          verification_uri: 'https://chat.papert.ai/device',
+          verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
           expires_in: 1800,
         }),
       };
@@ -1637,8 +1637,8 @@ describe('Credential Caching Functions', () => {
         .mockResolvedValue(mockTokenResponse as Response);
 
       try {
-        await import('./qwenOAuth2.js').then((module) =>
-          module.getQwenOAuthClient(mockConfig),
+        await import('./papertOAuth2.js').then((module) =>
+          module.getPapertOAuthClient(mockConfig),
         );
       } catch {
         // Expected to fail in test environment
@@ -1675,8 +1675,8 @@ describe('Credential Caching Functions', () => {
         json: async () => ({
           device_code: 'test-device-code',
           user_code: 'TEST123',
-          verification_uri: 'https://chat.qwen.ai/device',
-          verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+          verification_uri: 'https://chat.papert.ai/device',
+          verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
           expires_in: 1800,
         }),
       };
@@ -1697,8 +1697,8 @@ describe('Credential Caching Functions', () => {
         .mockResolvedValue(mockTokenResponse as Response);
 
       try {
-        await import('./qwenOAuth2.js').then((module) =>
-          module.getQwenOAuthClient(mockConfig),
+        await import('./papertOAuth2.js').then((module) =>
+          module.getPapertOAuthClient(mockConfig),
         );
       } catch {
         // Expected to fail in test environment
@@ -1740,8 +1740,8 @@ describe('Credential Caching Functions', () => {
 
       // Should proceed to device flow when cache loading fails
       try {
-        await import('./qwenOAuth2.js').then((module) =>
-          module.getQwenOAuthClient(mockConfig),
+        await import('./papertOAuth2.js').then((module) =>
+          module.getPapertOAuthClient(mockConfig),
         );
       } catch {
         // Expected to fail in test environment
@@ -1753,11 +1753,11 @@ describe('Credential Caching Functions', () => {
 });
 
 describe('Enhanced Error Handling and Edge Cases', () => {
-  let client: QwenOAuth2Client;
+  let client: PapertOAuth2Client;
   let originalFetch: typeof global.fetch;
 
   beforeEach(() => {
-    client = new QwenOAuth2Client();
+    client = new PapertOAuth2Client();
     originalFetch = global.fetch;
     global.fetch = vi.fn();
   });
@@ -1767,7 +1767,7 @@ describe('Enhanced Error Handling and Edge Cases', () => {
     vi.clearAllMocks();
   });
 
-  describe('QwenOAuth2Client getAccessToken enhanced scenarios', () => {
+  describe('PapertOAuth2Client getAccessToken enhanced scenarios', () => {
     it('should return undefined when SharedTokenManager fails (no fallback)', async () => {
       // Set up client with valid credentials (but we don't use fallback anymore)
       client.setCredentials({
@@ -1779,7 +1779,7 @@ describe('Enhanced Error Handling and Edge Cases', () => {
       (
         client as unknown as {
           sharedManager: {
-            getValidCredentials: () => Promise<QwenCredentials>;
+            getValidCredentials: () => Promise<PapertCredentials>;
           };
         }
       ).sharedManager = {
@@ -1789,7 +1789,7 @@ describe('Enhanced Error Handling and Edge Cases', () => {
       };
 
       // Mock console.warn to avoid test noise
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
       const result = await client.getAccessToken();
 
@@ -1815,7 +1815,7 @@ describe('Enhanced Error Handling and Edge Cases', () => {
       (
         client as unknown as {
           sharedManager: {
-            getValidCredentials: () => Promise<QwenCredentials>;
+            getValidCredentials: () => Promise<PapertCredentials>;
           };
         }
       ).sharedManager = {
@@ -1824,7 +1824,7 @@ describe('Enhanced Error Handling and Edge Cases', () => {
           .mockRejectedValue(new Error('Manager failed')),
       };
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
       const result = await client.getAccessToken();
 
@@ -1841,7 +1841,7 @@ describe('Enhanced Error Handling and Edge Cases', () => {
       (
         client as unknown as {
           sharedManager: {
-            getValidCredentials: () => Promise<QwenCredentials>;
+            getValidCredentials: () => Promise<PapertCredentials>;
           };
         }
       ).sharedManager = {
@@ -1850,7 +1850,7 @@ describe('Enhanced Error Handling and Edge Cases', () => {
           .mockRejectedValue(new Error('No credentials')),
       };
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
       const result = await client.getAccessToken();
 
@@ -1867,8 +1867,8 @@ describe('Enhanced Error Handling and Edge Cases', () => {
         json: async () => ({
           device_code: 'test-device-code',
           user_code: 'TEST123',
-          verification_uri: 'https://chat.qwen.ai/device',
-          verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+          verification_uri: 'https://chat.papert.ai/device',
+          verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
           expires_in: 1800,
         }),
       };
@@ -1897,8 +1897,8 @@ describe('Enhanced Error Handling and Edge Cases', () => {
         json: async () => ({
           device_code: 'test-device-code',
           user_code: 'TEST123',
-          verification_uri: 'https://chat.qwen.ai/device',
-          verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+          verification_uri: 'https://chat.papert.ai/device',
+          verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
           expires_in: 1800,
         }),
       };
@@ -1928,8 +1928,8 @@ describe('Enhanced Error Handling and Edge Cases', () => {
         json: async () => ({
           device_code: 'test-device-code',
           user_code: 'TEST123',
-          verification_uri: 'https://chat.qwen.ai/device',
-          verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+          verification_uri: 'https://chat.papert.ai/device',
+          verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
           expires_in: 1800,
         }),
       };
@@ -2027,7 +2027,7 @@ describe('Enhanced Error Handling and Edge Cases', () => {
   });
 
   describe('Enhanced refreshAccessToken scenarios', () => {
-    it('should call clearQwenCredentials on 400 error', async () => {
+    it('should call clearPapertCredentials on 400 error', async () => {
       client.setCredentials({
         refresh_token: 'expired-refresh',
       });
@@ -2051,7 +2051,7 @@ describe('Enhanced Error Handling and Edge Cases', () => {
     });
 
     it('should throw CredentialsClearRequiredError on 400 error', async () => {
-      const { CredentialsClearRequiredError } = await import('./qwenOAuth2.js');
+      const { CredentialsClearRequiredError } = await import('./papertOAuth2.js');
 
       client.setCredentials({
         refresh_token: 'expired-refresh',
@@ -2136,11 +2136,11 @@ describe('Enhanced Error Handling and Edge Cases', () => {
   });
 });
 
-describe('SharedTokenManager Integration in QwenOAuth2Client', () => {
-  let client: QwenOAuth2Client;
+describe('SharedTokenManager Integration in PapertOAuth2Client', () => {
+  let client: PapertOAuth2Client;
 
   beforeEach(() => {
-    client = new QwenOAuth2Client();
+    client = new PapertOAuth2Client();
   });
 
   it('should use SharedTokenManager instance in constructor', () => {
@@ -2150,7 +2150,7 @@ describe('SharedTokenManager Integration in QwenOAuth2Client', () => {
     expect(sharedManager).toBeDefined();
   });
 
-  it('should handle TokenManagerError types correctly in getQwenOAuthClient', async () => {
+  it('should handle TokenManagerError types correctly in getPapertOAuthClient', async () => {
     const mockConfig = {
       isBrowserLaunchSuppressed: vi.fn().mockReturnValue(true),
     } as unknown as Config;
@@ -2187,8 +2187,8 @@ describe('SharedTokenManager Integration in QwenOAuth2Client', () => {
         json: async () => ({
           device_code: 'test-device-code',
           user_code: 'TEST123',
-          verification_uri: 'https://chat.qwen.ai/device',
-          verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+          verification_uri: 'https://chat.papert.ai/device',
+          verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
           expires_in: 1800,
         }),
       };
@@ -2209,8 +2209,8 @@ describe('SharedTokenManager Integration in QwenOAuth2Client', () => {
         .mockResolvedValue(mockTokenResponse as Response);
 
       try {
-        await import('./qwenOAuth2.js').then((module) =>
-          module.getQwenOAuthClient(mockConfig),
+        await import('./papertOAuth2.js').then((module) =>
+          module.getPapertOAuthClient(mockConfig),
         );
       } catch {
         // Expected to fail in test environment
@@ -2225,15 +2225,15 @@ describe('SharedTokenManager Integration in QwenOAuth2Client', () => {
 describe('Constants and Configuration', () => {
   it('should have correct OAuth endpoints', async () => {
     // Test that the constants are properly defined by checking they're used in requests
-    const client = new QwenOAuth2Client();
+    const client = new PapertOAuth2Client();
 
     const mockResponse = {
       ok: true,
       json: async () => ({
         device_code: 'test-device-code',
         user_code: 'TEST123',
-        verification_uri: 'https://chat.qwen.ai/device',
-        verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+        verification_uri: 'https://chat.papert.ai/device',
+        verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
         expires_in: 1800,
       }),
     };
@@ -2247,19 +2247,19 @@ describe('Constants and Configuration', () => {
     });
 
     const [url] = vi.mocked(global.fetch).mock.calls[0];
-    expect(url).toBe('https://chat.qwen.ai/api/v1/oauth2/device/code');
+    expect(url).toBe('https://chat.papert.ai/api/v1/oauth2/device/code');
   });
 
   it('should use correct client ID in requests', async () => {
-    const client = new QwenOAuth2Client();
+    const client = new PapertOAuth2Client();
 
     const mockResponse = {
       ok: true,
       json: async () => ({
         device_code: 'test-device-code',
         user_code: 'TEST123',
-        verification_uri: 'https://chat.qwen.ai/device',
-        verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+        verification_uri: 'https://chat.papert.ai/device',
+        verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
         expires_in: 1800,
       }),
     };
@@ -2280,15 +2280,15 @@ describe('Constants and Configuration', () => {
 
   it('should use correct default scope', async () => {
     // Test the default scope constant by checking it's used in device flow
-    const client = new QwenOAuth2Client();
+    const client = new PapertOAuth2Client();
 
     const mockResponse = {
       ok: true,
       json: async () => ({
         device_code: 'test-device-code',
         user_code: 'TEST123',
-        verification_uri: 'https://chat.qwen.ai/device',
-        verification_uri_complete: 'https://chat.qwen.ai/device?code=TEST123',
+        verification_uri: 'https://chat.papert.ai/device',
+        verification_uri_complete: 'https://chat.papert.ai/device?code=TEST123',
         expires_in: 1800,
       }),
     };

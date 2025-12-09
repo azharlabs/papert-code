@@ -168,8 +168,8 @@ export class TestRig {
     mkdirSync(this.testDir, { recursive: true });
 
     // Create a settings file to point the CLI to the local collector
-    const qwenDir = join(this.testDir, '.papert');
-    mkdirSync(qwenDir, { recursive: true });
+    const papertDir = join(this.testDir, '.papert');
+    mkdirSync(papertDir, { recursive: true });
     // In sandbox mode, use an absolute path for telemetry inside the container
     // The container mounts the test directory at the same path as the host
     const telemetryPath = join(this.testDir, 'telemetry.log'); // Always use test directory for telemetry
@@ -185,7 +185,7 @@ export class TestRig {
       ...options.settings, // Allow tests to override/add settings
     };
     writeFileSync(
-      join(qwenDir, 'settings.json'),
+      join(papertDir, 'settings.json'),
       JSON.stringify(settings, null, 2),
     );
   }
@@ -206,9 +206,9 @@ export class TestRig {
   }
 
   /**
-   * The command and args to use to invoke Qwen Code CLI. Allows us to switch
+   * The command and args to use to invoke Papert Code CLI. Allows us to switch
    * between using the bundled gemini.js (the default) and using the installed
-   * 'qwen' (used to verify npm bundles).
+   * 'papert' (used to verify npm bundles).
    */
   private _getCommandAndArgs(extraInitialArgs: string[] = []): {
     command: string;
@@ -216,7 +216,7 @@ export class TestRig {
   } {
     const isNpmReleaseTest =
       process.env.INTEGRATION_TEST_USE_INSTALLED_GEMINI === 'true';
-    const command = isNpmReleaseTest ? 'qwen' : 'node';
+    const command = isNpmReleaseTest ? 'papert' : 'node';
     const initialArgs = isNpmReleaseTest
       ? extraInitialArgs
       : [this.bundlePath, ...extraInitialArgs];

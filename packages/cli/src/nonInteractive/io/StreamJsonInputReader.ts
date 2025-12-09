@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Papert Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -20,7 +20,7 @@ export type StreamJsonInputMessage =
   | CLIControlResponse
   | ControlCancelRequest;
 
-export class StreamJsonParseError extends Error {}
+export class StreamJsonParseError extends Error { }
 
 export class StreamJsonInputReader {
   private readonly input: Readable;

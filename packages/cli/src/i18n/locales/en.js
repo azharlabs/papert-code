@@ -1,10 +1,10 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// English translations for Qwen Code CLI
+// English translations for Papert Code CLI
 // The key serves as both the translation key and the default English text
 
 export default {
@@ -55,10 +55,10 @@ export default {
   'For a full list of shortcuts, see {{docPath}}':
     'For a full list of shortcuts, see {{docPath}}',
   'docs/keyboard-shortcuts.md': 'docs/keyboard-shortcuts.md',
-  'for help on Qwen Code': 'for help on Qwen Code',
+  'for help on Papert Code': 'for help on Papert Code',
   'show version info': 'show version info',
   'submit a bug report': 'submit a bug report',
-  'About Qwen Code': 'About Qwen Code',
+  'About Papert Code': 'About Papert Code',
 
   // ============================================================================
   // System Information Fields
@@ -83,9 +83,9 @@ export default {
   // ============================================================================
   'Analyzes the project and creates a tailored papert.md file.':
     'Analyzes the project and creates a tailored papert.md file.',
-  'list available Qwen Code tools. Usage: /tools [desc]':
-    'list available Qwen Code tools. Usage: /tools [desc]',
-  'Available Qwen Code CLI tools:': 'Available Qwen Code CLI tools:',
+  'list available Papert Code tools. Usage: /tools [desc]':
+    'list available Papert Code tools. Usage: /tools [desc]',
+  'Available Papert Code CLI tools:': 'Available Papert Code CLI tools:',
   'No tools available': 'No tools available',
   'View or change the approval mode for tool usage':
     'View or change the approval mode for tool usage',
@@ -106,8 +106,8 @@ export default {
     'clear the screen and conversation history',
   'Compresses the context by replacing it with a summary.':
     'Compresses the context by replacing it with a summary.',
-  'open full Qwen Code documentation in your browser':
-    'open full Qwen Code documentation in your browser',
+  'open full Papert Code documentation in your browser':
+    'open full Papert Code documentation in your browser',
   'Configuration not available.': 'Configuration not available.',
   'change the auth method': 'change the auth method',
   'Show quit confirmation dialog': 'Show quit confirmation dialog',
@@ -193,8 +193,8 @@ export default {
   'Step {{n}}: Choose Location': 'Step {{n}}: Choose Location',
   'Step {{n}}: Choose Generation Method':
     'Step {{n}}: Choose Generation Method',
-  'Generate with Qwen Code (Recommended)':
-    'Generate with Qwen Code (Recommended)',
+  'Generate with Papert Code (Recommended)':
+    'Generate with Papert Code (Recommended)',
   'Manual Creation': 'Manual Creation',
   'Describe what this subagent should do and when it should be used. (Be comprehensive for best results)':
     'Describe what this subagent should do and when it should be used. (Be comprehensive for best results)',
@@ -253,12 +253,12 @@ export default {
   // ============================================================================
   // Commands - General (continued)
   // ============================================================================
-  'View and edit Qwen Code settings': 'View and edit Qwen Code settings',
+  'View and edit Papert Code settings': 'View and edit Papert Code settings',
   Settings: 'Settings',
   '(Use Enter to select{{tabText}})': '(Use Enter to select{{tabText}})',
   ', Tab to change focus': ', Tab to change focus',
-  'To see changes, Qwen Code must be restarted. Press r to exit and apply changes now.':
-    'To see changes, Qwen Code must be restarted. Press r to exit and apply changes now.',
+  'To see changes, Papert Code must be restarted. Press r to exit and apply changes now.':
+    'To see changes, Papert Code must be restarted. Press r to exit and apply changes now.',
   // ============================================================================
   // Settings Labels
   // ============================================================================
@@ -345,8 +345,8 @@ export default {
     'install required IDE companion for {{ideName}}',
   'enable IDE integration': 'enable IDE integration',
   'disable IDE integration': 'disable IDE integration',
-  'IDE integration is not supported in your current environment. To use this feature, run Qwen Code in one of these supported IDEs: VS Code or VS Code forks.':
-    'IDE integration is not supported in your current environment. To use this feature, run Qwen Code in one of these supported IDEs: VS Code or VS Code forks.',
+  'IDE integration is not supported in your current environment. To use this feature, run Papert Code in one of these supported IDEs: VS Code or VS Code forks.':
+    'IDE integration is not supported in your current environment. To use this feature, run Papert Code in one of these supported IDEs: VS Code or VS Code forks.',
   'Set up GitHub Actions': 'Set up GitHub Actions',
   'Configure terminal keybindings for multiline input (VS Code, Cursor, Windsurf, Trae)':
     'Configure terminal keybindings for multiline input (VS Code, Cursor, Windsurf, Trae)',
@@ -739,33 +739,33 @@ export default {
   'You must select an auth method to proceed. Press Ctrl+C again to exit.':
     'You must select an auth method to proceed. Press Ctrl+C again to exit.',
   '(Use Enter to Set Auth)': '(Use Enter to Set Auth)',
-  'Terms of Services and Privacy Notice for Qwen Code':
-    'Terms of Services and Privacy Notice for Qwen Code',
+  'Terms of Services and Privacy Notice for Papert Code':
+    'Terms of Services and Privacy Notice for Papert Code',
   'OpenAI (compatible APIs)': 'OpenAI (compatible APIs)',
   OpenAI: 'OpenAI',
   'Failed to login. Message: {{message}}':
     'Failed to login. Message: {{message}}',
   'Authentication is enforced to be {{enforcedType}}, but you are currently using {{currentType}}.':
     'Authentication is enforced to be {{enforcedType}}, but you are currently using {{currentType}}.',
-  'Qwen OAuth authentication timed out. Please try again.':
-    'Qwen OAuth authentication timed out. Please try again.',
-  'Qwen OAuth authentication cancelled.':
-    'Qwen OAuth authentication cancelled.',
-  'Qwen OAuth Authentication': 'Qwen OAuth Authentication',
+  'Papert OAuth authentication timed out. Please try again.':
+    'Papert OAuth authentication timed out. Please try again.',
+  'Papert OAuth authentication cancelled.':
+    'Papert OAuth authentication cancelled.',
+  'Papert OAuth Authentication': 'Papert OAuth Authentication',
   'Please visit this URL to authorize:': 'Please visit this URL to authorize:',
   'Or scan the QR code below:': 'Or scan the QR code below:',
   'Waiting for authorization': 'Waiting for authorization',
   'Time remaining:': 'Time remaining:',
   '(Press ESC or CTRL+C to cancel)': '(Press ESC or CTRL+C to cancel)',
-  'Qwen OAuth Authentication Timeout': 'Qwen OAuth Authentication Timeout',
+  'Papert OAuth Authentication Timeout': 'Papert OAuth Authentication Timeout',
   'OAuth token expired (over {{seconds}} seconds). Please select authentication method again.':
     'OAuth token expired (over {{seconds}} seconds). Please select authentication method again.',
   'Press any key to return to authentication type selection.':
     'Press any key to return to authentication type selection.',
-  'Waiting for Qwen OAuth authentication...':
-    'Waiting for Qwen OAuth authentication...',
-  'Note: Your existing API key in settings.json will not be cleared when using Qwen OAuth. You can switch back to OpenAI authentication later if needed.':
-    'Note: Your existing API key in settings.json will not be cleared when using Qwen OAuth. You can switch back to OpenAI authentication later if needed.',
+  'Waiting for Papert OAuth authentication...':
+    'Waiting for Papert OAuth authentication...',
+  'Note: Your existing API key in settings.json will not be cleared when using Papert OAuth. You can switch back to OpenAI authentication later if needed.':
+    'Note: Your existing API key in settings.json will not be cleared when using Papert OAuth. You can switch back to OpenAI authentication later if needed.',
   'Authentication timed out. Please try again.':
     'Authentication timed out. Please try again.',
   'Waiting for auth... (Press ESC or CTRL+C to cancel)':
@@ -774,8 +774,8 @@ export default {
     'Failed to authenticate. Message: {{message}}',
   'Authenticated successfully with {{authType}} credentials.':
     'Authenticated successfully with {{authType}} credentials.',
-  'Invalid QWEN_DEFAULT_AUTH_TYPE value: "{{value}}". Valid values are: {{validValues}}':
-    'Invalid QWEN_DEFAULT_AUTH_TYPE value: "{{value}}". Valid values are: {{validValues}}',
+  'Invalid PAPERT_DEFAULT_AUTH_TYPE value: "{{value}}". Valid values are: {{validValues}}':
+    'Invalid PAPERT_DEFAULT_AUTH_TYPE value: "{{value}}". Valid values are: {{validValues}}',
   'OpenAI Configuration Required': 'OpenAI Configuration Required',
   'Please enter your OpenAI configuration. You can get an API key from':
     'Please enter your OpenAI configuration. You can get an API key from',
@@ -791,10 +791,10 @@ export default {
   // ============================================================================
   'Select Model': 'Select Model',
   '(Press Esc to close)': '(Press Esc to close)',
-  'The latest Qwen Coder model from Alibaba Cloud ModelStudio (version: qwen3-coder-plus-2025-09-23)':
-    'The latest Qwen Coder model from Alibaba Cloud ModelStudio (version: qwen3-coder-plus-2025-09-23)',
-  'The latest Qwen Vision model from Alibaba Cloud ModelStudio (version: qwen3-vl-plus-2025-09-23)':
-    'The latest Qwen Vision model from Alibaba Cloud ModelStudio (version: qwen3-vl-plus-2025-09-23)',
+  'The latest Papert Coder model from Alibaba Cloud ModelStudio (version: papert3-coder-plus-2025-09-23)':
+    'The latest Papert Coder model from Alibaba Cloud ModelStudio (version: papert3-coder-plus-2025-09-23)',
+  'The latest Papert Vision model from Alibaba Cloud ModelStudio (version: papert3-vl-plus-2025-09-23)':
+    'The latest Papert Vision model from Alibaba Cloud ModelStudio (version: papert3-vl-plus-2025-09-23)',
 
   // ============================================================================
   // Dialogs - Permissions

@@ -1,12 +1,12 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { IQwenOAuth2Client } from './qwenOAuth2.js';
-import { type QwenCredentials, type ErrorData } from './qwenOAuth2.js';
+import type { IPapertOAuth2Client } from './papertOAuth2.js';
+import { type PapertCredentials, type ErrorData } from './papertOAuth2.js';
 import type {
   GenerateContentParameters,
   GenerateContentResponse,
@@ -16,7 +16,7 @@ import type {
   EmbedContentResponse,
 } from '@google/genai';
 import { FinishReason } from '@google/genai';
-import { QwenContentGenerator } from './qwenContentGenerator.js';
+import { PapertContentGenerator } from './papertContentGenerator.js';
 import { SharedTokenManager } from './sharedTokenManager.js';
 import type { Config } from '../config/config.js';
 import { AuthType } from '../core/contentGenerator.js';
@@ -44,7 +44,7 @@ vi.mock('openai', () => ({
 // Mock DashScope provider
 vi.mock('../core/openaiContentGenerator/provider/dashscope.js', () => ({
   DashScopeOpenAICompatibleProvider: class {
-    constructor(_config: unknown, _cliConfig: unknown) {}
+    constructor(_config: unknown, _cliConfig: unknown) { }
   },
 }));
 
@@ -114,7 +114,7 @@ vi.mock('../core/openaiContentGenerator/pipeline.js', () => ({
 vi.mock('./sharedTokenManager.js', () => ({
   SharedTokenManager: class {
     private static instance: unknown = null;
-    private mockCredentials: QwenCredentials | null = null;
+    private mockCredentials: PapertCredentials | null = null;
     private shouldThrowError: boolean = false;
     private errorToThrow: Error | null = null;
 
@@ -126,8 +126,8 @@ vi.mock('./sharedTokenManager.js', () => ({
     }
 
     async getValidCredentials(
-      qwenClient: IQwenOAuth2Client,
-    ): Promise<QwenCredentials> {
+      papertClient: IPapertOAuth2Client,
+    ): Promise<PapertCredentials> {
       // If we're configured to throw an error, do so
       if (this.shouldThrowError && this.errorToThrow) {
         throw this.errorToThrow;
@@ -135,9 +135,9 @@ vi.mock('./sharedTokenManager.js', () => ({
 
       // Try to get credentials from the mock client first to trigger auth errors
       try {
-        const { token } = await qwenClient.getAccessToken();
+        const { token } = await papertClient.getAccessToken();
         if (token) {
-          const credentials = qwenClient.getCredentials();
+          const credentials = papertClient.getCredentials();
           return credentials;
         }
       } catch (error) {
@@ -160,20 +160,20 @@ vi.mock('./sharedTokenManager.js', () => ({
         if (isAuthError) {
           // Try to refresh the token through the client
           try {
-            const refreshResult = await qwenClient.refreshAccessToken();
+            const refreshResult = await papertClient.refreshAccessToken();
             if (refreshResult && !('error' in refreshResult)) {
               // Refresh succeeded, update client credentials and return them
-              const updatedCredentials = qwenClient.getCredentials();
+              const updatedCredentials = papertClient.getCredentials();
               return updatedCredentials;
             } else {
               // Refresh failed, throw appropriate error
               throw new Error(
-                'Failed to obtain valid Qwen access token. Please re-authenticate.',
+                'Failed to obtain valid Papert access token. Please re-authenticate.',
               );
             }
           } catch {
             throw new Error(
-              'Failed to obtain valid Qwen access token. Please re-authenticate.',
+              'Failed to obtain valid Papert access token. Please re-authenticate.',
             );
           }
         } else {
@@ -196,7 +196,7 @@ vi.mock('./sharedTokenManager.js', () => ({
       };
     }
 
-    getCurrentCredentials(): QwenCredentials | null {
+    getCurrentCredentials(): PapertCredentials | null {
       return this.mockCredentials;
     }
 
@@ -205,7 +205,7 @@ vi.mock('./sharedTokenManager.js', () => ({
     }
 
     // Helper method for tests to set credentials
-    setMockCredentials(credentials: QwenCredentials | null): void {
+    setMockCredentials(credentials: PapertCredentials | null): void {
       this.mockCredentials = credentials;
     }
 
@@ -290,12 +290,12 @@ const createMockResponse = (text: string): GenerateContentResponse =>
     codeExecutionResult: '',
   }) as GenerateContentResponse;
 
-describe('QwenContentGenerator', () => {
-  let mockQwenClient: IQwenOAuth2Client;
-  let qwenContentGenerator: QwenContentGenerator;
+describe('PapertContentGenerator', () => {
+  let mockPapertClient: IPapertOAuth2Client;
+  let papertContentGenerator: PapertContentGenerator;
   let mockConfig: Config;
 
-  const mockCredentials: QwenCredentials = {
+  const mockCredentials: PapertCredentials = {
     access_token: 'test-access-token',
     refresh_token: 'test-refresh-token',
     resource_url: 'https://test-endpoint.com/v1',
@@ -307,9 +307,9 @@ describe('QwenContentGenerator', () => {
     // Mock Config
     mockConfig = {
       getContentGeneratorConfig: vi.fn().mockReturnValue({
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         apiKey: 'test-api-key',
-        authType: 'qwen',
+        authType: 'papert',
         baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
         enableOpenAILogging: false,
         timeout: 120000,
@@ -325,8 +325,8 @@ describe('QwenContentGenerator', () => {
       getUsageStatisticsEnabled: vi.fn().mockReturnValue(false),
     } as unknown as Config;
 
-    // Mock QwenOAuth2Client
-    mockQwenClient = {
+    // Mock PapertOAuth2Client
+    mockPapertClient = {
       getAccessToken: vi.fn(),
       getCredentials: vi.fn(),
       setCredentials: vi.fn(),
@@ -335,17 +335,17 @@ describe('QwenContentGenerator', () => {
       pollDeviceToken: vi.fn(),
     };
 
-    // Create QwenContentGenerator instance
+    // Create PapertContentGenerator instance
     const contentGeneratorConfig = {
-      model: 'qwen-turbo',
+      model: 'papert-turbo',
       apiKey: 'test-api-key',
-      authType: AuthType.QWEN_OAUTH,
+      authType: AuthType.PAPERT_OAUTH,
       baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
       timeout: 120000,
       maxRetries: 3,
     };
-    qwenContentGenerator = new QwenContentGenerator(
-      mockQwenClient,
+    papertContentGenerator = new PapertContentGenerator(
+      mockPapertClient,
       contentGeneratorConfig,
       mockConfig,
     );
@@ -357,37 +357,37 @@ describe('QwenContentGenerator', () => {
 
   describe('Core Content Generation Methods', () => {
     it('should generate content with valid token', async () => {
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'valid-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue(mockCredentials);
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue(mockCredentials);
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
-      const result = await qwenContentGenerator.generateContent(
+      const result = await papertContentGenerator.generateContent(
         request,
         'test-prompt-id',
       );
 
       expect(result.text).toBe('Generated content');
-      expect(mockQwenClient.getAccessToken).toHaveBeenCalled();
+      expect(mockPapertClient.getAccessToken).toHaveBeenCalled();
     });
 
     it('should generate content stream with valid token', async () => {
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'valid-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue(mockCredentials);
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue(mockCredentials);
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello stream' }] }],
       };
 
-      const stream = await qwenContentGenerator.generateContentStream(
+      const stream = await papertContentGenerator.generateContentStream(
         request,
         'test-prompt-id',
       );
@@ -398,7 +398,7 @@ describe('QwenContentGenerator', () => {
       }
 
       expect(chunks).toEqual(['Stream chunk 1', 'Stream chunk 2']);
-      expect(mockQwenClient.getAccessToken).toHaveBeenCalled();
+      expect(mockPapertClient.getAccessToken).toHaveBeenCalled();
     });
 
     it('should count tokens without requiring authentication', async () => {
@@ -406,33 +406,33 @@ describe('QwenContentGenerator', () => {
       vi.clearAllMocks();
 
       const request: CountTokensParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Count me' }] }],
       };
 
-      const result = await qwenContentGenerator.countTokens(request);
+      const result = await papertContentGenerator.countTokens(request);
 
       expect(result.totalTokens).toBe(15);
       // countTokens is a local operation and should not require OAuth credentials
-      expect(mockQwenClient.getAccessToken).not.toHaveBeenCalled();
+      expect(mockPapertClient.getAccessToken).not.toHaveBeenCalled();
     });
 
     it('should embed content with valid token', async () => {
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'valid-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue(mockCredentials);
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue(mockCredentials);
 
       const request: EmbedContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ parts: [{ text: 'Embed me' }] }],
       };
 
-      const result = await qwenContentGenerator.embedContent(request);
+      const result = await papertContentGenerator.embedContent(request);
 
       expect(result.embeddings).toHaveLength(1);
       expect(result.embeddings?.[0]?.values).toEqual([0.1, 0.2, 0.3]);
-      expect(mockQwenClient.getAccessToken).toHaveBeenCalled();
+      expect(mockPapertClient.getAccessToken).toHaveBeenCalled();
     });
   });
 
@@ -441,12 +441,12 @@ describe('QwenContentGenerator', () => {
       const authError = { status: 401, message: 'Unauthorized' };
 
       // First call fails with auth error, second call succeeds
-      vi.mocked(mockQwenClient.getAccessToken)
+      vi.mocked(mockPapertClient.getAccessToken)
         .mockRejectedValueOnce(authError)
         .mockResolvedValueOnce({ token: 'refreshed-token' });
 
       // Refresh succeeds
-      vi.mocked(mockQwenClient.refreshAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.refreshAccessToken).mockResolvedValue({
         access_token: 'refreshed-token',
         token_type: 'Bearer',
         expires_in: 3600,
@@ -454,7 +454,7 @@ describe('QwenContentGenerator', () => {
       });
 
       // Set credentials for second call
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
         access_token: 'refreshed-token',
         token_type: 'Bearer',
         refresh_token: 'refresh-token',
@@ -463,17 +463,17 @@ describe('QwenContentGenerator', () => {
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
-      const result = await qwenContentGenerator.generateContent(
+      const result = await papertContentGenerator.generateContent(
         request,
         'test-prompt-id',
       );
 
       expect(result.text).toBe('Generated content');
-      expect(mockQwenClient.refreshAccessToken).toHaveBeenCalled();
+      expect(mockPapertClient.refreshAccessToken).toHaveBeenCalled();
     });
 
     it('should refresh token on auth error and retry for content stream', async () => {
@@ -483,12 +483,12 @@ describe('QwenContentGenerator', () => {
       vi.clearAllMocks();
 
       // First call fails with auth error, second call succeeds
-      vi.mocked(mockQwenClient.getAccessToken)
+      vi.mocked(mockPapertClient.getAccessToken)
         .mockRejectedValueOnce(authError)
         .mockResolvedValueOnce({ token: 'refreshed-stream-token' });
 
       // Refresh succeeds
-      vi.mocked(mockQwenClient.refreshAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.refreshAccessToken).mockResolvedValue({
         access_token: 'refreshed-stream-token',
         token_type: 'Bearer',
         expires_in: 3600,
@@ -496,7 +496,7 @@ describe('QwenContentGenerator', () => {
       });
 
       // Set credentials for second call
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
         access_token: 'refreshed-stream-token',
         token_type: 'Bearer',
         refresh_token: 'refresh-token',
@@ -505,11 +505,11 @@ describe('QwenContentGenerator', () => {
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello stream' }] }],
       };
 
-      const stream = await qwenContentGenerator.generateContentStream(
+      const stream = await papertContentGenerator.generateContentStream(
         request,
         'test-prompt-id',
       );
@@ -520,7 +520,7 @@ describe('QwenContentGenerator', () => {
       }
 
       expect(chunks).toEqual(['Stream chunk 1', 'Stream chunk 2']);
-      expect(mockQwenClient.refreshAccessToken).toHaveBeenCalled();
+      expect(mockPapertClient.refreshAccessToken).toHaveBeenCalled();
     });
 
     it('should handle token refresh failure', async () => {
@@ -530,19 +530,19 @@ describe('QwenContentGenerator', () => {
       };
       mockTokenManager.setMockError(
         new Error(
-          'Failed to obtain valid Qwen access token. Please re-authenticate.',
+          'Failed to obtain valid Papert access token. Please re-authenticate.',
         ),
       );
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
       await expect(
-        qwenContentGenerator.generateContent(request, 'test-prompt-id'),
+        papertContentGenerator.generateContent(request, 'test-prompt-id'),
       ).rejects.toThrow(
-        'Failed to obtain valid Qwen access token. Please re-authenticate.',
+        'Failed to obtain valid Papert access token. Please re-authenticate.',
       );
 
       // Clean up
@@ -550,22 +550,22 @@ describe('QwenContentGenerator', () => {
     });
 
     it('should update endpoint when token is refreshed', async () => {
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'valid-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
         ...mockCredentials,
         resource_url: 'https://new-endpoint.com',
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
-      await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+      await papertContentGenerator.generateContent(request, 'test-prompt-id');
 
-      expect(mockQwenClient.getCredentials).toHaveBeenCalled();
+      expect(mockPapertClient.getCredentials).toHaveBeenCalled();
     });
   });
 
@@ -573,10 +573,10 @@ describe('QwenContentGenerator', () => {
     it('should use default endpoint when no custom endpoint provided', async () => {
       let capturedBaseURL = '';
 
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'valid-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
         access_token: 'test-token',
         refresh_token: 'test-refresh',
         // No resource_url provided
@@ -584,11 +584,11 @@ describe('QwenContentGenerator', () => {
 
       // Mock the parent's generateContent to capture the baseURL during the call
       const parentPrototype = Object.getPrototypeOf(
-        Object.getPrototypeOf(qwenContentGenerator),
+        Object.getPrototypeOf(papertContentGenerator),
       );
       const originalGenerateContent = parentPrototype.generateContent;
       parentPrototype.generateContent = vi.fn().mockImplementation(function (
-        this: QwenContentGenerator,
+        this: PapertContentGenerator,
       ) {
         capturedBaseURL = (
           this as unknown as { pipeline: { client: { baseURL: string } } }
@@ -597,11 +597,11 @@ describe('QwenContentGenerator', () => {
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
-      await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+      await papertContentGenerator.generateContent(request, 'test-prompt-id');
 
       // Should use default endpoint with /v1 suffix
       expect(capturedBaseURL).toBe(
@@ -615,21 +615,21 @@ describe('QwenContentGenerator', () => {
     it('should normalize hostname-only endpoints by adding https protocol', async () => {
       let capturedBaseURL = '';
 
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'valid-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
         ...mockCredentials,
         resource_url: 'custom-endpoint.com',
       });
 
       // Mock the parent's generateContent to capture the baseURL during the call
       const parentPrototype = Object.getPrototypeOf(
-        Object.getPrototypeOf(qwenContentGenerator),
+        Object.getPrototypeOf(papertContentGenerator),
       );
       const originalGenerateContent = parentPrototype.generateContent;
       parentPrototype.generateContent = vi.fn().mockImplementation(function (
-        this: QwenContentGenerator,
+        this: PapertContentGenerator,
       ) {
         capturedBaseURL = (
           this as unknown as { pipeline: { client: { baseURL: string } } }
@@ -638,11 +638,11 @@ describe('QwenContentGenerator', () => {
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
-      await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+      await papertContentGenerator.generateContent(request, 'test-prompt-id');
 
       // Should add https:// and /v1
       expect(capturedBaseURL).toBe('https://custom-endpoint.com/v1');
@@ -654,21 +654,21 @@ describe('QwenContentGenerator', () => {
     it('should preserve existing protocol in endpoint URLs', async () => {
       let capturedBaseURL = '';
 
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'valid-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
         ...mockCredentials,
         resource_url: 'https://custom-endpoint.com',
       });
 
       // Mock the parent's generateContent to capture the baseURL during the call
       const parentPrototype = Object.getPrototypeOf(
-        Object.getPrototypeOf(qwenContentGenerator),
+        Object.getPrototypeOf(papertContentGenerator),
       );
       const originalGenerateContent = parentPrototype.generateContent;
       parentPrototype.generateContent = vi.fn().mockImplementation(function (
-        this: QwenContentGenerator,
+        this: PapertContentGenerator,
       ) {
         capturedBaseURL = (
           this as unknown as { pipeline: { client: { baseURL: string } } }
@@ -677,11 +677,11 @@ describe('QwenContentGenerator', () => {
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
-      await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+      await papertContentGenerator.generateContent(request, 'test-prompt-id');
 
       // Should preserve https:// and add /v1
       expect(capturedBaseURL).toBe('https://custom-endpoint.com/v1');
@@ -693,21 +693,21 @@ describe('QwenContentGenerator', () => {
     it('should not duplicate /v1 suffix if already present', async () => {
       let capturedBaseURL = '';
 
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'valid-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
         ...mockCredentials,
         resource_url: 'https://custom-endpoint.com/v1',
       });
 
       // Mock the parent's generateContent to capture the baseURL during the call
       const parentPrototype = Object.getPrototypeOf(
-        Object.getPrototypeOf(qwenContentGenerator),
+        Object.getPrototypeOf(papertContentGenerator),
       );
       const originalGenerateContent = parentPrototype.generateContent;
       parentPrototype.generateContent = vi.fn().mockImplementation(function (
-        this: QwenContentGenerator,
+        this: PapertContentGenerator,
       ) {
         capturedBaseURL = (
           this as unknown as { pipeline: { client: { baseURL: string } } }
@@ -716,11 +716,11 @@ describe('QwenContentGenerator', () => {
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
-      await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+      await papertContentGenerator.generateContent(request, 'test-prompt-id');
 
       // Should not duplicate /v1
       expect(capturedBaseURL).toBe('https://custom-endpoint.com/v1');
@@ -733,26 +733,26 @@ describe('QwenContentGenerator', () => {
   describe('Client State Management', () => {
     it('should set dynamic credentials during operations', async () => {
       const client = (
-        qwenContentGenerator as unknown as {
+        papertContentGenerator as unknown as {
           pipeline: { client: { apiKey: string; baseURL: string } };
         }
       ).pipeline.client;
 
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'temp-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
         ...mockCredentials,
         access_token: 'temp-token',
         resource_url: 'https://temp-endpoint.com',
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
-      await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+      await papertContentGenerator.generateContent(request, 'test-prompt-id');
 
       // Should have dynamic credentials set
       expect(client.apiKey).toBe('temp-token');
@@ -761,15 +761,15 @@ describe('QwenContentGenerator', () => {
 
     it('should set credentials even when operation throws', async () => {
       const client = (
-        qwenContentGenerator as unknown as {
+        papertContentGenerator as unknown as {
           pipeline: { client: { apiKey: string; baseURL: string } };
         }
       ).pipeline.client;
 
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'temp-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
         ...mockCredentials,
         access_token: 'temp-token',
       });
@@ -777,18 +777,18 @@ describe('QwenContentGenerator', () => {
       // Mock the parent method to throw an error
       const mockError = new Error('Network error');
       const parentPrototype = Object.getPrototypeOf(
-        Object.getPrototypeOf(qwenContentGenerator),
+        Object.getPrototypeOf(papertContentGenerator),
       );
       const originalGenerateContent = parentPrototype.generateContent;
       parentPrototype.generateContent = vi.fn().mockRejectedValue(mockError);
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
       try {
-        await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+        await papertContentGenerator.generateContent(request, 'test-prompt-id');
       } catch (error) {
         expect(error).toBe(mockError);
       }
@@ -814,14 +814,14 @@ describe('QwenContentGenerator', () => {
 
       // Replace the parent method
       const parentPrototype = Object.getPrototypeOf(
-        Object.getPrototypeOf(qwenContentGenerator),
+        Object.getPrototypeOf(papertContentGenerator),
       );
       const originalGenerateContent = parentPrototype.generateContent;
       parentPrototype.generateContent = mockGenerateContent;
 
       // Mock getAccessToken to fail initially, then succeed
       let getAccessTokenCallCount = 0;
-      vi.mocked(mockQwenClient.getAccessToken).mockImplementation(async () => {
+      vi.mocked(mockPapertClient.getAccessToken).mockImplementation(async () => {
         getAccessTokenCallCount++;
         if (getAccessTokenCallCount <= 2) {
           throw authError; // Fail on first two calls (initial + retry)
@@ -829,7 +829,7 @@ describe('QwenContentGenerator', () => {
         return { token: 'refreshed-token' }; // Succeed after refresh
       });
 
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
         access_token: 'refreshed-token',
         token_type: 'Bearer',
         refresh_token: 'refresh-token',
@@ -837,25 +837,25 @@ describe('QwenContentGenerator', () => {
         expiry_date: Date.now() + 3600000,
       });
 
-      vi.mocked(mockQwenClient.refreshAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.refreshAccessToken).mockResolvedValue({
         access_token: 'refreshed-token',
         token_type: 'Bearer',
         expires_in: 3600,
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
-      const result = await qwenContentGenerator.generateContent(
+      const result = await papertContentGenerator.generateContent(
         request,
         'test-prompt-id',
       );
 
       expect(result.text).toBe('Success after retry');
       expect(mockGenerateContent).toHaveBeenCalledTimes(2);
-      expect(mockQwenClient.refreshAccessToken).toHaveBeenCalled();
+      expect(mockPapertClient.refreshAccessToken).toHaveBeenCalled();
 
       // Restore original method
       parentPrototype.generateContent = originalGenerateContent;
@@ -866,89 +866,89 @@ describe('QwenContentGenerator', () => {
 
       const mockGenerateContent = vi.fn().mockRejectedValue(networkError);
       const parentPrototype = Object.getPrototypeOf(
-        Object.getPrototypeOf(qwenContentGenerator),
+        Object.getPrototypeOf(papertContentGenerator),
       );
       const originalGenerateContent = parentPrototype.generateContent;
       parentPrototype.generateContent = mockGenerateContent;
 
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'valid-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue(mockCredentials);
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue(mockCredentials);
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
       await expect(
-        qwenContentGenerator.generateContent(request, 'test-prompt-id'),
+        papertContentGenerator.generateContent(request, 'test-prompt-id'),
       ).rejects.toThrow('Network timeout');
       expect(mockGenerateContent).toHaveBeenCalledTimes(1);
-      expect(mockQwenClient.refreshAccessToken).not.toHaveBeenCalled();
+      expect(mockPapertClient.refreshAccessToken).not.toHaveBeenCalled();
 
       // Restore original method
       parentPrototype.generateContent = originalGenerateContent;
     });
 
     it('should handle error response from token refresh', async () => {
-      vi.mocked(mockQwenClient.getAccessToken).mockRejectedValue(
+      vi.mocked(mockPapertClient.getAccessToken).mockRejectedValue(
         new Error('Token expired'),
       );
-      vi.mocked(mockQwenClient.refreshAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.refreshAccessToken).mockResolvedValue({
         error: 'invalid_grant',
         error_description: 'Refresh token expired',
       } as ErrorData);
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
       await expect(
-        qwenContentGenerator.generateContent(request, 'test-prompt-id'),
-      ).rejects.toThrow('Failed to obtain valid Qwen access token');
+        papertContentGenerator.generateContent(request, 'test-prompt-id'),
+      ).rejects.toThrow('Failed to obtain valid Papert access token');
     });
   });
 
   describe('Token State Management', () => {
     it('should cache and return current token', () => {
-      expect(qwenContentGenerator.getCurrentToken()).toBeNull();
+      expect(papertContentGenerator.getCurrentToken()).toBeNull();
 
       // Simulate setting a token internally
       (
-        qwenContentGenerator as unknown as { currentToken: string }
+        papertContentGenerator as unknown as { currentToken: string }
       ).currentToken = 'cached-token';
 
-      expect(qwenContentGenerator.getCurrentToken()).toBe('cached-token');
+      expect(papertContentGenerator.getCurrentToken()).toBe('cached-token');
     });
 
     it('should clear token on clearToken()', () => {
       // Simulate having cached token value
-      const qwenInstance = qwenContentGenerator as unknown as {
+      const papertInstance = papertContentGenerator as unknown as {
         currentToken: string;
       };
-      qwenInstance.currentToken = 'cached-token';
+      papertInstance.currentToken = 'cached-token';
 
-      qwenContentGenerator.clearToken();
+      papertContentGenerator.clearToken();
 
-      expect(qwenContentGenerator.getCurrentToken()).toBeNull();
+      expect(papertContentGenerator.getCurrentToken()).toBeNull();
     });
 
     it('should handle concurrent token refresh requests', async () => {
       let refreshCallCount = 0;
 
       // Clear any existing cached token first
-      qwenContentGenerator.clearToken();
+      papertContentGenerator.clearToken();
 
       // Mock to simulate auth error on first parent call, which should trigger refresh
       const authError = { status: 401, message: 'Unauthorized' };
       let parentCallCount = 0;
 
-      vi.mocked(mockQwenClient.getAccessToken).mockRejectedValue(authError);
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue(mockCredentials);
+      vi.mocked(mockPapertClient.getAccessToken).mockRejectedValue(authError);
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue(mockCredentials);
 
-      vi.mocked(mockQwenClient.refreshAccessToken).mockImplementation(
+      vi.mocked(mockPapertClient.refreshAccessToken).mockImplementation(
         async () => {
           refreshCallCount++;
           await new Promise((resolve) => setTimeout(resolve, 50)); // Longer delay to ensure concurrency
@@ -962,7 +962,7 @@ describe('QwenContentGenerator', () => {
 
       // Mock the parent method to fail first then succeed
       const parentPrototype = Object.getPrototypeOf(
-        Object.getPrototypeOf(qwenContentGenerator),
+        Object.getPrototypeOf(papertContentGenerator),
       );
       const originalGenerateContent = parentPrototype.generateContent;
       parentPrototype.generateContent = vi.fn().mockImplementation(async () => {
@@ -974,15 +974,15 @@ describe('QwenContentGenerator', () => {
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
       // Make multiple concurrent requests - should all use the same refresh promise
       const promises = [
-        qwenContentGenerator.generateContent(request, 'test-prompt-id'),
-        qwenContentGenerator.generateContent(request, 'test-prompt-id'),
-        qwenContentGenerator.generateContent(request, 'test-prompt-id'),
+        papertContentGenerator.generateContent(request, 'test-prompt-id'),
+        papertContentGenerator.generateContent(request, 'test-prompt-id'),
+        papertContentGenerator.generateContent(request, 'test-prompt-id'),
       ];
 
       const results = await Promise.all(promises);
@@ -1014,7 +1014,7 @@ describe('QwenContentGenerator', () => {
 
       authErrors.forEach((error) => {
         const shouldSuppress = (
-          qwenContentGenerator as unknown as {
+          papertContentGenerator as unknown as {
             shouldSuppressErrorLogging: (
               error: unknown,
               request: GenerateContentParameters,
@@ -1035,7 +1035,7 @@ describe('QwenContentGenerator', () => {
 
       nonAuthErrors.forEach((error) => {
         const shouldSuppress = (
-          qwenContentGenerator as unknown as {
+          papertContentGenerator as unknown as {
             shouldSuppressErrorLogging: (
               error: unknown,
               request: GenerateContentParameters,
@@ -1062,13 +1062,13 @@ describe('QwenContentGenerator', () => {
       });
 
       const parentPrototype = Object.getPrototypeOf(
-        Object.getPrototypeOf(qwenContentGenerator),
+        Object.getPrototypeOf(papertContentGenerator),
       );
       parentPrototype.generateContent = mockGenerateContent;
 
       // Mock getAccessToken to fail initially, then succeed
       let getAccessTokenCallCount = 0;
-      vi.mocked(mockQwenClient.getAccessToken).mockImplementation(async () => {
+      vi.mocked(mockPapertClient.getAccessToken).mockImplementation(async () => {
         getAccessTokenCallCount++;
         if (getAccessTokenCallCount <= 2) {
           throw authError; // Fail on first two calls (initial + retry)
@@ -1076,7 +1076,7 @@ describe('QwenContentGenerator', () => {
         return { token: 'new-token' }; // Succeed after refresh
       });
 
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
         access_token: 'new-token',
         token_type: 'Bearer',
         refresh_token: 'refresh-token',
@@ -1084,7 +1084,7 @@ describe('QwenContentGenerator', () => {
         expiry_date: Date.now() + 7200000,
       });
 
-      vi.mocked(mockQwenClient.refreshAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.refreshAccessToken).mockResolvedValue({
         access_token: 'new-token',
         token_type: 'Bearer',
         expires_in: 7200,
@@ -1092,18 +1092,18 @@ describe('QwenContentGenerator', () => {
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Test message' }] }],
       };
 
-      const result = await qwenContentGenerator.generateContent(
+      const result = await papertContentGenerator.generateContent(
         request,
         'test-prompt-id',
       );
 
       expect(result.text).toBe('Success after refresh');
-      expect(mockQwenClient.getAccessToken).toHaveBeenCalled();
-      expect(mockQwenClient.refreshAccessToken).toHaveBeenCalled();
+      expect(mockPapertClient.getAccessToken).toHaveBeenCalled();
+      expect(mockPapertClient.refreshAccessToken).toHaveBeenCalled();
       expect(callCount).toBe(2); // Initial call + retry
     });
   });
@@ -1126,21 +1126,21 @@ describe('QwenContentGenerator', () => {
         .mockReturnValue(mockTokenManager);
 
       // Create new instance to pick up the mock
-      const newGenerator = new QwenContentGenerator(
-        mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+      const newGenerator = new PapertContentGenerator(
+        mockPapertClient,
+        { model: 'papert-turbo', authType: AuthType.PAPERT_OAUTH },
         mockConfig,
       );
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
       await newGenerator.generateContent(request, 'test-prompt-id');
 
       expect(mockTokenManager.getValidCredentials).toHaveBeenCalledWith(
-        mockQwenClient,
+        mockPapertClient,
       );
 
       // Restore original
@@ -1161,20 +1161,20 @@ describe('QwenContentGenerator', () => {
         .fn()
         .mockReturnValue(mockTokenManager);
 
-      const newGenerator = new QwenContentGenerator(
-        mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+      const newGenerator = new PapertContentGenerator(
+        mockPapertClient,
+        { model: 'papert-turbo', authType: AuthType.PAPERT_OAUTH },
         mockConfig,
       );
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
       await expect(
         newGenerator.generateContent(request, 'test-prompt-id'),
-      ).rejects.toThrow('Failed to obtain valid Qwen access token');
+      ).rejects.toThrow('Failed to obtain valid Papert access token');
 
       SharedTokenManager.getInstance = originalGetInstance;
     });
@@ -1194,20 +1194,20 @@ describe('QwenContentGenerator', () => {
         .fn()
         .mockReturnValue(mockTokenManager);
 
-      const newGenerator = new QwenContentGenerator(
-        mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+      const newGenerator = new PapertContentGenerator(
+        mockPapertClient,
+        { model: 'papert-turbo', authType: AuthType.PAPERT_OAUTH },
         mockConfig,
       );
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
       await expect(
         newGenerator.generateContent(request, 'test-prompt-id'),
-      ).rejects.toThrow('Failed to obtain valid Qwen access token');
+      ).rejects.toThrow('Failed to obtain valid Papert access token');
 
       SharedTokenManager.getInstance = originalGetInstance;
     });
@@ -1232,15 +1232,15 @@ describe('QwenContentGenerator', () => {
       ];
 
       endpoints.forEach(({ input, expected }) => {
-        vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+        vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
           token: 'test-token',
         });
-        vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+        vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
           ...mockCredentials,
           resource_url: input,
         });
 
-        const generator = qwenContentGenerator as unknown as {
+        const generator = papertContentGenerator as unknown as {
           getCurrentEndpoint: (resourceUrl?: string) => string;
         };
 
@@ -1265,7 +1265,7 @@ describe('QwenContentGenerator', () => {
       ];
 
       endpoints.forEach(({ input, expected }) => {
-        const generator = qwenContentGenerator as unknown as {
+        const generator = papertContentGenerator as unknown as {
           getCurrentEndpoint: (resourceUrl?: string) => string;
         };
 
@@ -1274,7 +1274,7 @@ describe('QwenContentGenerator', () => {
     });
 
     it('should handle undefined resource URL', () => {
-      const generator = qwenContentGenerator as unknown as {
+      const generator = papertContentGenerator as unknown as {
         getCurrentEndpoint: (resourceUrl?: string) => string;
       };
 
@@ -1284,7 +1284,7 @@ describe('QwenContentGenerator', () => {
     });
 
     it('should handle empty resource URL', () => {
-      const generator = qwenContentGenerator as unknown as {
+      const generator = papertContentGenerator as unknown as {
         getCurrentEndpoint: (resourceUrl?: string) => string;
       };
 
@@ -1305,7 +1305,7 @@ describe('QwenContentGenerator', () => {
       ];
 
       authErrors.forEach((error) => {
-        const generator = qwenContentGenerator as unknown as {
+        const generator = papertContentGenerator as unknown as {
           isAuthError: (error: unknown) => boolean;
         };
         expect(generator.isAuthError(error)).toBe(true);
@@ -1313,7 +1313,7 @@ describe('QwenContentGenerator', () => {
 
       // 400 is not typically an auth error, it's bad request
       const nonAuthError = { status: 400 };
-      const generator = qwenContentGenerator as unknown as {
+      const generator = papertContentGenerator as unknown as {
         isAuthError: (error: unknown) => boolean;
       };
       expect(generator.isAuthError(nonAuthError)).toBe(false);
@@ -1334,7 +1334,7 @@ describe('QwenContentGenerator', () => {
 
       authMessages.forEach((message) => {
         const error = new Error(message);
-        const generator = qwenContentGenerator as unknown as {
+        const generator = papertContentGenerator as unknown as {
           isAuthError: (error: unknown) => boolean;
         };
         expect(generator.isAuthError(error)).toBe(true);
@@ -1356,7 +1356,7 @@ describe('QwenContentGenerator', () => {
       ];
 
       nonAuthErrors.forEach((error) => {
-        const generator = qwenContentGenerator as unknown as {
+        const generator = papertContentGenerator as unknown as {
           isAuthError: (error: unknown) => boolean;
         };
         expect(generator.isAuthError(error)).toBe(false);
@@ -1372,7 +1372,7 @@ describe('QwenContentGenerator', () => {
 
       // These should not be identified as auth errors because the method only looks at top-level properties
       complexErrors.forEach((error) => {
-        const generator = qwenContentGenerator as unknown as {
+        const generator = papertContentGenerator as unknown as {
           isAuthError: (error: unknown) => boolean;
         };
         expect(generator.isAuthError(error)).toBe(false);
@@ -1383,15 +1383,15 @@ describe('QwenContentGenerator', () => {
   describe('Stream Error Handling', () => {
     it('should set credentials when stream generation fails', async () => {
       const client = (
-        qwenContentGenerator as unknown as {
+        papertContentGenerator as unknown as {
           pipeline: { client: { apiKey: string; baseURL: string } };
         }
       ).pipeline.client;
 
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'stream-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue({
         ...mockCredentials,
         access_token: 'stream-token',
         resource_url: 'https://stream-endpoint.com',
@@ -1399,7 +1399,7 @@ describe('QwenContentGenerator', () => {
 
       // Mock parent method to throw error
       const parentPrototype = Object.getPrototypeOf(
-        Object.getPrototypeOf(qwenContentGenerator),
+        Object.getPrototypeOf(papertContentGenerator),
       );
       const originalGenerateContentStream =
         parentPrototype.generateContentStream;
@@ -1408,12 +1408,12 @@ describe('QwenContentGenerator', () => {
         .mockRejectedValue(new Error('Stream error'));
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Stream test' }] }],
       };
 
       try {
-        await qwenContentGenerator.generateContentStream(
+        await papertContentGenerator.generateContentStream(
           request,
           'test-prompt-id',
         );
@@ -1431,7 +1431,7 @@ describe('QwenContentGenerator', () => {
 
     it('should set credentials for successful streams', async () => {
       const client = (
-        qwenContentGenerator as unknown as {
+        papertContentGenerator as unknown as {
           pipeline: { client: { apiKey: string; baseURL: string } };
         }
       ).pipeline.client;
@@ -1444,25 +1444,25 @@ describe('QwenContentGenerator', () => {
         expiry_date: Date.now() + 3600000,
       };
 
-      vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
+      vi.mocked(mockPapertClient.getAccessToken).mockResolvedValue({
         token: 'stream-token',
       });
-      vi.mocked(mockQwenClient.getCredentials).mockReturnValue(
+      vi.mocked(mockPapertClient.getCredentials).mockReturnValue(
         streamCredentials,
       );
 
       // Set the SharedTokenManager mock to return stream credentials
       const mockTokenManager = SharedTokenManager.getInstance() as unknown as {
-        setMockCredentials: (credentials: QwenCredentials | null) => void;
+        setMockCredentials: (credentials: PapertCredentials | null) => void;
       };
       mockTokenManager.setMockCredentials(streamCredentials);
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Stream test' }] }],
       };
 
-      const stream = await qwenContentGenerator.generateContentStream(
+      const stream = await papertContentGenerator.generateContentStream(
         request,
         'test-prompt-id',
       );
@@ -1498,9 +1498,9 @@ describe('QwenContentGenerator', () => {
         .fn()
         .mockReturnValue(mockTokenManager);
 
-      const newGenerator = new QwenContentGenerator(
-        mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+      const newGenerator = new PapertContentGenerator(
+        mockPapertClient,
+        { model: 'papert-turbo', authType: AuthType.PAPERT_OAUTH },
         mockConfig,
       );
 
@@ -1519,9 +1519,9 @@ describe('QwenContentGenerator', () => {
         .fn()
         .mockReturnValue(mockTokenManager);
 
-      const newGenerator = new QwenContentGenerator(
-        mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+      const newGenerator = new PapertContentGenerator(
+        mockPapertClient,
+        { model: 'papert-turbo', authType: AuthType.PAPERT_OAUTH },
         mockConfig,
       );
 
@@ -1542,9 +1542,9 @@ describe('QwenContentGenerator', () => {
         .fn()
         .mockReturnValue(mockTokenManager);
 
-      const newGenerator = new QwenContentGenerator(
-        mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+      const newGenerator = new PapertContentGenerator(
+        mockPapertClient,
+        { model: 'papert-turbo', authType: AuthType.PAPERT_OAUTH },
         mockConfig,
       );
 
@@ -1563,9 +1563,9 @@ describe('QwenContentGenerator', () => {
         .fn()
         .mockReturnValue(mockTokenManager);
 
-      const newGenerator = new QwenContentGenerator(
-        mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+      const newGenerator = new PapertContentGenerator(
+        mockPapertClient,
+        { model: 'papert-turbo', authType: AuthType.PAPERT_OAUTH },
         mockConfig,
       );
 
@@ -1579,11 +1579,11 @@ describe('QwenContentGenerator', () => {
 
   describe('Constructor and Initialization', () => {
     it('should initialize with configured base URL when provided', () => {
-      const generator = new QwenContentGenerator(
-        mockQwenClient,
+      const generator = new PapertContentGenerator(
+        mockPapertClient,
         {
-          model: 'qwen-turbo',
-          authType: AuthType.QWEN_OAUTH,
+          model: 'papert-turbo',
+          authType: AuthType.PAPERT_OAUTH,
           baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
           apiKey: 'test-key',
         },
@@ -1599,9 +1599,9 @@ describe('QwenContentGenerator', () => {
     });
 
     it('should get SharedTokenManager instance', () => {
-      const generator = new QwenContentGenerator(
-        mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+      const generator = new PapertContentGenerator(
+        mockPapertClient,
+        { model: 'papert-turbo', authType: AuthType.PAPERT_OAUTH },
         mockConfig,
       );
 
@@ -1614,7 +1614,7 @@ describe('QwenContentGenerator', () => {
 
   describe('Edge Cases and Error Conditions', () => {
     it('should handle token retrieval with warning when SharedTokenManager fails', async () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
       const mockTokenManager = {
         getValidCredentials: vi
@@ -1627,20 +1627,20 @@ describe('QwenContentGenerator', () => {
         .fn()
         .mockReturnValue(mockTokenManager);
 
-      const newGenerator = new QwenContentGenerator(
-        mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+      const newGenerator = new PapertContentGenerator(
+        mockPapertClient,
+        { model: 'papert-turbo', authType: AuthType.PAPERT_OAUTH },
         mockConfig,
       );
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
       await expect(
         newGenerator.generateContent(request, 'test-prompt-id'),
-      ).rejects.toThrow('Failed to obtain valid Qwen access token');
+      ).rejects.toThrow('Failed to obtain valid Papert access token');
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to get token from shared manager:',
@@ -1663,38 +1663,38 @@ describe('QwenContentGenerator', () => {
         .fn()
         .mockReturnValue(mockTokenManager);
 
-      const newGenerator = new QwenContentGenerator(
-        mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+      const newGenerator = new PapertContentGenerator(
+        mockPapertClient,
+        { model: 'papert-turbo', authType: AuthType.PAPERT_OAUTH },
         mockConfig,
       );
 
       const generateRequest: GenerateContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
       };
 
       const countRequest: CountTokensParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ role: 'user', parts: [{ text: 'Count' }] }],
       };
 
       const embedRequest: EmbedContentParameters = {
-        model: 'qwen-turbo',
+        model: 'papert-turbo',
         contents: [{ parts: [{ text: 'Embed' }] }],
       };
 
       // Methods requiring authentication should fail
       await expect(
         newGenerator.generateContent(generateRequest, 'test-id'),
-      ).rejects.toThrow('Failed to obtain valid Qwen access token');
+      ).rejects.toThrow('Failed to obtain valid Papert access token');
 
       await expect(
         newGenerator.generateContentStream(generateRequest, 'test-id'),
-      ).rejects.toThrow('Failed to obtain valid Qwen access token');
+      ).rejects.toThrow('Failed to obtain valid Papert access token');
 
       await expect(newGenerator.embedContent(embedRequest)).rejects.toThrow(
-        'Failed to obtain valid Qwen access token',
+        'Failed to obtain valid Papert access token',
       );
 
       // countTokens should succeed as it's a local operation

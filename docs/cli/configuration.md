@@ -234,7 +234,7 @@ Settings are organized into categories. All settings should be placed within the
   - **Description:** Respect .gitignore files when searching.
   - **Default:** `true`
 
-- **`context.fileFiltering.respectQwenIgnore`** (boolean):
+- **`context.fileFiltering.respectPapertIgnore`** (boolean):
   - **Description:** Respect .papertignore files when searching.
   - **Default:** `true`
 

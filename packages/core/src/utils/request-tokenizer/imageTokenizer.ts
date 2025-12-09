@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -324,7 +324,7 @@ export class ImageTokenizer {
         // Return minimum tokens as fallback
         results.push(
           ImageTokenizer.MIN_TOKENS_PER_IMAGE +
-            ImageTokenizer.VISION_SPECIAL_TOKENS,
+          ImageTokenizer.VISION_SPECIAL_TOKENS,
         );
       }
     }

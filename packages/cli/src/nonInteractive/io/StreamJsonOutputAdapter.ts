@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Papert Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -30,8 +30,7 @@ import {
  */
 export class StreamJsonOutputAdapter
   extends BaseJsonOutputAdapter
-  implements JsonOutputAdapterInterface
-{
+  implements JsonOutputAdapterInterface {
   constructor(
     config: Config,
     private readonly includePartialMessages: boolean,
@@ -284,8 +283,8 @@ export class StreamJsonOutputAdapter
     const state = this.getMessageState(parentToolUseId);
     const enrichedEvent = state.messageStarted
       ? ({ ...event, message_id: state.messageId } as StreamEvent & {
-          message_id: string;
-        })
+        message_id: string;
+      })
       : event;
 
     const partial: CLIPartialAssistantMessage = {

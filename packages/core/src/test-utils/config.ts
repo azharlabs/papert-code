@@ -14,7 +14,7 @@ export const DEFAULT_CONFIG_PARAMETERS: ConfigParameters = {
   usageStatisticsEnabled: true,
   debugMode: false,
   proxy: undefined,
-  model: 'qwen-9001-super-duper',
+  model: 'papert-9001-super-duper',
   targetDir: '/',
   cwd: '/',
 };

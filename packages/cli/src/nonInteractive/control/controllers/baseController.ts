@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Papert Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -174,5 +174,5 @@ export abstract class BaseController {
   /**
    * Cleanup resources
    */
-  cleanup(): void {}
+  cleanup(): void { }
 }

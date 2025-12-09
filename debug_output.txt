@@ -1,0 +1,1272 @@
+
+ RUN  v3.2.4 /Users/azhar/code/coding-agent/papert-code
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should process a valid text file path
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:145:20
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should process a valid directory path and convert to glob
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:183:20
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should handle query with text before and after @command
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:217:20
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should correctly unescape paths with escaped spaces
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:247:20
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should handle multiple @file references
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:288:20
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should handle multiple @file references with interleaved text
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:327:20
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should handle a mix of valid, invalid, and lone @ references
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:364:20
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stdout | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > git-aware filtering > should skip git-ignored files in @ commands
+Ignored 1 files:
+Git-ignored: /var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-zkV4f7/node_modules/package.json
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > git-aware filtering > should process non-git-ignored files normally
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:468:22
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stdout | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > git-aware filtering > should handle mixed git-ignored and valid files
+Ignored 1 files:
+Git-ignored: /var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-2ltcl4/.env
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > git-aware filtering > should handle mixed git-ignored and valid files
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:501:22
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stdout | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > git-aware filtering > should always ignore .git directory files
+Ignored 1 files:
+Git-ignored: /var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-53aKPQ/.git/config
+
+stdout | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > papert-ignore filtering > should skip papert-ignored files in @ commands
+Ignored 1 files:
+Papert-ignored: /var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-tnIztu/build/output.js
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should process non-ignored files when .papertignore is present
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:627:20
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stdout | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should handle mixed papert-ignored and valid files
+Ignored 1 files:
+Papert-ignored: /var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-0QJ7pc/dist/bundle.js
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should handle mixed papert-ignored and valid files
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:663:20
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'comma'
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:791:24
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'period'
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:791:24
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'semicolon'
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:791:24
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'exclamation mark'
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:791:24
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'question mark'
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:791:24
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'opening parenthesis'
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:791:24
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'closing parenthesis'
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:791:24
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'opening square bracket'
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:791:24
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'closing square bracket'
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:791:24
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'opening curly brace'
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:791:24
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'closing curly brace'
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:791:24
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should handle multiple @paths terminated by different punctuation
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:826:22
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should still handle escaped spaces in paths before punctuation
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:858:22
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should not break file paths with periods in extensions
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:887:22
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should handle file paths ending with period followed by space
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:916:22
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should handle comma termination with complex file paths
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:945:22
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should not terminate at period within file name
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:974:22
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should handle end of string termination for period and comma
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:1003:22
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should handle files with special characters in names
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:1032:22
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should handle basic file names without special characters
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:1061:22
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+stderr | src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should not add the user's turn to history, as that is the caller's responsibility
+DEBUG ERROR: TypeError: this.config.refreshContextMemory is not a function
+    at ReadManyFilesToolInvocation.execute [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/core/src/tools/read-many-files.ts:281:25[90m)[39m
+    at handleAtCommand [90m(/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.ts:411:20[90m)[39m
+    at [90m/Users/azhar/code/coding-agent/papert-code/[39mpackages/cli/src/ui/hooks/atCommandProcessor.test.ts:1093:5
+    at [90mfile:///Users/azhar/code/coding-agent/papert-code/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+ ❯ |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts (39 tests | 31 failed) 98ms
+   ✓ handleAtCommand > should pass through query if no @ command is present 2ms
+   ✓ handleAtCommand > should pass through original query if only a lone @ symbol is present 1ms
+   × handleAtCommand > should process a valid text file path 19ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > should process a valid directory path and convert to glob 4ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > should handle query with text before and after @command 3ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > should correctly unescape paths with escaped spaces 3ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > should handle multiple @file references 3ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > should handle multiple @file references with interleaved text 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > should handle a mix of valid, invalid, and lone @ references 4ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   ✓ handleAtCommand > should return original query if all @paths are invalid or lone @ 1ms
+   ✓ handleAtCommand > git-aware filtering > should skip git-ignored files in @ commands 2ms
+   × handleAtCommand > git-aware filtering > should process non-git-ignored files normally 3ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > git-aware filtering > should handle mixed git-ignored and valid files 3ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   ✓ handleAtCommand > git-aware filtering > should always ignore .git directory files 1ms
+   ✓ handleAtCommand > when recursive file search is disabled > should not use glob search for a nonexistent file 0ms
+   ✓ handleAtCommand > papert-ignore filtering > should skip papert-ignored files in @ commands 1ms
+   × handleAtCommand > should process non-ignored files when .papertignore is present 3ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > should handle mixed papert-ignored and valid files 3ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should terminate @path at 'comma' 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should terminate @path at 'period' 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should terminate @path at 'semicolon' 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should terminate @path at 'exclamation mark' 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should terminate @path at 'question mark' 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should terminate @path at 'opening parenthesis' 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should terminate @path at 'closing parenthesis' 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should terminate @path at 'opening square bracket' 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should terminate @path at 'closing square bracket' 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should terminate @path at 'opening curly brace' 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should terminate @path at 'closing curly brace' 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should handle multiple @paths terminated by different punctuation 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should still handle escaped spaces in paths before punctuation 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should not break file paths with periods in extensions 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should handle file paths ending with period followed by space 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should handle comma termination with complex file paths 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should not terminate at period within file name 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should handle end of string termination for period and comma 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should handle files with special characters in names 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   × handleAtCommand > punctuation termination in @ commands > should handle basic file names without special characters 2ms
+     → expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+   ✓ handleAtCommand > should not add the user's turn to history, as that is the caller's responsibility 5ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 31 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should process a valid text file path
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "@/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-oeE0rI/path/to/file.txt",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-oeE0rI/path/to/file.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "This is the file content.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:154:20
+    152|     });
+    153| 
+    154|     expect(result).toEqual({
+       |                    ^
+    155|       processedQuery: [
+    156|         { text: `@${filePath}` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should process a valid directory path and convert to glob
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "@/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-xvODNh/path/to/**",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-xvODNh/path/to/file.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "This is the file content.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:192:20
+    190|     });
+    191| 
+    192|     expect(result).toEqual({
+       |                    ^
+    193|       processedQuery: [
+    194|         { text: `@${resolvedGlob}` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should handle query with text before and after @command
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Explain this: @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-H1JzKu/doc.md in detail.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-H1JzKu/doc.md:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "Markdown content.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:226:20
+    224|     });
+    225| 
+    226|     expect(result).toEqual({
+       |                    ^
+    227|       processedQuery: [
+    228|         { text: `${textBefore}@${filePath}${textAfter}` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should correctly unescape paths with escaped spaces
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "@/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-ZHdobh/path/to/my file.txt",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-ZHdobh/path/to/my file.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "This is the file content.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:256:20
+    254|     });
+    255| 
+    256|     expect(result).toEqual({
+       |                    ^
+    257|       processedQuery: [
+    258|         { text: `@${filePath}` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should handle multiple @file references
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "@/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-uU2cqf/file1.txt @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-uU2cqf/file2.md",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-uU2cqf/file1.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "Content file1",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-uU2cqf/file2.md:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "Content file2",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:297:20
+    295|     });
+    296| 
+    297|     expect(result).toEqual({
+       |                    ^
+    298|       processedQuery: [
+    299|         { text: query },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should handle multiple @file references with interleaved text
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Check @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-ZSuFW4/f1.txt and @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-ZSuFW4/f2.md please.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-ZSuFW4/f1.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "C1",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-ZSuFW4/f2.md:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "C2",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:336:20
+    334|     });
+    335| 
+    336|     expect(result).toEqual({
+       |                    ^
+    337|       processedQuery: [
+    338|         { text: query },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should handle a mix of valid, invalid, and lone @ references
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Look at @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-9cxL7S/valid1.txt then @nonexistent.txt and also just @ symbol, then @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-9cxL7S/resolved/valid2.actual",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-9cxL7S/resolved/valid2.actual:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "Globbed content",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-9cxL7S/valid1.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "Valid content 1",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:373:20
+    371|     });
+    372| 
+    373|     expect(result).toEqual({
+       |                    ^
+    374|       processedQuery: [
+    375|         {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > git-aware filtering > should process non-git-ignored files normally
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "@/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-6C4z3c/src/index.ts",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-6C4z3c/src/index.ts:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "console.log(\"Hello world\");",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:477:22
+    475|       });
+    476| 
+    477|       expect(result).toEqual({
+       |                      ^
+    478|         processedQuery: [
+    479|           { text: `@${validFile}` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > git-aware filtering > should handle mixed git-ignored and valid files
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "@/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-2ltcl4/README.md @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-2ltcl4/.env",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-2ltcl4/README.md:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "# Project README",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:510:22
+    508|       });
+    509| 
+    510|       expect(result).toEqual({
+       |                      ^
+    511|         processedQuery: [
+    512|           { text: `@${validFile} @${gitIgnoredFile}` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should process non-ignored files when .papertignore is present
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "@/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-5GRV7N/src/index.ts",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-5GRV7N/src/index.ts:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "console.log(\"Hello world\");",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:636:20
+    634|     });
+    635| 
+    636|     expect(result).toEqual({
+       |                    ^
+    637|       processedQuery: [
+    638|         { text: `@${validFile}` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > should handle mixed papert-ignored and valid files
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "@/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-0QJ7pc/src/main.ts @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-0QJ7pc/dist/bundle.js",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ----",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-0QJ7pc/src/main.ts:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "// Main application entry",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:672:20
+    670|     });
+    671| 
+    672|     expect(result).toEqual({
+       |                    ^
+    673|       processedQuery: [
+    674|         { text: `@${validFile} @${papertIgnoredFile}` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'comma'
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'period'
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'semicolon'
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'exclamation mark'
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'question mark'
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'opening parenthesis'
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'closing parenthesis'
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'opening square bracket'
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'closing square bracket'
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'opening curly brace'
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should terminate @path at 'closing curly brace'
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Look at @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-D4ZsuL/test.txt, then explain it.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-D4ZsuL/test.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "File content here",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:800:24
+    798|         });
+    799| 
+    800|         expect(result).toEqual({
+       |                        ^
+    801|           processedQuery: [
+    802|             { text: query },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should handle multiple @paths terminated by different punctuation
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Compare @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-UPxpov/first.txt, @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-UPxpov/second.txt; what's different?",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-UPxpov/first.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "First file",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-UPxpov/second.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "Second file",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:835:22
+    833|       });
+    834| 
+    835|       expect(result).toEqual({
+       |                      ^
+    836|         processedQuery: [
+    837|           { text: `Compare @${file1Path}, @${file2Path}; what's differ…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should still handle escaped spaces in paths before punctuation
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Check @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-DoiCDp/spaced file.txt, it has spaces.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-DoiCDp/spaced file.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "Spaced file content",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:867:22
+    865|       });
+    866| 
+    867|       expect(result).toEqual({
+       |                      ^
+    868|         processedQuery: [
+    869|           { text: `Check @${filePath}, it has spaces.` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should not break file paths with periods in extensions
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Analyze @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-U2XYDa/example.d.ts for type definitions.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-U2XYDa/example.d.ts:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "TypeScript content",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:896:22
+    894|       });
+    895| 
+    896|       expect(result).toEqual({
+       |                      ^
+    897|         processedQuery: [
+    898|           { text: `Analyze @${filePath} for type definitions.` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should handle file paths ending with period followed by space
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Check @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-AZZUIF/config.json. This file contains settings.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-AZZUIF/config.json:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "Config content",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:925:22
+    923|       });
+    924| 
+    925|       expect(result).toEqual({
+       |                      ^
+    926|         processedQuery: [
+    927|           { text: `Check @${filePath}. This file contains settings.` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should handle comma termination with complex file paths
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Review @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-emauFf/package.json, then check dependencies.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-emauFf/package.json:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "Package info",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:954:22
+    952|       });
+    953| 
+    954|       expect(result).toEqual({
+       |                      ^
+    955|         processedQuery: [
+    956|           { text: `Review @${filePath}, then check dependencies.` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should not terminate at period within file name
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Check @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-mMRcRI/version.1.2.3.txt contains version information.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-mMRcRI/version.1.2.3.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "Version info",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:983:22
+    981|       });
+    982| 
+    983|       expect(result).toEqual({
+       |                      ^
+    984|         processedQuery: [
+    985|           { text: `Check @${filePath} contains version information.` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should handle end of string termination for period and comma
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Show me @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-wsbOrR/end.txt.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-wsbOrR/end.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "End file content",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:1012:22
+    1010|       });
+    1011| 
+    1012|       expect(result).toEqual({
+       |                      ^
+    1013|         processedQuery: [
+    1014|           { text: `Show me @${filePath}.` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should handle files with special characters in names
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Check @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-HfzfMg/file$with&special#chars.txt for content.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-HfzfMg/file$with&special#chars.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "File with special chars content",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:1041:22
+    1039|       });
+    1040| 
+    1041|       expect(result).toEqual({
+       |                      ^
+    1042|         processedQuery: [
+    1043|           { text: `Check @${filePath} for content.` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/31]⎯
+
+ FAIL  |@papert-code/papert-code| src/ui/hooks/atCommandProcessor.test.ts > handleAtCommand > punctuation termination in @ commands > should handle basic file names without special characters
+AssertionError: expected { processedQuery: null, …(1) } to deeply equal { …(2) }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "processedQuery": [[39m
+[32m-     {[39m
+[32m-       "text": "Check @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-noahVu/basicfile.txt please.",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- Content from referenced files ---",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- Content from @/var/folders/sm/gpq9v4qn72zf1r9tpf_75xm80000gn/T/folder-structure-test-noahVu/basicfile.txt:[39m
+[32m- ",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "Basic file content",[39m
+[32m-     },[39m
+[32m-     {[39m
+[32m-       "text": "[39m
+[32m- --- End of content ---",[39m
+[32m-     },[39m
+[32m-   ],[39m
+[32m-   "shouldProceed": true,[39m
+[31m+   "processedQuery": null,[39m
+[31m+   "shouldProceed": false,[39m
+[2m  }[22m
+
+ ❯ src/ui/hooks/atCommandProcessor.test.ts:1070:22
+    1068|       });
+    1069| 
+    1070|       expect(result).toEqual({
+       |                      ^
+    1071|         processedQuery: [
+    1072|           { text: `Check @${filePath} please.` },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/31]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  31 failed | 8 passed (39)
+   Start at  16:41:56
+   Duration  1.08s (transform 311ms, setup 13ms, collect 677ms, tests 98ms, environment 133ms, prepare 31ms)
+

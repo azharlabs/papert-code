@@ -362,7 +362,7 @@ export const AppContainer = (props: AppContainerProps) => {
     isAuthDialogOpen,
     isAuthenticating,
     pendingAuthType,
-    qwenAuthState,
+    papertAuthState,
     handleAuthSelect,
     openAuthDialog,
     cancelAuthentication,
@@ -394,7 +394,7 @@ export const AppContainer = (props: AppContainerProps) => {
       settings.merged.security?.auth?.enforcedType &&
       settings.merged.security?.auth.selectedType &&
       settings.merged.security?.auth.enforcedType !==
-        settings.merged.security?.auth.selectedType
+      settings.merged.security?.auth.selectedType
     ) {
       onAuthError(
         t(
@@ -598,11 +598,10 @@ export const AppContainer = (props: AppContainerProps) => {
       historyManager.addItem(
         {
           type: MessageType.INFO,
-          text: `Memory refreshed successfully. ${
-            memoryContent.length > 0
-              ? `Loaded ${memoryContent.length} characters from ${fileCount} file(s).`
-              : 'No memory content found.'
-          }`,
+          text: `Memory refreshed successfully. ${memoryContent.length > 0
+            ? `Loaded ${memoryContent.length} characters from ${fileCount} file(s).`
+            : 'No memory content found.'
+            }`,
         },
         Date.now(),
       );
@@ -627,7 +626,7 @@ export const AppContainer = (props: AppContainerProps) => {
     }
   }, [config, historyManager, settings.merged]);
 
-  const cancelHandlerRef = useRef<() => void>(() => {});
+  const cancelHandlerRef = useRef<() => void>(() => { });
 
   const {
     streamingState,
@@ -1224,8 +1223,8 @@ export const AppContainer = (props: AppContainerProps) => {
       authError,
       isAuthDialogOpen,
       pendingAuthType,
-      // Qwen OAuth state
-      qwenAuthState,
+      // Papert OAuth state
+      papertAuthState,
       editorError,
       isEditorDialogOpen,
       corgiMode,
@@ -1316,8 +1315,8 @@ export const AppContainer = (props: AppContainerProps) => {
       authError,
       isAuthDialogOpen,
       pendingAuthType,
-      // Qwen OAuth state
-      qwenAuthState,
+      // Papert OAuth state
+      papertAuthState,
       editorError,
       isEditorDialogOpen,
       corgiMode,

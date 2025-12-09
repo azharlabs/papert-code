@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -16,7 +16,7 @@ describe('EnhancedErrorHandler', () => {
   let mockRequest: GenerateContentParameters;
 
   beforeEach(() => {
-    mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => { });
 
     mockContext = {
       userPromptId: 'test-prompt-id',

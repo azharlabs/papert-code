@@ -33,7 +33,7 @@ describe('validateNonInterActiveAuth', () => {
     delete process.env['GOOGLE_GENAI_USE_VERTEXAI'];
     delete process.env['GOOGLE_GENAI_USE_GCA'];
     delete process.env['OPENAI_API_KEY'];
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
     processExitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`process.exit(${code}) called`);
     }) as ReturnType<typeof vi.spyOn<[code?: number], never>>;
@@ -126,7 +126,7 @@ describe('validateNonInterActiveAuth', () => {
     expect(refreshAuthMock).toHaveBeenCalledWith(AuthType.USE_OPENAI);
   });
 
-  it('uses configured QWEN_OAUTH if provided', async () => {
+  it('uses configured PAPERT_OAUTH if provided', async () => {
     const nonInteractiveConfig = {
       refreshAuth: refreshAuthMock,
       getOutputFormat: vi.fn().mockReturnValue(OutputFormat.TEXT),
@@ -135,12 +135,12 @@ describe('validateNonInterActiveAuth', () => {
         .mockReturnValue({ authType: undefined }),
     } as unknown as Config;
     await validateNonInteractiveAuth(
-      AuthType.QWEN_OAUTH,
+      AuthType.PAPERT_OAUTH,
       undefined,
       nonInteractiveConfig,
       mockSettings,
     );
-    expect(refreshAuthMock).toHaveBeenCalledWith(AuthType.QWEN_OAUTH);
+    expect(refreshAuthMock).toHaveBeenCalledWith(AuthType.PAPERT_OAUTH);
   });
 
   it('exits if validateAuthMethod returns error', async () => {
@@ -211,7 +211,7 @@ describe('validateNonInterActiveAuth', () => {
   });
 
   it('exits if currentAuthType does not match enforcedAuthType', async () => {
-    mockSettings.merged.security!.auth!.enforcedType = AuthType.QWEN_OAUTH;
+    mockSettings.merged.security!.auth!.enforcedType = AuthType.PAPERT_OAUTH;
     process.env['OPENAI_API_KEY'] = 'fake-key';
     const nonInteractiveConfig = {
       refreshAuth: refreshAuthMock,
@@ -232,7 +232,7 @@ describe('validateNonInterActiveAuth', () => {
       expect((e as Error).message).toContain('process.exit(1) called');
     }
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'The configured auth type is qwen-oauth, but the current auth type is openai. Please re-authenticate with the correct type.',
+      'The configured auth type is papert-oauth, but the current auth type is openai. Please re-authenticate with the correct type.',
     );
     expect(processExitSpy).toHaveBeenCalledWith(1);
   });
@@ -292,7 +292,7 @@ describe('validateNonInterActiveAuth', () => {
     });
 
     it('emits error result and exits when enforced auth mismatches current auth', async () => {
-      mockSettings.merged.security!.auth!.enforcedType = AuthType.QWEN_OAUTH;
+      mockSettings.merged.security!.auth!.enforcedType = AuthType.PAPERT_OAUTH;
       process.env['OPENAI_API_KEY'] = 'fake-key';
 
       const nonInteractiveConfig = {
@@ -318,7 +318,7 @@ describe('validateNonInterActiveAuth', () => {
       expect(emitResultMock).toHaveBeenCalledWith({
         isError: true,
         errorMessage: expect.stringContaining(
-          'The configured auth type is qwen-oauth, but the current auth type is openai.',
+          'The configured auth type is papert-oauth, but the current auth type is openai.',
         ),
         durationMs: 0,
         apiDurationMs: 0,
@@ -427,7 +427,7 @@ describe('validateNonInterActiveAuth', () => {
     });
 
     it('emits error result and exits when enforced auth mismatches current auth', async () => {
-      mockSettings.merged.security!.auth!.enforcedType = AuthType.QWEN_OAUTH;
+      mockSettings.merged.security!.auth!.enforcedType = AuthType.PAPERT_OAUTH;
       process.env['OPENAI_API_KEY'] = 'fake-key';
 
       const nonInteractiveConfig = {
@@ -454,7 +454,7 @@ describe('validateNonInterActiveAuth', () => {
       expect(emitResultMock).toHaveBeenCalledWith({
         isError: true,
         errorMessage: expect.stringContaining(
-          'The configured auth type is qwen-oauth, but the current auth type is openai.',
+          'The configured auth type is papert-oauth, but the current auth type is openai.',
         ),
         durationMs: 0,
         apiDurationMs: 0,

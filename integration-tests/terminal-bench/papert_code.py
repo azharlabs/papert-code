@@ -7,10 +7,10 @@ from terminal_bench.agents.installed_agents.abstract_installed_agent import (
 from terminal_bench.terminal.models import TerminalCommand
 
 
-class QwenCodeAgent(AbstractInstalledAgent):
+class PapertCodeAgent(AbstractInstalledAgent):
     @staticmethod
     def name() -> str:
-        return "Qwen Code"
+        return "Papert Code"
 
     def __init__(self, model_name: str | None = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -42,7 +42,7 @@ class QwenCodeAgent(AbstractInstalledAgent):
         elif "OPENAI_MODEL" in os.environ:
             env["OPENAI_MODEL"] = os.environ["OPENAI_MODEL"]
         else:
-            env["OPENAI_MODEL"] = "qwen3-coder-plus"
+            env["OPENAI_MODEL"] = "papert3-coder-plus"
         
         # Base URL - prefer agent_kwargs over environment variables  
         if self._base_url:
@@ -62,7 +62,7 @@ class QwenCodeAgent(AbstractInstalledAgent):
         escaped_description = shlex.quote(task_description)
         return [
             TerminalCommand(
-                command=f"qwen -y --prompt {escaped_description}",
+                command=f"papert -y --prompt {escaped_description}",
                 max_timeout_sec=float("inf"),
                 block=True,
                 append_enter=True

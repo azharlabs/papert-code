@@ -16,7 +16,7 @@ import {
   loadExtension,
 } from '../extension.js';
 import { checkForAllExtensionUpdates, updateExtension } from './update.js';
-import { QWEN_DIR } from '@papert-code/papert-code-core';
+import { PAPERT_DIR } from '@papert-code/papert-code-core';
 import { isWorkspaceTrusted } from '../trustedFolders.js';
 import { ExtensionUpdateState } from '../../ui/state/extensions.js';
 import { createExtension } from '../../test-utils/createExtension.js';
@@ -85,7 +85,7 @@ describe('update tests', () => {
       path.join(tempHomeDir, 'papert-code-test-workspace-'),
     );
     vi.mocked(os.homedir).mockReturnValue(tempHomeDir);
-    userExtensionsDir = path.join(tempHomeDir, QWEN_DIR, 'extensions');
+    userExtensionsDir = path.join(tempHomeDir, PAPERT_DIR, 'extensions');
     // Clean up before each test
     fs.rmSync(userExtensionsDir, { recursive: true, force: true });
     fs.mkdirSync(userExtensionsDir, { recursive: true });
@@ -105,7 +105,7 @@ describe('update tests', () => {
   describe('updateExtension', () => {
     it('should update a git-installed extension', async () => {
       const gitUrl = 'https://github.com/google/gemini-extensions.git';
-      const extensionName = 'qwen-extensions';
+      const extensionName = 'papert-extensions';
       const targetExtDir = path.join(userExtensionsDir, extensionName);
       const metadataPath = path.join(targetExtDir, INSTALL_METADATA_FILENAME);
 
@@ -144,11 +144,11 @@ describe('update tests', () => {
         tempHomeDir,
         async (_) => true,
         ExtensionUpdateState.UPDATE_AVAILABLE,
-        () => {},
+        () => { },
       );
 
       expect(updateInfo).toEqual({
-        name: 'qwen-extensions',
+        name: 'papert-extensions',
         originalVersion: '1.0.0',
         updatedVersion: '1.1.0',
       });

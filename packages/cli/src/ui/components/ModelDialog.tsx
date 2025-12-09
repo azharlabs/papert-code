@@ -29,8 +29,8 @@ interface ModelDialogProps {
 export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
   const config = useContext(ConfigContext);
 
-  // Get auth type from config, default to QWEN_OAUTH if not available
-  const authType = config?.getAuthType() ?? AuthType.QWEN_OAUTH;
+  // Get auth type from config, default to PAPERT_OAUTH if not available
+  const authType = config?.getAuthType() ?? AuthType.PAPERT_OAUTH;
 
   // Get available models based on auth type
   const availableModels = useMemo(

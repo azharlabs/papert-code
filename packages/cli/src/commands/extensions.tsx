@@ -16,7 +16,7 @@ import { newCommand } from './extensions/new.js';
 
 export const extensionsCommand: CommandModule = {
   command: 'extensions <command>',
-  describe: 'Manage Qwen Code extensions.',
+  describe: 'Manage Papert Code extensions.',
   builder: (yargs) =>
     yargs
       .command(installCommand)

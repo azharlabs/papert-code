@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -174,10 +174,10 @@ export class DefaultTelemetryService implements TelemetryService {
       | null = null;
     let usage:
       | {
-          prompt_tokens: number;
-          completion_tokens: number;
-          total_tokens: number;
-        }
+        prompt_tokens: number;
+        completion_tokens: number;
+        total_tokens: number;
+      }
       | undefined;
 
     for (const chunk of chunks) {

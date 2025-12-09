@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -127,8 +127,8 @@ export function shouldOfferVisionSwitch(
   currentModel: string,
   visionModelPreviewEnabled: boolean = true,
 ): boolean {
-  // Only trigger for qwen-oauth
-  if (authType !== AuthType.QWEN_OAUTH) {
+  // Only trigger for papert-oauth
+  if (authType !== AuthType.PAPERT_OAUTH) {
     return false;
   }
 
@@ -224,8 +224,8 @@ export function useVisionAutoSwitch(
 
       const contentGeneratorConfig = config.getContentGeneratorConfig();
 
-      // Only handle qwen-oauth auth type
-      if (contentGeneratorConfig?.authType !== AuthType.QWEN_OAUTH) {
+      // Only handle papert-oauth auth type
+      if (contentGeneratorConfig?.authType !== AuthType.PAPERT_OAUTH) {
         return { shouldProceed: true };
       }
 

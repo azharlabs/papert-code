@@ -72,7 +72,7 @@ export interface ReadManyFilesParams {
    */
   file_filtering_options?: {
     respect_git_ignore?: boolean;
-    respect_qwen_ignore?: boolean;
+    respect_papert_ignore?: boolean;
   };
 }
 
@@ -81,19 +81,19 @@ export interface ReadManyFilesParams {
  */
 type FileProcessingResult =
   | {
-      success: true;
-      filePath: string;
-      relativePathForDisplay: string;
-      fileReadResult: ProcessedFileReadResult;
-      reason?: undefined;
-    }
+    success: true;
+    filePath: string;
+    relativePathForDisplay: string;
+    fileReadResult: ProcessedFileReadResult;
+    reason?: undefined;
+  }
   | {
-      success: false;
-      filePath: string;
-      relativePathForDisplay: string;
-      fileReadResult?: undefined;
-      reason: string;
-    };
+    success: false;
+    filePath: string;
+    relativePathForDisplay: string;
+    fileReadResult?: undefined;
+    reason: string;
+  };
 
 /**
  * Creates the default exclusion patterns including dynamic patterns.
@@ -129,32 +129,31 @@ ${this.config.getTargetDir()}
     // Determine the final list of exclusion patterns exactly as in execute method
     const paramExcludes = this.params.exclude || [];
     const paramUseDefaultExcludes = this.params.useDefaultExcludes !== false;
-    const qwenIgnorePatterns = this.config
+    const papertIgnorePatterns = this.config
       .getFileService()
-      .getQwenIgnorePatterns();
+      .getPapertIgnorePatterns();
     const finalExclusionPatternsForDescription: string[] =
       paramUseDefaultExcludes
         ? [
-            ...getDefaultExcludes(this.config),
-            ...paramExcludes,
-            ...qwenIgnorePatterns,
-          ]
-        : [...paramExcludes, ...qwenIgnorePatterns];
+          ...getDefaultExcludes(this.config),
+          ...paramExcludes,
+          ...papertIgnorePatterns,
+        ]
+        : [...paramExcludes, ...papertIgnorePatterns];
 
-    let excludeDesc = `Excluding: ${
-      finalExclusionPatternsForDescription.length > 0
-        ? `patterns like 
+    let excludeDesc = `Excluding: ${finalExclusionPatternsForDescription.length > 0
+      ? `patterns like 
 ${finalExclusionPatternsForDescription
-  .slice(0, 2)
-  .join(
-    '`, `',
-  )}${finalExclusionPatternsForDescription.length > 2 ? '...`' : '`'}`
-        : 'none specified'
-    }`;
+        .slice(0, 2)
+        .join(
+          '`, `',
+        )}${finalExclusionPatternsForDescription.length > 2 ? '...`' : '`'}`
+      : 'none specified'
+      }`;
 
     // Add a note if .papertignore patterns contributed to the final list of exclusions
-    if (qwenIgnorePatterns.length > 0) {
-      const geminiPatternsInEffect = qwenIgnorePatterns.filter((p) =>
+    if (papertIgnorePatterns.length > 0) {
+      const geminiPatternsInEffect = papertIgnorePatterns.filter((p) =>
         finalExclusionPatternsForDescription.includes(p),
       ).length;
       if (geminiPatternsInEffect > 0) {
@@ -221,16 +220,16 @@ ${finalExclusionPatternsForDescription
       );
 
       const fileDiscovery = this.config.getFileService();
-      const { filteredPaths, gitIgnoredCount, qwenIgnoredCount } =
+      const { filteredPaths, gitIgnoredCount, papertIgnoredCount } =
         fileDiscovery.filterFilesWithReport(relativeEntries, {
           respectGitIgnore:
             this.params.file_filtering_options?.respect_git_ignore ??
             this.config.getFileFilteringOptions().respectGitIgnore ??
             DEFAULT_FILE_FILTERING_OPTIONS.respectGitIgnore,
-          respectQwenIgnore:
-            this.params.file_filtering_options?.respect_qwen_ignore ??
-            this.config.getFileFilteringOptions().respectQwenIgnore ??
-            DEFAULT_FILE_FILTERING_OPTIONS.respectQwenIgnore,
+          respectPapertIgnore:
+            this.params.file_filtering_options?.respect_papert_ignore ??
+            this.config.getFileFilteringOptions().respectPapertIgnore ??
+            DEFAULT_FILE_FILTERING_OPTIONS.respectPapertIgnore,
         });
 
       for (const relativePath of filteredPaths) {
@@ -257,11 +256,11 @@ ${finalExclusionPatternsForDescription
         });
       }
 
-      // Add info about qwen-ignored files if any were filtered
-      if (qwenIgnoredCount > 0) {
+      // Add info about papert-ignored files if any were filtered
+      if (papertIgnoredCount > 0) {
         skippedFiles.push({
-          path: `${qwenIgnoredCount} file(s)`,
-          reason: 'qwen ignored',
+          path: `${papertIgnoredCount} file(s)`,
+          reason: 'papert ignored',
         });
       }
     } catch (error) {
@@ -549,7 +548,7 @@ export class ReadManyFilesTool extends BaseDeclarativeTool<
                 'Optional: Whether to respect .gitignore patterns when listing files. Only available in git repositories. Defaults to true.',
               type: 'boolean',
             },
-            respect_qwen_ignore: {
+            respect_papert_ignore: {
               description:
                 'Optional: Whether to respect .papertignore patterns when listing files. Defaults to true.',
               type: 'boolean',

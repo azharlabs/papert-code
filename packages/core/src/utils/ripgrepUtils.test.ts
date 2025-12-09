@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -107,12 +107,12 @@ describe('ripgrepUtils', () => {
         platform: string;
         arch: string;
       }> = [
-        { platform: 'darwin', arch: 'x64' },
-        { platform: 'darwin', arch: 'arm64' },
-        { platform: 'linux', arch: 'x64' },
-        { platform: 'linux', arch: 'arm64' },
-        { platform: 'win32', arch: 'x64' },
-      ];
+          { platform: 'darwin', arch: 'x64' },
+          { platform: 'darwin', arch: 'arm64' },
+          { platform: 'linux', arch: 'x64' },
+          { platform: 'linux', arch: 'arm64' },
+          { platform: 'win32', arch: 'x64' },
+        ];
 
       combinations.forEach(({ platform, arch }) => {
         Object.defineProperty(process, 'platform', { value: platform });

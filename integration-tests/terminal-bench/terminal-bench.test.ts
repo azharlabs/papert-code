@@ -213,9 +213,9 @@ describe('terminal-bench integration', () => {
     it(
       `should complete ${taskId} task with papert-code agent`,
       async () => {
-        rig.setup(`terminal-bench-qwen-${taskId}`);
+        rig.setup(`terminal-bench-papert-${taskId}`);
 
-        const outputPath = join(outputBase, `qwen-${taskId}`);
+        const outputPath = join(outputBase, `papert-${taskId}`);
 
         // Check if API key is available
         const apiKey = process.env['OPENAI_API_KEY'];
@@ -229,11 +229,11 @@ describe('terminal-bench integration', () => {
         const args = [
           'run',
           '--agent-import-path',
-          'integration-tests.terminal-bench.qwen_code:QwenCodeAgent',
+          'integration-tests.terminal-bench.papert_code:PapertCodeAgent',
           '--agent-kwarg',
           `api_key=${apiKey}`,
           '--agent-kwarg',
-          `version=${process.env['QWEN_CODE_VERSION'] || 'latest'}`,
+          `version=${process.env['PAPERT_CODE_VERSION'] || 'latest'}`,
           '--dataset-path',
           ciTasksPath,
           '--task-id',
@@ -247,7 +247,7 @@ describe('terminal-bench integration', () => {
         const env = {
           ...process.env,
           OPENAI_API_KEY: apiKey,
-          OPENAI_MODEL: process.env['OPENAI_MODEL'] || 'qwen3-coder-plus',
+          OPENAI_MODEL: process.env['OPENAI_MODEL'] || 'papert3-coder-plus',
           OPENAI_BASE_URL:
             process.env['OPENAI_BASE_URL'] ||
             'https://dashscope.aliyuncs.com/compatible-mode/v1',

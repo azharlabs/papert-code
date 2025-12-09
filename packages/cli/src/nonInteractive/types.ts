@@ -143,7 +143,7 @@ export interface CLISystemMessage {
   model?: string;
   permission_mode?: string;
   slash_commands?: string[];
-  qwen_code_version?: string;
+  papert_code_version?: string;
   output_style?: string;
   agents?: string[];
   skills?: string[];
@@ -212,17 +212,17 @@ export interface ContentBlockStartEvent {
 
 export type ContentBlockDelta =
   | {
-      type: 'text_delta';
-      text: string;
-    }
+    type: 'text_delta';
+    text: string;
+  }
   | {
-      type: 'thinking_delta';
-      thinking: string;
-    }
+    type: 'thinking_delta';
+    thinking: string;
+  }
   | {
-      type: 'input_json_delta';
-      partial_json: string;
-    };
+    type: 'input_json_delta';
+    partial_json: string;
+  };
 
 export interface ContentBlockDeltaEvent {
   type: 'content_block_delta';
@@ -377,7 +377,7 @@ export interface ControlResponse {
 export interface ControlErrorResponse {
   subtype: 'error';
   request_id: string;
-  error: string | { message: string; [key: string]: unknown };
+  error: string | { message: string;[key: string]: unknown };
 }
 
 export interface CLIControlResponse {

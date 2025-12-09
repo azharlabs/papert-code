@@ -694,7 +694,7 @@ export class CoreToolScheduler {
 
             if (excludedMatch) {
               // The tool exists but is excluded - return permission error directly
-              const permissionErrorMessage = `Qwen Code requires permission to use ${excludedMatch}, but that permission was declined.`;
+              const permissionErrorMessage = `Papert Code requires permission to use ${excludedMatch}, but that permission was declined.`;
               return {
                 status: 'error',
                 request: reqInfo,
@@ -829,7 +829,7 @@ export class CoreToolScheduler {
               this.config.getInputFormat() !== InputFormat.STREAM_JSON;
 
             if (shouldAutoDeny) {
-              const errorMessage = `Qwen Code requires permission to use "${reqInfo.name}", but that permission was declined.`;
+              const errorMessage = `Papert Code requires permission to use "${reqInfo.name}", but that permission was declined.`;
               this.setStatusInternal(
                 reqInfo.callId,
                 'error',
@@ -1056,16 +1056,16 @@ export class CoreToolScheduler {
 
         const liveOutputCallback = scheduledCall.tool.canUpdateOutput
           ? (outputChunk: ToolResultDisplay) => {
-              if (this.outputUpdateHandler) {
-                this.outputUpdateHandler(callId, outputChunk);
-              }
-              this.toolCalls = this.toolCalls.map((tc) =>
-                tc.request.callId === callId && tc.status === 'executing'
-                  ? { ...tc, liveOutput: outputChunk }
-                  : tc,
-              );
-              this.notifyToolCallsUpdate();
+            if (this.outputUpdateHandler) {
+              this.outputUpdateHandler(callId, outputChunk);
             }
+            this.toolCalls = this.toolCalls.map((tc) =>
+              tc.request.callId === callId && tc.status === 'executing'
+                ? { ...tc, liveOutput: outputChunk }
+                : tc,
+            );
+            this.notifyToolCallsUpdate();
+          }
           : undefined;
 
         const shellExecutionConfig = this.config.getShellExecutionConfig();

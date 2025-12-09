@@ -25,7 +25,7 @@ import {
   type Extension,
 } from './extension.js';
 import {
-  QWEN_DIR,
+  PAPERT_DIR,
   type GeminiCLIExtension,
   ExtensionUninstallEvent,
   ExtensionDisableEvent,
@@ -109,7 +109,7 @@ vi.mock('node:readline', () => ({
   })),
 }));
 
-const EXTENSIONS_DIRECTORY_NAME = path.join(QWEN_DIR, 'extensions');
+const EXTENSIONS_DIRECTORY_NAME = path.join(PAPERT_DIR, 'extensions');
 
 describe('extension tests', () => {
   let tempHomeDir: string;
@@ -402,7 +402,7 @@ describe('extension tests', () => {
     it('should skip extensions with invalid JSON and log a warning', () => {
       const consoleSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       // Good extension
       createExtension({
@@ -435,7 +435,7 @@ describe('extension tests', () => {
     it('should skip extensions with missing name and log a warning', () => {
       const consoleSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       // Good extension
       createExtension({
@@ -490,7 +490,7 @@ describe('extension tests', () => {
     it('should throw an error for invalid extension names', () => {
       const consoleSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
       const badExtDir = createExtension({
         extensionsDir: userExtensionsDir,
         name: 'bad_name',
@@ -590,7 +590,7 @@ describe('extension tests', () => {
     it('should log an error for unknown extensions', () => {
       const consoleSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
       annotateActiveExtensions(
         extensions,
         '/path/to/workspace',
@@ -793,7 +793,7 @@ describe('extension tests', () => {
 
     it('should install an extension from a git URL', async () => {
       const gitUrl = 'https://github.com/google/gemini-extensions.git';
-      const extensionName = 'qwen-extensions';
+      const extensionName = 'papert-extensions';
       const targetExtDir = path.join(userExtensionsDir, extensionName);
       const metadataPath = path.join(targetExtDir, INSTALL_METADATA_FILENAME);
 
@@ -1182,7 +1182,7 @@ This extension will run the following MCP servers:
 
         const userExtensionsDir = path.join(
           tempHomeDir,
-          QWEN_DIR,
+          PAPERT_DIR,
           'extensions',
         );
         expect(fs.readdirSync(userExtensionsDir).length).toBe(0);
@@ -1243,7 +1243,7 @@ This extension will run the following MCP servers:
 
       expect(failed).toEqual([]);
 
-      const userExtensionsDir = path.join(tempHomeDir, QWEN_DIR, 'extensions');
+      const userExtensionsDir = path.join(tempHomeDir, PAPERT_DIR, 'extensions');
       const userExt1Path = path.join(userExtensionsDir, 'ext1');
       const extensions = loadExtensions(
         new ExtensionEnablementManager(ExtensionStorage.getUserExtensionsDir()),

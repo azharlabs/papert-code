@@ -1,7 +1,7 @@
 {
   "name": "@papert-code/papert-code-core",
   "version": "0.4.0",
-  "description": "Qwen Code Core",
+  "description": "Papert Code Core",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/azharlabs/papert-code.git"

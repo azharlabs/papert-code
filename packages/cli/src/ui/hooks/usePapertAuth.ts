@@ -1,46 +1,46 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { useState, useCallback, useEffect } from 'react';
 import {
   AuthType,
-  qwenOAuth2Events,
-  QwenOAuth2Event,
+  papertOAuth2Events,
+  PapertOAuth2Event,
   type DeviceAuthorizationData,
 } from '@papert-code/papert-code-core';
 
-export interface QwenAuthState {
+export interface PapertAuthState {
   deviceAuth: DeviceAuthorizationData | null;
   authStatus:
-    | 'idle'
-    | 'polling'
-    | 'success'
-    | 'error'
-    | 'timeout'
-    | 'rate_limit';
+  | 'idle'
+  | 'polling'
+  | 'success'
+  | 'error'
+  | 'timeout'
+  | 'rate_limit';
   authMessage: string | null;
 }
 
-export const useQwenAuth = (
+export const usePapertAuth = (
   pendingAuthType: AuthType | undefined,
   isAuthenticating: boolean,
 ) => {
-  const [qwenAuthState, setQwenAuthState] = useState<QwenAuthState>({
+  const [papertAuthState, setPapertAuthState] = useState<PapertAuthState>({
     deviceAuth: null,
     authStatus: 'idle',
     authMessage: null,
   });
 
-  const isQwenAuth = pendingAuthType === AuthType.QWEN_OAUTH;
+  const isPapertAuth = pendingAuthType === AuthType.PAPERT_OAUTH;
 
   // Set up event listeners when authentication starts
   useEffect(() => {
-    if (!isQwenAuth || !isAuthenticating) {
-      // Reset state when not authenticating or not Qwen auth
-      setQwenAuthState({
+    if (!isPapertAuth || !isAuthenticating) {
+      // Reset state when not authenticating or not Papert auth
+      setPapertAuthState({
         deviceAuth: null,
         authStatus: 'idle',
         authMessage: null,
@@ -48,14 +48,14 @@ export const useQwenAuth = (
       return;
     }
 
-    setQwenAuthState((prev) => ({
+    setPapertAuthState((prev) => ({
       ...prev,
       authStatus: 'idle',
     }));
 
     // Set up event listeners
     const handleDeviceAuth = (deviceAuth: DeviceAuthorizationData) => {
-      setQwenAuthState((prev) => ({
+      setPapertAuthState((prev) => ({
         ...prev,
         deviceAuth: {
           verification_uri: deviceAuth.verification_uri,
@@ -72,7 +72,7 @@ export const useQwenAuth = (
       status: 'success' | 'error' | 'polling' | 'timeout' | 'rate_limit',
       message?: string,
     ) => {
-      setQwenAuthState((prev) => ({
+      setPapertAuthState((prev) => ({
         ...prev,
         authStatus: status,
         authMessage: message || null,
@@ -80,21 +80,21 @@ export const useQwenAuth = (
     };
 
     // Add event listeners
-    qwenOAuth2Events.on(QwenOAuth2Event.AuthUri, handleDeviceAuth);
-    qwenOAuth2Events.on(QwenOAuth2Event.AuthProgress, handleAuthProgress);
+    papertOAuth2Events.on(PapertOAuth2Event.AuthUri, handleDeviceAuth);
+    papertOAuth2Events.on(PapertOAuth2Event.AuthProgress, handleAuthProgress);
 
     // Cleanup event listeners when component unmounts or auth finishes
     return () => {
-      qwenOAuth2Events.off(QwenOAuth2Event.AuthUri, handleDeviceAuth);
-      qwenOAuth2Events.off(QwenOAuth2Event.AuthProgress, handleAuthProgress);
+      papertOAuth2Events.off(PapertOAuth2Event.AuthUri, handleDeviceAuth);
+      papertOAuth2Events.off(PapertOAuth2Event.AuthProgress, handleAuthProgress);
     };
-  }, [isQwenAuth, isAuthenticating]);
+  }, [isPapertAuth, isAuthenticating]);
 
-  const cancelQwenAuth = useCallback(() => {
+  const cancelPapertAuth = useCallback(() => {
     // Emit cancel event to stop polling
-    qwenOAuth2Events.emit(QwenOAuth2Event.AuthCancel);
+    papertOAuth2Events.emit(PapertOAuth2Event.AuthCancel);
 
-    setQwenAuthState({
+    setPapertAuthState({
       deviceAuth: null,
       authStatus: 'idle',
       authMessage: null,
@@ -102,7 +102,7 @@ export const useQwenAuth = (
   }, []);
 
   return {
-    qwenAuthState,
-    cancelQwenAuth,
+    papertAuthState,
+    cancelPapertAuth,
   };
 };

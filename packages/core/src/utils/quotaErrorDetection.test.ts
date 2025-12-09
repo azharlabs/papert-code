@@ -6,8 +6,8 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  isQwenQuotaExceededError,
-  isQwenThrottlingError,
+  isPapertQuotaExceededError,
+  isPapertThrottlingError,
   isProQuotaExceededError,
   isGenericQuotaExceededError,
   isApiError,
@@ -16,30 +16,30 @@ import {
 } from './quotaErrorDetection.js';
 
 describe('quotaErrorDetection', () => {
-  describe('isQwenQuotaExceededError', () => {
+  describe('isPapertQuotaExceededError', () => {
     it('should detect insufficient_quota error message', () => {
       const error = new Error('insufficient_quota');
-      expect(isQwenQuotaExceededError(error)).toBe(true);
+      expect(isPapertQuotaExceededError(error)).toBe(true);
     });
 
     it('should detect free allocated quota exceeded error message', () => {
       const error = new Error('Free allocated quota exceeded.');
-      expect(isQwenQuotaExceededError(error)).toBe(true);
+      expect(isPapertQuotaExceededError(error)).toBe(true);
     });
 
     it('should detect quota exceeded error message', () => {
       const error = new Error('quota exceeded');
-      expect(isQwenQuotaExceededError(error)).toBe(true);
+      expect(isPapertQuotaExceededError(error)).toBe(true);
     });
 
     it('should detect quota exceeded in string error', () => {
       const error = 'insufficient_quota';
-      expect(isQwenQuotaExceededError(error)).toBe(true);
+      expect(isPapertQuotaExceededError(error)).toBe(true);
     });
 
     it('should detect quota exceeded in structured error', () => {
       const error = { message: 'Free allocated quota exceeded.', status: 429 };
-      expect(isQwenQuotaExceededError(error)).toBe(true);
+      expect(isPapertQuotaExceededError(error)).toBe(true);
     });
 
     it('should detect quota exceeded in API error', () => {
@@ -51,49 +51,49 @@ describe('quotaErrorDetection', () => {
           details: [],
         },
       };
-      expect(isQwenQuotaExceededError(error)).toBe(true);
+      expect(isPapertQuotaExceededError(error)).toBe(true);
     });
 
     it('should not detect throttling errors as quota exceeded', () => {
       const error = new Error('requests throttling triggered');
-      expect(isQwenQuotaExceededError(error)).toBe(false);
+      expect(isPapertQuotaExceededError(error)).toBe(false);
     });
 
     it('should not detect unrelated errors', () => {
       const error = new Error('Network error');
-      expect(isQwenQuotaExceededError(error)).toBe(false);
+      expect(isPapertQuotaExceededError(error)).toBe(false);
     });
   });
 
-  describe('isQwenThrottlingError', () => {
+  describe('isPapertThrottlingError', () => {
     it('should detect throttling error with 429 status', () => {
       const error = { message: 'throttling', status: 429 };
-      expect(isQwenThrottlingError(error)).toBe(true);
+      expect(isPapertThrottlingError(error)).toBe(true);
     });
 
     it('should detect requests throttling triggered with 429 status', () => {
       const error = { message: 'requests throttling triggered', status: 429 };
-      expect(isQwenThrottlingError(error)).toBe(true);
+      expect(isPapertThrottlingError(error)).toBe(true);
     });
 
     it('should detect rate limit error with 429 status', () => {
       const error = { message: 'rate limit exceeded', status: 429 };
-      expect(isQwenThrottlingError(error)).toBe(true);
+      expect(isPapertThrottlingError(error)).toBe(true);
     });
 
     it('should detect too many requests with 429 status', () => {
       const error = { message: 'too many requests', status: 429 };
-      expect(isQwenThrottlingError(error)).toBe(true);
+      expect(isPapertThrottlingError(error)).toBe(true);
     });
 
     it('should detect throttling in string error', () => {
       const error = 'throttling';
-      expect(isQwenThrottlingError(error)).toBe(true);
+      expect(isPapertThrottlingError(error)).toBe(true);
     });
 
     it('should detect throttling in structured error with 429', () => {
       const error = { message: 'requests throttling triggered', status: 429 };
-      expect(isQwenThrottlingError(error)).toBe(true);
+      expect(isPapertThrottlingError(error)).toBe(true);
     });
 
     it('should detect throttling in API error with 429', () => {
@@ -105,22 +105,22 @@ describe('quotaErrorDetection', () => {
           details: [],
         },
       };
-      expect(isQwenThrottlingError(error)).toBe(true);
+      expect(isPapertThrottlingError(error)).toBe(true);
     });
 
     it('should not detect throttling without 429 status in structured error', () => {
       const error = { message: 'throttling', status: 500 };
-      expect(isQwenThrottlingError(error)).toBe(false);
+      expect(isPapertThrottlingError(error)).toBe(false);
     });
 
     it('should not detect quota exceeded as throttling', () => {
       const error = { message: 'insufficient_quota', status: 429 };
-      expect(isQwenThrottlingError(error)).toBe(false);
+      expect(isPapertThrottlingError(error)).toBe(false);
     });
 
     it('should not detect unrelated errors as throttling', () => {
       const error = { message: 'Network error', status: 500 };
-      expect(isQwenThrottlingError(error)).toBe(false);
+      expect(isPapertThrottlingError(error)).toBe(false);
     });
   });
 

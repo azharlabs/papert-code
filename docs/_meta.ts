@@ -1,5 +1,5 @@
 export default {
-  index: 'Welcome to Qwen Code',
+  index: 'Welcome to Papert Code',
   cli: 'CLI',
   core: 'Core',
   tools: 'Tools',

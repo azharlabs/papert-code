@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -324,14 +324,14 @@ export const AgentSelectionStep = ({
       {(projectAgents.length > 0 ||
         userAgents.length > 0 ||
         builtinAgents.length > 0) && (
-        <Box marginTop={1}>
-          <Text color={theme.text.secondary}>
-            {t('Using: {{count}} agents', {
-              count: enabledAgentsCount.toString(),
-            })}
-          </Text>
-        </Box>
-      )}
+          <Box marginTop={1}>
+            <Text color={theme.text.secondary}>
+              {t('Using: {{count}} agents', {
+                count: enabledAgentsCount.toString(),
+              })}
+            </Text>
+          </Box>
+        )}
     </Box>
   );
 };

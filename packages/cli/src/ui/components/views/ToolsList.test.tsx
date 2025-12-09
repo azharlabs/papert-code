@@ -8,6 +8,7 @@ import { render } from 'ink-testing-library';
 import { describe, it, expect } from 'vitest';
 import { ToolsList } from './ToolsList.js';
 import { type ToolDefinition } from '../../types.js';
+import { SettingsContext } from '../../contexts/SettingsContext.js';
 
 const mockTools: ToolDefinition[] = [
   {
@@ -33,29 +34,65 @@ const mockTools: ToolDefinition[] = [
 describe('<ToolsList />', () => {
   it('renders correctly with descriptions', () => {
     const { lastFrame } = render(
-      <ToolsList
-        tools={mockTools}
-        showDescriptions={true}
-        terminalWidth={40}
-      />,
+      <SettingsContext.Provider
+        value={
+          {
+            merged: {
+              ui: {
+                theme: 'default',
+              },
+            },
+          } as any
+        }
+      >
+        <ToolsList
+          tools={mockTools}
+          showDescriptions={true}
+          terminalWidth={40}
+        />
+      </SettingsContext.Provider>,
     );
     expect(lastFrame()).toMatchSnapshot();
   });
 
   it('renders correctly without descriptions', () => {
     const { lastFrame } = render(
-      <ToolsList
-        tools={mockTools}
-        showDescriptions={false}
-        terminalWidth={40}
-      />,
+      <SettingsContext.Provider
+        value={
+          {
+            merged: {
+              ui: {
+                theme: 'default',
+              },
+            },
+          } as any
+        }
+      >
+        <ToolsList
+          tools={mockTools}
+          showDescriptions={false}
+          terminalWidth={40}
+        />
+      </SettingsContext.Provider>,
     );
     expect(lastFrame()).toMatchSnapshot();
   });
 
   it('renders correctly with no tools', () => {
     const { lastFrame } = render(
-      <ToolsList tools={[]} showDescriptions={true} terminalWidth={40} />,
+      <SettingsContext.Provider
+        value={
+          {
+            merged: {
+              ui: {
+                theme: 'default',
+              },
+            },
+          } as any
+        }
+      >
+        <ToolsList tools={[]} showDescriptions={true} terminalWidth={40} />
+      </SettingsContext.Provider>,
     );
     expect(lastFrame()).toMatchSnapshot();
   });

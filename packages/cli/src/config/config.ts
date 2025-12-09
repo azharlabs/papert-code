@@ -8,7 +8,7 @@ import {
   ApprovalMode,
   AuthType,
   Config,
-  DEFAULT_QWEN_EMBEDDING_MODEL,
+  DEFAULT_PAPERT_EMBEDDING_MODEL,
   DEFAULT_MEMORY_FILE_FILTERING_OPTIONS,
   EditTool,
   FileDiscoveryService,
@@ -160,9 +160,9 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
   const rawArgv = hideBin(process.argv);
   const yargsInstance = yargs(rawArgv)
     .locale('en')
-    .scriptName('qwen')
+    .scriptName('papert')
     .usage(
-      'Usage: qwen [options] [command]\n\nQwen Code - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
+      'Usage: papert [options] [command]\n\nPapert Code - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
     )
     .option('telemetry', {
       type: 'boolean',
@@ -227,13 +227,13 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     })
     .option('proxy', {
       type: 'string',
-      description: 'Proxy for Qwen Code, like schema://user:password@host:port',
+      description: 'Proxy for Papert Code, like schema://user:password@host:port',
     })
     .deprecateOption(
       'proxy',
       'Use the "proxy" setting in settings.json instead. This flag will be removed in a future version.',
     )
-    .command('$0 [query..]', 'Launch Qwen Code CLI', (yargsInstance: Argv) =>
+    .command('$0 [query..]', 'Launch Papert Code CLI', (yargsInstance: Argv) =>
       yargsInstance
         .positional('query', {
           description:
@@ -444,7 +444,7 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
         })
         .option('auth-type', {
           type: 'string',
-          choices: [AuthType.USE_OPENAI, AuthType.QWEN_OAUTH],
+          choices: [AuthType.USE_OPENAI, AuthType.PAPERT_OAUTH],
           description: 'Authentication type',
         })
         .deprecateOption(
@@ -658,7 +658,7 @@ export async function loadCliConfig(
 
   // Automatically load output-language.md if it exists
   const outputLanguageFilePath = path.join(
-    Storage.getGlobalQwenDir(),
+    Storage.getGlobalPapertDir(),
     'output-language.md',
   );
   if (fs.existsSync(outputLanguageFilePath)) {
@@ -846,7 +846,7 @@ export async function loadCliConfig(
   const resolvedModel =
     argv.model ||
     process.env['OPENAI_MODEL'] ||
-    process.env['QWEN_MODEL'] ||
+    process.env['PAPERT_MODEL'] ||
     settings.model?.name;
 
   const sandboxConfig = await loadSandboxConfig(settings, argv);
@@ -874,7 +874,7 @@ export async function loadCliConfig(
       sessionId = argv.resume;
       sessionData = await sessionService.loadSession(argv.resume);
       if (!sessionData) {
-        const message = `No saved session found with ID ${argv.resume}. Run \`qwen --resume\` without an ID to choose from existing sessions.`;
+        const message = `No saved session found with ID ${argv.resume}. Run \`papert --resume\` without an ID to choose from existing sessions.`;
         console.log(message);
         process.exit(1);
       }
@@ -884,7 +884,7 @@ export async function loadCliConfig(
   return new Config({
     sessionId,
     sessionData,
-    embeddingModel: DEFAULT_QWEN_EMBEDDING_MODEL,
+    embeddingModel: DEFAULT_PAPERT_EMBEDDING_MODEL,
     sandbox: sandboxConfig,
     targetDir: cwd,
     includeDirectories,

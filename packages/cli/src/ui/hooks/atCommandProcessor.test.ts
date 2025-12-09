@@ -55,10 +55,10 @@ describe('handleAtCommand', () => {
       isSandboxed: () => false,
       getFileService: () => new FileDiscoveryService(testRootDir),
       getFileFilteringRespectGitIgnore: () => true,
-      getFileFilteringRespectQwenIgnore: () => true,
+      getFileFilteringRespectPapertIgnore: () => true,
       getFileFilteringOptions: () => ({
         respectGitIgnore: true,
-        respectQwenIgnore: true,
+        respectPapertIgnore: true,
       }),
       getFileSystemService: () => new StandardFileSystemService(),
       getEnableRecursiveFileSearch: vi.fn(() => true),
@@ -82,6 +82,7 @@ describe('handleAtCommand', () => {
       getUsageStatisticsEnabled: () => false,
       getTruncateToolOutputThreshold: () => 2500,
       getTruncateToolOutputLines: () => 500,
+      refreshContextMemory: vi.fn().mockResolvedValue(undefined),
     } as unknown as Config;
 
     const registry = new ToolRegistry(mockConfig);
@@ -580,17 +581,17 @@ describe('handleAtCommand', () => {
     });
   });
 
-  describe('qwen-ignore filtering', () => {
-    it('should skip qwen-ignored files in @ commands', async () => {
+  describe('papert-ignore filtering', () => {
+    it('should skip papert-ignored files in @ commands', async () => {
       await createTestFile(
         path.join(testRootDir, '.papertignore'),
         'build/output.js',
       );
-      const qwenIgnoredFile = await createTestFile(
+      const papertIgnoredFile = await createTestFile(
         path.join(testRootDir, 'build', 'output.js'),
         'console.log("Hello");',
       );
-      const query = `@${qwenIgnoredFile}`;
+      const query = `@${papertIgnoredFile}`;
 
       const result = await handleAtCommand({
         query,
@@ -606,10 +607,10 @@ describe('handleAtCommand', () => {
         shouldProceed: true,
       });
       expect(mockOnDebugMessage).toHaveBeenCalledWith(
-        `Path ${qwenIgnoredFile} is qwen-ignored and will be skipped.`,
+        `Path ${papertIgnoredFile} is papert-ignored and will be skipped.`,
       );
       expect(mockOnDebugMessage).toHaveBeenCalledWith(
-        `Ignored 1 files:\nQwen-ignored: ${qwenIgnoredFile}`,
+        `Ignored 1 files:\nPapert-ignored: ${papertIgnoredFile}`,
       );
     });
   });
@@ -645,7 +646,7 @@ describe('handleAtCommand', () => {
     });
   });
 
-  it('should handle mixed qwen-ignored and valid files', async () => {
+  it('should handle mixed papert-ignored and valid files', async () => {
     await createTestFile(
       path.join(testRootDir, '.papertignore'),
       'dist/bundle.js',
@@ -654,11 +655,11 @@ describe('handleAtCommand', () => {
       path.join(testRootDir, 'src', 'main.ts'),
       '// Main application entry',
     );
-    const qwenIgnoredFile = await createTestFile(
+    const papertIgnoredFile = await createTestFile(
       path.join(testRootDir, 'dist', 'bundle.js'),
       'console.log("bundle");',
     );
-    const query = `@${validFile} @${qwenIgnoredFile}`;
+    const query = `@${validFile} @${papertIgnoredFile}`;
 
     const result = await handleAtCommand({
       query,
@@ -671,7 +672,7 @@ describe('handleAtCommand', () => {
 
     expect(result).toEqual({
       processedQuery: [
-        { text: `@${validFile} @${qwenIgnoredFile}` },
+        { text: `@${validFile} @${papertIgnoredFile}` },
         { text: '\n--- Content from referenced files ---' },
         { text: `\nContent from @${validFile}:\n` },
         { text: '// Main application entry' },
@@ -680,10 +681,10 @@ describe('handleAtCommand', () => {
       shouldProceed: true,
     });
     expect(mockOnDebugMessage).toHaveBeenCalledWith(
-      `Path ${qwenIgnoredFile} is qwen-ignored and will be skipped.`,
+      `Path ${papertIgnoredFile} is papert-ignored and will be skipped.`,
     );
     expect(mockOnDebugMessage).toHaveBeenCalledWith(
-      `Ignored 1 files:\nQwen-ignored: ${qwenIgnoredFile}`,
+      `Ignored 1 files:\nPapert-ignored: ${papertIgnoredFile}`,
     );
   });
 

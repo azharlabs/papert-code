@@ -69,7 +69,7 @@ import {
   SETTINGS_VERSION,
   SETTINGS_VERSION_KEY,
 } from './settings.js';
-import { FatalConfigError, QWEN_DIR } from '@papert-code/papert-code-core';
+import { FatalConfigError, PAPERT_DIR } from '@papert-code/papert-code-core';
 
 const MOCK_WORKSPACE_DIR = '/mock/workspace';
 // Use the (mocked) SETTINGS_DIRECTORY_NAME for consistency
@@ -1319,7 +1319,7 @@ describe('Settings Loading and Merging', () => {
     });
 
     it('should ignore chatCompression if contextPercentageThreshold is invalid', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
       (mockFsExistsSync as Mock).mockImplementation(
         (p: fs.PathLike) => p === USER_SETTINGS_PATH,
       );
@@ -1832,16 +1832,16 @@ describe('Settings Loading and Merging', () => {
       delete process.env['TEST_PORT'];
     });
 
-    describe('when QWEN_CODE_SYSTEM_SETTINGS_PATH is set', () => {
+    describe('when PAPERT_CODE_SYSTEM_SETTINGS_PATH is set', () => {
       const MOCK_ENV_SYSTEM_SETTINGS_PATH = '/mock/env/system/settings.json';
 
       beforeEach(() => {
-        process.env['QWEN_CODE_SYSTEM_SETTINGS_PATH'] =
+        process.env['PAPERT_CODE_SYSTEM_SETTINGS_PATH'] =
           MOCK_ENV_SYSTEM_SETTINGS_PATH;
       });
 
       afterEach(() => {
-        delete process.env['QWEN_CODE_SYSTEM_SETTINGS_PATH'];
+        delete process.env['PAPERT_CODE_SYSTEM_SETTINGS_PATH'];
       });
 
       it('should load system settings from the path specified in the environment variable', () => {
@@ -2469,7 +2469,7 @@ describe('Settings Loading and Merging', () => {
       isWorkspaceTrustedValue = true,
     }) {
       delete process.env['TESTTEST']; // reset
-      const geminiEnvPath = path.resolve(path.join(QWEN_DIR, '.env'));
+      const geminiEnvPath = path.resolve(path.join(PAPERT_DIR, '.env'));
 
       vi.mocked(isWorkspaceTrusted).mockReturnValue({
         isTrusted: isWorkspaceTrustedValue,

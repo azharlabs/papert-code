@@ -30,7 +30,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: true,
+      usePapertignore: true,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -56,7 +56,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: true,
-      useQwenignore: true,
+      usePapertignore: true,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -84,7 +84,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: ['logs'],
       cache: false,
       cacheTtl: 0,
@@ -113,7 +113,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: true,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -146,7 +146,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -170,7 +170,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: true,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -205,7 +205,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: true,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -235,7 +235,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: true,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -265,7 +265,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: true,
-      useQwenignore: true,
+      usePapertignore: true,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -292,7 +292,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -318,7 +318,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -344,7 +344,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -370,7 +370,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -394,7 +394,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -425,7 +425,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -447,7 +447,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: true,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -470,7 +470,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false, // Explicitly disable .gitignore to isolate this rule
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -494,7 +494,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -531,7 +531,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: true, // Enable caching for this test
       cacheTtl: 0,
@@ -571,7 +571,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -615,7 +615,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: true, // Ensure caching is enabled
       cacheTtl: 10000,
@@ -653,7 +653,7 @@ describe('FileSearch', () => {
     const fileSearch = FileSearchFactory.create({
       projectRoot: tmpDir,
       useGitignore: false,
-      useQwenignore: false,
+      usePapertignore: false,
       ignoreDirs: [],
       cache: false,
       cacheTtl: 0,
@@ -683,7 +683,7 @@ describe('FileSearch', () => {
       const fileSearch = FileSearchFactory.create({
         projectRoot: tmpDir,
         useGitignore: false,
-        useQwenignore: false,
+        usePapertignore: false,
         ignoreDirs: [],
         cache: false,
         cacheTtl: 0,
@@ -708,7 +708,7 @@ describe('FileSearch', () => {
       const fileSearch = FileSearchFactory.create({
         projectRoot: tmpDir,
         useGitignore: false,
-        useQwenignore: false,
+        usePapertignore: false,
         ignoreDirs: [],
         cache: false,
         cacheTtl: 0,
@@ -733,7 +733,7 @@ describe('FileSearch', () => {
       const fileSearch = FileSearchFactory.create({
         projectRoot: tmpDir,
         useGitignore: false,
-        useQwenignore: false,
+        usePapertignore: false,
         ignoreDirs: [],
         cache: false,
         cacheTtl: 0,
@@ -756,7 +756,7 @@ describe('FileSearch', () => {
       const fileSearch = FileSearchFactory.create({
         projectRoot: tmpDir,
         useGitignore: true,
-        useQwenignore: false,
+        usePapertignore: false,
         ignoreDirs: [],
         cache: false,
         cacheTtl: 0,

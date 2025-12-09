@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -64,7 +64,7 @@ class GeminiAgent {
     private extensions: Extension[],
     private argv: CliArgs,
     private client: acp.Client,
-  ) {}
+  ) { }
 
   async initialize(
     args: acp.InitializeRequest,
@@ -78,10 +78,10 @@ class GeminiAgent {
           'Requires setting the `OPENAI_API_KEY` environment variable',
       },
       {
-        id: AuthType.QWEN_OAUTH,
-        name: 'Qwen OAuth',
+        id: AuthType.PAPERT_OAUTH,
+        name: 'Papert OAuth',
         description:
-          'OAuth authentication for Qwen models with 2000 daily requests',
+          'OAuth authentication for Papert models with 2000 daily requests',
       },
     ];
 
@@ -101,7 +101,7 @@ class GeminiAgent {
       protocolVersion: acp.PROTOCOL_VERSION,
       agentInfo: {
         name: 'papert-code',
-        title: 'Qwen Code',
+        title: 'Papert Code',
         version,
       },
       authMethods,

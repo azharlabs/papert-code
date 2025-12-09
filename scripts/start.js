@@ -71,7 +71,7 @@ if (process.env.DEBUG) {
 }
 // Use process.cwd() to inherit the working directory from launch.json cwd setting
 // This allows debugging from a specific directory (e.g., .todo)
-const workingDir = process.env.QWEN_WORKING_DIR || process.cwd();
+const workingDir = process.env.PAPERT_WORKING_DIR || process.cwd();
 const child = spawn('node', nodeArgs, {
   stdio: 'inherit',
   env,

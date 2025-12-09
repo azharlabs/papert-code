@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,15 +11,15 @@ import { t } from '../../../../i18n/index.js';
 
 interface GenerationOption {
   label: string;
-  value: 'qwen' | 'manual';
+  value: 'papert' | 'manual';
 }
 
 const generationOptions: GenerationOption[] = [
   {
     get label() {
-      return t('Generate with Qwen Code (Recommended)');
+      return t('Generate with Papert Code (Recommended)');
     },
-    value: 'qwen',
+    value: 'papert',
   },
   {
     get label() {
@@ -39,7 +39,7 @@ export function GenerationMethodSelector({
   onPrevious: _onPrevious,
 }: WizardStepProps) {
   const handleSelect = (selectedValue: string) => {
-    const method = selectedValue as 'qwen' | 'manual';
+    const method = selectedValue as 'papert' | 'manual';
     dispatch({ type: 'SET_GENERATION_METHOD', method });
     onNext();
   };

@@ -36,8 +36,8 @@ class CORSError extends Error {
 }
 
 const MCP_SESSION_ID_HEADER = 'mcp-session-id';
-const IDE_SERVER_PORT_ENV_VAR = 'QWEN_CODE_IDE_SERVER_PORT';
-const IDE_WORKSPACE_PATH_ENV_VAR = 'QWEN_CODE_IDE_WORKSPACE_PATH';
+const IDE_SERVER_PORT_ENV_VAR = 'PAPERT_CODE_IDE_SERVER_PORT';
+const IDE_WORKSPACE_PATH_ENV_VAR = 'PAPERT_CODE_IDE_WORKSPACE_PATH';
 
 interface WritePortAndWorkspaceArgs {
   context: vscode.ExtensionContext;

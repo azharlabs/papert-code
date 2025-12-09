@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Papert Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -328,7 +328,7 @@ describe('ControlDispatcher', () => {
       // Register a pending outgoing request
       const resolve = vi.fn();
       const reject = vi.fn();
-      const timeoutId = setTimeout(() => {}, 1000);
+      const timeoutId = setTimeout(() => { }, 1000);
 
       // Access private method through type casting
       (
@@ -368,7 +368,7 @@ describe('ControlDispatcher', () => {
 
       const resolve = vi.fn();
       const reject = vi.fn();
-      const timeoutId = setTimeout(() => {}, 1000);
+      const timeoutId = setTimeout(() => { }, 1000);
 
       (
         dispatcher as unknown as {
@@ -411,7 +411,7 @@ describe('ControlDispatcher', () => {
 
       const resolve = vi.fn();
       const reject = vi.fn();
-      const timeoutId = setTimeout(() => {}, 1000);
+      const timeoutId = setTimeout(() => { }, 1000);
 
       (
         dispatcher as unknown as {
@@ -458,7 +458,7 @@ describe('ControlDispatcher', () => {
       const context = createMockContext(true);
       const consoleSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       const dispatcherWithDebug = new ControlDispatcher(context);
       const response: CLIControlResponse = {
@@ -512,7 +512,7 @@ describe('ControlDispatcher', () => {
     it('should cancel specific incoming request', () => {
       const requestId = 'cancel-req-1';
       const abortController = new AbortController();
-      const timeoutId = setTimeout(() => {}, 1000);
+      const timeoutId = setTimeout(() => { }, 1000);
 
       const abortSpy = vi.spyOn(abortController, 'abort');
 
@@ -551,8 +551,8 @@ describe('ControlDispatcher', () => {
 
       const abortController1 = new AbortController();
       const abortController2 = new AbortController();
-      const timeoutId1 = setTimeout(() => {}, 1000);
-      const timeoutId2 = setTimeout(() => {}, 1000);
+      const timeoutId1 = setTimeout(() => { }, 1000);
+      const timeoutId2 = setTimeout(() => { }, 1000);
 
       const abortSpy1 = vi.spyOn(abortController1, 'abort');
       const abortSpy2 = vi.spyOn(abortController2, 'abort');
@@ -602,12 +602,12 @@ describe('ControlDispatcher', () => {
       const context = createMockContext(true);
       const consoleSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       const dispatcherWithDebug = new ControlDispatcher(context);
       const requestId = 'cancel-req-debug';
       const abortController = new AbortController();
-      const timeoutId = setTimeout(() => {}, 1000);
+      const timeoutId = setTimeout(() => { }, 1000);
 
       (
         dispatcherWithDebug as unknown as {
@@ -644,8 +644,8 @@ describe('ControlDispatcher', () => {
 
       const abortController1 = new AbortController();
       const abortController2 = new AbortController();
-      const timeoutId1 = setTimeout(() => {}, 1000);
-      const timeoutId2 = setTimeout(() => {}, 1000);
+      const timeoutId1 = setTimeout(() => { }, 1000);
+      const timeoutId2 = setTimeout(() => { }, 1000);
 
       const abortSpy1 = vi.spyOn(abortController1, 'abort');
       const abortSpy2 = vi.spyOn(abortController2, 'abort');
@@ -679,8 +679,8 @@ describe('ControlDispatcher', () => {
 
       const reject1 = vi.fn();
       const reject2 = vi.fn();
-      const timeoutId1 = setTimeout(() => {}, 1000);
-      const timeoutId2 = setTimeout(() => {}, 1000);
+      const timeoutId1 = setTimeout(() => { }, 1000);
+      const timeoutId2 = setTimeout(() => { }, 1000);
 
       const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
@@ -716,7 +716,7 @@ describe('ControlDispatcher', () => {
     });
 
     it('should cleanup all controllers', () => {
-      vi.mocked(mockSystemController.cleanup).mockImplementation(() => {});
+      vi.mocked(mockSystemController.cleanup).mockImplementation(() => { });
 
       dispatcher.shutdown();
 
@@ -727,7 +727,7 @@ describe('ControlDispatcher', () => {
       const context = createMockContext(true);
       const consoleSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       const dispatcherWithDebug = new ControlDispatcher(context);
 
@@ -746,7 +746,7 @@ describe('ControlDispatcher', () => {
       it('should register incoming request', () => {
         const requestId = 'reg-incoming-1';
         const abortController = new AbortController();
-        const timeoutId = setTimeout(() => {}, 1000);
+        const timeoutId = setTimeout(() => { }, 1000);
 
         (
           dispatcher as unknown as {
@@ -774,7 +774,7 @@ describe('ControlDispatcher', () => {
       it('should deregister incoming request', () => {
         const requestId = 'dereg-incoming-1';
         const abortController = new AbortController();
-        const timeoutId = setTimeout(() => {}, 1000);
+        const timeoutId = setTimeout(() => { }, 1000);
 
         const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
@@ -826,7 +826,7 @@ describe('ControlDispatcher', () => {
         const requestId = 'reg-outgoing-1';
         const resolve = vi.fn();
         const reject = vi.fn();
-        const timeoutId = setTimeout(() => {}, 1000);
+        const timeoutId = setTimeout(() => { }, 1000);
 
         (
           dispatcher as unknown as {
@@ -866,7 +866,7 @@ describe('ControlDispatcher', () => {
         const requestId = 'dereg-outgoing-1';
         const resolve = vi.fn();
         const reject = vi.fn();
-        const timeoutId = setTimeout(() => {}, 1000);
+        const timeoutId = setTimeout(() => { }, 1000);
 
         const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 

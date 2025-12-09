@@ -12,7 +12,7 @@ import { ShellConfirmationDialog } from './ShellConfirmationDialog.js';
 import { ConsentPrompt } from './ConsentPrompt.js';
 import { ThemeDialog } from './ThemeDialog.js';
 import { SettingsDialog } from './SettingsDialog.js';
-import { QwenOAuthProgress } from './QwenOAuthProgress.js';
+import { PapertOAuthProgress } from './PapertOAuthProgress.js';
 import { AuthDialog } from '../auth/AuthDialog.js';
 import { OpenAIKeyPrompt } from './OpenAIKeyPrompt.js';
 import { EditorSettingsDialog } from './EditorSettingsDialog.js';
@@ -250,14 +250,14 @@ export const DialogManager = ({
       );
     }
 
-    if (uiState.pendingAuthType === AuthType.QWEN_OAUTH) {
+    if (uiState.pendingAuthType === AuthType.PAPERT_OAUTH) {
       return (
-        <QwenOAuthProgress
-          deviceAuth={uiState.qwenAuthState.deviceAuth || undefined}
-          authStatus={uiState.qwenAuthState.authStatus}
-          authMessage={uiState.qwenAuthState.authMessage}
+        <PapertOAuthProgress
+          deviceAuth={uiState.papertAuthState.deviceAuth || undefined}
+          authStatus={uiState.papertAuthState.authStatus}
+          authMessage={uiState.papertAuthState.authMessage}
           onTimeout={() => {
-            uiActions.onAuthError('Qwen OAuth authentication timed out.');
+            uiActions.onAuthError('Papert OAuth authentication timed out.');
             uiActions.cancelAuthentication();
             uiActions.setAuthState(AuthState.Updating);
           }}

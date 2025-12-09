@@ -26,7 +26,7 @@ import { AuthType } from '../core/contentGenerator.js';
 import type { Config } from '../config/config.js';
 import readline from 'node:readline';
 import { FORCE_ENCRYPTED_FILE_ENV_VAR } from '../mcp/token-storage/index.js';
-import { QWEN_DIR } from '../utils/paths.js';
+import { PAPERT_DIR } from '../utils/paths.js';
 
 const canListenOnLoopback = await new Promise<boolean>((resolve) => {
   import('node:net')
@@ -68,7 +68,7 @@ if (!canListenOnLoopback) {
           cb?: () => void,
         ) => {
           const callback =
-            typeof _hostOrCb === 'function' ? _hostOrCb : cb ?? (() => {});
+            typeof _hostOrCb === 'function' ? _hostOrCb : cb ?? (() => { });
           callback();
           listeners['listening'].forEach((fn) => fn());
         },
@@ -85,7 +85,7 @@ if (!canListenOnLoopback) {
         close: () => {
           listeners['close'].forEach((fn) => fn());
         },
-        unref: () => {},
+        unref: () => { },
       };
     };
     return {
@@ -253,7 +253,7 @@ describe('oauth2', () => {
       // Verify Google Account was cached
       const googleAccountPath = path.join(
         tempHomeDir,
-        QWEN_DIR,
+        PAPERT_DIR,
         'google_accounts.json',
       );
       expect(fs.existsSync(googleAccountPath)).toBe(true);
@@ -314,7 +314,7 @@ describe('oauth2', () => {
 
       const consoleLogSpy = vi
         .spyOn(console, 'log')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       const client = await getOauthClient(
         AuthType.LOGIN_WITH_GOOGLE,
@@ -883,7 +883,7 @@ describe('oauth2', () => {
 
         const consoleErrorSpy = vi
           .spyOn(console, 'error')
-          .mockImplementation(() => {});
+          .mockImplementation(() => { });
 
         let requestCallback!: http.RequestListener;
         let serverListeningCallback: (value: unknown) => void;
@@ -965,10 +965,10 @@ describe('oauth2', () => {
 
         const consoleLogSpy = vi
           .spyOn(console, 'log')
-          .mockImplementation(() => {});
+          .mockImplementation(() => { });
         const consoleErrorSpy = vi
           .spyOn(console, 'error')
-          .mockImplementation(() => {});
+          .mockImplementation(() => { });
 
         await expect(
           getOauthClient(AuthType.LOGIN_WITH_GOOGLE, mockConfigWithNoBrowser),
@@ -1089,7 +1089,7 @@ describe('oauth2', () => {
         refresh_token: 'test-refresh-token',
       };
 
-      let onTokensCallback: (tokens: Credentials) => void = () => {};
+      let onTokensCallback: (tokens: Credentials) => void = () => { };
       const mockOn = vi.fn((event, callback) => {
         if (event === 'tokens') {
           onTokensCallback = callback;

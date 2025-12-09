@@ -22,7 +22,7 @@ import {
   Kind,
   ToolConfirmationOutcome,
 } from './tools.js';
-import { DEFAULT_QWEN_MODEL } from '../config/models.js';
+import { DEFAULT_PAPERT_MODEL } from '../config/models.js';
 import { ToolNames, ToolDisplayNames } from './tool-names.js';
 
 const URL_FETCH_TIMEOUT_MS = 10000;
@@ -110,7 +110,7 @@ ${textContent}
         [{ role: 'user', parts: [{ text: fallbackPrompt }] }],
         {},
         signal,
-        this.config.getModel() || DEFAULT_QWEN_MODEL,
+        this.config.getModel() || DEFAULT_PAPERT_MODEL,
       );
       const resultText = getResponseText(result) || '';
 

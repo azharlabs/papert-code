@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -95,7 +95,7 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
 
       // Should include User-Agent from parent
       expect(headers['User-Agent']).toBe(
-        `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
+        `PapertCode/1.0.0 (${process.platform}; ${process.arch})`,
       );
     });
 
@@ -103,9 +103,9 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
       const headers = provider.buildHeaders();
 
       expect(headers).toEqual({
-        'User-Agent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
+        'User-Agent': `PapertCode/1.0.0 (${process.platform}; ${process.arch})`,
         'HTTP-Referer': 'https://github.com/azharlabs/papert-code.git',
-        'X-Title': 'Qwen Code',
+        'X-Title': 'Papert Code',
       });
     });
 
@@ -125,7 +125,7 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
       expect(headers).toEqual({
         'User-Agent': 'ParentAgent/1.0.0',
         'HTTP-Referer': 'https://github.com/azharlabs/papert-code.git', // OpenRouter-specific value should override
-        'X-Title': 'Qwen Code',
+        'X-Title': 'Papert Code',
       });
 
       parentBuildHeaders.mockRestore();
@@ -137,12 +137,12 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
       const headers = provider.buildHeaders();
 
       expect(headers['User-Agent']).toBe(
-        `QwenCode/unknown (${process.platform}; ${process.arch})`,
+        `PapertCode/unknown (${process.platform}; ${process.arch})`,
       );
       expect(headers['HTTP-Referer']).toBe(
         'https://github.com/azharlabs/papert-code.git',
       );
-      expect(headers['X-Title']).toBe('Qwen Code');
+      expect(headers['X-Title']).toBe('Papert Code');
     });
   });
 
@@ -215,7 +215,7 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
       expect(headers['HTTP-Referer']).toBe(
         'https://github.com/azharlabs/papert-code.git',
       ); // OpenRouter-specific
-      expect(headers['X-Title']).toBe('Qwen Code'); // OpenRouter-specific
+      expect(headers['X-Title']).toBe('Papert Code'); // OpenRouter-specific
     });
   });
 });

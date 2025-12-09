@@ -20,7 +20,7 @@ export function query({
   options = {},
 }: {
   /**
-   * The prompt to send to the Qwen Code CLI process.
+   * The prompt to send to the Papert Code CLI process.
    * - `string` for single-turn query,
    * - `AsyncIterable<SDKUserMessage>` for multi-turn query.
    *
@@ -36,13 +36,13 @@ export function query({
 
   const isSingleTurn = typeof prompt === 'string';
 
-  const pathToQwenExecutable =
-    options.pathToQwenExecutable ?? parsedExecutable.executablePath;
+  const pathToPapertExecutable =
+    options.pathToPapertExecutable ?? parsedExecutable.executablePath;
 
   const abortController = options.abortController ?? new AbortController();
 
   const transport = new ProcessTransport({
-    pathToQwenExecutable,
+    pathToPapertExecutable,
     cwd: options.cwd,
     model: options.model,
     permissionMode: options.permissionMode,
@@ -110,10 +110,10 @@ function validateOptions(
 
   let parsedExecutable: ReturnType<typeof parseExecutableSpec>;
   try {
-    parsedExecutable = parseExecutableSpec(options.pathToQwenExecutable);
+    parsedExecutable = parseExecutableSpec(options.pathToPapertExecutable);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Invalid pathToQwenExecutable: ${errorMessage}`);
+    throw new Error(`Invalid pathToPapertExecutable: ${errorMessage}`);
   }
 
   return parsedExecutable;

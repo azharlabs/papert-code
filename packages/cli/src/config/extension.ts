@@ -10,7 +10,7 @@ import type {
   ExtensionInstallMetadata,
 } from '@papert-code/papert-code-core';
 import {
-  QWEN_DIR,
+  PAPERT_DIR,
   Storage,
   Config,
   ExtensionInstallEvent,
@@ -39,11 +39,11 @@ import { ExtensionEnablementManager } from './extensions/extensionEnablement.js'
 import chalk from 'chalk';
 import type { ConfirmationRequest } from '../ui/types.js';
 
-export const EXTENSIONS_DIRECTORY_NAME = path.join(QWEN_DIR, 'extensions');
+export const EXTENSIONS_DIRECTORY_NAME = path.join(PAPERT_DIR, 'extensions');
 
 export const EXTENSION_CONFIG_FILENAMES = [
   'papert-extension.json', // Preferred
-  'qwen-extension.json', // Legacy
+  'papert-extension.json', // Legacy
 ];
 export const PRIMARY_EXTENSION_CONFIG_FILENAME = EXTENSION_CONFIG_FILENAMES[0];
 // Deprecated: keep for backward compatibility with older imports/tests.
@@ -681,9 +681,9 @@ export async function uninstallExtension(
   const extensionName = installedExtensions.find(
     (installed) =>
       installed.config.name.toLowerCase() ===
-        extensionIdentifier.toLowerCase() ||
+      extensionIdentifier.toLowerCase() ||
       installed.installMetadata?.source.toLowerCase() ===
-        extensionIdentifier.toLowerCase(),
+      extensionIdentifier.toLowerCase(),
   )?.config.name;
   if (!extensionName) {
     throw new Error(`Extension not found.`);

@@ -262,9 +262,9 @@ export class GeminiClient {
           path: activeFile.path,
           cursor: activeFile.cursor
             ? {
-                line: activeFile.cursor.line,
-                character: activeFile.cursor.character,
-              }
+              line: activeFile.cursor.line,
+              character: activeFile.cursor.character,
+            }
             : undefined,
           selectedText: activeFile.selectedText || undefined,
         };
@@ -343,9 +343,9 @@ export class GeminiClient {
             path: currentActiveFile.path,
             cursor: currentActiveFile.cursor
               ? {
-                  line: currentActiveFile.cursor.line,
-                  character: currentActiveFile.cursor.character,
-                }
+                line: currentActiveFile.cursor.line,
+                character: currentActiveFile.cursor.character,
+              }
               : undefined,
             selectedText: currentActiveFile.selectedText || undefined,
           };
@@ -489,7 +489,7 @@ export class GeminiClient {
     }
 
     // Prevent context updates from being sent while a tool call is
-    // waiting for a response. The Qwen API requires that a functionResponse
+    // waiting for a response. The Papert API requires that a functionResponse
     // part from the user immediately follows a functionCall part from the model
     // in the conversation history . The IDE context is not discarded; it will
     // be included in the next regular message sent to the model.
@@ -710,9 +710,9 @@ export class GeminiClient {
       }
     } else if (
       info.compressionStatus ===
-        CompressionStatus.COMPRESSION_FAILED_INFLATED_TOKEN_COUNT ||
+      CompressionStatus.COMPRESSION_FAILED_INFLATED_TOKEN_COUNT ||
       info.compressionStatus ===
-        CompressionStatus.COMPRESSION_FAILED_EMPTY_SUMMARY
+      CompressionStatus.COMPRESSION_FAILED_EMPTY_SUMMARY
     ) {
       // Track failed attempts (only mark as failed if not forced)
       if (!force) {

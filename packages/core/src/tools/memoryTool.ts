@@ -71,9 +71,9 @@ Do NOT use this tool:
   - If not specified, the tool will ask the user where they want to save the memory.
 `;
 
-export const QWEN_CONFIG_DIR = '.papert';
+export const PAPERT_CONFIG_DIR = '.papert';
 export const DEFAULT_CONTEXT_FILENAME = 'papert.md';
-export const MEMORY_SECTION_HEADER = '## Qwen Added Memories';
+export const MEMORY_SECTION_HEADER = '## Papert Added Memories';
 
 // This variable will hold the currently configured filename for papert.md context files.
 // It defaults to DEFAULT_CONTEXT_FILENAME but can be overridden by setGeminiMdFilename.
@@ -111,7 +111,7 @@ interface SaveMemoryParams {
 }
 
 function getGlobalMemoryFilePath(): string {
-  return path.join(Storage.getGlobalQwenDir(), getCurrentGeminiMdFilename());
+  return path.join(Storage.getGlobalPapertDir(), getCurrentGeminiMdFilename());
 }
 
 function getProjectMemoryFilePath(): string {
@@ -379,8 +379,7 @@ Project: ${projectPath} (current project only)`;
 
 export class MemoryTool
   extends BaseDeclarativeTool<SaveMemoryParams, ToolResult>
-  implements ModifiableDeclarativeTool<SaveMemoryParams>
-{
+  implements ModifiableDeclarativeTool<SaveMemoryParams> {
   static readonly Name: string = ToolNames.MEMORY;
   constructor() {
     super(

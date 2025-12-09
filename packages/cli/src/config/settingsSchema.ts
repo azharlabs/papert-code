@@ -707,7 +707,7 @@ const SETTINGS_SCHEMA = {
             description: 'Respect .gitignore files when searching',
             showInDialog: true,
           },
-          respectQwenIgnore: {
+          respectPapertIgnore: {
             type: 'boolean',
             label: 'Respect .papertignore',
             category: 'Context',
@@ -1124,13 +1124,13 @@ const SETTINGS_SCHEMA = {
     requiresRestart: true,
     default: undefined as
       | {
-          provider: Array<{
-            type: 'tavily' | 'google' | 'dashscope';
-            apiKey?: string;
-            searchEngineId?: string;
-          }>;
-          default: string;
-        }
+        provider: Array<{
+          type: 'tavily' | 'google' | 'dashscope';
+          apiKey?: string;
+          searchEngineId?: string;
+        }>;
+        default: string;
+      }
       | undefined,
     description: 'Configuration for web search providers.',
     showInDialog: false,
@@ -1161,7 +1161,7 @@ const SETTINGS_SCHEMA = {
         requiresRestart: false,
         default: true,
         description:
-          'Enable vision model support and auto-switching functionality. When disabled, vision models like qwen-vl-max-latest will be hidden and auto-switching will not occur.',
+          'Enable vision model support and auto-switching functionality. When disabled, vision models like papert-vl-max-latest will be hidden and auto-switching will not occur.',
         showInDialog: true,
       },
       vlmSwitchMode: {
@@ -1219,14 +1219,14 @@ export function getSettingsSchema(): SettingsSchemaType {
 
 type InferSettings<T extends SettingsSchema> = {
   -readonly [K in keyof T]?: T[K] extends { properties: SettingsSchema }
-    ? InferSettings<T[K]['properties']>
-    : T[K]['type'] extends 'enum'
-      ? T[K]['options'] extends readonly SettingEnumOption[]
-        ? T[K]['options'][number]['value']
-        : T[K]['default']
-      : T[K]['default'] extends boolean
-        ? boolean
-        : T[K]['default'];
+  ? InferSettings<T[K]['properties']>
+  : T[K]['type'] extends 'enum'
+  ? T[K]['options'] extends readonly SettingEnumOption[]
+  ? T[K]['options'][number]['value']
+  : T[K]['default']
+  : T[K]['default'] extends boolean
+  ? boolean
+  : T[K]['default'];
 };
 
 export type Settings = InferSettings<SettingsSchemaType>;

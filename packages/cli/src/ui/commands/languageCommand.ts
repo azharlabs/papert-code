@@ -68,7 +68,7 @@ This is a **NON-NEGOTIABLE** requirement. Even if the user writes in English, sa
  */
 function getLlmOutputLanguageRulePath(): string {
   return path.join(
-    Storage.getGlobalQwenDir(),
+    Storage.getGlobalPapertDir(),
     LLM_OUTPUT_LANGUAGE_RULE_FILENAME,
   );
 }

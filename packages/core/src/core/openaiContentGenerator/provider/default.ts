@@ -8,8 +8,7 @@ import type { OpenAICompatibleProvider } from './types.js';
  * Default provider for standard OpenAI-compatible APIs
  */
 export class DefaultOpenAICompatibleProvider
-  implements OpenAICompatibleProvider
-{
+  implements OpenAICompatibleProvider {
   protected contentGeneratorConfig: ContentGeneratorConfig;
   protected cliConfig: Config;
 
@@ -23,7 +22,7 @@ export class DefaultOpenAICompatibleProvider
 
   buildHeaders(): Record<string, string | undefined> {
     const version = this.cliConfig.getCliVersion() || 'unknown';
-    const userAgent = `QwenCode/${version} (${process.platform}; ${process.arch})`;
+    const userAgent = `PapertCode/${version} (${process.platform}; ${process.arch})`;
     return {
       'User-Agent': userAgent,
     };

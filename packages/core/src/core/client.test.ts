@@ -145,7 +145,7 @@ vi.mock('../telemetry/index.js', async (importOriginal) => {
     ...actual,
     uiTelemetryService: mockUiTelemetryService,
     // We keep the real implementations of logChatCompression, etc.
-    // but we can spy on QwenLogger if needed
+    // but we can spy on PapertLogger if needed
   };
 });
 vi.mock('../ide/ideContext.js');
@@ -320,7 +320,7 @@ describe('Gemini Client (client.ts)', () => {
     };
     const mockSubagentManager = {
       listSubagents: vi.fn().mockResolvedValue([]),
-      addChangeListener: vi.fn().mockReturnValue(() => {}),
+      addChangeListener: vi.fn().mockReturnValue(() => { }),
     };
     mockConfig = {
       getContentGeneratorConfig: vi
@@ -1101,20 +1101,20 @@ describe('Gemini Client (client.ts)', () => {
 Here is the user's editor context as a JSON object. This is for your information only.
 \`\`\`json
 ${JSON.stringify(
-  {
-    activeFile: {
-      path: '/path/to/active/file.ts',
-      cursor: {
-        line: 5,
-        character: 10,
-      },
-      selectedText: 'hello',
-    },
-    otherOpenFiles: ['/path/to/recent/file1.ts', '/path/to/recent/file2.ts'],
-  },
-  null,
-  2,
-)}
+        {
+          activeFile: {
+            path: '/path/to/active/file.ts',
+            cursor: {
+              line: 5,
+              character: 10,
+            },
+            selectedText: 'hello',
+          },
+          otherOpenFiles: ['/path/to/recent/file1.ts', '/path/to/recent/file2.ts'],
+        },
+        null,
+        2,
+      )}
 \`\`\`
       `.trim();
       const expectedRequest = [{ text: expectedContext }];
@@ -1218,19 +1218,19 @@ ${JSON.stringify(
 Here is the user's editor context as a JSON object. This is for your information only.
 \`\`\`json
 ${JSON.stringify(
-  {
-    activeFile: {
-      path: '/path/to/active/file.ts',
-      cursor: {
-        line: 5,
-        character: 10,
-      },
-      selectedText: 'hello',
-    },
-  },
-  null,
-  2,
-)}
+        {
+          activeFile: {
+            path: '/path/to/active/file.ts',
+            cursor: {
+              line: 5,
+              character: 10,
+            },
+            selectedText: 'hello',
+          },
+        },
+        null,
+        2,
+      )}
 \`\`\`
       `.trim();
       const expectedRequest = [{ text: expectedContext }];
@@ -1294,12 +1294,12 @@ ${JSON.stringify(
 Here is the user's editor context as a JSON object. This is for your information only.
 \`\`\`json
 ${JSON.stringify(
-  {
-    otherOpenFiles: ['/path/to/recent/file1.ts', '/path/to/recent/file2.ts'],
-  },
-  null,
-  2,
-)}
+        {
+          otherOpenFiles: ['/path/to/recent/file1.ts', '/path/to/recent/file2.ts'],
+        },
+        null,
+        2,
+      )}
 \`\`\`
       `.trim();
       const expectedRequest = [{ text: expectedContext }];
@@ -1558,7 +1558,7 @@ ${JSON.stringify(
 
       console.log(
         `Infinite loop protection working: checkNextSpeaker called ${callCount} times, ` +
-          `${eventCount} events generated (properly bounded by MAX_TURNS)`,
+        `${eventCount} events generated (properly bounded by MAX_TURNS)`,
       );
     });
 

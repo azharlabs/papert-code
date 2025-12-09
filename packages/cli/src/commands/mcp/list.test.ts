@@ -38,11 +38,11 @@ vi.mock('@papert-code/papert-code-core', () => ({
     DISCONNECTED: 'DISCONNECTED',
   },
   Storage: vi.fn().mockImplementation((_cwd: string) => ({
-    getGlobalSettingsPath: () => '/tmp/qwen/settings.json',
-    getWorkspaceSettingsPath: () => '/tmp/qwen/workspace-settings.json',
+    getGlobalSettingsPath: () => '/tmp/papert/settings.json',
+    getWorkspaceSettingsPath: () => '/tmp/papert/workspace-settings.json',
     getProjectTempDir: () => '/test/home/.papert/tmp/mocked_hash',
   })),
-  QWEN_CONFIG_DIR: '.papert',
+  PAPERT_CONFIG_DIR: '.papert',
   getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : String(e)),
 }));
 vi.mock('@modelcontextprotocol/sdk/client/index.js');
@@ -71,7 +71,7 @@ describe('mcp list command', () => {
   beforeEach(() => {
     vi.resetAllMocks();
 
-    consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
 
     mockTransport = { close: vi.fn() };
     mockClient = {

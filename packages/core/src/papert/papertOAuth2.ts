@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -12,6 +12,10 @@ import * as os from 'os';
 import open from 'open';
 import { EventEmitter } from 'events';
 import type { Config } from '../config/config.js';
+import {
+  PAPERT_DIR,
+  PAPERT_CREDENTIAL_FILENAME,
+} from '../utils/paths.js';
 import { randomUUID } from 'node:crypto';
 import {
   SharedTokenManager,
@@ -20,20 +24,19 @@ import {
 } from './sharedTokenManager.js';
 
 // OAuth Endpoints
-const QWEN_OAUTH_BASE_URL = 'https://chat.qwen.ai';
+const PAPERT_OAUTH_BASE_URL = 'https://chat.papert.ai';
 
-const QWEN_OAUTH_DEVICE_CODE_ENDPOINT = `${QWEN_OAUTH_BASE_URL}/api/v1/oauth2/device/code`;
-const QWEN_OAUTH_TOKEN_ENDPOINT = `${QWEN_OAUTH_BASE_URL}/api/v1/oauth2/token`;
+const PAPERT_OAUTH_DEVICE_CODE_ENDPOINT = `${PAPERT_OAUTH_BASE_URL}/api/v1/oauth2/device/code`;
+const PAPERT_OAUTH_TOKEN_ENDPOINT = `${PAPERT_OAUTH_BASE_URL}/api/v1/oauth2/token`;
 
 // OAuth Client Configuration
-const QWEN_OAUTH_CLIENT_ID = 'f0304373b74a44d2b584a3fb70ca9e56';
+const PAPERT_OAUTH_CLIENT_ID = 'f0304373b74a44d2b584a3fb70ca9e56';
 
-const QWEN_OAUTH_SCOPE = 'openid profile email model.completion';
-const QWEN_OAUTH_GRANT_TYPE = 'urn:ietf:params:oauth:grant-type:device_code';
+const PAPERT_OAUTH_SCOPE = 'openid profile email model.completion';
+const PAPERT_OAUTH_GRANT_TYPE = 'urn:ietf:params:oauth:grant-type:device_code';
 
 // File System Configuration
-const QWEN_DIR = '.papert';
-const QWEN_CREDENTIAL_FILENAME = 'oauth_creds.json';
+// Constants imported from ../utils/paths.js
 
 /**
  * PKCE (Proof Key for Code Exchange) utilities
@@ -107,9 +110,9 @@ export class CredentialsClearRequiredError extends Error {
 }
 
 /**
- * Qwen OAuth2 credentials interface
+ * Papert OAuth2 credentials interface
  */
-export interface QwenCredentials {
+export interface PapertCredentials {
   access_token?: string;
   refresh_token?: string;
   id_token?: string;
@@ -228,11 +231,11 @@ export interface TokenRefreshData {
 export type TokenRefreshResponse = TokenRefreshData | ErrorData;
 
 /**
- * Qwen OAuth2 client interface
+ * Papert OAuth2 client interface
  */
-export interface IQwenOAuth2Client {
-  setCredentials(credentials: QwenCredentials): void;
-  getCredentials(): QwenCredentials;
+export interface IPapertOAuth2Client {
+  setCredentials(credentials: PapertCredentials): void;
+  getCredentials(): PapertCredentials;
   getAccessToken(): Promise<{ token?: string }>;
   requestDeviceAuthorization(options: {
     scope: string;
@@ -247,21 +250,21 @@ export interface IQwenOAuth2Client {
 }
 
 /**
- * Qwen OAuth2 client implementation
+ * Papert OAuth2 client implementation
  */
-export class QwenOAuth2Client implements IQwenOAuth2Client {
-  private credentials: QwenCredentials = {};
+export class PapertOAuth2Client implements IPapertOAuth2Client {
+  private credentials: PapertCredentials = {};
   private sharedManager: SharedTokenManager;
 
   constructor() {
     this.sharedManager = SharedTokenManager.getInstance();
   }
 
-  setCredentials(credentials: QwenCredentials): void {
+  setCredentials(credentials: PapertCredentials): void {
     this.credentials = credentials;
   }
 
-  getCredentials(): QwenCredentials {
+  getCredentials(): PapertCredentials {
     return this.credentials;
   }
 
@@ -287,13 +290,13 @@ export class QwenOAuth2Client implements IQwenOAuth2Client {
     code_challenge_method: string;
   }): Promise<DeviceAuthorizationResponse> {
     const bodyData = {
-      client_id: QWEN_OAUTH_CLIENT_ID,
+      client_id: PAPERT_OAUTH_CLIENT_ID,
       scope: options.scope,
       code_challenge: options.code_challenge,
       code_challenge_method: options.code_challenge_method,
     };
 
-    const response = await fetch(QWEN_OAUTH_DEVICE_CODE_ENDPOINT, {
+    const response = await fetch(PAPERT_OAUTH_DEVICE_CODE_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -329,13 +332,13 @@ export class QwenOAuth2Client implements IQwenOAuth2Client {
     code_verifier: string;
   }): Promise<DeviceTokenResponse> {
     const bodyData = {
-      grant_type: QWEN_OAUTH_GRANT_TYPE,
-      client_id: QWEN_OAUTH_CLIENT_ID,
+      grant_type: PAPERT_OAUTH_GRANT_TYPE,
+      client_id: PAPERT_OAUTH_CLIENT_ID,
       device_code: options.device_code,
       code_verifier: options.code_verifier,
     };
 
-    const response = await fetch(QWEN_OAUTH_TOKEN_ENDPOINT, {
+    const response = await fetch(PAPERT_OAUTH_TOKEN_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -399,10 +402,10 @@ export class QwenOAuth2Client implements IQwenOAuth2Client {
     const bodyData = {
       grant_type: 'refresh_token',
       refresh_token: this.credentials.refresh_token,
-      client_id: QWEN_OAUTH_CLIENT_ID,
+      client_id: PAPERT_OAUTH_CLIENT_ID,
     };
 
-    const response = await fetch(QWEN_OAUTH_TOKEN_ENDPOINT, {
+    const response = await fetch(PAPERT_OAUTH_TOKEN_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -415,7 +418,7 @@ export class QwenOAuth2Client implements IQwenOAuth2Client {
       const errorData = await response.text();
       // Handle 400 errors which might indicate refresh token expiry
       if (response.status === 400) {
-        await clearQwenCredentials();
+        await clearPapertCredentials();
         throw new CredentialsClearRequiredError(
           "Refresh token expired or invalid. Please use '/auth' to re-authenticate.",
           { status: response.status, response: errorData },
@@ -438,7 +441,7 @@ export class QwenOAuth2Client implements IQwenOAuth2Client {
 
     // Handle successful response
     const tokenData = responseData as TokenRefreshData;
-    const tokens: QwenCredentials = {
+    const tokens: PapertCredentials = {
       access_token: tokenData.access_token,
       token_type: tokenData.token_type,
       // Use new refresh token if provided, otherwise preserve existing one
@@ -456,7 +459,7 @@ export class QwenOAuth2Client implements IQwenOAuth2Client {
   }
 }
 
-export enum QwenOAuth2Event {
+export enum PapertOAuth2Event {
   AuthUri = 'auth-uri',
   AuthProgress = 'auth-progress',
   AuthCancel = 'auth-cancel',
@@ -468,21 +471,21 @@ export enum QwenOAuth2Event {
 export type AuthResult =
   | { success: true }
   | {
-      success: false;
-      reason: 'timeout' | 'cancelled' | 'error' | 'rate_limit';
-      message?: string; // Detailed error message for better error reporting
-    };
+    success: false;
+    reason: 'timeout' | 'cancelled' | 'error' | 'rate_limit';
+    message?: string; // Detailed error message for better error reporting
+  };
 
 /**
- * Global event emitter instance for QwenOAuth2 authentication events
+ * Global event emitter instance for PapertOAuth2 authentication events
  */
-export const qwenOAuth2Events = new EventEmitter();
+export const papertOAuth2Events = new EventEmitter();
 
-export async function getQwenOAuthClient(
+export async function getPapertOAuthClient(
   config: Config,
   options?: { requireCachedCredentials?: boolean },
-): Promise<QwenOAuth2Client> {
-  const client = new QwenOAuth2Client();
+): Promise<PapertOAuth2Client> {
+  const client = new PapertOAuth2Client();
 
   // Use shared token manager to get valid credentials with cross-session synchronization
   const sharedManager = SharedTokenManager.getInstance();
@@ -515,14 +518,14 @@ export async function getQwenOAuthClient(
     }
 
     // If shared manager fails, check if we have cached credentials for device flow
-    if (await loadCachedQwenCredentials(client)) {
+    if (await loadCachedPapertCredentials(client)) {
       // We have cached credentials but they might be expired
       // Try device flow instead of forcing refresh
-      const result = await authWithQwenDeviceFlow(client, config);
+      const result = await authWithPapertDeviceFlow(client, config);
       if (!result.success) {
         // Use detailed error message if available, otherwise use default
         const errorMessage =
-          result.message || 'Qwen OAuth authentication failed';
+          result.message || 'Papert OAuth authentication failed';
         throw new Error(errorMessage);
       }
       return client;
@@ -530,17 +533,17 @@ export async function getQwenOAuthClient(
 
     if (options?.requireCachedCredentials) {
       throw new Error(
-        'No cached Qwen-OAuth credentials found. Please re-authenticate.',
+        'No cached Papert-OAuth credentials found. Please re-authenticate.',
       );
     }
 
-    const result = await authWithQwenDeviceFlow(client, config);
+    const result = await authWithPapertDeviceFlow(client, config);
     if (!result.success) {
       // Only emit timeout event if the failure reason is actually timeout
       // Other error types (401, 429, etc.) have already emitted their specific events
       if (result.reason === 'timeout') {
-        qwenOAuth2Events.emit(
-          QwenOAuth2Event.AuthProgress,
+        papertOAuth2Events.emit(
+          PapertOAuth2Event.AuthProgress,
           'timeout',
           'Authentication timed out. Please try again or select a different authentication method.',
         );
@@ -552,14 +555,14 @@ export async function getQwenOAuthClient(
         (() => {
           switch (result.reason) {
             case 'timeout':
-              return 'Qwen OAuth authentication timed out';
+              return 'Papert OAuth authentication timed out';
             case 'cancelled':
-              return 'Qwen OAuth authentication was cancelled by user';
+              return 'Papert OAuth authentication was cancelled by user';
             case 'rate_limit':
-              return 'Too many request for Qwen OAuth authentication, please try again later.';
+              return 'Too many request for Papert OAuth authentication, please try again later.';
             case 'error':
             default:
-              return 'Qwen OAuth authentication failed';
+              return 'Papert OAuth authentication failed';
           }
         })();
 
@@ -570,8 +573,8 @@ export async function getQwenOAuthClient(
   }
 }
 
-async function authWithQwenDeviceFlow(
-  client: QwenOAuth2Client,
+async function authWithPapertDeviceFlow(
+  client: PapertOAuth2Client,
   config: Config,
 ): Promise<AuthResult> {
   let isCancelled = false;
@@ -580,7 +583,7 @@ async function authWithQwenDeviceFlow(
   const cancelHandler = () => {
     isCancelled = true;
   };
-  qwenOAuth2Events.once(QwenOAuth2Event.AuthCancel, cancelHandler);
+  papertOAuth2Events.once(PapertOAuth2Event.AuthCancel, cancelHandler);
 
   try {
     // Generate PKCE code verifier and challenge
@@ -588,7 +591,7 @@ async function authWithQwenDeviceFlow(
 
     // Request device authorization
     const deviceAuth = await client.requestDeviceAuthorization({
-      scope: QWEN_OAUTH_SCOPE,
+      scope: PAPERT_OAUTH_SCOPE,
       code_challenge,
       code_challenge_method: 'S256',
     });
@@ -602,10 +605,10 @@ async function authWithQwenDeviceFlow(
     }
 
     // Emit device authorization event for UI integration immediately
-    qwenOAuth2Events.emit(QwenOAuth2Event.AuthUri, deviceAuth);
+    papertOAuth2Events.emit(PapertOAuth2Event.AuthUri, deviceAuth);
 
     const showFallbackMessage = () => {
-      console.log('\n=== Qwen OAuth Device Authorization ===');
+      console.log('\n=== Papert OAuth Device Authorization ===');
       console.log(
         'Please visit the following URL in your browser to authorize:',
       );
@@ -639,8 +642,8 @@ async function authWithQwenDeviceFlow(
     }
 
     // Emit auth progress event
-    qwenOAuth2Events.emit(
-      QwenOAuth2Event.AuthProgress,
+    papertOAuth2Events.emit(
+      PapertOAuth2Event.AuthProgress,
       'polling',
       'Waiting for authorization...',
     );
@@ -658,7 +661,7 @@ async function authWithQwenDeviceFlow(
       if (isCancelled) {
         const message = 'Authentication cancelled by user.';
         console.debug('\n' + message);
-        qwenOAuth2Events.emit(QwenOAuth2Event.AuthProgress, 'error', message);
+        papertOAuth2Events.emit(PapertOAuth2Event.AuthProgress, 'error', message);
         return { success: false, reason: 'cancelled', message };
       }
 
@@ -673,8 +676,8 @@ async function authWithQwenDeviceFlow(
         if (isDeviceTokenSuccess(tokenResponse)) {
           const tokenData = tokenResponse as DeviceTokenData;
 
-          // Convert to QwenCredentials format
-          const credentials: QwenCredentials = {
+          // Convert to PapertCredentials format
+          const credentials: PapertCredentials = {
             access_token: tokenData.access_token!, // Safe to assert as non-null due to isDeviceTokenSuccess check
             refresh_token: tokenData.refresh_token || undefined,
             token_type: tokenData.token_type,
@@ -687,11 +690,11 @@ async function authWithQwenDeviceFlow(
           client.setCredentials(credentials);
 
           // Cache the new tokens
-          await cacheQwenCredentials(credentials);
+          await cachePapertCredentials(credentials);
 
           // Emit auth progress success event
-          qwenOAuth2Events.emit(
-            QwenOAuth2Event.AuthProgress,
+          papertOAuth2Events.emit(
+            PapertOAuth2Event.AuthProgress,
             'success',
             'Authentication successful! Access token obtained.',
           );
@@ -715,8 +718,8 @@ async function authWithQwenDeviceFlow(
           }
 
           // Emit polling progress event
-          qwenOAuth2Events.emit(
-            QwenOAuth2Event.AuthProgress,
+          papertOAuth2Events.emit(
+            PapertOAuth2Event.AuthProgress,
             'polling',
             `Polling... (attempt ${attempt + 1}/${maxAttempts})`,
           );
@@ -749,8 +752,8 @@ async function authWithQwenDeviceFlow(
           if (isCancelled) {
             const message = 'Authentication cancelled by user.';
             console.debug('\n' + message);
-            qwenOAuth2Events.emit(
-              QwenOAuth2Event.AuthProgress,
+            papertOAuth2Events.emit(
+              PapertOAuth2Event.AuthProgress,
               'error',
               message,
             );
@@ -782,8 +785,8 @@ async function authWithQwenDeviceFlow(
           message: string,
           eventType: 'error' | 'rate_limit' = 'error',
         ): AuthResult => {
-          qwenOAuth2Events.emit(
-            QwenOAuth2Event.AuthProgress,
+          papertOAuth2Events.emit(
+            PapertOAuth2Event.AuthProgress,
             eventType,
             message,
           );
@@ -814,7 +817,7 @@ async function authWithQwenDeviceFlow(
         }
 
         const message = `Error polling for token: ${errorMessage}`;
-        qwenOAuth2Events.emit(QwenOAuth2Event.AuthProgress, 'error', message);
+        papertOAuth2Events.emit(PapertOAuth2Event.AuthProgress, 'error', message);
 
         if (isCancelled) {
           const message = 'Authentication cancelled by user.';
@@ -828,8 +831,8 @@ async function authWithQwenDeviceFlow(
     const timeoutMessage = 'Authorization timeout, please restart the process.';
 
     // Emit timeout error event
-    qwenOAuth2Events.emit(
-      QwenOAuth2Event.AuthProgress,
+    papertOAuth2Events.emit(
+      PapertOAuth2Event.AuthProgress,
       'timeout',
       timeoutMessage,
     );
@@ -843,17 +846,17 @@ async function authWithQwenDeviceFlow(
     return { success: false, reason: 'error', message };
   } finally {
     // Clean up event listener
-    qwenOAuth2Events.off(QwenOAuth2Event.AuthCancel, cancelHandler);
+    papertOAuth2Events.off(PapertOAuth2Event.AuthCancel, cancelHandler);
   }
 }
 
-async function loadCachedQwenCredentials(
-  client: QwenOAuth2Client,
+async function loadCachedPapertCredentials(
+  client: PapertOAuth2Client,
 ): Promise<boolean> {
   try {
-    const keyFile = getQwenCachedCredentialPath();
+    const keyFile = getPapertCachedCredentialPath();
     const creds = await fs.readFile(keyFile, 'utf-8');
-    const credentials = JSON.parse(creds) as QwenCredentials;
+    const credentials = JSON.parse(creds) as PapertCredentials;
     client.setCredentials(credentials);
 
     // Verify that the credentials are still valid
@@ -868,8 +871,8 @@ async function loadCachedQwenCredentials(
   }
 }
 
-async function cacheQwenCredentials(credentials: QwenCredentials) {
-  const filePath = getQwenCachedCredentialPath();
+async function cachePapertCredentials(credentials: PapertCredentials) {
+  const filePath = getPapertCachedCredentialPath();
   try {
     await fs.mkdir(path.dirname(filePath), { recursive: true });
 
@@ -897,14 +900,14 @@ async function cacheQwenCredentials(credentials: QwenCredentials) {
 }
 
 /**
- * Clear cached Qwen credentials from disk
+ * Clear cached Papert credentials from disk
  * This is useful when credentials have expired or need to be reset
  */
-export async function clearQwenCredentials(): Promise<void> {
+export async function clearPapertCredentials(): Promise<void> {
   try {
-    const filePath = getQwenCachedCredentialPath();
+    const filePath = getPapertCachedCredentialPath();
     await fs.unlink(filePath);
-    console.debug('Cached Qwen credentials cleared successfully.');
+    console.debug('Cached Papert credentials cleared successfully.');
   } catch (error: unknown) {
     // If file doesn't exist or can't be deleted, we consider it cleared
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
@@ -912,10 +915,10 @@ export async function clearQwenCredentials(): Promise<void> {
       return;
     }
     // Log other errors but don't throw - clearing credentials should be non-critical
-    console.warn('Warning: Failed to clear cached Qwen credentials:', error);
+    console.warn('Warning: Failed to clear cached Papert credentials:', error);
   }
 }
 
-function getQwenCachedCredentialPath(): string {
-  return path.join(os.homedir(), QWEN_DIR, QWEN_CREDENTIAL_FILENAME);
+function getPapertCachedCredentialPath(): string {
+  return path.join(os.homedir(), PAPERT_DIR, PAPERT_CREDENTIAL_FILENAME);
 }

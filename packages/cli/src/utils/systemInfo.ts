@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -73,9 +73,9 @@ export async function getIdeClientName(
 /**
  * Gets the sandbox environment information.
  * Handles different sandbox types including sandbox-exec and custom sandbox environments.
- * For bug reports, removes 'qwen-' or 'papert-code-' prefixes from sandbox names.
+ * For bug reports, removes 'papert-' or 'papert-code-' prefixes from sandbox names.
  *
- * @param stripPrefix - Whether to strip 'qwen-' prefix (used for bug reports)
+ * @param stripPrefix - Whether to strip 'papert-' prefix (used for bug reports)
  */
 export function getSandboxEnv(stripPrefix = false): string {
   const sandbox = process.env['SANDBOX'];
@@ -88,9 +88,9 @@ export function getSandboxEnv(stripPrefix = false): string {
     return 'no sandbox';
   }
 
-  // For bug reports, remove legacy prefixes (qwen-, qwen-code-, papert-code-)
+  // For bug reports, remove legacy prefixes (papert-, papert-code-, papert-code-)
   if (stripPrefix) {
-    return sandbox.replace(/^(?:qwen-(?:code-)?|papert-code-)/, '');
+    return sandbox.replace(/^(?:papert-(?:code-)?|papert-code-)/, '');
   }
 
   return sandbox;

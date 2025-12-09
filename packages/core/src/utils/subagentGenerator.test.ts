@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -34,7 +34,7 @@ describe('subagentGenerator', () => {
     // Create a mock config that returns the mock client and model
     mockConfig = {
       getBaseLlmClient: vi.fn().mockReturnValue(mockClient),
-      getModel: vi.fn().mockReturnValue('qwen3-coder-plus'),
+      getModel: vi.fn().mockReturnValue('papert3-coder-plus'),
     } as unknown as Config;
   });
 
@@ -88,7 +88,7 @@ describe('subagentGenerator', () => {
 
     // Check other parameters
     expect(callParams.abortSignal).toBe(abortSignal);
-    expect(callParams.model).toBe('qwen3-coder-plus');
+    expect(callParams.model).toBe('papert3-coder-plus');
     expect(callParams.systemInstruction).toContain(
       'You are an elite AI agent architect',
     );
@@ -149,7 +149,7 @@ describe('subagentGenerator', () => {
 
     expect(mockClient.generateJson).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: 'qwen3-coder-plus',
+        model: 'papert3-coder-plus',
         contents: expect.any(Object),
         schema: expect.objectContaining({
           type: 'object',

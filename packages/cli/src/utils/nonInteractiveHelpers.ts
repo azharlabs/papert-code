@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Papert Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -113,7 +113,7 @@ export function extractUsageFromGeminiClient(
       !chat ||
       typeof chat !== 'object' ||
       typeof (chat as { getDebugResponses?: unknown }).getDebugResponses !==
-        'function'
+      'function'
     ) {
       return undefined;
     }
@@ -246,9 +246,9 @@ export async function buildSystemMessage(
   const mcpServers = config.getMcpServers();
   const mcpServerList = mcpServers
     ? Object.keys(mcpServers).map((name) => ({
-        name,
-        status: getMCPServerStatus(name),
-      }))
+      name,
+      status: getMCPServerStatus(name),
+    }))
     : [];
 
   // Load slash commands
@@ -277,7 +277,7 @@ export async function buildSystemMessage(
     model: config.getModel(),
     permission_mode: permissionMode,
     slash_commands: slashCommands,
-    qwen_code_version: config.getCliVersion() || 'unknown',
+    papert_code_version: config.getCliVersion() || 'unknown',
     agents: agentNames,
   };
 
@@ -389,9 +389,9 @@ export function createTaskToolProgressHandler(
     const toolCallToEmit: NonNullable<TaskResultDisplay['toolCalls']>[number] =
       fallbackStatus
         ? {
-            ...toolCall,
-            status: fallbackStatus,
-          }
+          ...toolCall,
+          status: fallbackStatus,
+        }
         : toolCall;
 
     if (

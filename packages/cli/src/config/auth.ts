@@ -20,8 +20,8 @@ export function validateAuthMethod(authMethod: string): string | null {
     return null;
   }
 
-  if (authMethod === AuthType.QWEN_OAUTH) {
-    // Qwen OAuth doesn't require any environment variables for basic setup
+  if (authMethod === AuthType.PAPERT_OAUTH) {
+    // Papert OAuth doesn't require any environment variables for basic setup
     // The OAuth flow will handle authentication
     return null;
   }

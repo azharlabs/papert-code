@@ -50,7 +50,7 @@ function createConfig(
     includeDirectories: [dir],
     debugMode: false,
     generationConfig: {
-      model: 'qwen3-coder-14b',
+      model: 'papert3-coder-14b',
       authType: AuthType.USE_GEMINI,
     },
     ...overrides,

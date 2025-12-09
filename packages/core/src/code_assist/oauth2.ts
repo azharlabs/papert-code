@@ -163,8 +163,8 @@ async function initOauthClient(
 
     console.log(
       `\n\nCode Assist login required.\n` +
-        `Attempting to open authentication page in your browser.\n` +
-        `Otherwise navigate to:\n\n${webLogin.authUrl}\n\n`,
+      `Attempting to open authentication page in your browser.\n` +
+      `Otherwise navigate to:\n\n${webLogin.authUrl}\n\n`,
     );
     try {
       // Attempt to open the authentication URL in the default browser.
@@ -202,7 +202,7 @@ async function initOauthClient(
         reject(
           new FatalAuthenticationError(
             'Authentication timed out after 5 minutes. The browser tab may have gotten stuck in a loading state. ' +
-              'Please try again or use NO_BROWSER=true for manual authentication.',
+            'Please try again or use NO_BROWSER=true for manual authentication.',
           ),
         );
       }, authTimeout);
@@ -503,22 +503,22 @@ export async function clearCachedCredentialFile() {
     clearOauthClientCache();
 
     /**
-     * Also clear Qwen SharedTokenManager cache and credentials file to prevent stale credentials
+     * Also clear Papert SharedTokenManager cache and credentials file to prevent stale credentials
      * when switching between auth types
      * TODO: We do not depend on code_assist, we'll have to build an independent auth-cleaning procedure.
      */
     try {
       const { SharedTokenManager } = await import(
-        '../qwen/sharedTokenManager.js'
+        '../papert/sharedTokenManager.js'
       );
-      const { clearQwenCredentials } = await import('../qwen/qwenOAuth2.js');
+      const { clearPapertCredentials } = await import('../papert/papertOAuth2.js');
 
       const sharedManager = SharedTokenManager.getInstance();
       sharedManager.clearCache();
 
-      await clearQwenCredentials();
-    } catch (qwenError) {
-      console.debug('Could not clear Qwen credentials:', qwenError);
+      await clearPapertCredentials();
+    } catch (papertError) {
+      console.debug('Could not clear Papert credentials:', papertError);
     }
   } catch (e) {
     console.error('Failed to clear cached credentials:', e);

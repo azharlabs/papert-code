@@ -66,21 +66,21 @@ export interface ShellExecutionConfig {
  */
 export type ShellOutputEvent =
   | {
-      /** The event contains a chunk of output data. */
-      type: 'data';
-      /** The decoded string chunk. */
-      chunk: string | AnsiOutput;
-    }
+    /** The event contains a chunk of output data. */
+    type: 'data';
+    /** The decoded string chunk. */
+    chunk: string | AnsiOutput;
+  }
   | {
-      /** Signals that the output stream has been identified as binary. */
-      type: 'binary_detected';
-    }
+    /** Signals that the output stream has been identified as binary. */
+    type: 'binary_detected';
+  }
   | {
-      /** Provides progress updates for a binary stream. */
-      type: 'binary_progress';
-      /** The total number of bytes received so far. */
-      bytesReceived: number;
-    };
+    /** Provides progress updates for a binary stream. */
+    type: 'binary_progress';
+    /** The total number of bytes received so far. */
+    bytesReceived: number;
+  };
 
 interface ActivePty {
   ptyProcess: IPty;
@@ -167,7 +167,7 @@ export class ShellExecutionService {
         detached: !isWindows,
         env: {
           ...process.env,
-          QWEN_CODE: '1',
+          PAPERT_CODE: '1',
           TERM: 'xterm-256color',
           PAGER: 'cat',
         },
@@ -357,7 +357,7 @@ export class ShellExecutionService {
         rows,
         env: {
           ...process.env,
-          QWEN_CODE: '1',
+          PAPERT_CODE: '1',
           TERM: 'xterm-256color',
           PAGER: shellExecutionConfig.pager ?? 'cat',
         },

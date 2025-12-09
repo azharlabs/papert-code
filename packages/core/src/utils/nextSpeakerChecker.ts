@@ -5,7 +5,7 @@
  */
 
 import type { Content } from '@google/genai';
-import { DEFAULT_QWEN_MODEL } from '../config/models.js';
+import { DEFAULT_PAPERT_MODEL } from '../config/models.js';
 import type { GeminiChat } from '../core/geminiChat.js';
 import { isFunctionResponse } from './messageInspectors.js';
 import type { Config } from '../config/config.js';
@@ -112,7 +112,7 @@ export async function checkNextSpeaker(
     const parsedResponse = (await config.getBaseLlmClient().generateJson({
       contents,
       schema: RESPONSE_SCHEMA,
-      model: config.getModel() || DEFAULT_QWEN_MODEL,
+      model: config.getModel() || DEFAULT_PAPERT_MODEL,
       abortSignal,
       promptId,
     })) as unknown as NextSpeakerResponse;

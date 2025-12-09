@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -52,12 +52,12 @@ export type StepKind =
   | 'COLOR'
   | 'FINAL';
 
-export function getTotalSteps(method: 'qwen' | 'manual'): number {
+export function getTotalSteps(method: 'papert' | 'manual'): number {
   return method === 'manual' ? 8 : TOTAL_WIZARD_STEPS;
 }
 
 export function getStepKind(
-  method: 'qwen' | 'manual',
+  method: 'papert' | 'manual',
   stepNumber: number,
 ): StepKind {
   if (method === 'manual') {

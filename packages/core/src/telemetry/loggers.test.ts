@@ -56,7 +56,7 @@ import {
   logExtensionUninstall,
 } from './loggers.js';
 import * as metrics from './metrics.js';
-import { QwenLogger } from './qwen-logger/qwen-logger.js';
+import { PapertLogger } from './papert-logger/papert-logger.js';
 import * as sdk from './sdk.js';
 import { ToolCallDecision } from './tool-call-decision.js';
 import {
@@ -112,10 +112,10 @@ describe('loggers', () => {
   describe('logChatCompression', () => {
     beforeEach(() => {
       vi.spyOn(metrics, 'recordChatCompressionMetrics');
-      vi.spyOn(QwenLogger.prototype, 'logChatCompressionEvent');
+      vi.spyOn(PapertLogger.prototype, 'logChatCompressionEvent');
     });
 
-    it('logs the chat compression event to QwenLogger', () => {
+    it('logs the chat compression event to PapertLogger', () => {
       const mockConfig = makeFakeConfig({ sessionId: 'test-session-id' });
 
       const event = makeChatCompressionEvent({
@@ -125,7 +125,7 @@ describe('loggers', () => {
 
       logChatCompression(mockConfig, event);
 
-      expect(QwenLogger.prototype.logChatCompressionEvent).toHaveBeenCalledWith(
+      expect(PapertLogger.prototype.logChatCompressionEvent).toHaveBeenCalledWith(
         event,
       );
     });
@@ -446,7 +446,7 @@ describe('loggers', () => {
     } as unknown as Config;
 
     beforeEach(() => {
-      vi.spyOn(QwenLogger.prototype, 'logRipgrepFallbackEvent');
+      vi.spyOn(PapertLogger.prototype, 'logRipgrepFallbackEvent');
     });
 
     it('should log ripgrep fallback event', () => {
@@ -458,7 +458,7 @@ describe('loggers', () => {
 
       logRipgrepFallback(mockConfig, event);
 
-      expect(QwenLogger.prototype.logRipgrepFallbackEvent).toHaveBeenCalled();
+      expect(PapertLogger.prototype.logRipgrepFallbackEvent).toHaveBeenCalled();
 
       const emittedEvent = mockLogger.emit.mock.calls[0][0];
       expect(emittedEvent.body).toBe('Switching to grep as fallback.');
@@ -477,7 +477,7 @@ describe('loggers', () => {
 
       logRipgrepFallback(mockConfig, event);
 
-      expect(QwenLogger.prototype.logRipgrepFallbackEvent).toHaveBeenCalled();
+      expect(PapertLogger.prototype.logRipgrepFallbackEvent).toHaveBeenCalled();
 
       const emittedEvent = mockLogger.emit.mock.calls[0][0];
       expect(emittedEvent.body).toBe('Switching to grep as fallback.');
@@ -1030,7 +1030,7 @@ describe('loggers', () => {
 
   describe('logMalformedJsonResponse', () => {
     beforeEach(() => {
-      vi.spyOn(QwenLogger.prototype, 'logMalformedJsonResponseEvent');
+      vi.spyOn(PapertLogger.prototype, 'logMalformedJsonResponseEvent');
     });
 
     it('logs the event to Clearcut and OTEL', () => {
@@ -1040,7 +1040,7 @@ describe('loggers', () => {
       logMalformedJsonResponse(mockConfig, event);
 
       expect(
-        QwenLogger.prototype.logMalformedJsonResponseEvent,
+        PapertLogger.prototype.logMalformedJsonResponseEvent,
       ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
@@ -1159,7 +1159,7 @@ describe('loggers', () => {
     } as unknown as Config;
 
     beforeEach(() => {
-      vi.spyOn(QwenLogger.prototype, 'logExtensionInstallEvent');
+      vi.spyOn(PapertLogger.prototype, 'logExtensionInstallEvent');
     });
 
     afterEach(() => {
@@ -1177,7 +1177,7 @@ describe('loggers', () => {
       logExtensionInstallEvent(mockConfig, event);
 
       expect(
-        QwenLogger.prototype.logExtensionInstallEvent,
+        PapertLogger.prototype.logExtensionInstallEvent,
       ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
@@ -1203,7 +1203,7 @@ describe('loggers', () => {
     } as unknown as Config;
 
     beforeEach(() => {
-      vi.spyOn(QwenLogger.prototype, 'logExtensionUninstallEvent');
+      vi.spyOn(PapertLogger.prototype, 'logExtensionUninstallEvent');
     });
 
     afterEach(() => {
@@ -1216,7 +1216,7 @@ describe('loggers', () => {
       logExtensionUninstall(mockConfig, event);
 
       expect(
-        QwenLogger.prototype.logExtensionUninstallEvent,
+        PapertLogger.prototype.logExtensionUninstallEvent,
       ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
@@ -1240,7 +1240,7 @@ describe('loggers', () => {
     } as unknown as Config;
 
     beforeEach(() => {
-      vi.spyOn(QwenLogger.prototype, 'logExtensionEnableEvent');
+      vi.spyOn(PapertLogger.prototype, 'logExtensionEnableEvent');
     });
 
     afterEach(() => {
@@ -1252,7 +1252,7 @@ describe('loggers', () => {
 
       logExtensionEnable(mockConfig, event);
 
-      expect(QwenLogger.prototype.logExtensionEnableEvent).toHaveBeenCalledWith(
+      expect(PapertLogger.prototype.logExtensionEnableEvent).toHaveBeenCalledWith(
         event,
       );
 
@@ -1277,7 +1277,7 @@ describe('loggers', () => {
     } as unknown as Config;
 
     beforeEach(() => {
-      vi.spyOn(QwenLogger.prototype, 'logExtensionDisableEvent');
+      vi.spyOn(PapertLogger.prototype, 'logExtensionDisableEvent');
     });
 
     afterEach(() => {
@@ -1290,7 +1290,7 @@ describe('loggers', () => {
       logExtensionDisable(mockConfig, event);
 
       expect(
-        QwenLogger.prototype.logExtensionDisableEvent,
+        PapertLogger.prototype.logExtensionDisableEvent,
       ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({

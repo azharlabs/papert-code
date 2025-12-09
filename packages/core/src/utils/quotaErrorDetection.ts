@@ -99,8 +99,8 @@ export function isGenericQuotaExceededError(error: unknown): boolean {
   return false;
 }
 
-export function isQwenQuotaExceededError(error: unknown): boolean {
-  // Check for Qwen insufficient quota errors (should not retry)
+export function isPapertQuotaExceededError(error: unknown): boolean {
+  // Check for Papert insufficient quota errors (should not retry)
   const checkMessage = (message: string): boolean => {
     const lowerMessage = message.toLowerCase();
     return (
@@ -125,8 +125,8 @@ export function isQwenQuotaExceededError(error: unknown): boolean {
   return false;
 }
 
-export function isQwenThrottlingError(error: unknown): boolean {
-  // Check for Qwen throttling errors (should retry)
+export function isPapertThrottlingError(error: unknown): boolean {
+  // Check for Papert throttling errors (should retry)
   const checkMessage = (message: string): boolean => {
     const lowerMessage = message.toLowerCase();
     return (

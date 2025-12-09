@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -69,7 +69,7 @@ describe('DefaultOpenAICompatibleProvider', () => {
       const headers = provider.buildHeaders();
 
       expect(headers).toEqual({
-        'User-Agent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
+        'User-Agent': `PapertCode/1.0.0 (${process.platform}; ${process.arch})`,
       });
     });
 
@@ -83,7 +83,7 @@ describe('DefaultOpenAICompatibleProvider', () => {
       const headers = provider.buildHeaders();
 
       expect(headers).toEqual({
-        'User-Agent': `QwenCode/unknown (${process.platform}; ${process.arch})`,
+        'User-Agent': `PapertCode/unknown (${process.platform}; ${process.arch})`,
       });
     });
   });
@@ -98,7 +98,7 @@ describe('DefaultOpenAICompatibleProvider', () => {
         timeout: 60000,
         maxRetries: 2,
         defaultHeaders: {
-          'User-Agent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
+          'User-Agent': `PapertCode/1.0.0 (${process.platform}; ${process.arch})`,
         },
       });
 
@@ -117,7 +117,7 @@ describe('DefaultOpenAICompatibleProvider', () => {
         timeout: DEFAULT_TIMEOUT,
         maxRetries: DEFAULT_MAX_RETRIES,
         defaultHeaders: {
-          'User-Agent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
+          'User-Agent': `PapertCode/1.0.0 (${process.platform}; ${process.arch})`,
         },
       });
     });

@@ -12,7 +12,7 @@ import * as fsSync from 'fs';
 import * as path from 'path';
 import * as process from 'process';
 
-import { QWEN_DIR } from '../utils/paths.js';
+import { PAPERT_DIR } from '../utils/paths.js';
 import type { Config } from '../config/config.js';
 import { ToolDisplayNames, ToolNames } from './tool-names.js';
 
@@ -246,7 +246,7 @@ const TODO_SUBDIR = 'todos';
 function getTodoFilePath(sessionId?: string): string {
   const homeDir =
     process.env['HOME'] || process.env['USERPROFILE'] || process.cwd();
-  const todoDir = path.join(homeDir, QWEN_DIR, TODO_SUBDIR);
+  const todoDir = path.join(homeDir, PAPERT_DIR, TODO_SUBDIR);
 
   // Use sessionId if provided, otherwise fall back to 'default'
   const filename = `${sessionId || 'default'}.json`;
@@ -405,7 +405,7 @@ export async function listTodoSessions(): Promise<string[]> {
   try {
     const homeDir =
       process.env['HOME'] || process.env['USERPROFILE'] || process.cwd();
-    const todoDir = path.join(homeDir, QWEN_DIR, TODO_SUBDIR);
+    const todoDir = path.join(homeDir, PAPERT_DIR, TODO_SUBDIR);
     const files = await fs.readdir(todoDir);
     return files
       .filter((file: string) => file.endsWith('.json'))

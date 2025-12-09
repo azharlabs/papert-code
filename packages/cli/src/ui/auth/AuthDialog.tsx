@@ -56,9 +56,9 @@ export function AuthDialog(): React.JSX.Element {
         return item.value === settings.merged.security?.auth?.selectedType;
       }
 
-      // Priority 3: QWEN_DEFAULT_AUTH_TYPE env var
+      // Priority 3: PAPERT_DEFAULT_AUTH_TYPE env var
       const defaultAuthType = parseDefaultAuthType(
-        process.env['QWEN_DEFAULT_AUTH_TYPE'],
+        process.env['PAPERT_DEFAULT_AUTH_TYPE'],
       );
       if (defaultAuthType) {
         return item.value === defaultAuthType;

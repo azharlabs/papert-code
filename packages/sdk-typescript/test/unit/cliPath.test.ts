@@ -52,26 +52,26 @@ describe('CLI Path Utilities', () => {
     describe('auto-detection (no spec provided)', () => {
       it('should auto-detect native CLI when no spec provided', () => {
         // Mock environment variable
-        const originalEnv = process.env['QWEN_CODE_CLI_PATH'];
-        process.env['QWEN_CODE_CLI_PATH'] = '/usr/local/bin/qwen';
+        const originalEnv = process.env['PAPERT_CODE_CLI_PATH'];
+        process.env['PAPERT_CODE_CLI_PATH'] = '/usr/local/bin/papert';
         mockFs.existsSync.mockReturnValue(true);
 
         const result = parseExecutableSpec();
 
         expect(result).toEqual({
-          executablePath: path.resolve('/usr/local/bin/qwen'),
+          executablePath: path.resolve('/usr/local/bin/papert'),
           isExplicitRuntime: false,
         });
 
         // Restore env
-        process.env['QWEN_CODE_CLI_PATH'] = originalEnv;
+        process.env['PAPERT_CODE_CLI_PATH'] = originalEnv;
       });
 
       it('should throw when auto-detection fails', () => {
         mockFs.existsSync.mockReturnValue(false);
 
         expect(() => parseExecutableSpec()).toThrow(
-          'qwen CLI not found. Please:',
+          'papert CLI not found. Please:',
         );
       });
     });
@@ -142,19 +142,19 @@ describe('CLI Path Utilities', () => {
 
     describe('command name detection', () => {
       it('should detect command names without path separators', () => {
-        const result = parseExecutableSpec('qwen');
+        const result = parseExecutableSpec('papert');
 
         expect(result).toEqual({
-          executablePath: 'qwen',
+          executablePath: 'papert',
           isExplicitRuntime: false,
         });
       });
 
       it('should detect command names on Windows', () => {
-        const result = parseExecutableSpec('qwen.exe');
+        const result = parseExecutableSpec('papert.exe');
 
         expect(result).toEqual({
-          executablePath: 'qwen.exe',
+          executablePath: 'papert.exe',
           isExplicitRuntime: false,
         });
       });
@@ -164,10 +164,10 @@ describe('CLI Path Utilities', () => {
       it('should resolve absolute file paths', () => {
         mockFs.existsSync.mockReturnValue(true);
 
-        const result = parseExecutableSpec('/absolute/path/to/qwen');
+        const result = parseExecutableSpec('/absolute/path/to/papert');
 
         expect(result).toEqual({
-          executablePath: path.resolve('/absolute/path/to/qwen'),
+          executablePath: path.resolve('/absolute/path/to/papert'),
           isExplicitRuntime: false,
         });
       });
@@ -175,10 +175,10 @@ describe('CLI Path Utilities', () => {
       it('should resolve relative file paths', () => {
         mockFs.existsSync.mockReturnValue(true);
 
-        const result = parseExecutableSpec('./relative/path/to/qwen');
+        const result = parseExecutableSpec('./relative/path/to/papert');
 
         expect(result).toEqual({
-          executablePath: path.resolve('./relative/path/to/qwen'),
+          executablePath: path.resolve('./relative/path/to/papert'),
           isExplicitRuntime: false,
         });
       });
@@ -200,24 +200,24 @@ describe('CLI Path Utilities', () => {
 
     describe('native executables', () => {
       it('should prepare spawn info for native binary command', () => {
-        const result = prepareSpawnInfo('qwen');
+        const result = prepareSpawnInfo('papert');
 
         expect(result).toEqual({
-          command: 'qwen',
+          command: 'papert',
           args: [],
           type: 'native',
-          originalInput: 'qwen',
+          originalInput: 'papert',
         });
       });
 
       it('should prepare spawn info for native binary path', () => {
-        const result = prepareSpawnInfo('/usr/local/bin/qwen');
+        const result = prepareSpawnInfo('/usr/local/bin/papert');
 
         expect(result).toEqual({
-          command: path.resolve('/usr/local/bin/qwen'),
+          command: path.resolve('/usr/local/bin/papert'),
           args: [],
           type: 'native',
-          originalInput: '/usr/local/bin/qwen',
+          originalInput: '/usr/local/bin/papert',
         });
       });
     });
@@ -363,44 +363,44 @@ describe('CLI Path Utilities', () => {
     describe('auto-detection fallback', () => {
       it('should auto-detect when no spec provided', () => {
         // Mock environment variable
-        const originalEnv = process.env['QWEN_CODE_CLI_PATH'];
-        process.env['QWEN_CODE_CLI_PATH'] = '/usr/local/bin/qwen';
+        const originalEnv = process.env['PAPERT_CODE_CLI_PATH'];
+        process.env['PAPERT_CODE_CLI_PATH'] = '/usr/local/bin/papert';
 
         const result = prepareSpawnInfo();
 
         expect(result).toEqual({
-          command: path.resolve('/usr/local/bin/qwen'),
+          command: path.resolve('/usr/local/bin/papert'),
           args: [],
           type: 'native',
           originalInput: '',
         });
 
         // Restore env
-        process.env['QWEN_CODE_CLI_PATH'] = originalEnv;
+        process.env['PAPERT_CODE_CLI_PATH'] = originalEnv;
       });
     });
   });
 
   describe('findNativeCliPath', () => {
     it('should find CLI from environment variable', () => {
-      const originalEnv = process.env['QWEN_CODE_CLI_PATH'];
-      process.env['QWEN_CODE_CLI_PATH'] = '/custom/path/to/qwen';
+      const originalEnv = process.env['PAPERT_CODE_CLI_PATH'];
+      process.env['PAPERT_CODE_CLI_PATH'] = '/custom/path/to/papert';
       mockFs.existsSync.mockReturnValue(true);
 
       const result = findNativeCliPath();
 
-      expect(result).toBe(path.resolve('/custom/path/to/qwen'));
+      expect(result).toBe(path.resolve('/custom/path/to/papert'));
 
-      process.env['QWEN_CODE_CLI_PATH'] = originalEnv;
+      process.env['PAPERT_CODE_CLI_PATH'] = originalEnv;
     });
 
     it('should search common installation locations', () => {
-      const originalEnv = process.env['QWEN_CODE_CLI_PATH'];
-      delete process.env['QWEN_CODE_CLI_PATH'];
+      const originalEnv = process.env['PAPERT_CODE_CLI_PATH'];
+      delete process.env['PAPERT_CODE_CLI_PATH'];
 
       // Mock fs.existsSync to return true for volta bin
       // Use path.join to match platform-specific path separators
-      const voltaBinPath = path.join('.volta', 'bin', 'qwen');
+      const voltaBinPath = path.join('.volta', 'bin', 'papert');
       mockFs.existsSync.mockImplementation((p) => {
         return p.toString().includes(voltaBinPath);
       });
@@ -409,17 +409,17 @@ describe('CLI Path Utilities', () => {
 
       expect(result).toContain(voltaBinPath);
 
-      process.env['QWEN_CODE_CLI_PATH'] = originalEnv;
+      process.env['PAPERT_CODE_CLI_PATH'] = originalEnv;
     });
 
     it('should throw descriptive error when CLI not found', () => {
-      const originalEnv = process.env['QWEN_CODE_CLI_PATH'];
-      delete process.env['QWEN_CODE_CLI_PATH'];
+      const originalEnv = process.env['PAPERT_CODE_CLI_PATH'];
+      delete process.env['PAPERT_CODE_CLI_PATH'];
       mockFs.existsSync.mockReturnValue(false);
 
-      expect(() => findNativeCliPath()).toThrow('qwen CLI not found. Please:');
+      expect(() => findNativeCliPath()).toThrow('papert CLI not found. Please:');
 
-      process.env['QWEN_CODE_CLI_PATH'] = originalEnv;
+      process.env['PAPERT_CODE_CLI_PATH'] = originalEnv;
     });
   });
 
@@ -453,13 +453,13 @@ describe('CLI Path Utilities', () => {
     });
 
     it('should handle production native binary', () => {
-      const result = prepareSpawnInfo('qwen');
+      const result = prepareSpawnInfo('papert');
 
       expect(result).toEqual({
-        command: 'qwen',
+        command: 'papert',
         args: [],
         type: 'native',
-        originalInput: 'qwen',
+        originalInput: 'papert',
       });
     });
 
@@ -571,19 +571,19 @@ describe('CLI Path Utilities', () => {
       });
 
       it('should reject invalid command name characters', () => {
-        expect(() => parseExecutableSpec('qwen@invalid')).toThrow(
-          "Invalid command name 'qwen@invalid'. Command names should only contain letters, numbers, dots, hyphens, and underscores.",
+        expect(() => parseExecutableSpec('papert@invalid')).toThrow(
+          "Invalid command name 'papert@invalid'. Command names should only contain letters, numbers, dots, hyphens, and underscores.",
         );
 
-        expect(() => parseExecutableSpec('qwen/invalid')).not.toThrow(); // This is treated as a path
+        expect(() => parseExecutableSpec('papert/invalid')).not.toThrow(); // This is treated as a path
       });
 
       it('should accept valid command names', () => {
-        expect(() => parseExecutableSpec('qwen')).not.toThrow();
+        expect(() => parseExecutableSpec('papert')).not.toThrow();
         expect(() => parseExecutableSpec('papert-code')).not.toThrow();
-        expect(() => parseExecutableSpec('qwen_code')).not.toThrow();
-        expect(() => parseExecutableSpec('qwen.exe')).not.toThrow();
-        expect(() => parseExecutableSpec('qwen123')).not.toThrow();
+        expect(() => parseExecutableSpec('papert_code')).not.toThrow();
+        expect(() => parseExecutableSpec('papert.exe')).not.toThrow();
+        expect(() => parseExecutableSpec('papert123')).not.toThrow();
       });
     });
 
@@ -613,7 +613,7 @@ describe('CLI Path Utilities', () => {
           isFile: () => true,
         } as ReturnType<typeof import('fs').statSync>);
 
-        expect(() => parseExecutableSpec('/path/to/qwen')).not.toThrow();
+        expect(() => parseExecutableSpec('/path/to/papert')).not.toThrow();
         expect(() => parseExecutableSpec('./relative/path')).not.toThrow();
       });
     });
@@ -634,10 +634,10 @@ describe('CLI Path Utilities', () => {
         mockFs.existsSync.mockReturnValue(false);
 
         expect(() => parseExecutableSpec('/missing/file')).toThrow(
-          'Set QWEN_CODE_CLI_PATH environment variable',
+          'Set PAPERT_CODE_CLI_PATH environment variable',
         );
         expect(() => parseExecutableSpec('/missing/file')).toThrow(
-          'Install qwen globally: npm install -g qwen',
+          'Install papert globally: npm install -g papert',
         );
         expect(() => parseExecutableSpec('/missing/file')).toThrow(
           'Force specific runtime: bun:/path/to/cli.js or tsx:/path/to/index.ts',

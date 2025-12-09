@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -115,12 +115,12 @@ const distPackageJson = {
   name: rootPackageJson.name,
   version: rootPackageJson.version,
   description:
-    rootPackageJson.description || 'Qwen Code - AI-powered coding assistant',
+    rootPackageJson.description || 'Papert Code - AI-powered coding assistant',
   repository: rootPackageJson.repository,
   type: 'module',
   main: 'cli.js',
   bin: {
-    qwen: 'cli.js',
+    papert: 'cli.js',
   },
   files: ['cli.js', 'vendor', '*.sb', 'README.md', 'LICENSE', 'locales'],
   config: rootPackageJson.config,

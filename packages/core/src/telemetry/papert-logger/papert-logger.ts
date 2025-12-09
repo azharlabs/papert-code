@@ -85,8 +85,8 @@ export interface LogResponse {
 
 // Singleton class for batch posting log events to RUM. When a new event comes in, the elapsed time
 // is checked and events are flushed to RUM if at least a minute has passed since the last flush.
-export class QwenLogger {
-  private static instance: QwenLogger;
+export class PapertLogger {
+  private static instance: PapertLogger;
   private config?: Config;
   private readonly installationManager: InstallationManager;
 
@@ -130,14 +130,14 @@ export class QwenLogger {
     return `user-${installationId ?? 'unknown'}`;
   }
 
-  static getInstance(config?: Config): QwenLogger | undefined {
+  static getInstance(config?: Config): PapertLogger | undefined {
     if (config === undefined || !config?.getUsageStatisticsEnabled())
       return undefined;
-    if (!QwenLogger.instance) {
-      QwenLogger.instance = new QwenLogger(config);
+    if (!PapertLogger.instance) {
+      PapertLogger.instance = new PapertLogger(config);
     }
 
-    return QwenLogger.instance;
+    return PapertLogger.instance;
   }
 
   enqueueLogEvent(event: RumEvent): void {
@@ -153,12 +153,12 @@ export class QwenLogger {
 
       if (wasAtCapacity && this.config?.getDebugMode()) {
         console.debug(
-          `QwenLogger: Dropped old event to prevent memory leak (queue size: ${this.events.size})`,
+          `PapertLogger: Dropped old event to prevent memory leak (queue size: ${this.events.size})`,
         );
       }
     } catch (error) {
       if (this.config?.getDebugMode()) {
-        console.error('QwenLogger: Failed to enqueue log event.', error);
+        console.error('PapertLogger: Failed to enqueue log event.', error);
       }
     }
   }
@@ -270,7 +270,7 @@ export class QwenLogger {
     if (this.isFlushInProgress) {
       if (this.config?.getDebugMode()) {
         console.debug(
-          'QwenLogger: Flush already in progress, marking pending flush.',
+          'PapertLogger: Flush already in progress, marking pending flush.',
         );
       }
       this.pendingFlush = true;
@@ -868,10 +868,8 @@ export class QwenLogger {
     // Log a warning if we're dropping events
     if (eventsToSend.length > MAX_RETRY_EVENTS && this.config?.getDebugMode()) {
       console.warn(
-        `QwenLogger: Dropping ${
-          eventsToSend.length - MAX_RETRY_EVENTS
-        } events due to retry queue limit. Total events: ${
-          eventsToSend.length
+        `PapertLogger: Dropping ${eventsToSend.length - MAX_RETRY_EVENTS
+        } events due to retry queue limit. Total events: ${eventsToSend.length
         }, keeping: ${MAX_RETRY_EVENTS}`,
       );
     }
@@ -883,7 +881,7 @@ export class QwenLogger {
     if (numEventsToRequeue === 0) {
       if (this.config?.getDebugMode()) {
         console.debug(
-          `QwenLogger: No events re-queued (queue size: ${this.events.size})`,
+          `PapertLogger: No events re-queued (queue size: ${this.events.size})`,
         );
       }
       return;
@@ -906,7 +904,7 @@ export class QwenLogger {
 
     if (this.config?.getDebugMode()) {
       console.debug(
-        `QwenLogger: Re-queued ${numEventsToRequeue} events for retry (queue size: ${this.events.size})`,
+        `PapertLogger: Re-queued ${numEventsToRequeue} events for retry (queue size: ${this.events.size})`,
       );
     }
   }

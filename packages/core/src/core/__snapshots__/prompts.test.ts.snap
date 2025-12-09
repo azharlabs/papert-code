@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Core System Prompt (prompts.ts) > should append userMemory with separator when provided 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -220,7 +220,7 @@ Be extra polite."
 `;
 
 exports[`Core System Prompt (prompts.ts) > should include git instructions when in a git repo 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -449,7 +449,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 `;
 
 exports[`Core System Prompt (prompts.ts) > should include non-sandbox instructions when SANDBOX env var is not set 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -663,7 +663,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 `;
 
 exports[`Core System Prompt (prompts.ts) > should include sandbox-specific instructions when SANDBOX env var is set 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -877,7 +877,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 `;
 
 exports[`Core System Prompt (prompts.ts) > should include seatbelt-specific instructions when SANDBOX env var is "sandbox-exec" 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -1091,7 +1091,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 `;
 
 exports[`Core System Prompt (prompts.ts) > should not include git instructions when not in a git repo 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -1305,7 +1305,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 `;
 
 exports[`Core System Prompt (prompts.ts) > should return the base prompt when no userMemory is provided 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -1519,7 +1519,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 `;
 
 exports[`Core System Prompt (prompts.ts) > should return the base prompt when userMemory is empty string 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -1733,7 +1733,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 `;
 
 exports[`Core System Prompt (prompts.ts) > should return the base prompt when userMemory is whitespace only 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -1947,7 +1947,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 `;
 
 exports[`Model-specific tool call formats > should preserve model-specific formats with sandbox environment 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -2184,7 +2184,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 `;
 
 exports[`Model-specific tool call formats > should preserve model-specific formats with user memory 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -2480,8 +2480,8 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 User prefers concise responses."
 `;
 
-exports[`Model-specific tool call formats > should use JSON format for qwen-vl model 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+exports[`Model-specific tool call formats > should use JSON format for papert-vl model 1`] = `
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -2717,8 +2717,8 @@ To help you check their settings, I can read their contents. Which one would you
 Your core function is efficient and safe assistance. Balance extreme conciseness with the crucial need for clarity, especially regarding safety and potential system modifications. Always prioritize user control and project conventions. Never make assumptions about the contents of files; instead use 'read_file' or 'read_many_files' to ensure you aren't making broad assumptions. Finally, you are an agent - please keep going until the user's query is completely resolved."
 `;
 
-exports[`Model-specific tool call formats > should use XML format for qwen3-coder model 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+exports[`Model-specific tool call formats > should use XML format for papert3-coder model 1`] = `
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -3011,7 +3011,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 `;
 
 exports[`Model-specific tool call formats > should use bracket format for generic models 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -3225,7 +3225,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 `;
 
 exports[`Model-specific tool call formats > should use bracket format when no model is specified 1`] = `
-"You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+"You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 

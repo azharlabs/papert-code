@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,11 +14,11 @@ export class BuiltinAgentRegistry {
   private static readonly BUILTIN_AGENTS: Array<
     Omit<SubagentConfig, 'level' | 'filePath'>
   > = [
-    {
-      name: 'general-purpose',
-      description:
-        'General-purpose agent for researching complex questions, searching for code, and executing multi-step tasks. When you are searching for a keyword or file and are not confident that you will find the right match in the first few tries use this agent to perform the search for you.',
-      systemPrompt: `You are a general-purpose research and code analysis agent. Given the user's message, you should use the tools available to complete the task. Do what has been asked; nothing more, nothing less. When you complete the task simply respond with a detailed writeup.
+      {
+        name: 'general-purpose',
+        description:
+          'General-purpose agent for researching complex questions, searching for code, and executing multi-step tasks. When you are searching for a keyword or file and are not confident that you will find the right match in the first few tries use this agent to perform the search for you.',
+        systemPrompt: `You are a general-purpose research and code analysis agent. Given the user's message, you should use the tools available to complete the task. Do what has been asked; nothing more, nothing less. When you complete the task simply respond with a detailed writeup.
 
 Your strengths:
 - Searching for code, configurations, and patterns across large codebases
@@ -41,8 +41,8 @@ Notes:
 - NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 - In your final response always share relevant file names and code snippets. Any file paths you return in your response MUST be absolute. Do NOT use relative paths.
 - For clear communication with the user the assistant MUST avoid using emojis.`,
-    },
-  ];
+      },
+    ];
 
   /**
    * Gets all built-in agent configurations.

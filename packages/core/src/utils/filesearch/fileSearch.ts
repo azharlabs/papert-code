@@ -18,7 +18,7 @@ export interface FileSearchOptions {
   projectRoot: string;
   ignoreDirs: string[];
   useGitignore: boolean;
-  useQwenignore: boolean;
+  usePapertignore: boolean;
   cache: boolean;
   cacheTtl: number;
   enableRecursiveFileSearch: boolean;
@@ -97,7 +97,7 @@ class RecursiveFileSearch implements FileSearch {
   private allFiles: string[] = [];
   private fzf: AsyncFzf<string[]> | undefined;
 
-  constructor(private readonly options: FileSearchOptions) {}
+  constructor(private readonly options: FileSearchOptions) { }
 
   async initialize(): Promise<void> {
     this.ignore = loadIgnoreRules(this.options);
@@ -193,7 +193,7 @@ class RecursiveFileSearch implements FileSearch {
 class DirectoryFileSearch implements FileSearch {
   private ignore: Ignore | undefined;
 
-  constructor(private readonly options: FileSearchOptions) {}
+  constructor(private readonly options: FileSearchOptions) { }
 
   async initialize(): Promise<void> {
     this.ignore = loadIgnoreRules(this.options);

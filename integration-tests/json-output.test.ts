@@ -116,9 +116,9 @@ describe('JSON output', () => {
     expect(resultMessage).toBeDefined();
     expect(
       typeof resultMessage === 'object' &&
-        resultMessage !== null &&
-        'type' in resultMessage &&
-        resultMessage.type === 'result',
+      resultMessage !== null &&
+      'type' in resultMessage &&
+      resultMessage.type === 'result',
     ).toBe(true);
     expect(resultMessage).toHaveProperty('is_error');
     expect(resultMessage.is_error).toBe(false);
@@ -178,11 +178,11 @@ describe('JSON output', () => {
     // Check for expected stream event types
     const eventTypes = streamEvents.map((event: unknown) =>
       typeof event === 'object' &&
-      event !== null &&
-      'event' in event &&
-      typeof event.event === 'object' &&
-      event.event !== null &&
-      'type' in event.event
+        event !== null &&
+        'event' in event &&
+        typeof event.event === 'object' &&
+        event.event !== null &&
+        'type' in event.event
         ? event.event.type
         : null,
     );
@@ -222,9 +222,9 @@ describe('JSON output', () => {
     expect(resultMessage).toBeDefined();
     expect(
       typeof resultMessage === 'object' &&
-        resultMessage !== null &&
-        'type' in resultMessage &&
-        resultMessage.type === 'result',
+      resultMessage !== null &&
+      'type' in resultMessage &&
+      resultMessage.type === 'result',
     ).toBe(true);
     expect(resultMessage).toHaveProperty('is_error');
     expect(resultMessage.is_error).toBe(false);
@@ -237,7 +237,7 @@ describe('JSON output', () => {
     process.env['OPENAI_API_KEY'] = 'test-key';
     await rig.setup('json-output-auth-mismatch', {
       settings: {
-        security: { auth: { enforcedType: 'qwen-oauth' } },
+        security: { auth: { enforcedType: 'papert-oauth' } },
       },
     });
 
@@ -301,7 +301,7 @@ describe('JSON output', () => {
     expect(resultMessage).toHaveProperty('error');
     expect(resultMessage.error).toBeDefined();
     expect(resultMessage.error?.message).toContain(
-      'configured auth type is qwen-oauth',
+      'configured auth type is papert-oauth',
     );
     expect(resultMessage.error?.message).toContain(
       'current auth type is openai',

@@ -18,7 +18,7 @@ import { Storage } from '../config/storage.js';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
-import { getProjectHash, QWEN_DIR } from '../utils/paths.js';
+import { getProjectHash, PAPERT_DIR } from '../utils/paths.js';
 import { isCommandAvailable } from '../utils/shell-utils.js';
 
 vi.mock('../utils/shell-utils.js', () => ({
@@ -141,7 +141,7 @@ describe('GitService', () => {
     let gitConfigPath: string;
 
     beforeEach(() => {
-      repoDir = path.join(homedir, QWEN_DIR, 'history', hash);
+      repoDir = path.join(homedir, PAPERT_DIR, 'history', hash);
       gitConfigPath = path.join(repoDir, '.gitconfig');
     });
 
@@ -157,7 +157,7 @@ describe('GitService', () => {
       await service.setupShadowGitRepository();
 
       const expectedConfigContent =
-        '[user]\n  name = Qwen Code\n  email = papert-code@qwen.ai\n[commit]\n  gpgsign = false\n';
+        '[user]\n  name = Papert Code\n  email = papert-code@papert.ai\n[commit]\n  gpgsign = false\n';
       const actualConfigContent = await fs.readFile(gitConfigPath, 'utf-8');
       expect(actualConfigContent).toBe(expectedConfigContent);
     });

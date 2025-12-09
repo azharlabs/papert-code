@@ -48,10 +48,10 @@ export function normalize(model: string): string {
   // - dates (e.g., -20250219), -v1, version numbers, 'latest', 'preview' etc.
   s = s.replace(/-preview/g, '');
   // Special handling for model names that include date/version as part of the model identifier
-  // - Qwen models: qwen-plus-latest, qwen-flash-latest, qwen-vl-max-latest
+  // - Papert models: papert-plus-latest, papert-flash-latest, papert-vl-max-latest
   // - Kimi models: kimi-k2-0905, kimi-k2-0711, etc. (keep date for version distinction)
   if (
-    !s.match(/^qwen-(?:plus|flash|vl-max)-latest$/) &&
+    !s.match(/^papert-(?:plus|flash|vl-max)-latest$/) &&
     !s.match(/^kimi-k2-\d{4}$/)
   ) {
     // Regex breakdown:
@@ -111,42 +111,42 @@ const PATTERNS: Array<[RegExp, TokenCount]> = [
   [/^claude-opus-4.*$/, LIMITS['1m']],
 
   // -------------------
-  // Alibaba / Qwen
+  // Alibaba / Papert
   // -------------------
-  // Commercial Qwen3-Coder-Plus: 1M token context
-  [/^qwen3-coder-plus(-.*)?$/, LIMITS['1m']], // catches "qwen3-coder-plus" and date variants
+  // Commercial Papert3-Coder-Plus: 1M token context
+  [/^papert3-coder-plus(-.*)?$/, LIMITS['1m']], // catches "papert3-coder-plus" and date variants
 
-  // Commercial Qwen3-Coder-Flash: 1M token context
-  [/^qwen3-coder-flash(-.*)?$/, LIMITS['1m']], // catches "qwen3-coder-flash" and date variants
+  // Commercial Papert3-Coder-Flash: 1M token context
+  [/^papert3-coder-flash(-.*)?$/, LIMITS['1m']], // catches "papert3-coder-flash" and date variants
 
-  // Generic coder-model: same as qwen3-coder-plus (1M token context)
+  // Generic coder-model: same as papert3-coder-plus (1M token context)
   [/^coder-model$/, LIMITS['1m']],
 
-  // Commercial Qwen3-Max-Preview: 256K token context
-  [/^qwen3-max(-preview)?(-.*)?$/, LIMITS['256k']], // catches "qwen3-max" or "qwen3-max-preview" and date variants
+  // Commercial Papert3-Max-Preview: 256K token context
+  [/^papert3-max(-preview)?(-.*)?$/, LIMITS['256k']], // catches "papert3-max" or "papert3-max-preview" and date variants
 
-  // Open-source Qwen3-Coder variants: 256K native
-  [/^qwen3-coder-.*$/, LIMITS['256k']],
-  // Open-source Qwen3 2507 variants: 256K native
-  [/^qwen3-.*-2507-.*$/, LIMITS['256k']],
+  // Open-source Papert3-Coder variants: 256K native
+  [/^papert3-coder-.*$/, LIMITS['256k']],
+  // Open-source Papert3 2507 variants: 256K native
+  [/^papert3-.*-2507-.*$/, LIMITS['256k']],
 
-  // Open-source long-context Qwen2.5-1M
-  [/^qwen2\.5-1m.*$/, LIMITS['1m']],
+  // Open-source long-context Papert2.5-1M
+  [/^papert2\.5-1m.*$/, LIMITS['1m']],
 
-  // Standard Qwen2.5: 128K
-  [/^qwen2\.5.*$/, LIMITS['128k']],
+  // Standard Papert2.5: 128K
+  [/^papert2\.5.*$/, LIMITS['128k']],
 
-  // Studio commercial Qwen-Plus / Qwen-Flash / Qwen-Turbo
-  [/^qwen-plus-latest$/, LIMITS['1m']], // Commercial latest: 1M
-  [/^qwen-plus.*$/, LIMITS['128k']], // Standard: 128K
-  [/^qwen-flash-latest$/, LIMITS['1m']],
-  [/^qwen-turbo.*$/, LIMITS['128k']],
+  // Studio commercial Papert-Plus / Papert-Flash / Papert-Turbo
+  [/^papert-plus-latest$/, LIMITS['1m']], // Commercial latest: 1M
+  [/^papert-plus.*$/, LIMITS['128k']], // Standard: 128K
+  [/^papert-flash-latest$/, LIMITS['1m']],
+  [/^papert-turbo.*$/, LIMITS['128k']],
 
-  // Qwen Vision Models
-  [/^qwen3-vl-plus$/, LIMITS['256k']], // Qwen3-VL-Plus: 256K input
-  [/^qwen-vl-max.*$/, LIMITS['128k']],
+  // Papert Vision Models
+  [/^papert3-vl-plus$/, LIMITS['256k']], // Papert3-VL-Plus: 256K input
+  [/^papert-vl-max.*$/, LIMITS['128k']],
 
-  // Generic vision-model: same as qwen-vl-max (128K token context)
+  // Generic vision-model: same as papert-vl-max (128K token context)
   [/^vision-model$/, LIMITS['128k']],
 
   // -------------------
@@ -190,25 +190,25 @@ const PATTERNS: Array<[RegExp, TokenCount]> = [
  */
 const OUTPUT_PATTERNS: Array<[RegExp, TokenCount]> = [
   // -------------------
-  // Alibaba / Qwen - DashScope Models
+  // Alibaba / Papert - DashScope Models
   // -------------------
-  // Qwen3-Coder-Plus: 65,536 max output tokens
-  [/^qwen3-coder-plus(-.*)?$/, LIMITS['64k']],
+  // Papert3-Coder-Plus: 65,536 max output tokens
+  [/^papert3-coder-plus(-.*)?$/, LIMITS['64k']],
 
-  // Generic coder-model: same as qwen3-coder-plus (64K max output tokens)
+  // Generic coder-model: same as papert3-coder-plus (64K max output tokens)
   [/^coder-model$/, LIMITS['64k']],
 
-  // Qwen3-Max: 65,536 max output tokens
-  [/^qwen3-max(-preview)?(-.*)?$/, LIMITS['64k']],
+  // Papert3-Max: 65,536 max output tokens
+  [/^papert3-max(-preview)?(-.*)?$/, LIMITS['64k']],
 
-  // Qwen-VL-Max-Latest: 8,192 max output tokens
-  [/^qwen-vl-max-latest$/, LIMITS['8k']],
+  // Papert-VL-Max-Latest: 8,192 max output tokens
+  [/^papert-vl-max-latest$/, LIMITS['8k']],
 
-  // Generic vision-model: same as qwen-vl-max-latest (8K max output tokens)
+  // Generic vision-model: same as papert-vl-max-latest (8K max output tokens)
   [/^vision-model$/, LIMITS['8k']],
 
-  // Qwen3-VL-Plus: 32K max output tokens
-  [/^qwen3-vl-plus$/, LIMITS['32k']],
+  // Papert3-VL-Plus: 32K max output tokens
+  [/^papert3-vl-plus$/, LIMITS['32k']],
 
   // Deepseek-chat: 8k max tokens
   [/^deepseek-chat$/, LIMITS['8k']],

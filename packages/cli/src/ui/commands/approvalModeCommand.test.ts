@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -22,11 +22,11 @@ describe('approvalModeCommand', () => {
       services: {
         config: {
           getApprovalMode: () => 'default',
-          setApprovalMode: () => {},
+          setApprovalMode: () => { },
         },
         settings: {
           merged: {},
-          setValue: () => {},
+          setValue: () => { },
           forScope: () => ({}),
         } as unknown as LoadedSettings,
       },

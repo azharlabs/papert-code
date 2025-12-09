@@ -10,7 +10,7 @@ import os from 'node:os';
 import { ToolNames } from '../tools/tool-names.js';
 import process from 'node:process';
 import { isGitRepository } from '../utils/gitUtils.js';
-import { QWEN_CONFIG_DIR } from '../tools/memoryTool.js';
+import { PAPERT_CONFIG_DIR } from '../tools/memoryTool.js';
 import type { GenerateContentConfig } from '@google/genai';
 
 export function resolvePathFromEnv(envVar?: string): {
@@ -109,13 +109,13 @@ export function getCoreSystemPrompt(
   userMemory?: string,
   model?: string,
 ): string {
-  // if QWEN_SYSTEM_MD is set (and not 0|false), override system prompt from file
-  // default path is .papert/system.md but can be modified via custom path in QWEN_SYSTEM_MD
+  // if PAPERT_SYSTEM_MD is set (and not 0|false), override system prompt from file
+  // default path is .papert/system.md but can be modified via custom path in PAPERT_SYSTEM_MD
   let systemMdEnabled = false;
   // The default path for the system prompt file. This can be overridden.
-  let systemMdPath = path.resolve(path.join(QWEN_CONFIG_DIR, 'system.md'));
+  let systemMdPath = path.resolve(path.join(PAPERT_CONFIG_DIR, 'system.md'));
   // Resolve the environment variable to get either a path or a switch value.
-  const systemMdResolution = resolvePathFromEnv(process.env['QWEN_SYSTEM_MD']);
+  const systemMdResolution = resolvePathFromEnv(process.env['PAPERT_SYSTEM_MD']);
 
   // Proceed only if the environment variable is set and is not disabled.
   if (systemMdResolution.value && !systemMdResolution.isDisabled) {
@@ -135,7 +135,7 @@ export function getCoreSystemPrompt(
   const basePrompt = systemMdEnabled
     ? fs.readFileSync(systemMdPath, 'utf8')
     : `
-You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+You are Papert Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 
@@ -264,31 +264,31 @@ IMPORTANT: Always use the ${ToolNames.TODO_WRITE} tool to plan and track tasks t
 - **Feedback:** To report a bug or provide feedback, please use the /bug command.
 
 ${(function () {
-  // Determine sandbox status based on environment variables
-  const isSandboxExec = process.env['SANDBOX'] === 'sandbox-exec';
-  const isGenericSandbox = !!process.env['SANDBOX']; // Check if SANDBOX is set to any non-empty value
+        // Determine sandbox status based on environment variables
+        const isSandboxExec = process.env['SANDBOX'] === 'sandbox-exec';
+        const isGenericSandbox = !!process.env['SANDBOX']; // Check if SANDBOX is set to any non-empty value
 
-  if (isSandboxExec) {
-    return `
+        if (isSandboxExec) {
+          return `
 # macOS Seatbelt
 You are running under macos seatbelt with limited access to files outside the project directory or system temp directory, and with limited access to host system resources such as ports. If you encounter failures that could be due to MacOS Seatbelt (e.g. if a command fails with 'Operation not permitted' or similar error), as you report the error to the user, also explain why you think it could be due to MacOS Seatbelt, and how the user may need to adjust their Seatbelt profile.
 `;
-  } else if (isGenericSandbox) {
-    return `
+        } else if (isGenericSandbox) {
+          return `
 # Sandbox
 You are running in a sandbox container with limited access to files outside the project directory or system temp directory, and with limited access to host system resources such as ports. If you encounter failures that could be due to sandboxing (e.g. if a command fails with 'Operation not permitted' or similar error), when you report the error to the user, also explain why you think it could be due to sandboxing, and how the user may need to adjust their sandbox configuration.
 `;
-  } else {
-    return `
+        } else {
+          return `
 # Outside of Sandbox
 You are running outside of a sandbox container, directly on the user's system. For critical commands that are particularly likely to modify the user's system outside of the project directory or system temp directory, as you explain the command to the user (per the Explain Critical Commands rule above), also remind the user to consider enabling sandboxing.
 `;
-  }
-})()}
+        }
+      })()}
 
 ${(function () {
-  if (isGitRepository(process.cwd())) {
-    return `
+        if (isGitRepository(process.cwd())) {
+          return `
 # Git Repository
 - The current working (project) directory is being managed by a git repository.
 - When asked to commit changes or prepare a commit, always start by gathering information using shell commands:
@@ -304,9 +304,9 @@ ${(function () {
 - If a commit fails, never attempt to work around the issues without being asked to do so.
 - Never push changes to a remote repository without being asked explicitly by the user.
 `;
-  }
-  return '';
-})()}
+        }
+        return '';
+      })()}
 
 ${getToolCallExamples(model || '')}
 
@@ -314,9 +314,9 @@ ${getToolCallExamples(model || '')}
 Your core function is efficient and safe assistance. Balance extreme conciseness with the crucial need for clarity, especially regarding safety and potential system modifications. Always prioritize user control and project conventions. Never make assumptions about the contents of files; instead use '${ToolNames.READ_FILE}' or '${ToolNames.READ_MANY_FILES}' to ensure you aren't making broad assumptions. Finally, you are an agent - please keep going until the user's query is completely resolved.
 `.trim();
 
-  // if QWEN_WRITE_SYSTEM_MD is set (and not 0|false), write base system prompt to file
+  // if PAPERT_WRITE_SYSTEM_MD is set (and not 0|false), write base system prompt to file
   const writeSystemMdResolution = resolvePathFromEnv(
-    process.env['QWEN_WRITE_SYSTEM_MD'],
+    process.env['PAPERT_WRITE_SYSTEM_MD'],
   );
 
   // Check if the feature is enabled. This proceeds only if the environment
@@ -509,7 +509,7 @@ To help you check their settings, I can read their contents. Which one would you
 </example>
 `.trim();
 
-const qwenCoderToolCallExamples = `
+const papertCoderToolCallExamples = `
 # Examples (Illustrating Tone and Workflow)
 <example>
 user: 1 + 2
@@ -663,7 +663,7 @@ I found the following 'app.config' files:
 To help you check their settings, I can read their contents. Which one would you like to start with, or should I read all of them?
 </example>
 `.trim();
-const qwenVlToolCallExamples = `
+const papertVlToolCallExamples = `
 # Examples (Illustrating Tone and Workflow)
 <example>
 user: 1 + 2
@@ -764,18 +764,18 @@ To help you check their settings, I can read their contents. Which one would you
 
 function getToolCallExamples(model?: string): string {
   // Check for environment variable override first
-  const toolCallStyle = process.env['QWEN_CODE_TOOL_CALL_STYLE'];
+  const toolCallStyle = process.env['PAPERT_CODE_TOOL_CALL_STYLE'];
   if (toolCallStyle) {
     switch (toolCallStyle.toLowerCase()) {
       case 'papert-coder':
-        return qwenCoderToolCallExamples;
-      case 'qwen-vl':
-        return qwenVlToolCallExamples;
+        return papertCoderToolCallExamples;
+      case 'papert-vl':
+        return papertVlToolCallExamples;
       case 'general':
         return generalToolCallExamples;
       default:
         console.warn(
-          `Unknown QWEN_CODE_TOOL_CALL_STYLE value: ${toolCallStyle}. Using model-based detection.`,
+          `Unknown PAPERT_CODE_TOOL_CALL_STYLE value: ${toolCallStyle}. Using model-based detection.`,
         );
         break;
     }
@@ -783,21 +783,21 @@ function getToolCallExamples(model?: string): string {
 
   // Enhanced regex-based model detection
   if (model && model.length < 100) {
-    // Match qwen*-coder patterns (e.g., qwen3-coder, qwen2.5-coder, papert-coder)
-    if (/qwen[^-]*-coder/i.test(model)) {
-      return qwenCoderToolCallExamples;
+    // Match papert*-coder patterns (e.g., papert3-coder, papert2.5-coder, papert-coder)
+    if (/papert[^-]*-coder/i.test(model)) {
+      return papertCoderToolCallExamples;
     }
-    // Match qwen*-vl patterns (e.g., qwen-vl, qwen2-vl, qwen3-vl)
-    if (/qwen[^-]*-vl/i.test(model)) {
-      return qwenVlToolCallExamples;
+    // Match papert*-vl patterns (e.g., papert-vl, papert2-vl, papert3-vl)
+    if (/papert[^-]*-vl/i.test(model)) {
+      return papertVlToolCallExamples;
     }
-    // Match coder-model pattern (same as qwen3-coder)
+    // Match coder-model pattern (same as papert3-coder)
     if (/coder-model/i.test(model)) {
-      return qwenCoderToolCallExamples;
+      return papertCoderToolCallExamples;
     }
-    // Match vision-model pattern (same as qwen3-vl)
+    // Match vision-model pattern (same as papert3-vl)
     if (/vision-model/i.test(model)) {
-      return qwenVlToolCallExamples;
+      return papertVlToolCallExamples;
     }
   }
 

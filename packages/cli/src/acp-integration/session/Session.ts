@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -490,8 +490,8 @@ export class Session implements SessionContext {
           output.outcome.outcome === 'cancelled'
             ? ToolConfirmationOutcome.Cancel
             : z
-                .nativeEnum(ToolConfirmationOutcome)
-                .parse(output.outcome.optionId);
+              .nativeEnum(ToolConfirmationOutcome)
+              .parse(output.outcome.optionId);
 
         await confirmationDetails.onConfirm(outcome);
 

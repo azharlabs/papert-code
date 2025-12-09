@@ -77,7 +77,7 @@ describe('ReadManyFilesTool', () => {
 
       getFileFilteringOptions: () => ({
         respectGitIgnore: true,
-        respectQwenIgnore: true,
+        respectPapertIgnore: true,
       }),
       getTargetDir: () => tempRootDir,
       getWorkspaceDirs: () => [tempRootDir],
@@ -506,7 +506,7 @@ describe('ReadManyFilesTool', () => {
         getFileSystemService: () => new StandardFileSystemService(),
         getFileFilteringOptions: () => ({
           respectGitIgnore: true,
-          respectQwenIgnore: true,
+          respectPapertIgnore: true,
         }),
         getWorkspaceContext: () => new WorkspaceContext(tempDir1, [tempDir2]),
         getTargetDir: () => tempDir1,
@@ -515,12 +515,12 @@ describe('ReadManyFilesTool', () => {
           getDefaultExcludePatterns: () => [],
           getGlobExcludes: () => COMMON_IGNORE_PATTERNS,
           buildExcludePatterns: () => [],
-        getReadManyFilesExcludes: () => [],
-      }),
-      getTruncateToolOutputThreshold: () => 2500,
-      getTruncateToolOutputLines: () => 500,
-      refreshContextMemory: vi.fn(),
-    } as Partial<Config> as Config;
+          getReadManyFilesExcludes: () => [],
+        }),
+        getTruncateToolOutputThreshold: () => 2500,
+        getTruncateToolOutputLines: () => 500,
+        refreshContextMemory: vi.fn(),
+      } as Partial<Config> as Config;
       tool = new ReadManyFilesTool(mockConfig);
 
       fs.writeFileSync(path.join(tempDir1, 'file1.txt'), 'Content1');

@@ -1,10 +1,10 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AuthType, DEFAULT_QWEN_MODEL } from '@papert-code/papert-code-core';
+import { AuthType, DEFAULT_PAPERT_MODEL } from '@papert-code/papert-code-core';
 import { t } from '../../i18n/index.js';
 
 export type AvailableModel = {
@@ -15,15 +15,15 @@ export type AvailableModel = {
 };
 
 export const MAINLINE_VLM = 'vision-model';
-export const MAINLINE_CODER = DEFAULT_QWEN_MODEL;
+export const MAINLINE_CODER = DEFAULT_PAPERT_MODEL;
 
-export const AVAILABLE_MODELS_QWEN: AvailableModel[] = [
+export const AVAILABLE_MODELS_PAPERT: AvailableModel[] = [
   {
     id: MAINLINE_CODER,
     label: MAINLINE_CODER,
     get description() {
       return t(
-        'The latest Qwen Coder model from Alibaba Cloud ModelStudio (version: qwen3-coder-plus-2025-09-23)',
+        'The latest Papert Coder model from Alibaba Cloud ModelStudio (version: papert3-coder-plus-2025-09-23)',
       );
     },
   },
@@ -32,7 +32,7 @@ export const AVAILABLE_MODELS_QWEN: AvailableModel[] = [
     label: MAINLINE_VLM,
     get description() {
       return t(
-        'The latest Qwen Vision model from Alibaba Cloud ModelStudio (version: qwen3-vl-plus-2025-09-23)',
+        'The latest Papert Vision model from Alibaba Cloud ModelStudio (version: papert3-vl-plus-2025-09-23)',
       );
     },
     isVision: true,
@@ -40,15 +40,15 @@ export const AVAILABLE_MODELS_QWEN: AvailableModel[] = [
 ];
 
 /**
- * Get available Qwen models filtered by vision model preview setting
+ * Get available Papert models filtered by vision model preview setting
  */
-export function getFilteredQwenModels(
+export function getFilteredPapertModels(
   visionModelPreviewEnabled: boolean,
 ): AvailableModel[] {
   if (visionModelPreviewEnabled) {
-    return AVAILABLE_MODELS_QWEN;
+    return AVAILABLE_MODELS_PAPERT;
   }
-  return AVAILABLE_MODELS_QWEN.filter((model) => !model.isVision);
+  return AVAILABLE_MODELS_PAPERT.filter((model) => !model.isVision);
 }
 
 /**
@@ -64,8 +64,8 @@ export function getAvailableModelsForAuthType(
   authType: AuthType,
 ): AvailableModel[] {
   switch (authType) {
-    case AuthType.QWEN_OAUTH:
-      return AVAILABLE_MODELS_QWEN;
+    case AuthType.PAPERT_OAUTH:
+      return AVAILABLE_MODELS_PAPERT;
     case AuthType.USE_OPENAI: {
       const openAIModel = getOpenAIAvailableModelFromEnv();
       return openAIModel ? [openAIModel] : [];
@@ -87,7 +87,7 @@ export function getDefaultVisionModel(): string {
 }
 
 export function isVisionModel(modelId: string): boolean {
-  return AVAILABLE_MODELS_QWEN.some(
+  return AVAILABLE_MODELS_PAPERT.some(
     (model) => model.id === modelId && model.isVision,
   );
 }

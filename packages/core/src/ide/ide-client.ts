@@ -34,13 +34,13 @@ const logger = {
 
 export type DiffUpdateResult =
   | {
-      status: 'accepted';
-      content?: string;
-    }
+    status: 'accepted';
+    content?: string;
+  }
   | {
-      status: 'rejected';
-      content: undefined;
-    };
+    status: 'rejected';
+    content: undefined;
+  };
 
 export type IDEConnectionState = {
   status: IDEConnectionStatus;
@@ -102,7 +102,7 @@ export class IdeClient {
    */
   private diffMutex = Promise.resolve();
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): Promise<IdeClient> {
     if (!IdeClient.instancePromise) {
@@ -140,7 +140,7 @@ export class IdeClient {
     if (!this.currentIde) {
       this.setState(
         IDEConnectionStatus.Disconnected,
-        `IDE integration is not supported in your current environment. To use this feature, run Qwen Code in one of these supported IDEs: VS Code or VS Code forks`,
+        `IDE integration is not supported in your current environment. To use this feature, run Papert Code in one of these supported IDEs: VS Code or VS Code forks`,
         false,
       );
       return;
@@ -154,7 +154,7 @@ export class IdeClient {
     }
     const workspacePath =
       this.connectionConfig?.workspacePath ??
-      process.env['QWEN_CODE_IDE_WORKSPACE_PATH'];
+      process.env['PAPERT_CODE_IDE_WORKSPACE_PATH'];
 
     const { isValid, error } = IdeClient.validateWorkspacePath(
       workspacePath,
@@ -526,7 +526,7 @@ export class IdeClient {
     if (!isWithinWorkspace) {
       return {
         isValid: false,
-        error: `Directory mismatch. Qwen Code is running in a different location than the open workspace in the IDE. Please run the CLI from one of the following directories: ${ideWorkspacePaths.join(
+        error: `Directory mismatch. Papert Code is running in a different location than the open workspace in the IDE. Please run the CLI from one of the following directories: ${ideWorkspacePaths.join(
           ', ',
         )}`,
       };
@@ -535,7 +535,7 @@ export class IdeClient {
   }
 
   private getPortFromEnv(): string | undefined {
-    const port = process.env['QWEN_CODE_IDE_SERVER_PORT'];
+    const port = process.env['PAPERT_CODE_IDE_SERVER_PORT'];
     if (!port) {
       return undefined;
     }
@@ -543,12 +543,12 @@ export class IdeClient {
   }
 
   private getStdioConfigFromEnv(): StdioConfig | undefined {
-    const command = process.env['QWEN_CODE_IDE_SERVER_STDIO_COMMAND'];
+    const command = process.env['PAPERT_CODE_IDE_SERVER_STDIO_COMMAND'];
     if (!command) {
       return undefined;
     }
 
-    const argsStr = process.env['QWEN_CODE_IDE_SERVER_STDIO_ARGS'];
+    const argsStr = process.env['PAPERT_CODE_IDE_SERVER_STDIO_ARGS'];
     let args: string[] = [];
     if (argsStr) {
       try {
@@ -557,11 +557,11 @@ export class IdeClient {
           args = parsedArgs;
         } else {
           logger.error(
-            'QWEN_CODE_IDE_SERVER_STDIO_ARGS must be a JSON array string.',
+            'PAPERT_CODE_IDE_SERVER_STDIO_ARGS must be a JSON array string.',
           );
         }
       } catch (e) {
-        logger.error('Failed to parse QWEN_CODE_IDE_SERVER_STDIO_ARGS:', e);
+        logger.error('Failed to parse PAPERT_CODE_IDE_SERVER_STDIO_ARGS:', e);
       }
     }
 

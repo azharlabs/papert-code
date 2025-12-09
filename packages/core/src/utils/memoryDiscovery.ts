@@ -14,7 +14,7 @@ import type { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { processImports } from './memoryImportProcessor.js';
 import type { FileFilteringOptions } from '../config/constants.js';
 import { DEFAULT_MEMORY_FILE_FILTERING_OPTIONS } from '../config/constants.js';
-import { QWEN_DIR } from './paths.js';
+import { PAPERT_DIR } from './paths.js';
 
 // Simple console logger, similar to the one previously in CLI's config.ts
 // TODO: Integrate with a more robust server-side logger if available/appropriate.
@@ -153,7 +153,7 @@ async function getGeminiMdFilePathsInternalForEachDir(
     const resolvedHome = path.resolve(userHomePath);
     const globalMemoryPath = path.join(
       resolvedHome,
-      QWEN_DIR,
+      PAPERT_DIR,
       geminiMdFilename,
     );
 
@@ -208,7 +208,7 @@ async function getGeminiMdFilePathsInternalForEachDir(
         : path.dirname(resolvedHome);
 
       while (currentDir && currentDir !== path.dirname(currentDir)) {
-        if (currentDir === path.join(resolvedHome, QWEN_DIR)) {
+        if (currentDir === path.join(resolvedHome, PAPERT_DIR)) {
           break;
         }
 
@@ -337,7 +337,7 @@ export async function loadGlobalMemory(
   const geminiMdFilenames = getAllGeminiMdFilenames();
 
   const accessChecks = geminiMdFilenames.map(async (filename) => {
-    const globalPath = path.join(userHome, QWEN_DIR, filename);
+    const globalPath = path.join(userHome, PAPERT_DIR, filename);
     try {
       await fs.access(globalPath, fsSync.constants.R_OK);
       if (debugMode) {
@@ -380,7 +380,7 @@ async function findUpwardGeminiFiles(
   let currentDir = path.resolve(startDir);
   const resolvedStopDir = path.resolve(stopDir);
   const geminiMdFilenames = getAllGeminiMdFilenames();
-  const globalGeminiDir = path.join(homedir(), QWEN_DIR);
+  const globalGeminiDir = path.join(homedir(), PAPERT_DIR);
 
   if (debugMode) {
     logger.debug(

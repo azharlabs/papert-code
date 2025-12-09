@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -31,7 +31,7 @@ import type { Config } from '../config/config.js';
 import { BuiltinAgentRegistry } from './builtin-agents.js';
 import { ToolDisplayNamesMigration } from '../tools/tool-names.js';
 
-const QWEN_CONFIG_DIR = '.papert';
+const PAPERT_CONFIG_DIR = '.papert';
 const AGENT_CONFIG_DIR = 'agents';
 
 /**
@@ -723,9 +723,9 @@ export class SubagentManager {
         (tool) =>
           tool.displayName === toolIdentifier ||
           tool.displayName ===
-            (ToolDisplayNamesMigration[
-              toolIdentifier as keyof typeof ToolDisplayNamesMigration
-            ] as string | undefined),
+          (ToolDisplayNamesMigration[
+            toolIdentifier as keyof typeof ToolDisplayNamesMigration
+          ] as string | undefined),
       );
       if (displayNameMatch) {
         result.push(displayNameMatch.name);
@@ -787,11 +787,11 @@ export class SubagentManager {
     const baseDir =
       level === 'project'
         ? path.join(
-            this.config.getProjectRoot(),
-            QWEN_CONFIG_DIR,
-            AGENT_CONFIG_DIR,
-          )
-        : path.join(os.homedir(), QWEN_CONFIG_DIR, AGENT_CONFIG_DIR);
+          this.config.getProjectRoot(),
+          PAPERT_CONFIG_DIR,
+          AGENT_CONFIG_DIR,
+        )
+        : path.join(os.homedir(), PAPERT_CONFIG_DIR, AGENT_CONFIG_DIR);
 
     return path.join(baseDir, `${name}.md`);
   }
@@ -822,7 +822,7 @@ export class SubagentManager {
     }
 
     let baseDir = level === 'project' ? projectRoot : homeDir;
-    baseDir = path.join(baseDir, QWEN_CONFIG_DIR, AGENT_CONFIG_DIR);
+    baseDir = path.join(baseDir, PAPERT_CONFIG_DIR, AGENT_CONFIG_DIR);
 
     try {
       const files = await fs.readdir(baseDir);

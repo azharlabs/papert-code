@@ -55,10 +55,10 @@ describe('IdeClient', () => {
       undefined;
 
     // Mock environment variables
-    process.env['QWEN_CODE_IDE_WORKSPACE_PATH'] = '/test/workspace';
-    delete process.env['QWEN_CODE_IDE_SERVER_PORT'];
-    delete process.env['QWEN_CODE_IDE_SERVER_STDIO_COMMAND'];
-    delete process.env['QWEN_CODE_IDE_SERVER_STDIO_ARGS'];
+    process.env['PAPERT_CODE_IDE_WORKSPACE_PATH'] = '/test/workspace';
+    delete process.env['PAPERT_CODE_IDE_SERVER_PORT'];
+    delete process.env['PAPERT_CODE_IDE_SERVER_STDIO_COMMAND'];
+    delete process.env['PAPERT_CODE_IDE_SERVER_STDIO_ARGS'];
 
     // Mock dependencies
     vi.spyOn(process, 'cwd').mockReturnValue('/test/workspace/sub-dir');
@@ -175,7 +175,7 @@ describe('IdeClient', () => {
           (path: fs.PathLike) => Promise<string[]>
         >
       ).mockResolvedValue([]);
-      process.env['QWEN_CODE_IDE_SERVER_PORT'] = '9090';
+      process.env['PAPERT_CODE_IDE_SERVER_PORT'] = '9090';
 
       const ideClient = await IdeClient.getInstance();
       await ideClient.connect();
@@ -200,8 +200,8 @@ describe('IdeClient', () => {
           (path: fs.PathLike) => Promise<string[]>
         >
       ).mockResolvedValue([]);
-      process.env['QWEN_CODE_IDE_SERVER_STDIO_COMMAND'] = 'env-cmd';
-      process.env['QWEN_CODE_IDE_SERVER_STDIO_ARGS'] = '["--bar"]';
+      process.env['PAPERT_CODE_IDE_SERVER_STDIO_COMMAND'] = 'env-cmd';
+      process.env['PAPERT_CODE_IDE_SERVER_STDIO_ARGS'] = '["--bar"]';
 
       const ideClient = await IdeClient.getInstance();
       await ideClient.connect();
@@ -224,7 +224,7 @@ describe('IdeClient', () => {
           (path: fs.PathLike) => Promise<string[]>
         >
       ).mockResolvedValue([]);
-      process.env['QWEN_CODE_IDE_SERVER_PORT'] = '9090';
+      process.env['PAPERT_CODE_IDE_SERVER_PORT'] = '9090';
 
       const ideClient = await IdeClient.getInstance();
       await ideClient.connect();
@@ -408,7 +408,7 @@ describe('IdeClient', () => {
     });
 
     it('should prioritize the config matching the port from the environment variable', async () => {
-      process.env['QWEN_CODE_IDE_SERVER_PORT'] = '2222';
+      process.env['PAPERT_CODE_IDE_SERVER_PORT'] = '2222';
       const config1 = { port: '1111', workspacePath: '/test/workspace' };
       const config2 = { port: '2222', workspacePath: '/test/workspace2' };
       vi.mocked(fs.promises.readFile).mockRejectedValueOnce(
@@ -437,7 +437,7 @@ describe('IdeClient', () => {
       ).getConnectionConfigFromFile();
 
       expect(result).toEqual(config2);
-      delete process.env['QWEN_CODE_IDE_SERVER_PORT'];
+      delete process.env['PAPERT_CODE_IDE_SERVER_PORT'];
     });
 
     it('should handle invalid JSON in one of the config files', async () => {
@@ -528,7 +528,7 @@ describe('IdeClient', () => {
     });
 
     it('should match env port string to a number port in the config', async () => {
-      process.env['QWEN_CODE_IDE_SERVER_PORT'] = '3333';
+      process.env['PAPERT_CODE_IDE_SERVER_PORT'] = '3333';
       const config1 = { port: 1111, workspacePath: '/test/workspace' };
       const config2 = { port: 3333, workspacePath: '/test/workspace2' };
       vi.mocked(fs.promises.readFile).mockRejectedValueOnce(
@@ -557,7 +557,7 @@ describe('IdeClient', () => {
       ).getConnectionConfigFromFile();
 
       expect(result).toEqual(config2);
-      delete process.env['QWEN_CODE_IDE_SERVER_PORT'];
+      delete process.env['PAPERT_CODE_IDE_SERVER_PORT'];
     });
   });
 

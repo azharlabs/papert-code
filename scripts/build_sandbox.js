@@ -143,7 +143,7 @@ function buildImage(imageName, dockerfile) {
     if (isWindows) {
       // PowerShell doesn't support <() process substitution.
       // Create a temporary auth file that we will clean up after.
-      tempAuthFile = join(os.tmpdir(), `qwen-auth-${Date.now()}.json`);
+      tempAuthFile = join(os.tmpdir(), `papert-auth-${Date.now()}.json`);
       writeFileSync(tempAuthFile, '{}');
       buildCommandArgs = `--authfile="${tempAuthFile}"`;
     } else {
@@ -162,8 +162,7 @@ function buildImage(imageName, dockerfile) {
 
   try {
     execSync(
-      `${sandboxCommand} build ${buildCommandArgs} ${
-        process.env.BUILD_SANDBOX_FLAGS || ''
+      `${sandboxCommand} build ${buildCommandArgs} ${process.env.BUILD_SANDBOX_FLAGS || ''
       } --build-arg CLI_VERSION_ARG=${npmPackageVersion} -f "${dockerfile}" -t "${finalImageName}" .`,
       { stdio: buildStdout, shell: shellToUse },
     );

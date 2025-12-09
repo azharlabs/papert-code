@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Papert Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -40,7 +40,7 @@ export interface SDKTestHelperOptions {
   /**
    * Whether to create .papert/settings.json
    */
-  createQwenConfig?: boolean;
+  createPapertConfig?: boolean;
 }
 
 /**
@@ -73,9 +73,9 @@ export class SDKTestHelper {
     await mkdir(this.testDir, { recursive: true });
 
     // Optionally create .papert/settings.json for CLI configuration
-    if (options.createQwenConfig) {
-      const qwenDir = join(this.testDir, '.papert');
-      await mkdir(qwenDir, { recursive: true });
+    if (options.createPapertConfig) {
+      const papertDir = join(this.testDir, '.papert');
+      await mkdir(papertDir, { recursive: true });
 
       const settings = {
         telemetry: {
@@ -85,7 +85,7 @@ export class SDKTestHelper {
       };
 
       await writeFile(
-        join(qwenDir, 'settings.json'),
+        join(papertDir, 'settings.json'),
         JSON.stringify(settings, null, 2),
         'utf-8',
       );
@@ -197,7 +197,7 @@ export interface MCPServerResult {
 const MCP_MATH_SERVER_SCRIPT = `#!/usr/bin/env node
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Papert Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -964,7 +964,7 @@ export function createSharedTestOptions(
   }
 
   return {
-    pathToQwenExecutable: TEST_CLI_PATH,
+    pathToPapertExecutable: TEST_CLI_PATH,
     ...overrides,
   };
 }

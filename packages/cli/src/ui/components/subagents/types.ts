@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,7 +17,7 @@ export interface CreationWizardState {
   location: SubagentLevel;
 
   /** Generation method selection */
-  generationMethod: 'qwen' | 'manual';
+  generationMethod: 'papert' | 'manual';
 
   /** User's description input for the subagent */
   userDescription: string;
@@ -71,17 +71,17 @@ export interface ColorOption {
 export type WizardAction =
   | { type: 'SET_STEP'; step: number }
   | { type: 'SET_LOCATION'; location: SubagentLevel }
-  | { type: 'SET_GENERATION_METHOD'; method: 'qwen' | 'manual' }
+  | { type: 'SET_GENERATION_METHOD'; method: 'papert' | 'manual' }
   | { type: 'SET_USER_DESCRIPTION'; description: string }
   | { type: 'SET_GENERATED_NAME'; name: string }
   | { type: 'SET_GENERATED_SYSTEM_PROMPT'; systemPrompt: string }
   | { type: 'SET_GENERATED_DESCRIPTION'; description: string }
   | {
-      type: 'SET_GENERATED_CONTENT';
-      name: string;
-      description: string;
-      systemPrompt: string;
-    }
+    type: 'SET_GENERATED_CONTENT';
+    name: string;
+    description: string;
+    systemPrompt: string;
+  }
   | { type: 'SET_TOOLS'; tools: string[] }
   | { type: 'SET_BACKGROUND_COLOR'; color: string }
   | { type: 'SET_GENERATING'; isGenerating: boolean }

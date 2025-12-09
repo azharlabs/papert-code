@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Papert
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -54,7 +54,7 @@ import type { SubagentHooks } from './subagent-hooks.js';
 import { logSubagentExecution } from '../telemetry/loggers.js';
 import { SubagentExecutionEvent } from '../telemetry/types.js';
 import { TaskTool } from '../tools/task.js';
-import { DEFAULT_QWEN_MODEL } from '../config/models.js';
+import { DEFAULT_PAPERT_MODEL } from '../config/models.js';
 
 /**
  * @fileoverview Defines the configuration interfaces for a subagent.
@@ -332,7 +332,7 @@ export class SubAgentScope {
         model:
           this.modelConfig.model ||
           this.runtimeContext.getModel() ||
-          DEFAULT_QWEN_MODEL,
+          DEFAULT_PAPERT_MODEL,
         tools: (this.toolConfig?.tools || ['*']).map((t) =>
           typeof t === 'string' ? t : t.name,
         ),
@@ -371,8 +371,8 @@ export class SubAgentScope {
 
         const responseStream = await chat.sendMessageStream(
           this.modelConfig.model ||
-            this.runtimeContext.getModel() ||
-            DEFAULT_QWEN_MODEL,
+          this.runtimeContext.getModel() ||
+          DEFAULT_PAPERT_MODEL,
           messageParams,
           promptId,
         );
@@ -711,7 +711,7 @@ export class SubAgentScope {
         }
       },
       getPreferredEditor: () => undefined,
-      onEditorClose: () => {},
+      onEditorClose: () => { },
     });
 
     // Prepare requests and emit TOOL_CALL events

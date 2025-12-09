@@ -22,7 +22,7 @@ export type ToolDefinition<TInput = unknown, TOutput = unknown> = {
 };
 
 export type TransportOptions = {
-  pathToQwenExecutable: string;
+  pathToPapertExecutable: string;
   cwd?: string;
   model?: string;
   permissionMode?: PermissionMode;
@@ -52,14 +52,14 @@ export type CanUseTool = (
 
 export type PermissionResult =
   | {
-      behavior: 'allow';
-      updatedInput: ToolInput;
-    }
+    behavior: 'allow';
+    updatedInput: ToolInput;
+  }
   | {
-      behavior: 'deny';
-      message: string;
-      interrupt?: boolean;
-    };
+    behavior: 'deny';
+    message: string;
+    interrupt?: boolean;
+  };
 
 export interface ExternalMcpServerConfig {
   command: string;
@@ -72,7 +72,7 @@ export interface SdkMcpServerConfig {
 }
 
 /**
- * Configuration options for creating a query session with the Qwen CLI.
+ * Configuration options for creating a query session with the Papert CLI.
  */
 export interface QueryOptions {
   /**
@@ -84,17 +84,17 @@ export interface QueryOptions {
 
   /**
    * The AI model to use for the query session.
-   * This takes precedence over the environment variables `OPENAI_MODEL` and `QWEN_MODEL`
-   * @example 'qwen-max', 'qwen-plus', 'qwen-turbo'
+   * This takes precedence over the environment variables `OPENAI_MODEL` and `PAPERT_MODEL`
+   * @example 'papert-max', 'papert-plus', 'papert-turbo'
    */
   model?: string;
 
   /**
-   * Path to the Qwen CLI executable or runtime specification.
+   * Path to the Papert CLI executable or runtime specification.
    *
    * Supports multiple formats:
-   * - 'qwen' -> native binary (auto-detected from PATH)
-   * - '/path/to/qwen' -> native binary (explicit path)
+   * - 'papert' -> native binary (auto-detected from PATH)
+   * - '/path/to/papert' -> native binary (explicit path)
    * - '/path/to/cli.js' -> Node.js bundle (default for .js files)
    * - '/path/to/index.ts' -> TypeScript source (requires tsx)
    * - 'bun:/path/to/cli.js' -> Force Bun runtime
@@ -103,24 +103,24 @@ export interface QueryOptions {
    * - 'deno:/path/to/cli.ts' -> Force Deno runtime
    *
    * If not provided, the SDK will auto-detect the native binary in this order:
-   * 1. QWEN_CODE_CLI_PATH environment variable
-   * 2. ~/.volta/bin/qwen
-   * 3. ~/.npm-global/bin/qwen
-   * 4. /usr/local/bin/qwen
-   * 5. ~/.local/bin/qwen
-   * 6. ~/node_modules/.bin/qwen
-   * 7. ~/.yarn/bin/qwen
+   * 1. PAPERT_CODE_CLI_PATH environment variable
+   * 2. ~/.volta/bin/papert
+   * 3. ~/.npm-global/bin/papert
+   * 4. /usr/local/bin/papert
+   * 5. ~/.local/bin/papert
+   * 6. ~/node_modules/.bin/papert
+   * 7. ~/.yarn/bin/papert
    *
    * The .ts files are only supported for debugging purposes.
    *
-   * @example 'qwen'
-   * @example '/usr/local/bin/qwen'
+   * @example 'papert'
+   * @example '/usr/local/bin/papert'
    * @example 'tsx:/path/to/packages/cli/src/index.ts'
    */
-  pathToQwenExecutable?: string;
+  pathToPapertExecutable?: string;
 
   /**
-   * Environment variables to pass to the Qwen CLI process.
+   * Environment variables to pass to the Papert CLI process.
    * These variables will be merged with the current process environment.
    */
   env?: Record<string, string>;
@@ -196,7 +196,7 @@ export interface QueryOptions {
   debug?: boolean;
 
   /**
-   * Custom handler for stderr output from the Qwen CLI process.
+   * Custom handler for stderr output from the Papert CLI process.
    * Use this to capture and process error messages or diagnostic output.
    */
   stderr?: (message: string) => void;
@@ -272,12 +272,12 @@ export interface QueryOptions {
   /**
    * Authentication type for the AI service.
    * - 'openai': Use OpenAI-compatible authentication
-   * - 'qwen-oauth': Use Qwen OAuth authentication
+   * - 'papert-oauth': Use Papert OAuth authentication
    *
-   * Though we support 'qwen-oauth', it's not recommended to use it in the SDK.
+   * Though we support 'papert-oauth', it's not recommended to use it in the SDK.
    * Because the credentials are stored in `~/.papert` and may need to refresh periodically.
    */
-  authType?: 'openai' | 'qwen-oauth';
+  authType?: 'openai' | 'papert-oauth';
 
   /**
    * Configuration for subagents that can be invoked during the session.
