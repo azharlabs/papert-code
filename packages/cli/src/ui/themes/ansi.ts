@@ -22,7 +22,7 @@ const ansiColors: ColorsTheme = {
   DiffRemoved: '#4D0000',
   Comment: 'gray',
   Gray: 'gray',
-  GradientColors: ['cyan', 'green'],
+  GradientColors: ['#84cc16', '#10b981'],
 };
 
 export const ANSI: Theme = new Theme(

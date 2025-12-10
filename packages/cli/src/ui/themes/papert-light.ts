@@ -22,7 +22,7 @@ const papertLightColors: ColorsTheme = {
   DiffRemoved: '#f07171',
   Comment: '#ABADB1',
   Gray: '#CCCFD3',
-  GradientColors: ['#399ee6', '#86b300'],
+  GradientColors: ['#65a30d', '#059669'],
 };
 
 export const PapertLight: Theme = new Theme(

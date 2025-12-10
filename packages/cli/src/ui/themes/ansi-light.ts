@@ -22,7 +22,7 @@ const ansiLightColors: ColorsTheme = {
   DiffRemoved: '#FFE5E5',
   Comment: 'gray',
   Gray: 'gray',
-  GradientColors: ['blue', 'green'],
+  GradientColors: ['#65a30d', '#059669'],
 };
 
 export const ANSILight: Theme = new Theme(
