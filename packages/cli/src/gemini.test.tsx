@@ -23,6 +23,14 @@ import { type LoadedSettings } from './config/settings.js';
 import { appEvents, AppEvent } from './utils/events.js';
 import type { Config } from '@papert-code/papert-code-core';
 import { OutputFormat } from '@papert-code/papert-code-core';
+vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@papert-code/papert-code-core')>();
+  return {
+    ...actual,
+    getVersion: vi.fn(() => Promise.resolve('1.0.0')),
+  };
+});
 
 // Custom error to identify mock process.exit calls
 class MockProcessExitError extends Error {
@@ -544,10 +552,6 @@ describe('startInteractiveUI', () => {
   const mockStartupWarnings = ['warning1'];
   const mockWorkspaceRoot = '/root';
 
-  vi.mock('./utils/version.js', () => ({
-    getCliVersion: vi.fn(() => Promise.resolve('1.0.0')),
-  }));
-
   vi.mock('./ui/utils/kittyProtocolDetector.js', () => ({
     detectAndEnableKittyProtocol: vi.fn(() => Promise.resolve(true)),
   }));
@@ -604,7 +608,7 @@ describe('startInteractiveUI', () => {
   });
 
   it('should perform all startup tasks in correct order', async () => {
-    const { getCliVersion } = await import('./utils/version.js');
+    const { getVersion } = await import('@papert-code/papert-code-core');
     const { checkForUpdates } = await import('./ui/utils/updateCheck.js');
     const { registerCleanup } = await import('./utils/cleanup.js');
 
@@ -624,7 +628,7 @@ describe('startInteractiveUI', () => {
     );
 
     // Verify all startup tasks were called
-    expect(getCliVersion).toHaveBeenCalledTimes(1);
+    expect(getVersion).toHaveBeenCalledTimes(1);
     expect(registerCleanup).toHaveBeenCalledTimes(1);
 
     // Verify cleanup handler is registered with unmount function

@@ -8,8 +8,7 @@ import process from 'node:process';
 import os from 'node:os';
 import { execSync } from 'node:child_process';
 import type { CommandContext } from '../ui/commands/types.js';
-import { getCliVersion } from './version.js';
-import { IdeClient, AuthType } from '@papert-code/papert-code-core';
+import { IdeClient, AuthType, getVersion } from '@papert-code/papert-code-core';
 import { formatMemoryUsage } from '../ui/utils/formatters.js';
 import { GIT_COMMIT_INFO } from '../generated/git-commit.js';
 
@@ -114,7 +113,7 @@ export async function getSystemInfo(
   const npmVersion = await getNpmVersion();
   const sandboxEnv = getSandboxEnv();
   const modelVersion = context.services.config?.getModel() || 'Unknown';
-  const cliVersion = await getCliVersion();
+  const cliVersion = await getVersion();
   const selectedAuthType =
     context.services.settings.merged.security?.auth?.selectedType || '';
   const ideClient = await getIdeClientName(context);

@@ -26,6 +26,7 @@ import {
   type ResumedSessionData,
   type FileFilteringOptions,
   type MCPServerConfig,
+  getVersion,
 } from '@papert-code/papert-code-core';
 import { extensionsCommand } from '../commands/extensions.js';
 import type { Settings } from './settings.js';
@@ -36,7 +37,6 @@ import * as path from 'node:path';
 import { homedir } from 'node:os';
 
 import { resolvePath } from '../utils/resolvePath.js';
-import { getCliVersion } from '../utils/version.js';
 import type { Extension } from './extension.js';
 import { annotateActiveExtensions } from './extension.js';
 import { loadSandboxConfig } from './sandboxConfig.js';
@@ -516,7 +516,7 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
   }
 
   yargsInstance
-    .version(await getCliVersion()) // This will enable the --version flag based on package.json
+    .version(await getVersion()) // This will enable the --version flag based on package.json
     .alias('v', 'version')
     .help()
     .alias('h', 'help')
@@ -957,7 +957,7 @@ export async function loadCliConfig(
       openAILoggingDir:
         argv.openaiLoggingDir || settings.model?.openAILoggingDir,
     },
-    cliVersion: await getCliVersion(),
+    cliVersion: await getVersion(),
     webSearch: buildWebSearchConfig(
       argv,
       settings,

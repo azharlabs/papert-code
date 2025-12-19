@@ -49,3 +49,4 @@ export * from './src/utils/request-tokenizer/supportedImageFormats.js';
 export { ClearcutLogger } from './src/telemetry/clearcut-logger/clearcut-logger.js';
 export { PapertLogger } from './src/telemetry/papert-logger/papert-logger.js';
 export { logModelSlashCommand } from './src/telemetry/loggers.js';
+export { getVersion } from './src/utils/version.js';

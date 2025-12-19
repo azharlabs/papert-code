@@ -16,8 +16,7 @@ import type { CommandContext } from '../ui/commands/types.js';
 import { createMockCommandContext } from '../test-utils/mockCommandContext.js';
 import * as child_process from 'node:child_process';
 import os from 'node:os';
-import { IdeClient } from '@papert-code/papert-code-core';
-import * as versionUtils from './version.js';
+import { IdeClient, getVersion } from '@papert-code/papert-code-core';
 import type { ExecSyncOptions } from 'node:child_process';
 
 vi.mock('node:child_process');
@@ -28,10 +27,6 @@ vi.mock('node:os', () => ({
   },
 }));
 
-vi.mock('./version.js', () => ({
-  getCliVersion: vi.fn(),
-}));
-
 vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
   const actual =
     await importOriginal<typeof import('@papert-code/papert-code-core')>();
@@ -40,6 +35,7 @@ vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
     IdeClient: {
       getInstance: vi.fn(),
     },
+    getVersion: vi.fn(),
   };
 });
 
@@ -73,7 +69,7 @@ describe('systemInfo', () => {
       },
     } as unknown as CommandContext);
 
-    vi.mocked(versionUtils.getCliVersion).mockResolvedValue('test-version');
+    vi.mocked(getVersion).mockResolvedValue('test-version');
     vi.mocked(child_process.execSync).mockImplementation(
       (command: string, options?: ExecSyncOptions) => {
         if (
