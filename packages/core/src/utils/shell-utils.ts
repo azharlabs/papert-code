@@ -16,6 +16,13 @@ import {
   type ExecFileOptions,
 } from 'node:child_process';
 import { accessSync, constants as fsConstants } from 'node:fs';
+import { PolicyEngine } from '../policy/policy-engine.js';
+import { createPolicyEngineConfig } from '../policy/config.js';
+import { ApprovalMode, PolicyDecision } from '../policy/types.js';
+
+const policyEngine = new PolicyEngine(
+  createPolicyEngineConfig({}, ApprovalMode.DEFAULT),
+);
 
 const SHELL_TOOL_NAMES = ['run_shell_command', 'ShellTool'];
 
@@ -340,6 +347,22 @@ export function checkCommandPermissions(
   const invocation: AnyToolInvocation & { params: { command: string } } = {
     params: { command: '' },
   } as AnyToolInvocation & { params: { command: string } };
+
+  // Policy check: explicit deny stops evaluation.
+  for (const cmd of commandsToValidate) {
+    const decision = policyEngine.check(
+      { name: 'run_shell_command', args: { command: cmd } },
+      undefined,
+    );
+    if (decision === PolicyDecision.DENY) {
+      return {
+        allAllowed: false,
+        disallowedCommands: [cmd],
+        blockReason: `Command '${cmd}' denied by policy`,
+        isHardDenial: true,
+      };
+    }
+  }
 
   // 1. Blocklist Check (Highest Priority)
   const excludeTools = config.getExcludeTools() || [];
