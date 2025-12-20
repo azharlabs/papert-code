@@ -190,7 +190,7 @@ describe('mcp list command', () => {
     );
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        'extension-server: /ext/server  (stdio) - Connected',
+        'extension-server (from test-extension): /ext/server  (stdio) - Connected',
       ),
     );
   });

@@ -84,6 +84,18 @@ describe('mcp add command', () => {
     });
   });
 
+  it('should allow sse shortcut flag', async () => {
+    await parser.parseAsync(
+      'add --sse sse-server https://example.com/sse-endpoint --scope user',
+    );
+
+    expect(mockSetValue).toHaveBeenCalledWith(SettingScope.User, 'mcpServers', {
+      'sse-server': {
+        url: 'https://example.com/sse-endpoint',
+      },
+    });
+  });
+
   it('should add an http server to project settings', async () => {
     await parser.parseAsync(
       'add --transport http http-server https://example.com/mcp -H "Authorization: Bearer your-token"',

@@ -168,6 +168,21 @@ export const addCommand: CommandModule = {
         default: 'stdio',
         choices: ['stdio', 'sse', 'http'],
       })
+      .option('stdio', {
+        describe: 'Shortcut for --transport stdio',
+        type: 'boolean',
+        conflicts: ['sse', 'http'],
+      })
+      .option('sse', {
+        describe: 'Shortcut for --transport sse',
+        type: 'boolean',
+        conflicts: ['stdio', 'http'],
+      })
+      .option('http', {
+        describe: 'Shortcut for --transport http',
+        type: 'boolean',
+        conflicts: ['stdio', 'sse'],
+      })
       .option('env', {
         alias: 'e',
         describe: 'Set environment variables (e.g. -e KEY=value)',
@@ -212,13 +227,19 @@ export const addCommand: CommandModule = {
         }
       }),
   handler: async (argv) => {
+    const transportFlag =
+      (argv['stdio'] && 'stdio') ||
+      (argv['sse'] && 'sse') ||
+      (argv['http'] && 'http') ||
+      (argv['transport'] as string);
+
     await addMcpServer(
       argv['name'] as string,
       argv['commandOrUrl'] as string,
       argv['args'] as Array<string | number>,
       {
         scope: argv['scope'] as string,
-        transport: argv['transport'] as string,
+        transport: transportFlag as string,
         env: argv['env'] as string[],
         header: argv['header'] as string[],
         timeout: argv['timeout'] as number | undefined,

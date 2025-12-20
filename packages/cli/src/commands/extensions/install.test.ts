@@ -140,4 +140,19 @@ describe('handleInstall', () => {
     expect(consoleErrorSpy).toHaveBeenCalledWith('Install extension failed');
     expect(processSpy).toHaveBeenCalledWith(1);
   });
+
+  it('should allow skipping consent when explicitly provided', async () => {
+    mockInstallExtension.mockResolvedValue('local-extension');
+    mockStat.mockResolvedValue({});
+
+    await handleInstall({
+      source: '/some/path',
+      consent: true,
+    });
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      'You have consented to the following:',
+    );
+    expect(mockRequestConsentNonInteractive).not.toHaveBeenCalled();
+  });
 });
