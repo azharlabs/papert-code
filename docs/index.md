@@ -167,7 +167,7 @@ Use API keys for OpenAI or other compatible providers:
 ```bash
 export OPENAI_API_KEY="your_api_key_here"
 export OPENAI_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
-export OPENAI_MODEL="qwen3-coder-plus"
+export OPENAI_MODEL="papert3-coder-plus"
 ```
 
 **Option 2: ModelScope (Free Tier)** ([Apply for API Key](https://modelscope.cn/docs/model-service/API-Inference/intro))
@@ -178,7 +178,7 @@ export OPENAI_MODEL="qwen3-coder-plus"
 ```bash
 export OPENAI_API_KEY="your_api_key_here"
 export OPENAI_BASE_URL="https://api-inference.modelscope.cn/v1"
-export OPENAI_MODEL="Qwen/Qwen3-Coder-480B-A35B-Instruct"
+export OPENAI_MODEL="Papert/Papert3-Coder-480B-A35B-Instruct"
 ```
 
 </details>
@@ -191,7 +191,7 @@ export OPENAI_MODEL="Qwen/Qwen3-Coder-480B-A35B-Instruct"
 ```bash
 export OPENAI_API_KEY="your_api_key_here"
 export OPENAI_BASE_URL="https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
-export OPENAI_MODEL="qwen3-coder-plus"
+export OPENAI_MODEL="papert3-coder-plus"
 ```
 
 **Option 2: OpenRouter (Free Tier Available)** ([Apply for API Key](https://openrouter.ai/))
@@ -199,7 +199,7 @@ export OPENAI_MODEL="qwen3-coder-plus"
 ```bash
 export OPENAI_API_KEY="your_api_key_here"
 export OPENAI_BASE_URL="https://openrouter.ai/api/v1"
-export OPENAI_MODEL="qwen/qwen3-coder:free"
+export OPENAI_MODEL="papert/papert3-coder:free"
 ```
 
 </details>

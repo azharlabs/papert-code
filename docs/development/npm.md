@@ -4,7 +4,7 @@ This monorepo contains two main packages: `@papert-code/papert-code` and `@paper
 
 ## `@papert-code/papert-code`
 
-This is the main package for Qwen Code. It is responsible for the user interface, command parsing, and all other user-facing functionality.
+This is the main package for Papert Code. It is responsible for the user interface, command parsing, and all other user-facing functionality.
 
 When this package is published, it is bundled into a single executable file. This bundle includes all of the package's dependencies, including `@papert-code/papert-code-core`. This means that whether a user installs the package with `npm install -g @papert-code/papert-code` or runs it directly with `npx @papert-code/papert-code`, they are using this single, self-contained executable.
 

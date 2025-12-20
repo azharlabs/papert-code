@@ -2,7 +2,7 @@
 
 > Last Updated: September 15, 2025
 
-This document defines the contract for building a companion plugin to enable Papert Code's IDE mode. For VS Code, these features (native diffing, context awareness) are provided by the official extension ([marketplace](https://marketplace.visualstudio.com/items?itemName=qwenlm.papert-code-vscode-ide-companion)). This specification is for contributors who wish to bring similar functionality to other editors like JetBrains IDEs, Sublime Text, etc.
+This document defines the contract for building a companion plugin to enable Papert Code's IDE mode. For VS Code, these features (native diffing, context awareness) are provided by the official extension ([marketplace](https://marketplace.visualstudio.com/items?itemName=papertlm.papert-code-vscode-ide-companion)). This specification is for contributors who wish to bring similar functionality to other editors like JetBrains IDEs, Sublime Text, etc.
 
 ## I. The Communication Interface
 
@@ -47,7 +47,7 @@ For Papert Code to connect, it needs to discover which IDE instance it's running
     - `displayName` (string, required): A user-friendly name for the IDE (e.g., `VS Code`, `JetBrains IDE`).
 
 - **Authentication:** To secure the connection, the plugin **MUST** generate a unique, secret token and include it in the discovery file. The CLI will then include this token in the `Authorization` header for all requests to the MCP server (e.g., `Authorization: Bearer a-very-secret-token`). Your server **MUST** validate this token on every request and reject any that are unauthorized.
-- **Tie-Breaking with Environment Variables (Recommended):** For the most reliable experience, your plugin **SHOULD** both create the discovery file and set the `QWEN_CODE_IDE_SERVER_PORT` environment variable in the integrated terminal. The file serves as the primary discovery mechanism, but the environment variable is crucial for tie-breaking. If a user has multiple IDE windows open for the same workspace, the CLI uses the `QWEN_CODE_IDE_SERVER_PORT` variable to identify and connect to the correct window's server.
+- **Tie-Breaking with Environment Variables (Recommended):** For the most reliable experience, your plugin **SHOULD** both create the discovery file and set the `PAPERT_CODE_IDE_SERVER_PORT` environment variable in the integrated terminal. The file serves as the primary discovery mechanism, but the environment variable is crucial for tie-breaking. If a user has multiple IDE windows open for the same workspace, the CLI uses the `PAPERT_CODE_IDE_SERVER_PORT` variable to identify and connect to the correct window's server.
 
 ## II. The Context Interface
 

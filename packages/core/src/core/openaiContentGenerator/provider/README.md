@@ -1,13 +1,13 @@
 # Provider Structure
 
-This folder contains the different provider implementations for the Qwen Code refactor system.
+This folder contains the different provider implementations for the Papert Code refactor system.
 
 ## File Structure
 
 - `constants.ts` - Common constants used across all providers
 - `types.ts` - Type definitions and interfaces for providers
 - `default.ts` - Default provider for standard OpenAI-compatible APIs
-- `dashscope.ts` - DashScope (Qwen) specific provider implementation
+- `dashscope.ts` - DashScope (Papert) specific provider implementation
 - `openrouter.ts` - OpenRouter specific provider implementation
 - `index.ts` - Main export file for all providers
 
@@ -19,7 +19,7 @@ The `DefaultOpenAICompatibleProvider` is the fallback provider for standard Open
 
 ### DashScope Provider
 
-The `DashScopeOpenAICompatibleProvider` handles DashScope (Qwen) specific features like cache control and metadata.
+The `DashScopeOpenAICompatibleProvider` handles DashScope (Papert) specific features like cache control and metadata.
 
 ### OpenRouter Provider
 

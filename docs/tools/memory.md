@@ -1,10 +1,10 @@
 # Memory Tool (`save_memory`)
 
-This document describes the `save_memory` tool for Qwen Code.
+This document describes the `save_memory` tool for Papert Code.
 
 ## Description
 
-Use `save_memory` to save and recall information across your Qwen Code sessions. With `save_memory`, you can direct the CLI to remember key details across sessions, providing personalized and directed assistance.
+Use `save_memory` to save and recall information across your Papert Code sessions. With `save_memory`, you can direct the CLI to remember key details across sessions, providing personalized and directed assistance.
 
 ### Arguments
 
@@ -12,11 +12,11 @@ Use `save_memory` to save and recall information across your Qwen Code sessions.
 
 - `fact` (string, required): The specific fact or piece of information to remember. This should be a clear, self-contained statement written in natural language.
 
-## How to use `save_memory` with Qwen Code
+## How to use `save_memory` with Papert Code
 
 The tool appends the provided `fact` to your context file in the user's home directory (`~/.papert/papert.md` by default). This filename can be configured via `contextFileName`.
 
-Once added, the facts are stored under a `## Qwen Added Memories` section. This file is loaded as context in subsequent sessions, allowing the CLI to recall the saved information.
+Once added, the facts are stored under a `## Papert Added Memories` section. This file is loaded as context in subsequent sessions, allowing the CLI to recall the saved information.
 
 Usage:
 

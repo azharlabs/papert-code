@@ -1,6 +1,6 @@
 # Shell Tool (`run_shell_command`)
 
-This document describes the `run_shell_command` tool for Qwen Code.
+This document describes the `run_shell_command` tool for Papert Code.
 
 ## Description
 
@@ -17,7 +17,7 @@ On Windows, commands are executed with `cmd.exe /c`. On other platforms, they ar
 - `directory` (string, optional): The directory (relative to the project root) in which to execute the command. If not provided, the command runs in the project root.
 - `is_background` (boolean, required): Whether to run the command in background. This parameter is required to ensure explicit decision-making about command execution mode. Set to true for long-running processes like development servers, watchers, or daemons that should continue running without blocking further commands. Set to false for one-time commands that should complete before proceeding.
 
-## How to use `run_shell_command` with Qwen Code
+## How to use `run_shell_command` with Papert Code
 
 When using `run_shell_command`, the command is executed as a subprocess. You can control whether commands run in background or foreground using the `is_background` parameter, or by explicitly adding `&` to commands. The tool returns detailed information about the execution, including:
 
@@ -106,7 +106,7 @@ run_shell_command(command="docker-compose up", description="Start all services",
 
 ## Configuration
 
-You can configure the behavior of the `run_shell_command` tool by modifying your `settings.json` file or by using the `/settings` command in the Qwen Code.
+You can configure the behavior of the `run_shell_command` tool by modifying your `settings.json` file or by using the `/settings` command in the Papert Code.
 
 ### Enabling Interactive Commands
 
@@ -160,7 +160,7 @@ You can set a custom pager for the shell output by setting the `tools.shell.page
 
 The `run_shell_command` tool now supports interactive commands by integrating a pseudo-terminal (pty). This allows you to run commands that require real-time user input, such as text editors (`vim`, `nano`), terminal-based UIs (`htop`), and interactive version control operations (`git rebase -i`).
 
-When an interactive command is running, you can send input to it from the Qwen Code. To focus on the interactive shell, press `ctrl+f`. The terminal output, including complex TUIs, will be rendered correctly.
+When an interactive command is running, you can send input to it from the Papert Code. To focus on the interactive shell, press `ctrl+f`. The terminal output, including complex TUIs, will be rendered correctly.
 
 ## Important notes
 
@@ -172,7 +172,7 @@ When an interactive command is running, you can send input to it from the Qwen C
 
 ## Environment Variables
 
-When `run_shell_command` executes a command, it sets the `QWEN_CODE=1` environment variable in the subprocess's environment. This allows scripts or tools to detect if they are being run from within the CLI.
+When `run_shell_command` executes a command, it sets the `PAPERT_CODE=1` environment variable in the subprocess's environment. This allows scripts or tools to detect if they are being run from within the CLI.
 
 ## Command Restrictions
 

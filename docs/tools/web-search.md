@@ -8,7 +8,7 @@ Use `web_search` to perform a web search and get information from the internet. 
 
 ### Supported Providers
 
-1. **DashScope** (Official, Free) - Automatically available for Qwen OAuth users (200 requests/minute, 2000 requests/day)
+1. **DashScope** (Official, Free) - Automatically available for Papert OAuth users (200 requests/minute, 2000 requests/day)
 2. **Tavily** - High-quality search API with built-in answer generation
 3. **Google Custom Search** - Google's Custom Search JSON API
 
@@ -46,7 +46,7 @@ Add to your `settings.json`:
 **Notes:**
 
 - DashScope doesn't require an API key (official, free service)
-- **Qwen OAuth users:** DashScope is automatically added to your provider list, even if not explicitly configured
+- **Papert OAuth users:** DashScope is automatically added to your provider list, even if not explicitly configured
 - Configure additional providers (Tavily, Google) if you want to use them alongside DashScope
 - Set `default` to specify which provider to use by default (if not set, priority order: Tavily > Google > DashScope)
 
@@ -65,7 +65,7 @@ export GOOGLE_SEARCH_ENGINE_ID="your-engine-id"
 
 ### Method 3: Command Line Arguments
 
-Pass API keys when running Qwen Code:
+Pass API keys when running Papert Code:
 
 ```bash
 # Tavily
@@ -104,7 +104,7 @@ If you want to disable the web search functionality, you can exclude the `web_se
 }
 ```
 
-**Note:** This setting requires a restart of Qwen Code to take effect. Once disabled, the `web_search` tool will not be available to the model, even if web search providers are configured.
+**Note:** This setting requires a restart of Papert Code to take effect. Once disabled, the `web_search` tool will not be available to the model, even if web search providers are configured.
 
 ## Usage Examples
 
@@ -133,11 +133,11 @@ web_search(query="best practices for React 19", provider="dashscope")
 ### DashScope (Official)
 
 - **Cost:** Free
-- **Authentication:** Automatically available when using Qwen OAuth authentication
-- **Configuration:** No API key required, automatically added to provider list for Qwen OAuth users
+- **Authentication:** Automatically available when using Papert OAuth authentication
+- **Configuration:** No API key required, automatically added to provider list for Papert OAuth users
 - **Quota:** 200 requests/minute, 2000 requests/day
-- **Best for:** General queries, always available as fallback for Qwen OAuth users
-- **Auto-registration:** If you're using Qwen OAuth, DashScope is automatically added to your provider list even if you don't configure it explicitly
+- **Best for:** General queries, always available as fallback for Papert OAuth users
+- **Auto-registration:** If you're using Papert OAuth, DashScope is automatically added to your provider list even if you don't configure it explicitly
 
 ### Tavily
 
@@ -160,7 +160,7 @@ web_search(query="best practices for React 19", provider="dashscope")
 - **Response format:** Returns a concise answer with numbered source citations
 - **Citations:** Source links are appended as a numbered list: [1], [2], etc.
 - **Multiple providers:** If one provider fails, manually specify another using the `provider` parameter
-- **DashScope availability:** Automatically available for Qwen OAuth users, no configuration needed
+- **DashScope availability:** Automatically available for Papert OAuth users, no configuration needed
 - **Default provider selection:** The system automatically selects a default provider based on availability:
   1. Your explicit `default` configuration (highest priority)
   2. CLI argument `--web-search-default`
@@ -170,7 +170,7 @@ web_search(query="best practices for React 19", provider="dashscope")
 
 **Tool not available?**
 
-- **For Qwen OAuth users:** The tool is automatically registered with DashScope provider, no configuration needed
+- **For Papert OAuth users:** The tool is automatically registered with DashScope provider, no configuration needed
 - **For other authentication types:** Ensure at least one provider (Tavily or Google) is configured
 - For Tavily/Google: Verify your API keys are correct
 

@@ -1,6 +1,6 @@
-# Qwen Code Keyboard Shortcuts
+# Papert Code Keyboard Shortcuts
 
-This document lists the available keyboard shortcuts in Qwen Code.
+This document lists the available keyboard shortcuts in Papert Code.
 
 ## General
 

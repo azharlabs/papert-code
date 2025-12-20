@@ -1,6 +1,6 @@
 # Headless Mode
 
-Headless mode allows you to run Qwen Code programmatically from command line
+Headless mode allows you to run Papert Code programmatically from command line
 scripts and automation tools without any interactive UI. This is ideal for
 scripting, automation, CI/CD pipelines, and building AI-powered tools.
 
@@ -31,7 +31,7 @@ scripting, automation, CI/CD pipelines, and building AI-powered tools.
 
 ## Overview
 
-The headless mode provides a headless interface to Qwen Code that:
+The headless mode provides a headless interface to Papert Code that:
 
 - Accepts prompts via command line arguments or stdin
 - Returns structured output (text or JSON)
@@ -52,7 +52,7 @@ papert --prompt "What is machine learning?"
 
 ### Stdin Input
 
-Pipe input to Qwen Code from your terminal:
+Pipe input to Papert Code from your terminal:
 
 ```bash
 echo "Explain this code" | papert
@@ -60,7 +60,7 @@ echo "Explain this code" | papert
 
 ### Combining with File Input
 
-Read from files and process with Qwen Code:
+Read from files and process with Papert Code:
 
 ```bash
 cat README.md | papert --prompt "Summarize this documentation"
@@ -85,7 +85,7 @@ Notes:
 
 ## Output Formats
 
-Qwen Code supports multiple output formats for different use cases:
+Papert Code supports multiple output formats for different use cases:
 
 ### Text Output (Default)
 
@@ -122,7 +122,7 @@ Output (at end of execution):
     "subtype": "session_start",
     "uuid": "...",
     "session_id": "...",
-    "model": "qwen3-coder-plus",
+    "model": "papert3-coder-plus",
     ...
   },
   {
@@ -133,7 +133,7 @@ Output (at end of execution):
       "id": "...",
       "type": "message",
       "role": "assistant",
-      "model": "qwen3-coder-plus",
+      "model": "papert3-coder-plus",
       "content": [
         {
           "type": "text",
@@ -181,7 +181,7 @@ papert -p "Write a Python script" --output-format stream-json --include-partial-
 
 ### Input Format
 
-The `--input-format` parameter controls how Qwen Code consumes input from standard input:
+The `--input-format` parameter controls how Papert Code consumes input from standard input:
 
 - **`text`** (default): Standard text input from stdin or command-line arguments
 - **`stream-json`**: JSON message protocol via stdin for bidirectional communication

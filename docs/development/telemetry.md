@@ -1,6 +1,6 @@
 # Observability with OpenTelemetry
 
-Learn how to enable and setup OpenTelemetry for Qwen Code.
+Learn how to enable and setup OpenTelemetry for Papert Code.
 
 - [Observability with OpenTelemetry](#observability-with-opentelemetry)
   - [Key Benefits](#key-benefits)
@@ -33,7 +33,7 @@ Learn how to enable and setup OpenTelemetry for Qwen Code.
 ## OpenTelemetry Integration
 
 Built on **[OpenTelemetry]** — the vendor-neutral, industry-standard
-observability framework — Qwen Code's observability system provides:
+observability framework — Papert Code's observability system provides:
 
 - **Universal Compatibility**: Export to any OpenTelemetry backend (Google
   Cloud, Jaeger, Prometheus, Datadog, etc.)
@@ -120,7 +120,7 @@ Sends telemetry directly to Google Cloud services. No collector needed.
      }
    }
    ```
-2. Run Qwen Code and send prompts.
+2. Run Papert Code and send prompts.
 3. View logs and metrics:
    - Open the Google Cloud Console in your browser after sending prompts:
      - Logs: https://console.cloud.google.com/logs/
@@ -152,7 +152,7 @@ forward data to Google Cloud.
    - Provide links to view traces, metrics, and logs in Google Cloud Console
    - Save collector logs to `~/.papert/tmp/<projectHash>/otel/collector-gcp.log`
    - Stop collector on exit (e.g. `Ctrl+C`)
-3. Run Qwen Code and send prompts.
+3. Run Papert Code and send prompts.
 4. View logs and metrics:
    - Open the Google Cloud Console in your browser after sending prompts:
      - Logs: https://console.cloud.google.com/logs/
@@ -178,7 +178,7 @@ For local development and debugging, you can capture telemetry data locally:
      }
    }
    ```
-2. Run Qwen Code and send prompts.
+2. Run Papert Code and send prompts.
 3. View logs and metrics in the specified file (e.g., `.papert/telemetry.log`).
 
 ### Collector-Based Export (Advanced)
@@ -193,20 +193,20 @@ For local development and debugging, you can capture telemetry data locally:
    - Provide a Jaeger UI at http://localhost:16686
    - Save logs/metrics to `~/.papert/tmp/<projectHash>/otel/collector.log`
    - Stop collector on exit (e.g. `Ctrl+C`)
-2. Run Qwen Code and send prompts.
+2. Run Papert Code and send prompts.
 3. View traces at http://localhost:16686 and logs/metrics in the collector log
    file.
 
 ## Logs and Metrics
 
 The following section describes the structure of logs and metrics generated for
-Qwen Code.
+Papert Code.
 
 - A `sessionId` is included as a common attribute on all logs and metrics.
 
 ### Logs
 
-Logs are timestamped records of specific events. The following events are logged for Qwen Code:
+Logs are timestamped records of specific events. The following events are logged for Papert Code:
 
 - `papert-code.config`: This event occurs once at startup with the CLI's configuration.
   - **Attributes**:
@@ -259,7 +259,7 @@ Logs are timestamped records of specific events. The following events are logged
       - `user_added_lines` (int)
       - `user_removed_lines` (int)
 
-- `papert-code.api_request`: This event occurs when making a request to Qwen API.
+- `papert-code.api_request`: This event occurs when making a request to Papert API.
   - **Attributes**:
     - `model`
     - `request_text` (if applicable)
@@ -273,7 +273,7 @@ Logs are timestamped records of specific events. The following events are logged
     - `duration_ms`
     - `auth_type`
 
-- `papert-code.api_response`: This event occurs upon receiving a response from Qwen API.
+- `papert-code.api_response`: This event occurs upon receiving a response from Papert API.
   - **Attributes**:
     - `model`
     - `status_code`
@@ -296,11 +296,11 @@ Logs are timestamped records of specific events. The following events are logged
     - `lines` (int)
     - `prompt_id` (string)
 
-- `papert-code.malformed_json_response`: This event occurs when a `generateJson` response from Qwen API cannot be parsed as a json.
+- `papert-code.malformed_json_response`: This event occurs when a `generateJson` response from Papert API cannot be parsed as a json.
   - **Attributes**:
     - `model`
 
-- `papert-code.flash_fallback`: This event occurs when Qwen Code switches to flash as fallback.
+- `papert-code.flash_fallback`: This event occurs when Papert Code switches to flash as fallback.
   - **Attributes**:
     - `auth_type`
 
@@ -320,7 +320,7 @@ Logs are timestamped records of specific events. The following events are logged
 
 ### Metrics
 
-Metrics are numerical measurements of behavior over time. The following metrics are collected for Qwen Code (metric names remain `papert-code.*` for compatibility):
+Metrics are numerical measurements of behavior over time. The following metrics are collected for Papert Code (metric names remain `papert-code.*` for compatibility):
 
 - `papert-code.session.count` (Counter, Int): Incremented once per CLI startup.
 

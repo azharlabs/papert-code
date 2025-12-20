@@ -4,7 +4,7 @@ The Welcome Back feature helps you seamlessly resume your work by automatically 
 
 ## Overview
 
-When you start Qwen Code in a project directory that contains a previously generated project summary (`.papert/PROJECT_SUMMARY.md`), the Welcome Back dialog will automatically appear, giving you the option to either start fresh or continue your previous conversation.
+When you start Papert Code in a project directory that contains a previously generated project summary (`.papert/PROJECT_SUMMARY.md`), the Welcome Back dialog will automatically appear, giving you the option to either start fresh or continue your previous conversation.
 
 ## How It Works
 
@@ -49,7 +49,7 @@ You can control the Welcome Back feature through settings:
 
 **Via Settings Dialog:**
 
-1. Run `/settings` in Qwen Code
+1. Run `/settings` in Papert Code
 2. Find "Enable Welcome Back" in the UI category
 3. Toggle the setting on/off
 
@@ -78,7 +78,7 @@ Add to your `.papert/settings.json`:
 The Welcome Back feature works seamlessly with the `/summary` command:
 
 1. **Generate Summary:** Use `/summary` to create a project summary
-2. **Automatic Detection:** Next time you start Qwen Code in this project, Welcome Back will detect the summary
+2. **Automatic Detection:** Next time you start Papert Code in this project, Welcome Back will detect the summary
 3. **Resume Work:** Choose to continue and the summary will be loaded as context
 
 ### Quit Confirmation

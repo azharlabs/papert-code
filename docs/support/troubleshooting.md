@@ -23,10 +23,10 @@ This guide provides solutions to common issues and debugging tips, including top
 
 ## Frequently asked questions (FAQs)
 
-- **Q: How do I update Qwen Code to the latest version?**
+- **Q: How do I update Papert Code to the latest version?**
   - A: If you installed it globally via `npm`, update it using the command `npm install -g @papert-code/papert-code@latest`. If you compiled it from source, pull the latest changes from the repository, and then rebuild using the command `npm run build`.
 
-- **Q: Where are the Qwen Code configuration or settings files stored?**
+- **Q: Where are the Papert Code configuration or settings files stored?**
   - A: The Papert Code configuration is stored in two `settings.json` files:
     1. In your home directory: `~/.papert/settings.json`.
     2. In your project's root directory: `./.papert/settings.json`.
@@ -75,8 +75,8 @@ This guide provides solutions to common issues and debugging tips, including top
 
 - Ensure VS Code has a single workspace folder open.
 - Restart the integrated terminal after installing the extension so it inherits:
-  - `QWEN_CODE_IDE_WORKSPACE_PATH`
-  - `QWEN_CODE_IDE_SERVER_PORT`
+  - `PAPERT_CODE_IDE_WORKSPACE_PATH`
+  - `PAPERT_CODE_IDE_SERVER_PORT`
 - If running in a container, verify `host.docker.internal` resolves. Otherwise, map the host appropriately.
 - Reinstall the companion with `/ide install` and use “Papert Code: Run” in the Command Palette to verify it launches.
 
@@ -113,4 +113,4 @@ Papert Code uses specific exit codes to indicate the reason for termination. Thi
 
 ## Existing GitHub Issues similar to yours or creating new Issues
 
-If you encounter an issue that was not covered here in this _Troubleshooting guide_, consider searching the Qwen Code [Issue tracker on GitHub](https://github.com/azharlabs/papert-code/issues). If you can't find an issue similar to yours, consider creating a new GitHub Issue with a detailed description. Pull requests are also welcome!
+If you encounter an issue that was not covered here in this _Troubleshooting guide_, consider searching the Papert Code [Issue tracker on GitHub](https://github.com/azharlabs/papert-code/issues). If you can't find an issue similar to yours, consider creating a new GitHub Issue with a detailed description. Pull requests are also welcome!

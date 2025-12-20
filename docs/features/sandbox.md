@@ -1,10 +1,10 @@
-# Sandboxing in Qwen Code
+# Sandboxing in Papert Code
 
-This document provides a guide to sandboxing in Qwen Code, including prerequisites, quickstart, and configuration.
+This document provides a guide to sandboxing in Papert Code, including prerequisites, quickstart, and configuration.
 
 ## Prerequisites
 
-Before using sandboxing, you need to install and set up Qwen Code:
+Before using sandboxing, you need to install and set up Papert Code:
 
 ```bash
 npm install -g @papert-code/papert-code
@@ -131,7 +131,7 @@ export SANDBOX_SET_UID_GID=false  # Disable UID/GID mapping
 DEBUG=1 papert -s -p "debug command"
 ```
 
-**Note:** If you have `DEBUG=true` in a project's `.env` file, it won't affect the CLI due to automatic exclusion. Use `.papert/.env` files for Qwen Code-specific debug settings.
+**Note:** If you have `DEBUG=true` in a project's `.env` file, it won't affect the CLI due to automatic exclusion. Use `.papert/.env` files for Papert Code-specific debug settings.
 
 ### Inspect sandbox
 

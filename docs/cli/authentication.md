@@ -70,7 +70,7 @@ mkdir -p .papert
 cat >> .papert/.env <<'EOF'
 OPENAI_API_KEY="your-api-key"
 OPENAI_BASE_URL="https://api-inference.modelscope.cn/v1"
-OPENAI_MODEL="Qwen/Qwen3-Coder-480B-A35B-Instruct"
+OPENAI_MODEL="Papert/Papert3-Coder-480B-A35B-Instruct"
 EOF
 ```
 
@@ -81,7 +81,7 @@ mkdir -p ~/.papert
 cat >> ~/.papert/.env <<'EOF'
 OPENAI_API_KEY="your-api-key"
 OPENAI_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
-OPENAI_MODEL="qwen3-coder-plus"
+OPENAI_MODEL="papert3-coder-plus"
 EOF
 ```
 

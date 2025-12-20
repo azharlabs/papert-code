@@ -1,10 +1,10 @@
-# Getting Started with Qwen Code Extensions
+# Getting Started with Papert Code Extensions
 
-This guide will walk you through creating your first Qwen Code extension. You'll learn how to set up a new extension, add a custom tool via an MCP server, create a custom command, and provide context to the model with a `papert.md` file.
+This guide will walk you through creating your first Papert Code extension. You'll learn how to set up a new extension, add a custom tool via an MCP server, create a custom command, and provide context to the model with a `papert.md` file.
 
 ## Prerequisites
 
-Before you start, make sure you have the Qwen Code installed and a basic understanding of Node.js and TypeScript.
+Before you start, make sure you have the Papert Code installed and a basic understanding of Node.js and TypeScript.
 
 ## Step 1: Create a New Extension
 
@@ -32,7 +32,7 @@ Let's look at the key files in your new extension.
 
 ### `papert-extension.json`
 
-This is the manifest file for your extension. It tells Qwen Code how to load and use your extension.
+This is the manifest file for your extension. It tells Papert Code how to load and use your extension.
 
 ```json
 {
@@ -51,7 +51,7 @@ This is the manifest file for your extension. It tells Qwen Code how to load and
 - `name`: The unique name for your extension.
 - `version`: The version of your extension.
 - `mcpServers`: This section defines one or more Model Context Protocol (MCP) servers. MCP servers are how you can add new tools for the model to use.
-  - `command`, `args`, `cwd`: These fields specify how to start your server. Notice the use of the `${extensionPath}` variable, which Qwen Code replaces with the absolute path to your extension's installation directory. This allows your extension to work regardless of where it's installed.
+  - `command`, `args`, `cwd`: These fields specify how to start your server. Notice the use of the `${extensionPath}` variable, which Papert Code replaces with the absolute path to your extension's installation directory. This allows your extension to work regardless of where it's installed.
 
 ### `example.ts`
 
@@ -111,7 +111,7 @@ These are standard configuration files for a TypeScript project. The `package.js
 
 ## Step 3: Build and Link Your Extension
 
-Before you can use the extension, you need to compile the TypeScript code and link the extension to your Qwen Code installation for local development.
+Before you can use the extension, you need to compile the TypeScript code and link the extension to your Papert Code installation for local development.
 
 1.  **Install dependencies:**
 
@@ -130,13 +130,13 @@ Before you can use the extension, you need to compile the TypeScript code and li
 
 3.  **Link the extension:**
 
-    The `link` command creates a symbolic link from the Qwen Code extensions directory to your development directory. This means any changes you make will be reflected immediately without needing to reinstall.
+    The `link` command creates a symbolic link from the Papert Code extensions directory to your development directory. This means any changes you make will be reflected immediately without needing to reinstall.
 
     ```bash
     papert extensions link .
     ```
 
-Now, restart your Qwen Code session. The new `fetch_posts` tool will be available. You can test it by asking: "fetch posts".
+Now, restart your Papert Code session. The new `fetch_posts` tool will be available. You can test it by asking: "fetch posts".
 
 ## Step 4: Add a Custom Command
 
@@ -161,7 +161,7 @@ Custom commands provide a way to create shortcuts for complex prompts. Let's add
 
     This command, `/fs:grep-code`, will take an argument, run the `grep` shell command with it, and pipe the results into a prompt for summarization.
 
-After saving the file, restart the Qwen Code. You can now run `/fs:grep-code "some pattern"` to use your new command.
+After saving the file, restart the Papert Code. You can now run `/fs:grep-code "some pattern"` to use your new command.
 
 ## Step 5: Add a Custom `papert.md`
 
@@ -202,7 +202,7 @@ For detailed instructions on both methods, please refer to the [Extension Releas
 
 ## Conclusion
 
-You've successfully created a Qwen Code extension! You learned how to:
+You've successfully created a Papert Code extension! You learned how to:
 
 - Bootstrap a new extension from a template.
 - Add custom tools with an MCP server.
@@ -210,4 +210,4 @@ You've successfully created a Qwen Code extension! You learned how to:
 - Provide persistent context to the model.
 - Link your extension for local development.
 
-From here, you can explore more advanced features and build powerful new capabilities into the Qwen Code.
+From here, you can explore more advanced features and build powerful new capabilities into the Papert Code.

@@ -1,6 +1,6 @@
-# Qwen Code Core: Tools API
+# Papert Code Core: Tools API
 
-The Qwen Code core (`packages/core`) features a robust system for defining, registering, and executing tools. These tools extend the capabilities of the model, allowing it to interact with the local environment, fetch web content, and perform various actions beyond simple text generation.
+The Papert Code core (`packages/core`) features a robust system for defining, registering, and executing tools. These tools extend the capabilities of the model, allowing it to interact with the local environment, fetch web content, and perform various actions beyond simple text generation.
 
 ## Core Concepts
 
@@ -76,4 +76,4 @@ While direct programmatic registration of new tools by users isn't explicitly de
 - **Command-based Discovery:** Advanced users or project administrators can define a `tools.toolDiscoveryCommand` in `settings.json`. This command, when run by the core, should output a JSON array of `FunctionDeclaration` objects. The core will then make these available as `DiscoveredTool` instances. The corresponding `tools.toolCallCommand` would then be responsible for actually executing these custom tools.
 - **MCP Server(s):** For more complex scenarios, one or more MCP servers can be set up and configured via the `mcpServers` setting in `settings.json`. The core can then discover and use tools exposed by these servers. As mentioned, if you have multiple MCP servers, the tool names will be prefixed with the server name from your configuration (e.g., `serverAlias__actualToolName`).
 
-This tool system provides a flexible and powerful way to augment the model's capabilities, making Qwen Code a versatile assistant for a wide range of tasks.
+This tool system provides a flexible and powerful way to augment the model's capabilities, making Papert Code a versatile assistant for a wide range of tasks.

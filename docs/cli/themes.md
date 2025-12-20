@@ -1,10 +1,10 @@
 # Themes
 
-Qwen Code supports a variety of themes to customize its color scheme and appearance. You can change the theme to suit your preferences via the `/theme` command or `"theme":` configuration setting.
+Papert Code supports a variety of themes to customize its color scheme and appearance. You can change the theme to suit your preferences via the `/theme` command or `"theme":` configuration setting.
 
 ## Available Themes
 
-Qwen Code comes with a selection of pre-defined themes, which you can list using the `/theme` command within the CLI:
+Papert Code comes with a selection of pre-defined themes, which you can list using the `/theme` command within the CLI:
 
 - **Dark Themes:**
   - `ANSI`
@@ -23,7 +23,7 @@ Qwen Code comes with a selection of pre-defined themes, which you can list using
 
 ### Changing Themes
 
-1.  Enter `/theme` into Qwen Code.
+1.  Enter `/theme` into Papert Code.
 2.  A dialog or selection prompt appears, listing the available themes.
 3.  Using the arrow keys, select a theme. Some interfaces might offer a live preview or highlight as you select.
 4.  Confirm your selection to apply the theme.
@@ -32,13 +32,13 @@ Qwen Code comes with a selection of pre-defined themes, which you can list using
 
 ### Theme Persistence
 
-Selected themes are saved in Qwen Code's [configuration](./configuration.md) so your preference is remembered across sessions.
+Selected themes are saved in Papert Code's [configuration](./configuration.md) so your preference is remembered across sessions.
 
 ---
 
 ## Custom Color Themes
 
-Qwen Code allows you to create your own custom color themes by specifying them in your `settings.json` file. This gives you full control over the color palette used in the CLI.
+Papert Code allows you to create your own custom color themes by specifying them in your `settings.json` file. This gives you full control over the color palette used in the CLI.
 
 ### How to Define a Custom Theme
 
@@ -144,7 +144,7 @@ The theme file must be a valid JSON file that follows the same structure as a cu
 
 ### Using Your Custom Theme
 
-- Select your custom theme using the `/theme` command in Qwen Code. Your custom theme will appear in the theme selection dialog.
+- Select your custom theme using the `/theme` command in Papert Code. Your custom theme will appear in the theme selection dialog.
 - Or, set it as the default by adding `"theme": "MyCustomTheme"` to the `ui` object in your `settings.json`.
 - Custom themes can be set at the user, project, or system level, and follow the same [configuration precedence](./configuration.md) as other settings.
 

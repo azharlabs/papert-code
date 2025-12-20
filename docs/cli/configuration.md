@@ -1,4 +1,4 @@
-# Qwen Code Configuration
+# Papert Code Configuration
 
 **Note on New Configuration Format**
 
@@ -6,7 +6,7 @@ The format of the `settings.json` file has been updated to a new, more organized
 
 For details on the previous format, please see the [v1 Configuration documentation](./configuration-v1.md).
 
-Qwen Code offers several ways to configure its behavior, including environment variables, command-line arguments, and settings files. This document outlines the different configuration methods and available settings.
+Papert Code offers several ways to configure its behavior, including environment variables, command-line arguments, and settings files. This document outlines the different configuration methods and available settings.
 
 ## Configuration layers
 
@@ -22,27 +22,27 @@ Configuration is applied in the following order of precedence (lower numbers are
 
 ## Settings files
 
-Qwen Code uses JSON settings files for persistent configuration. There are four locations for these files:
+Papert Code uses JSON settings files for persistent configuration. There are four locations for these files:
 
 - **System defaults file:**
-  - **Location:** `/etc/papert-code/system-defaults.json` (Linux), `C:\ProgramData\papert-code\system-defaults.json` (Windows) or `/Library/Application Support/QwenCode/system-defaults.json` (macOS). The path can be overridden using the `QWEN_CODE_SYSTEM_DEFAULTS_PATH` environment variable.
+  - **Location:** `/etc/papert-code/system-defaults.json` (Linux), `C:\ProgramData\papert-code\system-defaults.json` (Windows) or `/Library/Application Support/PapertCode/system-defaults.json` (macOS). The path can be overridden using the `PAPERT_CODE_SYSTEM_DEFAULTS_PATH` environment variable.
   - **Scope:** Provides a base layer of system-wide default settings. These settings have the lowest precedence and are intended to be overridden by user, project, or system override settings.
 - **User settings file:**
   - **Location:** `~/.papert/settings.json` (where `~` is your home directory).
-  - **Scope:** Applies to all Qwen Code sessions for the current user.
+  - **Scope:** Applies to all Papert Code sessions for the current user.
 - **Project settings file:**
   - **Location:** `.papert/settings.json` within your project's root directory.
-  - **Scope:** Applies only when running Qwen Code from that specific project. Project settings override user settings.
+  - **Scope:** Applies only when running Papert Code from that specific project. Project settings override user settings.
 
 - **System settings file:**
-  - **Location:** `/etc/papert-code/settings.json` (Linux), `C:\ProgramData\papert-code\settings.json` (Windows) or `/Library/Application Support/QwenCode/settings.json` (macOS). The path can be overridden using the `QWEN_CODE_SYSTEM_SETTINGS_PATH` environment variable.
-  - **Scope:** Applies to all Qwen Code sessions on the system, for all users. System settings override user and project settings. May be useful for system administrators at enterprises to have controls over users' Qwen Code setups.
+  - **Location:** `/etc/papert-code/settings.json` (Linux), `C:\ProgramData\papert-code\settings.json` (Windows) or `/Library/Application Support/PapertCode/settings.json` (macOS). The path can be overridden using the `PAPERT_CODE_SYSTEM_SETTINGS_PATH` environment variable.
+  - **Scope:** Applies to all Papert Code sessions on the system, for all users. System settings override user and project settings. May be useful for system administrators at enterprises to have controls over users' Papert Code setups.
 
 **Note on environment variables in settings:** String values within your `settings.json` files can reference environment variables using either `$VAR_NAME` or `${VAR_NAME}` syntax. These variables will be automatically resolved when the settings are loaded. For example, if you have an environment variable `MY_API_TOKEN`, you could use it in `settings.json` like this: `"apiKey": "$MY_API_TOKEN"`.
 
 ### The `.papert` directory in your project
 
-In addition to a project settings file, a project's `.papert` directory can contain other project-specific files related to Qwen Code's operation, such as:
+In addition to a project settings file, a project's `.papert` directory can contain other project-specific files related to Papert Code's operation, such as:
 
 - [Custom sandbox profiles](#sandboxing) (e.g., `.papert/sandbox-macos-custom.sb`, `.papert/sandbox.Dockerfile`).
 
@@ -148,7 +148,7 @@ Settings are organized into categories. All settings should be placed within the
 #### `model`
 
 - **`model.name`** (string):
-  - **Description:** The Qwen model to use for conversations.
+  - **Description:** The Papert model to use for conversations.
   - **Default:** `undefined`
 
 - **`model.maxSessionTurns`** (number):
@@ -358,12 +358,12 @@ Settings are organized into categories. All settings should be placed within the
 
 - **`advanced.tavilyApiKey`** (string):
   - **Description:** API key for Tavily web search service. Used to enable the `web_search` tool functionality.
-  - **Note:** This is a legacy configuration format. For Qwen OAuth users, DashScope provider is automatically available without any configuration. For other authentication types, configure Tavily or Google providers using the new `webSearch` configuration format.
+  - **Note:** This is a legacy configuration format. For Papert OAuth users, DashScope provider is automatically available without any configuration. For other authentication types, configure Tavily or Google providers using the new `webSearch` configuration format.
   - **Default:** `undefined`
 
 #### `mcpServers`
 
-Configures connections to one or more Model-Context Protocol (MCP) servers for discovering and using custom tools. Qwen Code attempts to connect to each configured MCP server to discover available tools. If multiple MCP servers expose a tool with the same name, the tool names will be prefixed with the server alias you defined in the configuration (e.g., `serverAlias__actualToolName`) to avoid conflicts. Note that the system might strip certain schema properties from MCP tool definitions for compatibility. At least one of `command`, `url`, or `httpUrl` must be provided. If multiple are specified, the order of precedence is `httpUrl`, then `url`, then `command`.
+Configures connections to one or more Model-Context Protocol (MCP) servers for discovering and using custom tools. Papert Code attempts to connect to each configured MCP server to discover available tools. If multiple MCP servers expose a tool with the same name, the tool names will be prefixed with the server alias you defined in the configuration (e.g., `serverAlias__actualToolName`) to avoid conflicts. Note that the system might strip certain schema properties from MCP tool definitions for compatibility. At least one of `command`, `url`, or `httpUrl` must be provided. If multiple are specified, the order of precedence is `httpUrl`, then `url`, then `command`.
 
 - **`mcpServers.<SERVER_NAME>`** (object): The server parameters for the named server.
   - `command` (string, optional): The command to execute to start the MCP server via standard I/O.
@@ -381,7 +381,7 @@ Configures connections to one or more Model-Context Protocol (MCP) servers for d
 
 #### `telemetry`
 
-Configures logging and metrics collection for Qwen Code. For more information, see [Telemetry](../telemetry.md).
+Configures logging and metrics collection for Papert Code. For more information, see [Telemetry](../telemetry.md).
 
 - **Properties:**
   - **`enabled`** (boolean): Whether or not telemetry is enabled.
@@ -437,7 +437,7 @@ Here is an example of a `settings.json` file with the nested structure, new as o
     "usageStatisticsEnabled": true
   },
   "model": {
-    "name": "qwen3-coder-plus",
+    "name": "papert3-coder-plus",
     "maxSessionTurns": 10,
     "enableOpenAILogging": false,
     "openAILoggingDir": "~/papert-logs",
@@ -490,7 +490,7 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
 - **`OPENAI_MODEL`**:
   - Specifies the default OPENAI model to use.
   - Overrides the hardcoded default
-  - Example: `export OPENAI_MODEL="qwen3-coder-plus"`
+  - Example: `export OPENAI_MODEL="papert3-coder-plus"`
 - **`GEMINI_TELEMETRY_ENABLED`**:
   - Set to `true` or `1` to enable telemetry. Any other value is treated as disabling it.
   - Overrides the `telemetry.enabled` setting.
@@ -539,7 +539,7 @@ Arguments passed directly when running the CLI can override other configurations
 
 - **`--model <model_name>`** (**`-m <model_name>`**):
   - Specifies the model to use for this session.
-  - Example: `npm start -- --model qwen3-coder-plus`
+  - Example: `npm start -- --model papert3-coder-plus`
 - **`--prompt <your_prompt>`** (**`-p <your_prompt>`**):
   - Used to pass a prompt directly to the command. This invokes Papert Code in a non-interactive mode.
   - For scripting examples, use the `--output-format json` flag to get structured output.
@@ -641,7 +641,7 @@ Arguments passed directly when running the CLI can override other configurations
 
 While not strictly configuration for the CLI's _behavior_, context files (defaulting to `papert.md` but configurable via the `context.fileName` setting) are crucial for configuring the _instructional context_ (also referred to as "memory"). This powerful feature allows you to give project-specific instructions, coding style guides, or any relevant background information to the AI, making its responses more tailored and accurate to your needs. The CLI includes UI elements, such as an indicator in the footer showing the number of loaded context files, to keep you informed about the active context.
 
-- **Purpose:** These Markdown files contain instructions, guidelines, or context that you want the Qwen model to be aware of during your interactions. The system is designed to manage this instructional context hierarchically.
+- **Purpose:** These Markdown files contain instructions, guidelines, or context that you want the Papert model to be aware of during your interactions. The system is designed to manage this instructional context hierarchically.
 
 ### Example Context File Content (e.g., `papert.md`)
 
@@ -699,7 +699,7 @@ By understanding and utilizing these configuration layers and the hierarchical n
 
 ## Sandboxing
 
-Qwen Code can execute potentially unsafe operations (like shell commands and file modifications) within a sandboxed environment to protect your system.
+Papert Code can execute potentially unsafe operations (like shell commands and file modifications) within a sandboxed environment to protect your system.
 
 Sandboxing is disabled by default, but you can enable it in a few ways:
 
@@ -728,7 +728,7 @@ BUILD_SANDBOX=1 papert -s
 
 ## Usage Statistics
 
-To help us improve Qwen Code, we collect anonymized usage statistics. This data helps us understand how the CLI is used, identify common issues, and prioritize new features.
+To help us improve Papert Code, we collect anonymized usage statistics. This data helps us understand how the CLI is used, identify common issues, and prioritize new features.
 
 **What we collect:**
 

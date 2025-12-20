@@ -1,13 +1,13 @@
 # Language Command
 
-The `/language` command allows you to customize the language settings for both the Qwen Code user interface (UI) and the language model's output. This command supports two distinct functionalities:
+The `/language` command allows you to customize the language settings for both the Papert Code user interface (UI) and the language model's output. This command supports two distinct functionalities:
 
-1. Setting the UI language for the Qwen Code interface
+1. Setting the UI language for the Papert Code interface
 2. Setting the output language for the language model (LLM)
 
 ## UI Language Settings
 
-To change the UI language of Qwen Code, use the `ui` subcommand:
+To change the UI language of Papert Code, use the `ui` subcommand:
 
 ```
 /language ui [zh-CN|en-US]
