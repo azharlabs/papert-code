@@ -43,7 +43,7 @@ export const EXTENSIONS_DIRECTORY_NAME = path.join(PAPERT_DIR, 'extensions');
 
 export const EXTENSION_CONFIG_FILENAMES = [
   'papert-extension.json', // Preferred
-  'papert-extension.json', // Legacy
+  'gemini-extension.json', // Legacy (Gemini CLI)
 ];
 export const PRIMARY_EXTENSION_CONFIG_FILENAME = EXTENSION_CONFIG_FILENAMES[0];
 // Deprecated: keep for backward compatibility with older imports/tests.
