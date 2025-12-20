@@ -749,7 +749,7 @@ describe('convertToFunctionResponse', () => {
 
   it('should handle simple string llmContent', () => {
     const llmContent = 'Simple text output';
-    const result = convertToFunctionResponse(toolName, callId, llmContent);
+    const result = convertToFunctionResponse(toolName, callId, llmContent, 'gemini-2.5-pro');
     expect(result).toEqual([
       {
         functionResponse: {
@@ -763,7 +763,7 @@ describe('convertToFunctionResponse', () => {
 
   it('should handle llmContent as a single Part with text', () => {
     const llmContent: Part = { text: 'Text from Part object' };
-    const result = convertToFunctionResponse(toolName, callId, llmContent);
+    const result = convertToFunctionResponse(toolName, callId, llmContent, 'gemini-2.5-pro');
     expect(result).toEqual([
       {
         functionResponse: {
@@ -777,7 +777,7 @@ describe('convertToFunctionResponse', () => {
 
   it('should handle llmContent as a PartListUnion array with a single text Part', () => {
     const llmContent: PartListUnion = [{ text: 'Text from array' }];
-    const result = convertToFunctionResponse(toolName, callId, llmContent);
+    const result = convertToFunctionResponse(toolName, callId, llmContent, 'gemini-2.5-pro');
     expect(result).toEqual([
       {
         functionResponse: {
@@ -793,7 +793,7 @@ describe('convertToFunctionResponse', () => {
     const llmContent: Part = {
       inlineData: { mimeType: 'image/png', data: 'base64...' },
     };
-    const result = convertToFunctionResponse(toolName, callId, llmContent);
+    const result = convertToFunctionResponse(toolName, callId, llmContent, 'gemini-2.5-pro');
     expect(result).toEqual([
       {
         functionResponse: {
@@ -812,7 +812,7 @@ describe('convertToFunctionResponse', () => {
     const llmContent: Part = {
       fileData: { mimeType: 'application/pdf', fileUri: 'gs://...' },
     };
-    const result = convertToFunctionResponse(toolName, callId, llmContent);
+    const result = convertToFunctionResponse(toolName, callId, llmContent, 'gemini-2.5-pro');
     expect(result).toEqual([
       {
         functionResponse: {
@@ -833,7 +833,7 @@ describe('convertToFunctionResponse', () => {
       { inlineData: { mimeType: 'image/jpeg', data: 'base64data...' } },
       { text: 'Another text part' },
     ];
-    const result = convertToFunctionResponse(toolName, callId, llmContent);
+    const result = convertToFunctionResponse(toolName, callId, llmContent, 'gemini-2.5-pro');
     expect(result).toEqual([
       {
         functionResponse: {
@@ -850,7 +850,7 @@ describe('convertToFunctionResponse', () => {
     const llmContent: PartListUnion = [
       { inlineData: { mimeType: 'image/gif', data: 'gifdata...' } },
     ];
-    const result = convertToFunctionResponse(toolName, callId, llmContent);
+    const result = convertToFunctionResponse(toolName, callId, llmContent, 'gemini-2.5-pro');
     expect(result).toEqual([
       {
         functionResponse: {
@@ -867,7 +867,7 @@ describe('convertToFunctionResponse', () => {
 
   it('should handle llmContent as a generic Part (not text, inlineData, or fileData)', () => {
     const llmContent: Part = { functionCall: { name: 'test', args: {} } };
-    const result = convertToFunctionResponse(toolName, callId, llmContent);
+    const result = convertToFunctionResponse(toolName, callId, llmContent, 'gemini-2.5-pro');
     expect(result).toEqual([
       {
         functionResponse: {
@@ -881,7 +881,7 @@ describe('convertToFunctionResponse', () => {
 
   it('should handle empty string llmContent', () => {
     const llmContent = '';
-    const result = convertToFunctionResponse(toolName, callId, llmContent);
+    const result = convertToFunctionResponse(toolName, callId, llmContent, 'gemini-2.5-pro');
     expect(result).toEqual([
       {
         functionResponse: {
@@ -895,7 +895,7 @@ describe('convertToFunctionResponse', () => {
 
   it('should handle llmContent as an empty array', () => {
     const llmContent: PartListUnion = [];
-    const result = convertToFunctionResponse(toolName, callId, llmContent);
+    const result = convertToFunctionResponse(toolName, callId, llmContent, 'gemini-2.5-pro');
     expect(result).toEqual([
       {
         functionResponse: {
@@ -909,7 +909,7 @@ describe('convertToFunctionResponse', () => {
 
   it('should handle llmContent as a Part with undefined inlineData/fileData/text', () => {
     const llmContent: Part = {}; // An empty part object
-    const result = convertToFunctionResponse(toolName, callId, llmContent);
+    const result = convertToFunctionResponse(toolName, callId, llmContent, 'gemini-2.5-pro');
     expect(result).toEqual([
       {
         functionResponse: {

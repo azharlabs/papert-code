@@ -91,6 +91,7 @@ export interface ToolCallRequestInfo {
   args: Record<string, unknown>;
   isClientInitiated: boolean;
   prompt_id: string;
+  traceId?: string;
   response_id?: string;
 }
 

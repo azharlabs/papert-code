@@ -13,10 +13,8 @@ import {
   afterEach,
   afterAll,
 } from 'vitest';
-import * as os from 'node:os';
 import { PapertLogger, TEST_ONLY } from './papert-logger.js';
 import type { Config } from '../../config/config.js';
-import { AuthType } from '../../core/contentGenerator.js';
 import {
   StartSessionEvent,
   EndSessionEvent,
@@ -24,7 +22,7 @@ import {
   KittySequenceOverflowEvent,
   IdeConnectionType,
 } from '../types.js';
-import type { RumEvent, RumPayload } from './event-types.js';
+import type { RumEvent } from './event-types.js';
 
 // Mock dependencies
 vi.mock('../../utils/user_id.js', () => ({
@@ -48,7 +46,6 @@ const makeFakeConfig = (overrides: Partial<Config> = {}): Config => {
     getCliVersion: () => '1.0.0',
     getProxy: () => undefined,
     getContentGeneratorConfig: () => ({ authType: 'test-auth' }),
-    getAuthType: () => AuthType.PAPERT_OAUTH,
     getMcpServers: () => ({}),
     getModel: () => 'test-model',
     getEmbeddingModel: () => 'test-embedding',
@@ -59,7 +56,6 @@ const makeFakeConfig = (overrides: Partial<Config> = {}): Config => {
     getTelemetryLogPromptsEnabled: () => false,
     getFileFilteringRespectGitIgnore: () => true,
     getOutputFormat: () => 'text',
-    getToolRegistry: () => undefined,
     ...overrides,
   };
   return defaults as Config;
@@ -106,31 +102,13 @@ describe('PapertLogger', () => {
     });
   });
 
-  describe('createRumPayload', () => {
-    it('includes os metadata in payload', async () => {
-      const logger = PapertLogger.getInstance(mockConfig)!;
-      const payload = await (
-        logger as unknown as {
-          createRumPayload(): Promise<RumPayload>;
-        }
-      ).createRumPayload();
-
-      expect(payload.os).toEqual(
-        expect.objectContaining({
-          type: os.platform(),
-          version: os.release(),
-        }),
-      );
-    });
-  });
-
   describe('event queue management', () => {
     it('should handle event overflow gracefully', () => {
       const debugConfig = makeFakeConfig({ getDebugMode: () => true });
       const logger = PapertLogger.getInstance(debugConfig)!;
       const consoleSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => { });
+        .mockImplementation(() => {});
 
       // Fill the queue beyond capacity
       for (let i = 0; i < TEST_ONLY.MAX_EVENTS + 10; i++) {
@@ -155,7 +133,7 @@ describe('PapertLogger', () => {
       const logger = PapertLogger.getInstance(debugConfig)!;
       const consoleSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => { });
+        .mockImplementation(() => {});
 
       // Mock the events deque to throw an error
       const originalPush = logger['events'].push;
@@ -186,7 +164,7 @@ describe('PapertLogger', () => {
       const logger = PapertLogger.getInstance(debugConfig)!;
       const consoleSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => { });
+        .mockImplementation(() => {});
 
       // Manually set the flush in progress flag to simulate concurrent access
       logger['isFlushInProgress'] = true;
@@ -215,7 +193,7 @@ describe('PapertLogger', () => {
       const logger = PapertLogger.getInstance(debugConfig)!;
       const consoleSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => { });
+        .mockImplementation(() => {});
 
       const failedEvents: RumEvent[] = [];
       for (let i = 0; i < TEST_ONLY.MAX_RETRY_EVENTS + 50; i++) {
@@ -242,7 +220,7 @@ describe('PapertLogger', () => {
       const logger = PapertLogger.getInstance(debugConfig)!;
       const consoleSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => { });
+        .mockImplementation(() => {});
 
       // Fill the queue to capacity first
       for (let i = 0; i < TEST_ONLY.MAX_EVENTS; i++) {
@@ -287,9 +265,9 @@ describe('PapertLogger', () => {
           event_type: 'action',
           type: 'ide',
           name: 'ide_connection',
-          properties: {
+          snapshots: JSON.stringify({
             connection_type: IdeConnectionType.SESSION,
-          },
+          }),
         }),
       );
     });
@@ -308,10 +286,8 @@ describe('PapertLogger', () => {
           type: 'overflow',
           name: 'kitty_sequence_overflow',
           subtype: 'kitty_sequence_overflow',
-          properties: {
-            sequence_length: 1024,
-          },
           snapshots: JSON.stringify({
+            sequence_length: 1024,
             truncated_sequence: 'truncated...',
           }),
         }),
@@ -390,7 +366,7 @@ describe('PapertLogger', () => {
       const logger = PapertLogger.getInstance(debugConfig)!;
       const consoleSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => { });
+        .mockImplementation(() => {});
 
       // Add an event first
       logger.enqueueLogEvent({

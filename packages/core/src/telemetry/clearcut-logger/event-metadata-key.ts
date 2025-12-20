@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Defines valid event metadata keys for Papert logging.
+// Defines valid event metadata keys for Qwen logging.
 export enum EventMetadataKey {
   // Deleted enums: 24
 

@@ -536,6 +536,7 @@ export class Session implements SessionContext {
         fc.name,
         callId,
         toolResult.llmContent,
+        this.config.getActiveModel?.() ?? this.config.getModel(),
       );
 
       // Handle TodoWriteTool: extract todos and send plan update

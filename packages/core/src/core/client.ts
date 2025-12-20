@@ -16,7 +16,6 @@ import type {
 // Config
 import { ApprovalMode, type Config } from '../config/config.js';
 import {
-  DEFAULT_GEMINI_FLASH_MODEL,
   DEFAULT_GEMINI_MODEL_AUTO,
   DEFAULT_THINKING_MODE,
 } from '../config/models.js';
@@ -634,7 +633,7 @@ export class GeminiClient {
 
       const apiCall = () => {
         const modelToUse = this.config.isInFallbackMode()
-          ? DEFAULT_GEMINI_FLASH_MODEL
+          ? this.config.getActiveModel()
           : model;
         currentAttemptModel = modelToUse;
 

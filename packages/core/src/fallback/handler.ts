@@ -6,8 +6,20 @@
 
 import type { Config } from '../config/config.js';
 import { AuthType } from '../core/contentGenerator.js';
-import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
+import { openBrowserSecurely } from '../utils/secure-browser-launcher.js';
+import { debugLogger } from '../utils/debugLogger.js';
+import { getErrorMessage } from '../utils/errors.js';
+import type { FallbackIntent, FallbackRecommendation } from './types.js';
+import { classifyFailureKind } from '../availability/errorClassification.js';
+import {
+  buildFallbackPolicyContext,
+  resolvePolicyChain,
+  resolvePolicyAction,
+  applyAvailabilityTransition,
+} from '../availability/policyHelpers.js';
 import { logFlashFallback, FlashFallbackEvent } from '../telemetry/index.js';
+
+const UPGRADE_URL_PAGE = 'https://goo.gle/set-up-gemini-code-assist';
 
 export async function handleFallback(
   config: Config,
@@ -15,52 +27,153 @@ export async function handleFallback(
   authType?: string,
   error?: unknown,
 ): Promise<string | boolean | null> {
-  // Handle different auth types
+  // Handle Papert OAuth errors separately.
   if (authType === AuthType.PAPERT_OAUTH) {
     return handlePapertOAuthError(error);
   }
 
-  // Applicability Checks
-  if (authType !== AuthType.LOGIN_WITH_GOOGLE) return null;
+  return handlePolicyDrivenFallback(config, failedModel, authType, error);
+}
 
-  const fallbackModel = DEFAULT_GEMINI_FLASH_MODEL;
+/**
+ * Fallback logic using the ModelAvailabilityService + policy chain.
+ */
+async function handlePolicyDrivenFallback(
+  config: Config,
+  failedModel: string,
+  authType?: string,
+  error?: unknown,
+): Promise<string | boolean | null> {
+  if (authType !== AuthType.LOGIN_WITH_GOOGLE) {
+    return null;
+  }
 
-  if (failedModel === fallbackModel) return null;
+  const chain = resolvePolicyChain(config);
+  const { failedPolicy, candidates } = buildFallbackPolicyContext(
+    chain,
+    failedModel,
+  );
 
-  // Consult UI Handler for Intent
-  const fallbackModelHandler = config.fallbackModelHandler;
-  if (typeof fallbackModelHandler !== 'function') return null;
+  const failureKind = classifyFailureKind(error);
+  const availability = config.getModelAvailabilityService();
+  const getAvailabilityContext = () => {
+    if (!failedPolicy) return undefined;
+    return { service: availability, policy: failedPolicy };
+  };
 
-  try {
-    // Pass the specific failed model to the UI handler.
-    const intent = await fallbackModelHandler(
-      failedModel,
-      fallbackModel,
-      error,
+  let fallbackModel: string;
+  if (!candidates.length) {
+    fallbackModel = failedModel;
+  } else {
+    const selection = availability.selectFirstAvailable(
+      candidates.map((policy) => policy.model),
     );
 
-    // Process Intent and Update State
-    switch (intent) {
-      case 'retry':
-        // Activate fallback mode. The NEXT retry attempt will pick this up.
-        activateFallbackMode(config, authType);
-        return true; // Signal retryWithBackoff to continue.
+    const lastResortPolicy = candidates.find((policy) => policy.isLastResort);
+    const selectedFallbackModel =
+      selection.selectedModel ?? lastResortPolicy?.model;
+    const selectedPolicy = candidates.find(
+      (policy) => policy.model === selectedFallbackModel,
+    );
 
-      case 'stop':
-        activateFallbackMode(config, authType);
-        return false;
-
-      case 'auth':
-        return false;
-
-      default:
-        throw new Error(
-          `Unexpected fallback intent received from fallbackModelHandler: "${intent}"`,
-        );
+    if (
+      !selectedFallbackModel ||
+      selectedFallbackModel === failedModel ||
+      !selectedPolicy
+    ) {
+      return null;
     }
-  } catch (handlerError) {
-    console.error('Fallback UI handler failed:', handlerError);
+
+    fallbackModel = selectedFallbackModel;
+
+    const action = resolvePolicyAction(failureKind, selectedPolicy);
+
+    if (action === 'silent') {
+      applyAvailabilityTransition(getAvailabilityContext, failureKind);
+      return processIntent(config, 'retry_always', fallbackModel, authType);
+    }
+
+    // This will be used when FallbackRecommendation is passed through UI
+    const recommendation: FallbackRecommendation = {
+      ...selection,
+      selectedModel: fallbackModel,
+      action,
+      failureKind,
+      failedPolicy,
+      selectedPolicy,
+    };
+    void recommendation;
+  }
+
+  const handler =
+    typeof config.getFallbackModelHandler === 'function'
+      ? config.getFallbackModelHandler()
+      : config.fallbackModelHandler;
+  if (typeof handler !== 'function') {
     return null;
+  }
+
+  try {
+    const intent = await handler(failedModel, fallbackModel, error);
+
+    if (
+      intent === 'retry_always' ||
+      intent === 'retry_once' ||
+      intent === 'retry'
+    ) {
+      applyAvailabilityTransition(getAvailabilityContext, failureKind);
+    }
+
+    return await processIntent(config, intent, fallbackModel, authType);
+  } catch (handlerError) {
+    debugLogger.error('Fallback handler failed:', handlerError);
+    return null;
+  }
+}
+
+async function handleUpgrade() {
+  try {
+    await openBrowserSecurely(UPGRADE_URL_PAGE);
+  } catch (error) {
+    debugLogger.warn(
+      'Failed to open browser automatically:',
+      getErrorMessage(error),
+    );
+  }
+}
+
+async function processIntent(
+  config: Config,
+  intent: FallbackIntent | null,
+  fallbackModel: string,
+  authType?: string,
+): Promise<boolean> {
+  switch (intent) {
+    case 'retry_always':
+    case 'retry_once':
+    case 'retry':
+      config.setActiveModel(fallbackModel);
+      if (!config.isInFallbackMode()) {
+        config.setFallbackMode(true);
+        if (authType) {
+          logFlashFallback(config, new FlashFallbackEvent(authType));
+        }
+      }
+      return true;
+
+    case 'stop':
+    case 'retry_later':
+    case 'auth':
+      return false;
+
+    case 'upgrade':
+      await handleUpgrade();
+      return false;
+
+    default:
+      throw new Error(
+        `Unexpected fallback intent received from fallbackModelHandler: "${intent}"`,
+      );
   }
 }
 
@@ -80,7 +193,6 @@ async function handlePapertOAuthError(error?: unknown): Promise<string | null> {
     (error as { status?: number; code?: number })?.status ||
     (error as { status?: number; code?: number })?.code;
 
-  // Check if this is an authentication/authorization error
   const isAuthError =
     errorCode === 401 ||
     errorCode === 403 ||
@@ -91,7 +203,6 @@ async function handlePapertOAuthError(error?: unknown): Promise<string | null> {
     errorMessage.includes('access denied') ||
     (errorMessage.includes('token') && errorMessage.includes('expired'));
 
-  // Check if this is a rate limiting error
   const isRateLimitError =
     errorCode === 429 ||
     errorMessage.includes('429') ||
@@ -100,8 +211,6 @@ async function handlePapertOAuthError(error?: unknown): Promise<string | null> {
 
   if (isAuthError) {
     console.warn('Papert OAuth authentication error detected:', errorMessage);
-    // The PapertContentGenerator should automatically handle token refresh
-    // If it still fails, it likely means the refresh token is also expired
     console.log(
       'Note: If this persists, you may need to re-authenticate with Papert OAuth',
     );
@@ -110,20 +219,8 @@ async function handlePapertOAuthError(error?: unknown): Promise<string | null> {
 
   if (isRateLimitError) {
     console.warn('Papert API rate limit encountered:', errorMessage);
-    // For rate limiting, we don't need to do anything special
-    // The retry mechanism will handle the backoff
     return null;
   }
 
-  // For other errors, don't handle them specially
   return null;
-}
-
-function activateFallbackMode(config: Config, authType: string | undefined) {
-  if (!config.isInFallbackMode()) {
-    config.setFallbackMode(true);
-    if (authType) {
-      logFlashFallback(config, new FlashFallbackEvent(authType));
-    }
-  }
 }

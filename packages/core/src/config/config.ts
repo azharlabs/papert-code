@@ -77,6 +77,7 @@ import {
   type TelemetryTarget,
   uiTelemetryService,
 } from '../telemetry/index.js';
+import { ModelAvailabilityService } from '../availability/modelAvailabilityService.js';
 
 // Utils
 import { shouldAttemptBrowserLaunch } from '../utils/browser.js';
@@ -87,7 +88,9 @@ import { getErrorMessage } from '../utils/errors.js';
 import {
   ModelConfigService,
   type ModelConfigServiceConfig,
+  type ModelConfigKey,
 } from '../services/modelConfigService.js';
+import type { UserTierId } from '../code_assist/types.js';
 
 // Local config modules
 import type { FileFilteringOptions } from './constants.js';
@@ -377,10 +380,12 @@ export class Config {
   private subagentManager!: SubagentManager;
   private fileSystemService: FileSystemService;
   private readonly modelConfigService: ModelConfigService;
+  private readonly modelAvailabilityService: ModelAvailabilityService;
   private contentGeneratorConfig!: ContentGeneratorConfig;
   private contentGenerator!: ContentGenerator;
   private _generationConfig: Partial<ContentGeneratorConfig>;
   private readonly embeddingModel: string;
+  private _activeModel?: string;
   private readonly sandbox: SandboxConfig | undefined;
   private readonly targetDir: string;
   private workspaceContext: WorkspaceContext;
@@ -485,6 +490,7 @@ export class Config {
     this.modelConfigService = new ModelConfigService(
       params.modelConfigServiceConfig ?? DEFAULT_MODEL_CONFIGS,
     );
+    this.modelAvailabilityService = new ModelAvailabilityService();
     this.sandbox = params.sandbox;
     this.targetDir = path.resolve(params.targetDir);
     this.workspaceContext = new WorkspaceContext(
@@ -560,6 +566,7 @@ export class Config {
       ...(params.generationConfig || {}),
       baseUrl: params.generationConfig?.baseUrl || DEFAULT_DASHSCOPE_BASE_URL,
     };
+    this._activeModel = params.model;
     this.contentGeneratorConfig = this
       ._generationConfig as ContentGeneratorConfig;
     this.cliVersion = params.cliVersion;
@@ -670,6 +677,7 @@ export class Config {
   }
 
   async refreshAuth(authMethod: AuthType, isInitialAuth?: boolean) {
+    this.modelAvailabilityService.reset();
     // Vertex and Genai have incompatible encryption and sending history with
     // throughtSignature from Genai to Vertex will fail, we need to strip them
     if (
@@ -698,6 +706,7 @@ export class Config {
 
     // Reset the session flag since we're explicitly changing auth and using default model
     this.inFallbackMode = false;
+    this.modelAvailabilityService.reset();
   }
 
   /**
@@ -763,8 +772,20 @@ export class Config {
     if (this.contentGeneratorConfig) {
       this.contentGeneratorConfig.model = newModel;
     }
+    if (this._activeModel !== newModel) {
+      this._activeModel = newModel;
+    }
+    this.modelAvailabilityService.reset();
     // TODO: Log _metadata for telemetry if needed
     // This _metadata can be used for tracking model switches (reason, context)
+  }
+
+  getActiveModel(): string {
+    return this._activeModel ?? this.getModel();
+  }
+
+  setActiveModel(model: string): void {
+    this._activeModel = model;
   }
 
   isInFallbackMode(): boolean {
@@ -777,6 +798,14 @@ export class Config {
 
   setFallbackModelHandler(handler: FallbackModelHandler): void {
     this.fallbackModelHandler = handler;
+  }
+
+  getFallbackModelHandler(): FallbackModelHandler | undefined {
+    return this.fallbackModelHandler;
+  }
+
+  resetTurn(): void {
+    this.modelAvailabilityService.resetTurn();
   }
 
   getMaxSessionTurns(): number {
@@ -793,6 +822,18 @@ export class Config {
 
   getQuotaErrorOccurred(): boolean {
     return this.quotaErrorOccurred;
+  }
+
+  getModelAvailabilityService(): ModelAvailabilityService {
+    return this.modelAvailabilityService;
+  }
+
+  getUserTier(): UserTierId | undefined {
+    return undefined;
+  }
+
+  getResolvedModelConfig(modelConfigKey: ModelConfigKey) {
+    return this.modelConfigService.getResolvedConfig(modelConfigKey);
   }
 
   getEmbeddingModel(): string {

@@ -346,10 +346,9 @@ export class GeminiChat {
     prompt_id: string,
   ): Promise<AsyncGenerator<GenerateContentResponse>> {
     const apiCall = () => {
-      const modelToUse = getEffectiveModel(
-        this.config.isInFallbackMode(),
-        model,
-      );
+      const modelToUse = this.config.isInFallbackMode()
+        ? this.config.getActiveModel()
+        : getEffectiveModel(this.config.isInFallbackMode(), model);
 
       if (
         this.config.getQuotaErrorOccurred() &&

@@ -14,3 +14,7 @@ export const formatMemoryUsage = (bytes: number): string => {
   }
   return `${gb.toFixed(2)} GB`;
 };
+
+export function bytesToMB(bytes: number): number {
+  return bytes / (1024 * 1024);
+}

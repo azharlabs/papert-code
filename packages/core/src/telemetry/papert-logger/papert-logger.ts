@@ -6,7 +6,6 @@
 
 import { Buffer } from 'buffer';
 import * as https from 'https';
-import * as os from 'node:os';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
 import type {
@@ -39,8 +38,8 @@ import type {
   ExtensionDisableEvent,
   AuthEvent,
   RipgrepFallbackEvent,
-  EndSessionEvent,
 } from '../types.js';
+import { EndSessionEvent } from '../types.js';
 import type {
   RumEvent,
   RumViewEvent,
@@ -48,7 +47,6 @@ import type {
   RumResourceEvent,
   RumExceptionEvent,
   RumPayload,
-  RumOS,
 } from './event-types.js';
 import type { Config } from '../../config/config.js';
 import { safeJsonStringify } from '../../utils/safeJsonStringify.js';
@@ -102,7 +100,6 @@ export class PapertLogger {
   private lastFlushTime: number = Date.now();
 
   private userId: string;
-
   private sessionId: string;
 
   /**
@@ -116,12 +113,17 @@ export class PapertLogger {
    */
   private pendingFlush: boolean = false;
 
-  private constructor(config: Config) {
+  private isShutdown: boolean = false;
+
+  private constructor(config?: Config) {
     this.config = config;
     this.events = new FixedDeque<RumEvent>(Array, MAX_EVENTS);
     this.installationManager = new InstallationManager();
     this.userId = this.generateUserId();
-    this.sessionId = config.getSessionId();
+    this.sessionId =
+      typeof this.config?.getSessionId === 'function'
+        ? this.config.getSessionId()
+        : '';
   }
 
   private generateUserId(): string {
@@ -135,6 +137,10 @@ export class PapertLogger {
       return undefined;
     if (!PapertLogger.instance) {
       PapertLogger.instance = new PapertLogger(config);
+      process.on(
+        'exit',
+        PapertLogger.instance.shutdown.bind(PapertLogger.instance),
+      );
     }
 
     return PapertLogger.instance;
@@ -210,17 +216,9 @@ export class PapertLogger {
     return this.createRumEvent('exception', type, name, properties);
   }
 
-  private getOsMetadata(): RumOS {
-    return {
-      type: os.platform(),
-      version: os.release(),
-    };
-  }
-
   async createRumPayload(): Promise<RumPayload> {
     const authType = this.config?.getAuthType();
     const version = this.config?.getCliVersion() || 'unknown';
-    const osMetadata = this.getOsMetadata();
 
     return {
       app: {
@@ -233,13 +231,12 @@ export class PapertLogger {
         id: this.userId,
       },
       session: {
-        id: this.sessionId || this.config?.getSessionId(),
+        id: this.sessionId,
       },
       view: {
-        id: this.sessionId || this.config?.getSessionId(),
+        id: this.sessionId,
         name: 'papert-code-cli',
       },
-      os: osMetadata,
 
       events: this.events.toArray() as RumEvent[],
       properties: {
@@ -251,7 +248,7 @@ export class PapertLogger {
             : '',
       },
       _v: `papert-code@${version}`,
-    } as RumPayload;
+    };
   }
 
   flushIfNeeded(): void {
@@ -356,31 +353,16 @@ export class PapertLogger {
   }
 
   // session events
-  async logStartSessionEvent(event: StartSessionEvent): Promise<void> {
-    // Flush all pending events with the old session ID first.
-    // If flush fails, discard the pending events to avoid mixing sessions.
-    await this.flushToRum().catch((error: unknown) => {
-      if (this.config?.getDebugMode()) {
-        console.debug(
-          'Error flushing pending events before session start:',
-          error,
-        );
-      }
-    });
-
-    // Clear any remaining events (discard if flush failed)
-    this.events.clear();
-
-    // Now set the new session ID
-    this.sessionId = event.session_id;
-
+  logStartSessionEvent(event: StartSessionEvent): void {
     const applicationEvent = this.createViewEvent('session', 'session_start', {
       properties: {
         model: event.model,
-        approval_mode: event.approval_mode,
+      },
+      snapshots: JSON.stringify({
         embedding_model: event.embedding_model,
         sandbox_enabled: event.sandbox_enabled,
         core_tools_enabled: event.core_tools_enabled,
+        approval_mode: event.approval_mode,
         api_key_enabled: event.api_key_enabled,
         vertex_ai_enabled: event.vertex_ai_enabled,
         debug_enabled: event.debug_enabled,
@@ -388,7 +370,7 @@ export class PapertLogger {
         telemetry_enabled: event.telemetry_enabled,
         telemetry_log_user_prompts_enabled:
           event.telemetry_log_user_prompts_enabled,
-      },
+      }),
     });
 
     // Flush start event immediately
@@ -417,10 +399,10 @@ export class PapertLogger {
       'conversation',
       'conversation_finished',
       {
-        properties: {
+        snapshots: JSON.stringify({
           approval_mode: event.approvalMode,
           turn_count: event.turnCount,
-        },
+        }),
       },
     );
 
@@ -434,8 +416,10 @@ export class PapertLogger {
       properties: {
         auth_type: event.auth_type,
         prompt_id: event.prompt_id,
-        prompt_length: event.prompt_length,
       },
+      snapshots: JSON.stringify({
+        prompt_length: event.prompt_length,
+      }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -444,10 +428,10 @@ export class PapertLogger {
 
   logSlashCommandEvent(event: SlashCommandEvent): void {
     const rumEvent = this.createActionEvent('user', 'slash_command', {
-      properties: {
+      snapshots: JSON.stringify({
         command: event.command,
         subcommand: event.subcommand,
-      },
+      }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -456,9 +440,9 @@ export class PapertLogger {
 
   logModelSlashCommandEvent(event: ModelSlashCommandEvent): void {
     const rumEvent = this.createActionEvent('user', 'model_slash_command', {
-      properties: {
-        model: event.model_name,
-      },
+      snapshots: JSON.stringify({
+        model_name: event.model_name,
+      }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -474,13 +458,15 @@ export class PapertLogger {
         properties: {
           prompt_id: event.prompt_id,
           response_id: event.response_id,
-          tool_name: event.function_name,
-          permission: event.decision,
-          success: event.success ? 1 : 0,
-          duration_ms: event.duration_ms,
-          error_type: event.error_type,
-          error_message: event.error,
         },
+        snapshots: JSON.stringify({
+          function_name: event.function_name,
+          decision: event.decision,
+          success: event.success,
+          duration_ms: event.duration_ms,
+          error: event.error,
+          error_type: event.error_type,
+        }),
       },
     );
 
@@ -493,14 +479,14 @@ export class PapertLogger {
       'tool',
       `file_operation#${event.tool_name}`,
       {
-        properties: {
+        snapshots: JSON.stringify({
           tool_name: event.tool_name,
           operation: event.operation,
           lines: event.lines,
           mimetype: event.mimetype,
           extension: event.extension,
           programming_language: event.programming_language,
-        },
+        }),
       },
     );
 
@@ -510,15 +496,11 @@ export class PapertLogger {
 
   logSubagentExecutionEvent(event: SubagentExecutionEvent): void {
     const rumEvent = this.createActionEvent('tool', 'subagent_execution', {
-      properties: {
+      snapshots: JSON.stringify({
         subagent_name: event.subagent_name,
         status: event.status,
         terminate_reason: event.terminate_reason,
-      },
-      snapshots: JSON.stringify({
-        ...(event.execution_summary
-          ? { execution_summary: event.execution_summary }
-          : {}),
+        execution_summary: event.execution_summary,
       }),
     });
 
@@ -528,10 +510,8 @@ export class PapertLogger {
 
   logToolOutputTruncatedEvent(event: ToolOutputTruncatedEvent): void {
     const rumEvent = this.createActionEvent('tool', 'tool_output_truncated', {
-      properties: {
-        tool_name: event.tool_name,
-      },
       snapshots: JSON.stringify({
+        tool_name: event.tool_name,
         original_content_length: event.original_content_length,
         truncated_content_length: event.truncated_content_length,
         threshold: event.threshold,
@@ -604,8 +584,10 @@ export class PapertLogger {
         auth_type: event.auth_type,
         model: event.model,
         prompt_id: event.prompt_id,
-        error_type: event.error_type,
       },
+      snapshots: JSON.stringify({
+        error_type: event.error_type,
+      }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -630,11 +612,11 @@ export class PapertLogger {
       {
         subtype: 'content_retry_failure',
         message: `Content retry failed after ${event.total_attempts} attempts`,
-        properties: {
-          error_type: event.final_error_type,
+        snapshots: JSON.stringify({
           total_attempts: event.total_attempts,
+          final_error_type: event.final_error_type,
           total_duration_ms: event.total_duration_ms,
-        },
+        }),
       },
     );
 
@@ -663,8 +645,10 @@ export class PapertLogger {
       subtype: 'loop_detected',
       properties: {
         prompt_id: event.prompt_id,
-        error_type: event.loop_type,
       },
+      snapshots: JSON.stringify({
+        loop_type: event.loop_type,
+      }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -677,10 +661,8 @@ export class PapertLogger {
       'kitty_sequence_overflow',
       {
         subtype: 'kitty_sequence_overflow',
-        properties: {
-          sequence_length: event.sequence_length,
-        },
         snapshots: JSON.stringify({
+          sequence_length: event.sequence_length,
           truncated_sequence: event.truncated_sequence,
         }),
       },
@@ -693,9 +675,7 @@ export class PapertLogger {
   // ide events
   logIdeConnectionEvent(event: IdeConnectionEvent): void {
     const rumEvent = this.createActionEvent('ide', 'ide_connection', {
-      properties: {
-        connection_type: event.connection_type,
-      },
+      snapshots: JSON.stringify({ connection_type: event.connection_type }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -705,12 +685,12 @@ export class PapertLogger {
   // extension events
   logExtensionInstallEvent(event: ExtensionInstallEvent): void {
     const rumEvent = this.createActionEvent('extension', 'extension_install', {
-      properties: {
+      snapshots: JSON.stringify({
         extension_name: event.extension_name,
         extension_version: event.extension_version,
         extension_source: event.extension_source,
         status: event.status,
-      },
+      }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -722,10 +702,10 @@ export class PapertLogger {
       'extension',
       'extension_uninstall',
       {
-        properties: {
+        snapshots: JSON.stringify({
           extension_name: event.extension_name,
           status: event.status,
-        },
+        }),
       },
     );
 
@@ -735,10 +715,10 @@ export class PapertLogger {
 
   logExtensionEnableEvent(event: ExtensionEnableEvent): void {
     const rumEvent = this.createActionEvent('extension', 'extension_enable', {
-      properties: {
+      snapshots: JSON.stringify({
         extension_name: event.extension_name,
         setting_scope: event.setting_scope,
-      },
+      }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -747,26 +727,10 @@ export class PapertLogger {
 
   logExtensionDisableEvent(event: ExtensionDisableEvent): void {
     const rumEvent = this.createActionEvent('extension', 'extension_disable', {
-      properties: {
+      snapshots: JSON.stringify({
         extension_name: event.extension_name,
         setting_scope: event.setting_scope,
-      },
-    });
-
-    this.enqueueLogEvent(rumEvent);
-    this.flushIfNeeded();
-  }
-
-  logAuthEvent(event: AuthEvent): void {
-    const rumEvent = this.createActionEvent('auth', 'auth', {
-      properties: {
-        auth_type: event.auth_type,
-        action_type: event.action_type,
-        success: event.status === 'success' ? 1 : 0,
-        error_type: event.status !== 'success' ? event.status : undefined,
-        error_message:
-          event.status === 'error' ? event.error_message : undefined,
-      },
+      }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -787,13 +751,11 @@ export class PapertLogger {
 
   logRipgrepFallbackEvent(event: RipgrepFallbackEvent): void {
     const rumEvent = this.createActionEvent('misc', 'ripgrep_fallback', {
-      properties: {
-        platform: process.platform,
-        arch: process.arch,
+      snapshots: JSON.stringify({
         use_ripgrep: event.use_ripgrep,
         use_builtin_ripgrep: event.use_builtin_ripgrep,
-        error_message: event.error,
-      },
+        error: event.error,
+      }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -815,9 +777,11 @@ export class PapertLogger {
     const rumEvent = this.createActionEvent('misc', 'next_speaker_check', {
       properties: {
         prompt_id: event.prompt_id,
+      },
+      snapshots: JSON.stringify({
         finish_reason: event.finish_reason,
         result: event.result,
-      },
+      }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -826,10 +790,10 @@ export class PapertLogger {
 
   logChatCompressionEvent(event: ChatCompressionEvent): void {
     const rumEvent = this.createActionEvent('misc', 'chat_compression', {
-      properties: {
+      snapshots: JSON.stringify({
         tokens_before: event.tokens_before,
         tokens_after: event.tokens_after,
-      },
+      }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -838,11 +802,27 @@ export class PapertLogger {
 
   logContentRetryEvent(event: ContentRetryEvent): void {
     const rumEvent = this.createActionEvent('misc', 'content_retry', {
-      properties: {
-        error_type: event.error_type,
+      snapshots: JSON.stringify({
         attempt_number: event.attempt_number,
+        error_type: event.error_type,
         retry_delay_ms: event.retry_delay_ms,
+      }),
+    });
+
+    this.enqueueLogEvent(rumEvent);
+    this.flushIfNeeded();
+  }
+
+  logAuthEvent(event: AuthEvent): void {
+    const rumEvent = this.createActionEvent('auth', 'auth_event', {
+      properties: {
+        auth_type: event.auth_type,
+        action_type: event.action_type,
+        status: event.status,
       },
+      snapshots: JSON.stringify({
+        error_message: event.error_message,
+      }),
     });
 
     this.enqueueLogEvent(rumEvent);
@@ -859,6 +839,14 @@ export class PapertLogger {
     } else {
       throw new Error('Unsupported proxy type');
     }
+  }
+
+  shutdown() {
+    if (this.isShutdown) return;
+
+    this.isShutdown = true;
+    const event = new EndSessionEvent(this.config);
+    this.logEndSessionEvent(event);
   }
 
   private requeueFailedEvents(eventsToSend: RumEvent[]): void {

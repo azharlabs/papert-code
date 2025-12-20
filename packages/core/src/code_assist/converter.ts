@@ -73,6 +73,7 @@ interface VertexGenerationConfig {
 
 export interface CaGenerateContentResponse {
   response: VertexGenerateContentResponse;
+  traceId?: string;
 }
 
 interface VertexGenerateContentResponse {
