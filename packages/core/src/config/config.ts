@@ -208,6 +208,14 @@ export interface GeminiCLIExtension {
   installMetadata?: ExtensionInstallMetadata;
 }
 
+export interface GeminiCLISkill {
+  name: string;
+  version: string;
+  isActive: boolean;
+  path: string;
+  installMetadata?: ExtensionInstallMetadata;
+}
+
 export interface ExtensionInstallMetadata {
   source: string;
   type: 'git' | 'local' | 'link' | 'github-release';
@@ -304,11 +312,13 @@ export interface ConfigParameters {
   bugCommand?: BugCommandSettings;
   model?: string;
   extensionContextFilePaths?: string[];
+  listSkills?: boolean;
   maxSessionTurns?: number;
   sessionTokenLimit?: number;
   experimentalZedIntegration?: boolean;
   listExtensions?: boolean;
   extensions?: GeminiCLIExtension[];
+  skills?: GeminiCLISkill[];
   blockedMcpServers?: Array<{ name: string; extensionName: string }>;
   noBrowser?: boolean;
   summarizeToolOutput?: Record<string, SummarizeToolOutputSettings>;
@@ -406,6 +416,7 @@ export class Config {
   private userMemory: string;
   private sdkMode: boolean;
   private geminiMdFileCount: number;
+  private readonly contextFileName: string | string[] | undefined;
   private approvalMode: ApprovalMode;
   private readonly showMemoryUsage: boolean;
   private readonly accessibility: AccessibilitySettings;
@@ -438,7 +449,9 @@ export class Config {
   private readonly maxSessionTurns: number;
   private readonly sessionTokenLimit: number;
   private readonly listExtensions: boolean;
+  private readonly listSkills: boolean;
   private readonly _extensions: GeminiCLIExtension[];
+  private readonly _skills: GeminiCLISkill[];
   private readonly _blockedMcpServers: Array<{
     name: string;
     extensionName: string;
@@ -517,6 +530,7 @@ export class Config {
     this.sdkMode = params.sdkMode ?? false;
     this.userMemory = params.userMemory ?? '';
     this.geminiMdFileCount = params.geminiMdFileCount ?? 0;
+    this.contextFileName = params.contextFileName;
     this.approvalMode = params.approvalMode ?? ApprovalMode.DEFAULT;
     this.showMemoryUsage = params.showMemoryUsage ?? false;
     this.accessibility = params.accessibility ?? {};
@@ -554,7 +568,9 @@ export class Config {
     this.experimentalZedIntegration =
       params.experimentalZedIntegration ?? false;
     this.listExtensions = params.listExtensions ?? false;
+    this.listSkills = params.listSkills ?? false;
     this._extensions = params.extensions ?? [];
+    this._skills = params.skills ?? [];
     this._blockedMcpServers = params.blockedMcpServers ?? [];
     this.noBrowser = params.noBrowser ?? false;
     this.summarizeToolOutput = params.summarizeToolOutput;
@@ -1158,6 +1174,10 @@ export class Config {
     return this.extensionContextFilePaths;
   }
 
+  getContextFileName(): string | string[] | undefined {
+    return this.contextFileName;
+  }
+
   getExperimentalZedIntegration(): boolean {
     return this.experimentalZedIntegration;
   }
@@ -1166,12 +1186,20 @@ export class Config {
     return this.listExtensions;
   }
 
+  getListSkills(): boolean {
+    return this.listSkills;
+  }
+
   getExtensionManagement(): boolean {
     return this.extensionManagement;
   }
 
   getExtensions(): GeminiCLIExtension[] {
     return this._extensions;
+  }
+
+  getSkills(): GeminiCLISkill[] {
+    return this._skills;
   }
 
   getBlockedMcpServers(): Array<{ name: string; extensionName: string }> {

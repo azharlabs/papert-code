@@ -353,6 +353,14 @@ export async function main() {
       process.exit(0);
     }
 
+    if (config.getListSkills()) {
+      console.log('Installed skills:');
+      for (const skill of config.getSkills()) {
+        console.log(`- ${skill.name}`);
+      }
+      process.exit(0);
+    }
+
     // Setup unified ConsolePatcher based on interactive mode
     const isInteractive = config.isInteractive();
     const consolePatcher = new ConsolePatcher({

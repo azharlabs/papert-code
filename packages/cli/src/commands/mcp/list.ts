@@ -14,7 +14,9 @@ import {
 } from '@papert-code/papert-code-core';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { ExtensionStorage, loadExtensions } from '../../config/extension.js';
+import { loadSkills, SkillStorage } from '../../config/skill.js';
 import { ExtensionEnablementManager } from '../../config/extensions/extensionEnablement.js';
+import { SkillEnablementManager } from '../../config/skills/skillEnablement.js';
 import { getDefaultMcpServers } from '../../config/defaultMcpServers.js';
 
 const COLOR_GREEN = '\u001b[32m';
@@ -28,6 +30,9 @@ async function getMcpServersFromConfig(): Promise<
   const settings = loadSettings();
   const extensions = loadExtensions(
     new ExtensionEnablementManager(ExtensionStorage.getUserExtensionsDir()),
+  );
+  const skills = loadSkills(
+    new SkillEnablementManager(SkillStorage.getUserSkillsDir()),
   );
   const mcpServers = {
     ...getDefaultMcpServers(),
@@ -45,6 +50,17 @@ async function getMcpServersFromConfig(): Promise<
         };
       },
     );
+  }
+  for (const skill of skills) {
+    Object.entries(skill.config.mcpServers || {}).forEach(([key, server]) => {
+      if (mcpServers[key]) {
+        return;
+      }
+      mcpServers[key] = {
+        ...server,
+        extensionName: skill.config.name,
+      };
+    });
   }
   return mcpServers;
 }

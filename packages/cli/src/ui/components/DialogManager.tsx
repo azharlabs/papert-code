@@ -164,6 +164,16 @@ export const DialogManager = ({
       />
     );
   }
+  if (uiState.confirmUpdateSkillRequests.length > 0) {
+    const request = uiState.confirmUpdateSkillRequests[0];
+    return (
+      <ConsentPrompt
+        prompt={request.prompt}
+        onConfirm={request.onConfirm}
+        terminalWidth={terminalWidth}
+      />
+    );
+  }
   if (uiState.isThemeDialogOpen) {
     return (
       <Box flexDirection="column">

@@ -32,10 +32,13 @@ export function createShowMemoryAction(
 
     const currentMemory = config.getUserMemory();
     const fileCount = config.getGeminiMdFileCount();
-    const contextFileName = settings.merged.context?.fileName;
-    const contextFileNames = Array.isArray(contextFileName)
-      ? contextFileName
-      : [contextFileName];
+    const contextFileName =
+      config.getContextFileName() ?? settings.merged.context?.fileName;
+    const contextFileNames = contextFileName
+      ? Array.isArray(contextFileName)
+        ? contextFileName
+        : [contextFileName]
+      : [];
 
     if (debugMode) {
       console.log(
@@ -45,7 +48,9 @@ export function createShowMemoryAction(
     }
 
     if (fileCount > 0) {
-      const allNamesTheSame = new Set(contextFileNames).size < 2;
+      const allNamesTheSame =
+        contextFileNames.length > 0 &&
+        new Set(contextFileNames).size < 2;
       const name = allNamesTheSame ? contextFileNames[0] : 'context';
       addMessage({
         type: MessageType.INFO,

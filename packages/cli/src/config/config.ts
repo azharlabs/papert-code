@@ -29,6 +29,7 @@ import {
   getVersion,
 } from '@papert-code/papert-code-core';
 import { extensionsCommand } from '../commands/extensions.js';
+import { skillsCommand } from '../commands/skills.js';
 import type { Settings } from './settings.js';
 import yargs, { type Argv } from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -39,6 +40,8 @@ import { homedir } from 'node:os';
 import { resolvePath } from '../utils/resolvePath.js';
 import type { Extension } from './extension.js';
 import { annotateActiveExtensions } from './extension.js';
+import { annotateActiveSkills, loadSkills, SkillStorage } from './skill.js';
+import type { Skill } from './skill.js';
 import { loadSandboxConfig } from './sandboxConfig.js';
 import { appEvents } from '../utils/events.js';
 import { mcpCommand } from '../commands/mcp.js';
@@ -46,6 +49,7 @@ import { getDefaultMcpServers } from './defaultMcpServers.js';
 
 import { isWorkspaceTrusted } from './trustedFolders.js';
 import type { ExtensionEnablementManager } from './extensions/extensionEnablement.js';
+import { SkillEnablementManager } from './skills/skillEnablement.js';
 import { buildWebSearchConfig } from './webSearch.js';
 
 // Simple console logger for now - replace with actual logger if available
@@ -99,6 +103,7 @@ export interface CliArgs {
   debug: boolean | undefined;
   prompt: string | undefined;
   promptInteractive: string | undefined;
+  contextFile: string | undefined;
   allFiles: boolean | undefined;
   showMemoryUsage: boolean | undefined;
   yolo: boolean | undefined;
@@ -115,6 +120,8 @@ export interface CliArgs {
   experimentalAcp: boolean | undefined;
   extensions: string[] | undefined;
   listExtensions: boolean | undefined;
+  skills: string[] | undefined;
+  listSkills: boolean | undefined;
   openaiLogging: boolean | undefined;
   openaiApiKey: string | undefined;
   openaiBaseUrl: string | undefined;
@@ -255,6 +262,12 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
           description:
             'Execute the provided prompt and continue in interactive mode',
         })
+        .option('context-file', {
+          alias: 'f',
+          type: 'string',
+          description:
+            'Override the context memory file for this session (read/write).',
+        })
         .option('sandbox', {
           alias: 's',
           type: 'boolean',
@@ -332,6 +345,18 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
           alias: 'l',
           type: 'boolean',
           description: 'List all available extensions and exit.',
+        })
+        .option('skills', {
+          type: 'array',
+          string: true,
+          description:
+            'A list of skills to use. If not provided, all skills are used.',
+          coerce: (skills: string[]) =>
+            skills.flatMap((skill) => skill.split(',').map((s) => s.trim())),
+        })
+        .option('list-skills', {
+          type: 'boolean',
+          description: 'List all available skills and exit.',
         })
         .option('include-directories', {
           type: 'array',
@@ -514,6 +539,7 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
   if (settings?.experimental?.extensionManagement ?? true) {
     yargsInstance.command(extensionsCommand);
   }
+  yargsInstance.command(skillsCommand);
 
   yargsInstance
     .version(await getVersion()) // This will enable the --version flag based on package.json
@@ -532,7 +558,9 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
   // and not return to main CLI logic
   if (
     result._.length > 0 &&
-    (result._[0] === 'mcp' || result._[0] === 'extensions')
+    (result._[0] === 'mcp' ||
+      result._[0] === 'extensions' ||
+      result._[0] === 'skills')
   ) {
     // MCP commands handle their own execution and process exit
     process.exit(0);
@@ -641,20 +669,35 @@ export async function loadCliConfig(
     (_, i) => allExtensions[i].isActive,
   );
 
+  const skillEnablementManager = new SkillEnablementManager(
+    SkillStorage.getUserSkillsDir(),
+    argv.skills,
+  );
+  const skills = loadSkills(skillEnablementManager, cwd);
+  const allSkills = annotateActiveSkills(
+    skills,
+    cwd,
+    skillEnablementManager,
+  );
+  const activeSkills = skills.filter((skill) =>
+    skillEnablementManager.isEnabled(skill.config.name, cwd),
+  );
+
   // Set the context filename in the server's memoryTool module BEFORE loading memory
   // TODO(b/343434939): This is a bit of a hack. The contextFileName should ideally be passed
   // directly to the Config constructor in core, and have core handle setGeminiMdFilename.
   // However, loadHierarchicalGeminiMemory is called *before* createServerConfig.
-  if (settings.context?.fileName) {
-    setServerGeminiMdFilename(settings.context.fileName);
+  const contextFileName = argv.contextFile ?? settings.context?.fileName;
+  if (contextFileName) {
+    setServerGeminiMdFilename(contextFileName);
   } else {
     // Reset to default if not provided in settings.
     setServerGeminiMdFilename(getCurrentGeminiMdFilename());
   }
 
-  const extensionContextFilePaths = activeExtensions.flatMap(
-    (e) => e.contextFiles,
-  );
+  const extensionContextFilePaths = activeExtensions
+    .flatMap((e) => e.contextFiles)
+    .concat(activeSkills.flatMap((skill) => skill.contextFiles));
 
   // Automatically load output-language.md if it exists
   const outputLanguageFilePath = path.join(
@@ -696,7 +739,11 @@ export async function loadCliConfig(
     fileFiltering,
   );
 
-  let mcpServers = mergeMcpServers(settings, activeExtensions);
+  let mcpServers = mergeMcpServers(
+    settings,
+    activeExtensions,
+    activeSkills,
+  );
   const question = argv.promptInteractive || argv.prompt || '';
   const inputFormat: InputFormat =
     (argv.inputFormat as InputFormat | undefined) ?? InputFormat.TEXT;
@@ -811,6 +858,7 @@ export async function loadCliConfig(
   const excludeTools = mergeExcludeTools(
     settings,
     activeExtensions,
+    activeSkills,
     extraExcludes.length > 0 ? extraExcludes : undefined,
     argv.excludeTools,
   );
@@ -902,6 +950,7 @@ export async function loadCliConfig(
     mcpServers,
     userMemory: memoryContent,
     geminiMdFileCount: fileCount,
+    contextFileName,
     approvalMode,
     showMemoryUsage:
       argv.showMemoryUsage || settings.ui?.showMemoryUsage || false,
@@ -931,6 +980,8 @@ export async function loadCliConfig(
     experimentalZedIntegration: argv.experimentalAcp || false,
     listExtensions: argv.listExtensions || false,
     extensions: allExtensions,
+    listSkills: argv.listSkills || false,
+    skills: allSkills,
     blockedMcpServers,
     noBrowser: !!process.env['NO_BROWSER'],
     authType:
@@ -1018,7 +1069,11 @@ function allowedMcpServers(
   return mcpServers;
 }
 
-function mergeMcpServers(settings: Settings, extensions: Extension[]) {
+function mergeMcpServers(
+  settings: Settings,
+  extensions: Extension[],
+  skills: Skill[],
+) {
   const mcpServers = {
     ...getDefaultMcpServers(),
     ...(settings.mcpServers || {}),
@@ -1039,12 +1094,27 @@ function mergeMcpServers(settings: Settings, extensions: Extension[]) {
       },
     );
   }
+  for (const skill of skills) {
+    Object.entries(skill.config.mcpServers || {}).forEach(([key, server]) => {
+      if (mcpServers[key]) {
+        logger.warn(
+          `Skipping skill MCP config for server with key \"${key}\" as it already exists.`,
+        );
+        return;
+      }
+      mcpServers[key] = {
+        ...server,
+        extensionName: skill.config.name,
+      };
+    });
+  }
   return mcpServers;
 }
 
 function mergeExcludeTools(
   settings: Settings,
   extensions: Extension[],
+  skills: Skill[],
   extraExcludes?: string[] | undefined,
   cliExcludeTools?: string[] | undefined,
 ): string[] {
@@ -1055,6 +1125,11 @@ function mergeExcludeTools(
   ]);
   for (const extension of extensions) {
     for (const tool of extension.config.excludeTools || []) {
+      allExcludeTools.add(tool);
+    }
+  }
+  for (const skill of skills) {
+    for (const tool of skill.config.excludeTools || []) {
       allExcludeTools.add(tool);
     }
   }

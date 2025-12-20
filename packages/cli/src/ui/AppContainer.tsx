@@ -88,6 +88,7 @@ import { useWorkspaceMigration } from './hooks/useWorkspaceMigration.js';
 import { useSessionStats } from './contexts/SessionContext.js';
 import { useGitBranchName } from './hooks/useGitBranchName.js';
 import { useExtensionUpdates } from './hooks/useExtensionUpdates.js';
+import { useSkillUpdates } from './hooks/useSkillUpdates.js';
 import { ShellFocusContext } from './contexts/ShellFocusContext.js';
 import { useQuitConfirmation } from './hooks/useQuitConfirmation.js';
 import { t } from '../i18n/index.js';
@@ -172,6 +173,15 @@ export const AppContainer = (props: AppContainerProps) => {
     historyManager.addItem,
     config.getWorkingDir(),
   );
+
+  const skills = config.getSkills();
+  const {
+    skillsUpdateState,
+    skillsUpdateStateInternal,
+    dispatchSkillStateUpdate,
+    confirmUpdateSkillRequests,
+    addConfirmUpdateSkillRequest,
+  } = useSkillUpdates(skills, historyManager.addItem, config.getWorkingDir());
 
   const [isPermissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
   const openPermissionsDialog = useCallback(
@@ -491,6 +501,8 @@ export const AppContainer = (props: AppContainerProps) => {
       toggleCorgiMode: () => setCorgiMode((prev) => !prev),
       dispatchExtensionStateUpdate,
       addConfirmUpdateExtensionRequest,
+      dispatchSkillStateUpdate,
+      addConfirmUpdateSkillRequest,
       openSubagentCreateDialog,
       openAgentsManagerDialog,
       _showQuitConfirmation: showQuitConfirmation,
@@ -507,6 +519,8 @@ export const AppContainer = (props: AppContainerProps) => {
       openPermissionsDialog,
       openApprovalModeDialog,
       addConfirmUpdateExtensionRequest,
+      dispatchSkillStateUpdate,
+      addConfirmUpdateSkillRequest,
       showQuitConfirmation,
       openSubagentCreateDialog,
       openAgentsManagerDialog,
@@ -533,6 +547,7 @@ export const AppContainer = (props: AppContainerProps) => {
     setGeminiMdFileCount,
     slashCommandActions,
     extensionsUpdateStateInternal,
+    skillsUpdateStateInternal,
     isConfigInitialized,
     logger,
   );
@@ -780,13 +795,15 @@ export const AppContainer = (props: AppContainerProps) => {
 
   // Context file names computation
   const contextFileNames = useMemo(() => {
+    const fromConfig = config.getContextFileName();
     const fromSettings = settings.merged.context?.fileName;
-    return fromSettings
-      ? Array.isArray(fromSettings)
-        ? fromSettings
-        : [fromSettings]
+    const fileName = fromConfig ?? fromSettings;
+    return fileName
+      ? Array.isArray(fileName)
+        ? fileName
+        : [fileName]
       : getAllGeminiMdFilenames();
-  }, [settings.merged.context?.fileName]);
+  }, [config, settings.merged.context?.fileName]);
   // Initial prompt handling
   const initialPrompt = useMemo(() => config.getQuestion(), [config]);
   const initialPromptSubmitted = useRef(false);
@@ -1191,6 +1208,7 @@ export const AppContainer = (props: AppContainerProps) => {
     !!shellConfirmationRequest ||
     !!confirmationRequest ||
     confirmUpdateExtensionRequests.length > 0 ||
+    confirmUpdateSkillRequests.length > 0 ||
     !!loopDetectionConfirmationRequest ||
     !!quitConfirmationRequest ||
     isThemeDialogOpen ||
@@ -1240,6 +1258,7 @@ export const AppContainer = (props: AppContainerProps) => {
       shellConfirmationRequest,
       confirmationRequest,
       confirmUpdateExtensionRequests,
+      confirmUpdateSkillRequests,
       loopDetectionConfirmationRequest,
       quitConfirmationRequest,
       geminiMdFileCount,
@@ -1295,6 +1314,7 @@ export const AppContainer = (props: AppContainerProps) => {
       ideTrustRestartReason,
       isRestarting,
       extensionsUpdateState,
+      skillsUpdateState,
       activePtyId,
       embeddedShellFocused,
       // Vision switch dialog
@@ -1332,6 +1352,7 @@ export const AppContainer = (props: AppContainerProps) => {
       shellConfirmationRequest,
       confirmationRequest,
       confirmUpdateExtensionRequests,
+      confirmUpdateSkillRequests,
       loopDetectionConfirmationRequest,
       quitConfirmationRequest,
       geminiMdFileCount,
@@ -1387,6 +1408,7 @@ export const AppContainer = (props: AppContainerProps) => {
       isRestarting,
       currentModel,
       extensionsUpdateState,
+      skillsUpdateState,
       activePtyId,
       historyManager,
       embeddedShellFocused,

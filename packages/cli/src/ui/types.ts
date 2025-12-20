@@ -190,6 +190,10 @@ export type HistoryItemExtensionsList = HistoryItemBase & {
   type: 'extensions_list';
 };
 
+export type HistoryItemSkillsList = HistoryItemBase & {
+  type: 'skills_list';
+};
+
 export interface ToolDefinition {
   name: string;
   displayName: string;
@@ -261,6 +265,7 @@ export type HistoryItemWithoutId =
   | HistoryItemSummary
   | HistoryItemCompression
   | HistoryItemExtensionsList
+  | HistoryItemSkillsList
   | HistoryItemToolsList
   | HistoryItemMcpStatus;
 
@@ -283,6 +288,7 @@ export enum MessageType {
   COMPRESSION = 'compression',
   SUMMARY = 'summary',
   EXTENSIONS_LIST = 'extensions_list',
+  SKILLS_LIST = 'skills_list',
   TOOLS_LIST = 'tools_list',
   MCP_STATUS = 'mcp_status',
 }

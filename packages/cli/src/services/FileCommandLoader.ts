@@ -73,12 +73,12 @@ export class FileCommandLoader implements ICommandLoader {
   }
 
   /**
-   * Loads all commands from user, project, and extension directories.
-   * Returns commands in order: user → project → extensions (alphabetically).
+   * Loads all commands from user, project, skill, and extension directories.
+   * Returns commands in order: user → project → skills → extensions (alphabetically).
    *
    * Order is important for conflict resolution in CommandService:
    * - User/project commands (without extensionName) use "last wins" strategy
-   * - Extension commands (with extensionName) get renamed if conflicts exist
+   * - Skill/extension commands (with extensionName) get renamed if conflicts exist
    *
    * @param signal An AbortSignal to cancel the loading process.
    * @returns A promise that resolves to an array of all loaded SlashCommands.
@@ -138,8 +138,8 @@ export class FileCommandLoader implements ICommandLoader {
 
   /**
    * Get all command directories in order for loading.
-   * User commands → Project commands → Extension commands
-   * This order ensures extension commands can detect all conflicts.
+   * User commands → Project commands → Skill commands → Extension commands
+   * This order ensures skill/extension commands can detect all conflicts.
    */
   private getCommandDirectories(): CommandDirectory[] {
     const dirs: CommandDirectory[] = [];
@@ -152,7 +152,22 @@ export class FileCommandLoader implements ICommandLoader {
     // 2. Project commands (override user commands)
     dirs.push({ path: storage.getProjectCommandsDir() });
 
-    // 3. Extension commands (processed last to detect all conflicts)
+    // 3. Skill commands (processed after user/project)
+    if (this.config) {
+      const activeSkills = this.config
+        .getSkills()
+        .filter((skill) => skill.isActive)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      const skillCommandDirs = activeSkills.map((skill) => ({
+        path: path.join(skill.path, 'commands'),
+        extensionName: skill.name,
+      }));
+
+      dirs.push(...skillCommandDirs);
+    }
+
+    // 4. Extension commands (processed last to detect all conflicts)
     if (this.config) {
       const activeExtensions = this.config
         .getExtensions()

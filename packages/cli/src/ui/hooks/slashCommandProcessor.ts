@@ -38,6 +38,10 @@ import {
   type ExtensionUpdateAction,
   type ExtensionUpdateStatus,
 } from '../state/extensions.js';
+import type {
+  SkillUpdateAction,
+  SkillUpdateStatus,
+} from '../state/skills.js';
 
 type SerializableHistoryItem = Record<string, unknown>;
 
@@ -73,6 +77,8 @@ interface SlashCommandProcessorActions {
   toggleCorgiMode: () => void;
   dispatchExtensionStateUpdate: (action: ExtensionUpdateAction) => void;
   addConfirmUpdateExtensionRequest: (request: ConfirmationRequest) => void;
+  dispatchSkillStateUpdate: (action: SkillUpdateAction) => void;
+  addConfirmUpdateSkillRequest: (request: ConfirmationRequest) => void;
   openSubagentCreateDialog: () => void;
   openAgentsManagerDialog: () => void;
   _showQuitConfirmation: () => void;
@@ -93,6 +99,7 @@ export const useSlashCommandProcessor = (
   setGeminiMdFileCount: (count: number) => void,
   actions: SlashCommandProcessorActions,
   extensionsUpdateState: Map<string, ExtensionUpdateStatus>,
+  skillsUpdateState: Map<string, SkillUpdateStatus>,
   isConfigInitialized: boolean,
   logger: Logger | null,
 ) => {
@@ -226,6 +233,9 @@ export const useSlashCommandProcessor = (
         dispatchExtensionStateUpdate: actions.dispatchExtensionStateUpdate,
         addConfirmUpdateExtensionRequest:
           actions.addConfirmUpdateExtensionRequest,
+        skillsUpdateState,
+        dispatchSkillStateUpdate: actions.dispatchSkillStateUpdate,
+        addConfirmUpdateSkillRequest: actions.addConfirmUpdateSkillRequest,
       },
       session: {
         stats: sessionStats,
@@ -252,6 +262,7 @@ export const useSlashCommandProcessor = (
       setGeminiMdFileCount,
       reloadCommands,
       extensionsUpdateState,
+      skillsUpdateState,
     ],
   );
 

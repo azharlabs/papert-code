@@ -19,6 +19,10 @@ import type {
   ExtensionUpdateAction,
   ExtensionUpdateStatus,
 } from '../state/extensions.js';
+import type {
+  SkillUpdateAction,
+  SkillUpdateStatus,
+} from '../state/skills.js';
 
 // Grouped dependencies for clarity and easier mocking
 export interface CommandContext {
@@ -72,6 +76,9 @@ export interface CommandContext {
     extensionsUpdateState: Map<string, ExtensionUpdateStatus>;
     dispatchExtensionStateUpdate: (action: ExtensionUpdateAction) => void;
     addConfirmUpdateExtensionRequest: (value: ConfirmationRequest) => void;
+    skillsUpdateState: Map<string, SkillUpdateStatus>;
+    dispatchSkillStateUpdate: (action: SkillUpdateAction) => void;
+    addConfirmUpdateSkillRequest: (value: ConfirmationRequest) => void;
   };
   // Session-specific data
   session: {

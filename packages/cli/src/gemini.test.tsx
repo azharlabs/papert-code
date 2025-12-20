@@ -430,6 +430,7 @@ describe('gemini.tsx main function kitty protocol', () => {
       getSandbox: () => false,
       getDebugMode: () => false,
       getListExtensions: () => false,
+      getListSkills: () => false,
       getMcpServers: () => ({}),
       initialize: vi.fn(),
       getIdeMode: () => false,
@@ -493,6 +494,9 @@ describe('gemini.tsx main function kitty protocol', () => {
       excludeTools: undefined,
       authType: undefined,
       maxSessionTurns: undefined,
+      contextFile: undefined,
+      skills: undefined,
+      listSkills: undefined,
     });
 
     await main();

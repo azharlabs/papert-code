@@ -30,6 +30,7 @@ import type {
 import type { DOMElement } from 'ink';
 import type { SessionStatsState } from './SessionContext.js';
 import type { ExtensionUpdateState } from '../state/extensions.js';
+import type { SkillUpdateState } from '../state/skills.js';
 import type { UpdateObject } from '../utils/updateCheck.js';
 
 export interface ProQuotaDialogRequest {
@@ -68,6 +69,7 @@ export interface UIState {
   shellConfirmationRequest: ShellConfirmationRequest | null;
   confirmationRequest: ConfirmationRequest | null;
   confirmUpdateExtensionRequests: ConfirmationRequest[];
+  confirmUpdateSkillRequests: ConfirmationRequest[];
   loopDetectionConfirmationRequest: LoopDetectionConfirmationRequest | null;
   quitConfirmationRequest: QuitConfirmationRequest | null;
   geminiMdFileCount: number;
@@ -124,6 +126,7 @@ export interface UIState {
   ideTrustRestartReason: RestartReason;
   isRestarting: boolean;
   extensionsUpdateState: Map<string, ExtensionUpdateState>;
+  skillsUpdateState: Map<string, SkillUpdateState>;
   activePtyId: number | undefined;
   embeddedShellFocused: boolean;
   // Vision switch dialog

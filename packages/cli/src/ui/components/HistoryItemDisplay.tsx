@@ -27,6 +27,7 @@ import { SessionSummaryDisplay } from './SessionSummaryDisplay.js';
 import { Help } from './Help.js';
 import type { SlashCommand } from '../commands/types.js';
 import { ExtensionsList } from './views/ExtensionsList.js';
+import { SkillsList } from './views/SkillsList.js';
 import { getMCPServerStatus } from '@papert-code/papert-code-core';
 import { ToolsList } from './views/ToolsList.js';
 import { McpStatus } from './views/McpStatus.js';
@@ -127,6 +128,7 @@ const HistoryItemDisplayComponent: React.FC<HistoryItemDisplayProps> = ({
       )}
       {item.type === 'summary' && <SummaryMessage summary={item.summary} />}
       {itemForDisplay.type === 'extensions_list' && <ExtensionsList />}
+      {itemForDisplay.type === 'skills_list' && <SkillsList />}
       {itemForDisplay.type === 'tools_list' && (
         <ToolsList
           terminalWidth={terminalWidth}

@@ -6,6 +6,7 @@
 
 import type { CommandContext } from '../commands/types.js';
 import type { ExtensionUpdateAction } from '../state/extensions.js';
+import type { SkillUpdateAction } from '../state/skills.js';
 
 /**
  * Creates a UI context object with no-op functions.
@@ -27,5 +28,8 @@ export function createNonInteractiveUI(): CommandContext['ui'] {
     extensionsUpdateState: new Map(),
     dispatchExtensionStateUpdate: (_action: ExtensionUpdateAction) => {},
     addConfirmUpdateExtensionRequest: (_request) => {},
+    skillsUpdateState: new Map(),
+    dispatchSkillStateUpdate: (_action: SkillUpdateAction) => {},
+    addConfirmUpdateSkillRequest: (_request) => {},
   };
 }

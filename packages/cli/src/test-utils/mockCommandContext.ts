@@ -59,7 +59,11 @@ export const createMockCommandContext = (
       toggleCorgiMode: vi.fn(),
       toggleVimEnabled: vi.fn(),
       extensionsUpdateState: new Map(),
-      setExtensionsUpdateState: vi.fn(),
+      dispatchExtensionStateUpdate: vi.fn(),
+      addConfirmUpdateExtensionRequest: vi.fn(),
+      skillsUpdateState: new Map(),
+      dispatchSkillStateUpdate: vi.fn(),
+      addConfirmUpdateSkillRequest: vi.fn(),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,
     session: {

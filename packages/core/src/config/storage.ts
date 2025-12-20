@@ -51,6 +51,10 @@ export class Storage {
     return path.join(Storage.getGlobalPapertDir(), 'commands');
   }
 
+  static getUserSkillsDir(): string {
+    return path.join(Storage.getGlobalPapertDir(), 'skills');
+  }
+
   static getGlobalMemoryFilePath(): string {
     return path.join(Storage.getGlobalPapertDir(), 'memory.md');
   }
