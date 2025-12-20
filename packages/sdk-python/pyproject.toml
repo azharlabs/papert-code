@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "papert-code-sdk"
+version = "0.1.0"
+description = "Python SDK for programmatic access to papert-code CLI"
+readme = "README.md"
+authors = [
+  { name = "Papert Team", email = "hello@papert.ai" },
+]
+license = { text = "Apache-2.0" }
+requires-python = ">=3.8"
+dependencies = [
+  "pydantic>=2.0.0",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/azharlabs/papert-code"
+Repository = "https://github.com/azharlabs/papert-code"
+Issues = "https://github.com/azharlabs/papert-code/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/papert_code_sdk"]
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
