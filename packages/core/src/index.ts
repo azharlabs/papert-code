@@ -61,6 +61,11 @@ export * from './utils/subagentGenerator.js';
 export * from './utils/projectSummary.js';
 export * from './utils/promptIdContext.js';
 export * from './utils/thoughtUtils.js';
+export * from './utils/debugLogger.js';
+export {
+  isCommandAllowed as isShellCommandAllowed,
+  isShellInvocationAllowlisted,
+} from './utils/shell-permissions.js';
 
 // Export services
 export * from './services/fileDiscoveryService.js';
@@ -93,6 +98,39 @@ export * from './subagents/index.js';
 
 // Export prompt logic
 export * from './prompts/mcp-prompts.js';
+
+// Agents and policy
+export * from './agents/types.js';
+export * from './agents/executor.js';
+export * from './agents/invocation.js';
+export * from './agents/registry.js';
+export * from './agents/local-executor.js';
+export * from './agents/local-invocation.js';
+export * from './agents/remote-invocation.js';
+export * from './agents/toml-loader.js';
+export * from './agents/codebase-investigator.js';
+export * from './agents/delegate-to-agent-tool.js';
+export * from './agents/introspection-agent.js';
+export * from './agents/subagent-tool-wrapper.js';
+export {
+  PolicyDecision,
+  ApprovalMode as PolicyApprovalMode,
+  type PolicyRule,
+  type PolicyEngineConfig,
+  type PolicySettings,
+  DEFAULT_POLICY_TIER,
+  USER_POLICY_TIER,
+  ADMIN_POLICY_TIER,
+} from './policy/index.js';
+export { PolicyEngine } from './policy/policy-engine.js';
+export {
+  createPolicyEngineConfig,
+  DEFAULT_CORE_POLICIES_DIR,
+  USER_POLICIES_DIR,
+  SYSTEM_POLICIES_DIR,
+  getPolicyDirectories,
+  getPolicyTier,
+} from './policy/config.js';
 
 // Export specific tool logic
 export * from './tools/read-file.js';

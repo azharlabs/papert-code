@@ -1,0 +1,3 @@
+rule = [
+  { toolName = "run_shell_command", decision = "ask_user", priority = 10 },
+]
