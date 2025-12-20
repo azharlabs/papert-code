@@ -5,21 +5,22 @@
  */
 
 import type React from 'react';
-import { useCallback, useContext, useMemo } from 'react';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import { Box, Text } from 'ink';
 import {
-  AuthType,
   ModelSlashCommandEvent,
   logModelSlashCommand,
+  DEFAULT_PAPERT_MODEL,
+  DEFAULT_GEMINI_MODEL,
+  DEFAULT_GEMINI_FLASH_MODEL,
+  DEFAULT_GEMINI_MODEL_AUTO,
+  DEFAULT_GEMINI_FLASH_LITE_MODEL,
+  getDisplayString,
 } from '@papert-code/papert-code-core';
 import { useKeypress } from '../hooks/useKeypress.js';
 import { theme } from '../semantic-colors.js';
 import { DescriptiveRadioButtonSelect } from './shared/DescriptiveRadioButtonSelect.js';
 import { ConfigContext } from '../contexts/ConfigContext.js';
-import {
-  getAvailableModelsForAuthType,
-  MAINLINE_CODER,
-} from '../models/availableModels.js';
 import { t } from '../../i18n/index.js';
 
 interface ModelDialogProps {
@@ -28,48 +29,109 @@ interface ModelDialogProps {
 
 export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
   const config = useContext(ConfigContext);
+  const [view, setView] = useState<'main' | 'manual'>('main');
 
-  // Get auth type from config, default to PAPERT_OAUTH if not available
-  const authType = config?.getAuthType() ?? AuthType.PAPERT_OAUTH;
+  const preferredModel = config?.getModel() || DEFAULT_GEMINI_MODEL_AUTO;
+  const shouldShowPreviewModels =
+    config?.getPreviewFeatures() && config.getHasAccessToPreviewModel();
 
-  // Get available models based on auth type
-  const availableModels = useMemo(
-    () => getAvailableModelsForAuthType(authType),
-    [authType],
-  );
-
-  const MODEL_OPTIONS = useMemo(
-    () =>
-      availableModels.map((model) => ({
-        value: model.id,
-        title: model.label,
-        description: model.description || '',
-        key: model.id,
-      })),
-    [availableModels],
-  );
-
-  // Determine the Preferred Model (read once when the dialog opens).
-  const preferredModel = config?.getModel() || MAINLINE_CODER;
+  const manualModelSelected = useMemo(() => {
+    const manualModels = [
+      DEFAULT_PAPERT_MODEL,
+      DEFAULT_GEMINI_MODEL,
+      DEFAULT_GEMINI_FLASH_MODEL,
+      DEFAULT_GEMINI_FLASH_LITE_MODEL,
+    ];
+    if (manualModels.includes(preferredModel)) {
+      return preferredModel;
+    }
+    return '';
+  }, [preferredModel]);
 
   useKeypress(
     (key) => {
       if (key.name === 'escape') {
-        onClose();
+        if (view === 'manual') {
+          setView('main');
+        } else {
+          onClose();
+        }
       }
     },
     { isActive: true },
   );
 
-  // Calculate the initial index based on the preferred model.
-  const initialIndex = useMemo(
-    () => MODEL_OPTIONS.findIndex((option) => option.value === preferredModel),
-    [MODEL_OPTIONS, preferredModel],
+  const mainOptions = useMemo(() => {
+    const list = [
+      {
+        value: DEFAULT_GEMINI_MODEL_AUTO,
+        title: getDisplayString(DEFAULT_GEMINI_MODEL_AUTO),
+        description: t(
+          'Let Papert Code decide the best model for the task (Gemini Pro/Flash)',
+        ),
+        key: DEFAULT_GEMINI_MODEL_AUTO,
+      },
+      {
+        value: 'Manual',
+        title: manualModelSelected
+          ? `${t('Manual')} (${manualModelSelected})`
+          : t('Manual'),
+        description: t('Manually select a model'),
+        key: 'Manual',
+      },
+    ];
+    return list;
+  }, [manualModelSelected, t]);
+
+  const manualOptions = useMemo(
+    () => [
+      {
+        value: DEFAULT_GEMINI_MODEL,
+        title: DEFAULT_GEMINI_MODEL,
+        key: DEFAULT_GEMINI_MODEL,
+      },
+      {
+        value: DEFAULT_GEMINI_FLASH_MODEL,
+        title: DEFAULT_GEMINI_FLASH_MODEL,
+        key: DEFAULT_GEMINI_FLASH_MODEL,
+      },
+      {
+        value: DEFAULT_GEMINI_FLASH_LITE_MODEL,
+        title: DEFAULT_GEMINI_FLASH_LITE_MODEL,
+        key: DEFAULT_GEMINI_FLASH_LITE_MODEL,
+      },
+      {
+        value: DEFAULT_PAPERT_MODEL,
+        title: DEFAULT_PAPERT_MODEL,
+        key: DEFAULT_PAPERT_MODEL,
+      },
+    ],
+    [],
   );
+
+  const options = view === 'main' ? mainOptions : manualOptions;
+
+  // Calculate the initial index based on the preferred model.
+  const initialIndex = useMemo(() => {
+    const idx = options.findIndex((option) => option.value === preferredModel);
+    if (idx !== -1) {
+      return idx;
+    }
+    if (view === 'main') {
+      const manualIdx = options.findIndex((o) => o.value === 'Manual');
+      return manualIdx !== -1 ? manualIdx : 0;
+    }
+    return 0;
+  }, [preferredModel, options, view]);
 
   // Handle selection internally (Autonomous Dialog).
   const handleSelect = useCallback(
     (model: string) => {
+      if (model === 'Manual') {
+        setView('manual');
+        return;
+      }
+
       if (config) {
         config.setModel(model);
         const event = new ModelSlashCommandEvent(model);
@@ -89,13 +151,19 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
       width="100%"
     >
       <Text bold>{t('Select Model')}</Text>
+
       <Box marginTop={1}>
         <DescriptiveRadioButtonSelect
-          items={MODEL_OPTIONS}
+          items={options}
           onSelect={handleSelect}
           initialIndex={initialIndex}
           showNumbers={true}
         />
+      </Box>
+      <Box marginTop={1} flexDirection="column">
+        <Text color={theme.text.secondary}>
+          {t('To use a specific model on startup, use the --model flag.')}
+        </Text>
       </Box>
       <Box marginTop={1} flexDirection="column">
         <Text color={theme.text.secondary}>{t('(Press Esc to close)')}</Text>

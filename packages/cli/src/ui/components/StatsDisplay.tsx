@@ -17,6 +17,8 @@ import {
   TOOL_SUCCESS_RATE_MEDIUM,
   USER_AGREEMENT_RATE_HIGH,
   USER_AGREEMENT_RATE_MEDIUM,
+  CACHE_EFFICIENCY_HIGH,
+  CACHE_EFFICIENCY_MEDIUM,
 } from '../utils/displayUtils.js';
 import { computeSessionStats } from '../utils/computeStats.js';
 import { t } from '../../i18n/index.js';
@@ -184,6 +186,10 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
     computed.agreementRate,
     agreementThresholds,
   );
+  const cacheColor = getStatusColor(computed.cacheEfficiency, {
+    green: CACHE_EFFICIENCY_HIGH,
+    yellow: CACHE_EFFICIENCY_MEDIUM,
+  });
 
   const renderTitle = () => {
     if (title) {
@@ -289,6 +295,14 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           totalCachedTokens={computed.totalCachedTokens}
           cacheEfficiency={computed.cacheEfficiency}
         />
+      )}
+
+      {computed.cacheEfficiency > 0 && (
+        <Box marginTop={1} flexDirection="column">
+          <Text color={cacheColor}>
+            {t('Cache Efficiency:')} {computed.cacheEfficiency.toFixed(1)}%
+          </Text>
+        </Box>
       )}
     </Box>
   );

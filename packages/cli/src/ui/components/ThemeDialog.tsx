@@ -31,6 +31,42 @@ interface ThemeDialogProps {
   terminalWidth: number;
 }
 
+import {
+  getThemeTypeFromBackgroundColor,
+  resolveColor,
+} from '../themes/color-utils.js';
+
+function generateThemeItem(
+  name: string,
+  typeDisplay: string,
+  themeType: string,
+  themeBackground: string | undefined,
+  terminalBackgroundColor: string | undefined,
+  terminalThemeType: 'light' | 'dark' | undefined,
+) {
+  const isCompatible =
+    themeType === 'custom' ||
+    terminalThemeType === undefined ||
+    themeType === 'ansi' ||
+    themeType === terminalThemeType;
+
+  const isBackgroundMatch =
+    terminalBackgroundColor &&
+    themeBackground &&
+    terminalBackgroundColor.toLowerCase() === themeBackground.toLowerCase();
+
+  return {
+    label: name,
+    value: name,
+    themeNameDisplay: name,
+    themeTypeDisplay: typeDisplay,
+    themeWarning: isCompatible ? '' : ' (Incompatible)',
+    themeMatch: isBackgroundMatch ? ' (Matches terminal)' : '',
+    key: name,
+    isCompatible,
+  };
+}
+
 export function ThemeDialog({
   onSelect,
   onHighlight,
@@ -57,23 +93,44 @@ export function ThemeDialog({
     .filter((theme) => theme.type !== 'custom');
   const customThemeNames = Object.keys(customThemes);
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-  // Generate theme items
+  const terminalThemeType = getThemeTypeFromBackgroundColor(
+    settings.merged.ui?.terminalBackgroundColor,
+  );
   const themeItems = [
-    ...builtInThemes.map((theme) => ({
-      label: theme.name,
-      value: theme.name,
-      themeNameDisplay: theme.name,
-      themeTypeDisplay: capitalize(theme.type),
-      key: theme.name,
-    })),
-    ...customThemeNames.map((name) => ({
-      label: name,
-      value: name,
-      themeNameDisplay: name,
-      themeTypeDisplay: 'Custom',
-      key: name,
-    })),
-  ];
+    ...builtInThemes.map((theme) => {
+      const fullTheme = themeManager.getTheme(theme.name);
+      const themeBackground = fullTheme
+        ? resolveColor(fullTheme.colors.Background)
+        : undefined;
+
+      return generateThemeItem(
+        theme.name,
+        capitalize(theme.type),
+        theme.type,
+        themeBackground,
+        settings.merged.ui?.terminalBackgroundColor,
+        terminalThemeType,
+      );
+    }),
+    ...customThemeNames.map((name) => {
+      const themeConfig = customThemes[name];
+      const bg = themeConfig.background?.primary ?? themeConfig.Background;
+      const themeBackground = bg ? resolveColor(bg) : undefined;
+
+      return generateThemeItem(
+        name,
+        'Custom',
+        'custom',
+        themeBackground,
+        settings.merged.ui?.terminalBackgroundColor,
+        terminalThemeType,
+      );
+    }),
+  ].sort((a, b) => {
+    if (a.isCompatible && !b.isCompatible) return -1;
+    if (!a.isCompatible && b.isCompatible) return 1;
+    return a.label.localeCompare(b.label);
+  });
 
   // Find the index of the selected theme, but only if it exists in the list
   const initialThemeIndex = themeItems.findIndex(
