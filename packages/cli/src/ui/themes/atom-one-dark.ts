@@ -44,13 +44,13 @@ export const AtomOneDark: Theme = new Theme(
       fontStyle: 'italic',
     },
     'hljs-doctag': {
-      color: atomOneDarkColors.AccentPurple,
+      color: atomOneDarkColors.AccentGreen,
     },
     'hljs-keyword': {
-      color: atomOneDarkColors.AccentPurple,
+      color: atomOneDarkColors.AccentGreen,
     },
     'hljs-formula': {
-      color: atomOneDarkColors.AccentPurple,
+      color: atomOneDarkColors.AccentGreen,
     },
     'hljs-section': {
       color: atomOneDarkColors.AccentRed,

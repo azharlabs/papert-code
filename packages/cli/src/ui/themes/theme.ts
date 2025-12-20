@@ -160,7 +160,7 @@ export class Theme {
         primary: this.colors.Foreground,
         secondary: this.colors.Gray,
         link: this.colors.AccentBlue,
-        accent: this.colors.AccentPurple,
+        accent: this.colors.AccentGreen,
       },
       background: {
         primary: this.colors.Background,
@@ -355,10 +355,10 @@ export function createCustomTheme(customTheme: CustomTheme): Theme {
       color: colors.Gray,
     },
     'hljs-variable': {
-      color: colors.AccentPurple,
+      color: colors.AccentGreen,
     },
     'hljs-template-variable': {
-      color: colors.AccentPurple,
+      color: colors.AccentGreen,
     },
     'hljs-attr': {
       color: colors.LightBlue,
@@ -413,7 +413,7 @@ export function createCustomTheme(customTheme: CustomTheme): Theme {
       primary: customTheme.text?.primary ?? colors.Foreground,
       secondary: customTheme.text?.secondary ?? colors.Gray,
       link: customTheme.text?.link ?? colors.AccentBlue,
-      accent: customTheme.text?.accent ?? colors.AccentPurple,
+      accent: customTheme.text?.accent ?? colors.AccentGreen,
     },
     background: {
       primary: customTheme.background?.primary ?? colors.Background,

@@ -93,10 +93,10 @@ export const DefaultDark: Theme = new Theme(
       color: darkTheme.Gray,
     },
     'hljs-variable': {
-      color: darkTheme.AccentPurple,
+      color: darkTheme.AccentGreen,
     },
     'hljs-template-variable': {
-      color: darkTheme.AccentPurple,
+      color: darkTheme.AccentGreen,
     },
     'hljs-attr': {
       color: darkTheme.LightBlue,
