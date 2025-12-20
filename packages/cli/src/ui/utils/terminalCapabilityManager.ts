@@ -4,12 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as fs from 'node:fs';
-import {
-  debugLogger,
-  enableKittyKeyboardProtocol,
-  disableKittyKeyboardProtocol,
-} from '@papert-code/papert-code-core';
+// Minimal detector; Kitty enable/disable are no-ops in this build.
 
 export type TerminalBackgroundColor = string | undefined;
 
@@ -92,11 +87,7 @@ export class TerminalCapabilityManager {
         this.detectionComplete = true;
 
         // Auto-enable kitty if supported
-        if (this.kittySupported) {
-          this.enableKittyProtocol();
-          process.on('exit', () => this.disableKittyProtocol());
-          process.on('SIGTERM', () => this.disableKittyProtocol());
-        }
+        // No-op (Kitty enable not wired in this build)
 
         resolve();
       };
@@ -204,14 +195,12 @@ export class TerminalCapabilityManager {
 
   enableKittyProtocol(): void {
     if (this.kittySupported && !this.kittyEnabled) {
-      enableKittyKeyboardProtocol();
       this.kittyEnabled = true;
     }
   }
 
   disableKittyProtocol(): void {
     if (this.kittyEnabled) {
-      disableKittyKeyboardProtocol();
       this.kittyEnabled = false;
     }
   }
@@ -226,7 +215,6 @@ export class TerminalCapabilityManager {
       const unsupportedTerminals = ['Windows Terminal', 'Alacritty', 'WezTerm'];
       const termProgram = process.env['TERM_PROGRAM'];
       if (termProgram && unsupportedTerminals.includes(termProgram)) {
-        debugLogger.debug('Skipping OSC 11 query on unsupported terminal');
         return false;
       }
     }
@@ -249,7 +237,6 @@ export class TerminalCapabilityManager {
         .toString(16)
         .padStart(2, '0')}${bVal.toString(16).padStart(2, '0')}`;
     } catch (error) {
-      debugLogger.warn('Failed to parse OSC 11 color:', error);
       return undefined;
     }
   }

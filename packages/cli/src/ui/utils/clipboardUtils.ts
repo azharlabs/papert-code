@@ -6,12 +6,7 @@
 
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import {
-  debugLogger,
-  execCommand,
-  escapePath,
-  unescapePath,
-} from '@papert-code/papert-code-core';
+import { execCommand, escapePath, unescapePath } from '@papert-code/papert-code-core';
 
 /**
  * Supported image file extensions.
@@ -42,7 +37,7 @@ export async function clipboardHasImage(): Promise<boolean> {
       ]);
       return stdout.trim() === 'True';
     } catch (error) {
-      debugLogger.warn('Error checking clipboard for image:', error);
+      console.warn('Error checking clipboard for image:', error);
       return false;
     }
   }
@@ -58,7 +53,7 @@ export async function clipboardHasImage(): Promise<boolean> {
       /«class PNGf»|TIFF picture|JPEG picture|GIF picture|«class JPEG»|«class TIFF»/;
     return imageRegex.test(stdout);
   } catch (error) {
-    debugLogger.warn('Error checking clipboard for image:', error);
+    console.warn('Error checking clipboard for image:', error);
     return false;
   }
 }
@@ -156,7 +151,7 @@ export async function saveClipboardImage(
             return tempFilePath;
           }
         } catch (e) {
-          debugLogger.debug('Clipboard image file not found:', tempFilePath, e);
+          // best-effort, ignore
         }
       }
 
@@ -164,14 +159,14 @@ export async function saveClipboardImage(
       try {
         await fs.unlink(tempFilePath);
       } catch (e) {
-        debugLogger.debug('Failed to clean up temp file:', tempFilePath, e);
+        // ignore cleanup errors
       }
     }
 
     // No format worked
     return null;
   } catch (error) {
-    debugLogger.warn('Error saving clipboard image:', error);
+    console.warn('Error saving clipboard image:', error);
     return null;
   }
 }
@@ -202,7 +197,7 @@ export async function cleanupOldClipboardImages(
     }
   } catch (e) {
     // Ignore errors in cleanup
-    debugLogger.debug('Failed to clean up old clipboard images:', e);
+    console.debug('Failed to clean up old clipboard images:', e);
   }
 }
 

@@ -31,10 +31,7 @@ interface ThemeDialogProps {
   terminalWidth: number;
 }
 
-import {
-  getThemeTypeFromBackgroundColor,
-  resolveColor,
-} from '../themes/color-utils.js';
+import { getThemeTypeFromBackgroundColor, resolveColor } from '../themes/color-utils.js';
 
 function generateThemeItem(
   name: string,
@@ -93,9 +90,7 @@ export function ThemeDialog({
     .filter((theme) => theme.type !== 'custom');
   const customThemeNames = Object.keys(customThemes);
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-  const terminalThemeType = getThemeTypeFromBackgroundColor(
-    settings.merged.ui?.terminalBackgroundColor,
-  );
+  const terminalThemeType = getThemeTypeFromBackgroundColor(undefined);
   const themeItems = [
     ...builtInThemes.map((theme) => {
       const fullTheme = themeManager.getTheme(theme.name);
@@ -108,7 +103,7 @@ export function ThemeDialog({
         capitalize(theme.type),
         theme.type,
         themeBackground,
-        settings.merged.ui?.terminalBackgroundColor,
+        undefined,
         terminalThemeType,
       );
     }),
@@ -122,7 +117,7 @@ export function ThemeDialog({
         'Custom',
         'custom',
         themeBackground,
-        settings.merged.ui?.terminalBackgroundColor,
+        undefined,
         terminalThemeType,
       );
     }),

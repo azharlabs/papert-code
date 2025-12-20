@@ -15,7 +15,6 @@ import {
   DEFAULT_GEMINI_FLASH_MODEL,
   DEFAULT_GEMINI_MODEL_AUTO,
   DEFAULT_GEMINI_FLASH_LITE_MODEL,
-  getDisplayString,
 } from '@papert-code/papert-code-core';
 import { useKeypress } from '../hooks/useKeypress.js';
 import { theme } from '../semantic-colors.js';
@@ -32,9 +31,6 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
   const [view, setView] = useState<'main' | 'manual'>('main');
 
   const preferredModel = config?.getModel() || DEFAULT_GEMINI_MODEL_AUTO;
-  const shouldShowPreviewModels =
-    config?.getPreviewFeatures() && config.getHasAccessToPreviewModel();
-
   const manualModelSelected = useMemo(() => {
     const manualModels = [
       DEFAULT_PAPERT_MODEL,
@@ -65,7 +61,7 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
     const list = [
       {
         value: DEFAULT_GEMINI_MODEL_AUTO,
-        title: getDisplayString(DEFAULT_GEMINI_MODEL_AUTO),
+        title: t('Auto (Gemini)'),
         description: t(
           'Let Papert Code decide the best model for the task (Gemini Pro/Flash)',
         ),
@@ -88,21 +84,25 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
       {
         value: DEFAULT_GEMINI_MODEL,
         title: DEFAULT_GEMINI_MODEL,
+        description: t('Gemini Pro'),
         key: DEFAULT_GEMINI_MODEL,
       },
       {
         value: DEFAULT_GEMINI_FLASH_MODEL,
         title: DEFAULT_GEMINI_FLASH_MODEL,
+        description: t('Gemini Flash'),
         key: DEFAULT_GEMINI_FLASH_MODEL,
       },
       {
         value: DEFAULT_GEMINI_FLASH_LITE_MODEL,
         title: DEFAULT_GEMINI_FLASH_LITE_MODEL,
+        description: t('Gemini Flash Lite'),
         key: DEFAULT_GEMINI_FLASH_LITE_MODEL,
       },
       {
         value: DEFAULT_PAPERT_MODEL,
         title: DEFAULT_PAPERT_MODEL,
+        description: t('Papert default model'),
         key: DEFAULT_PAPERT_MODEL,
       },
     ],
