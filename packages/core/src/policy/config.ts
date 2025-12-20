@@ -68,13 +68,13 @@ export function getPolicyTier(
   return DEFAULT_POLICY_TIER;
 }
 
-export async function createPolicyEngineConfig(
+export function createPolicyEngineConfig(
   settings: PolicySettings,
   approvalMode: ApprovalMode,
   defaultPoliciesDir?: string,
-): Promise<PolicyEngineConfig> {
+): PolicyEngineConfig {
   const policyDirs = getPolicyDirectories(defaultPoliciesDir);
-  const { rules: tomlRules } = await loadPoliciesFromToml(
+  const { rules: tomlRules } = loadPoliciesFromToml(
     approvalMode,
     policyDirs,
     (dir) => getPolicyTier(dir, defaultPoliciesDir),

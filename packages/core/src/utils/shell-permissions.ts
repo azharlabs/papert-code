@@ -5,17 +5,39 @@
  */
 
 /**
- * Minimal shell permission helpers to mirror the upstream API surface.
- * Current implementation is permissive; callers can extend with stricter
- * checks as policy support matures.
+ * Shell permission helpers backed by the policy engine.
  */
 
+import { PolicyDecision, ApprovalMode } from '../policy/types.js';
+import { PolicyEngine } from '../policy/policy-engine.js';
+import { createPolicyEngineConfig } from '../policy/config.js';
+
+let cachedEngine: PolicyEngine | null = null;
+
+function getEngine(): PolicyEngine {
+  if (cachedEngine) return cachedEngine;
+  const config = createPolicyEngineConfig(
+    {},
+    // Default approval mode
+    ApprovalMode.DEFAULT,
+  );
+  cachedEngine = new PolicyEngine(config);
+  return cachedEngine;
+}
+
 /**
- * Returns true if the provided shell invocation is allowlisted.
- * Placeholder implementation always allows the command.
+ * Returns true if the provided shell invocation is allowed by policy.
  */
-export function isShellInvocationAllowlisted(_command: string): boolean {
-  return true;
+export function isShellInvocationAllowlisted(command: string): boolean {
+  const engine = getEngine();
+  const decision = engine.check(
+    {
+      name: 'run_shell_command',
+      args: { command },
+    },
+    undefined,
+  );
+  return decision === PolicyDecision.ALLOW;
 }
 
 /**
