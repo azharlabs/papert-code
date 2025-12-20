@@ -48,6 +48,8 @@ export default {
   'Type your message or @path/to/file': 'Type your message or @path/to/file',
   "Press 'i' for INSERT mode and 'Esc' for NORMAL mode.":
     "Press 'i' for INSERT mode and 'Esc' for NORMAL mode.",
+  'Tell me what to do: edit your code, code review, or add a new feature...':
+    'Tell me what to do: edit your code, code review, or add a new feature...',
   'Cancel operation / Clear input (double press)':
     'Cancel operation / Clear input (double press)',
   'Cycle approval modes': 'Cycle approval modes',

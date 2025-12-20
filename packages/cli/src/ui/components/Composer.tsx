@@ -53,7 +53,7 @@ export const Composer = () => {
         <LoadingIndicator
           thought={
             uiState.streamingState === StreamingState.WaitingForConfirmation ||
-            config.getAccessibility()?.disableLoadingPhrases
+              config.getAccessibility()?.disableLoadingPhrases
               ? undefined
               : uiState.thought
           }
@@ -154,7 +154,7 @@ export const Composer = () => {
           isEmbeddedShellFocused={uiState.embeddedShellFocused}
           placeholder={
             vimEnabled
-              ? '  ' + t("Press 'i' for INSERT mode and 'Esc' for NORMAL mode.")
+              ? '  ' + t('Tell me what to do: edit your code, code review, or add a new feature...')
               : '  ' + t('Type your message or @path/to/file')
           }
         />
