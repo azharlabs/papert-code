@@ -5,6 +5,7 @@
  */
 
 import type React from 'react';
+import clipboardy from 'clipboardy';
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { Box, Text } from 'ink';
 import { SuggestionsDisplay, MAX_WIDTH } from './SuggestionsDisplay.js';
@@ -36,6 +37,16 @@ import {
 import * as path from 'node:path';
 import { SCREEN_READER_USER_PREFIX } from '../textConstants.js';
 import { useShellFocusState } from '../contexts/ShellFocusContext.js';
+import { useKittyKeyboardProtocol } from '../hooks/useKittyKeyboardProtocol.js';
+
+/**
+ * Returns if the terminal can be trusted to handle paste events atomically.
+ */
+export function isTerminalPasteTrusted(
+  kittyProtocolSupported: boolean,
+): boolean {
+  return kittyProtocolSupported;
+}
 export interface InputPromptProps {
   buffer: TextBuffer;
   onSubmit: (value: string) => void;
@@ -52,6 +63,7 @@ export interface InputPromptProps {
   setShellModeActive: (value: boolean) => void;
   approvalMode: ApprovalMode;
   onEscapePromptChange?: (showPrompt: boolean) => void;
+  onSuggestionsVisibilityChange?: (visible: boolean) => void;
   vimHandleInput?: (key: Key) => boolean;
   isEmbeddedShellFocused?: boolean;
 }
@@ -96,15 +108,19 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
   setShellModeActive,
   approvalMode,
   onEscapePromptChange,
+  onSuggestionsVisibilityChange,
   vimHandleInput,
   isEmbeddedShellFocused,
 }) => {
+  const kittyProtocol = useKittyKeyboardProtocol();
   const isShellFocused = useShellFocusState();
   const [justNavigatedHistory, setJustNavigatedHistory] = useState(false);
   const [escPressCount, setEscPressCount] = useState(0);
   const [showEscapePrompt, setShowEscapePrompt] = useState(false);
   const escapeTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [recentPasteTime, setRecentPasteTime] = useState<number | null>(null);
+  const [recentUnsafePasteTime, setRecentUnsafePasteTime] = useState<
+    number | null
+  >(null);
   const pasteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [dirs, setDirs] = useState<readonly string[]>(
@@ -244,8 +260,8 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
     resetCommandSearchCompletionState,
   ]);
 
-  // Handle clipboard image pasting with Ctrl+V
-  const handleClipboardImage = useCallback(async () => {
+  // Handle clipboard image/text pasting with Ctrl+V
+  const handleClipboardPaste = useCallback(async () => {
     try {
       if (await clipboardHasImage()) {
         const imagePath = await saveClipboardImage(config.getTargetDir());
@@ -261,14 +277,11 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
           // Insert @path reference at cursor position
           const insertText = `@${relativePath}`;
           const currentText = buffer.text;
-          const [row, col] = buffer.cursor;
-
-          // Calculate offset from row/col
-          let offset = 0;
-          for (let i = 0; i < row; i++) {
-            offset += buffer.lines[i].length + 1; // +1 for newline
-          }
-          offset += col;
+          const offset = logicalPosToOffset(
+            buffer.lines,
+            buffer.cursor[0],
+            buffer.cursor[1],
+          );
 
           // Add spaces around the path if needed
           let textToInsert = insertText;
@@ -285,8 +298,17 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
 
           // Insert at cursor position
           buffer.replaceRangeByOffset(offset, offset, textToInsert);
+          return;
         }
       }
+
+      const textToInsert = await clipboardy.read();
+      const offset = logicalPosToOffset(
+        buffer.lines,
+        buffer.cursor[0],
+        buffer.cursor[1],
+      );
+      buffer.replaceRangeByOffset(offset, offset, textToInsert);
     } catch (error) {
       console.error('Error handling clipboard image:', error);
     }
@@ -303,19 +325,18 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       }
 
       if (key.paste) {
-        // Record paste time to prevent accidental auto-submission
-        setRecentPasteTime(Date.now());
+        const trustedPaste = isTerminalPasteTrusted(kittyProtocol.enabled);
+        if (!trustedPaste) {
+          setRecentUnsafePasteTime(Date.now());
 
-        // Clear any existing paste timeout
-        if (pasteTimeoutRef.current) {
-          clearTimeout(pasteTimeoutRef.current);
+          if (pasteTimeoutRef.current) {
+            clearTimeout(pasteTimeoutRef.current);
+          }
+          pasteTimeoutRef.current = setTimeout(() => {
+            setRecentUnsafePasteTime(null);
+            pasteTimeoutRef.current = null;
+          }, 500);
         }
-
-        // Clear the paste protection after a safe delay
-        pasteTimeoutRef.current = setTimeout(() => {
-          setRecentPasteTime(null);
-          pasteTimeoutRef.current = null;
-        }, 500);
 
         // Ensure we never accidentally interpret paste as regular input.
         buffer.handleInput(key);
@@ -575,8 +596,9 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       if (keyMatchers[Command.SUBMIT](key)) {
         if (buffer.text.trim()) {
           // Check if a paste operation occurred recently to prevent accidental auto-submission
-          if (recentPasteTime !== null) {
-            // Paste occurred recently, ignore this submit to prevent auto-execution
+          if (recentUnsafePasteTime !== null) {
+            // Paste occurred recently in an untrusted terminal; treat as newline
+            buffer.newline();
             return;
           }
 
@@ -638,9 +660,11 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
         return;
       }
 
-      // Ctrl+V for clipboard image paste
+      // Ctrl+V for clipboard image/text paste
       if (keyMatchers[Command.PASTE_CLIPBOARD_IMAGE](key)) {
-        handleClipboardImage();
+        handleClipboardPaste().catch((error) => {
+          console.error('Failed to handle clipboard paste:', error);
+        });
         return;
       }
 
@@ -658,7 +682,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       handleSubmitAndClear,
       shellHistory,
       reverseSearchCompletion,
-      handleClipboardImage,
+      handleClipboardPaste,
       resetCompletionState,
       escPressCount,
       showEscapePrompt,
@@ -667,9 +691,10 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       reverseSearchActive,
       textBeforeReverseSearch,
       cursorPosition,
-      recentPasteTime,
+      recentUnsafePasteTime,
       commandSearchActive,
       commandSearchCompletion,
+      kittyProtocol.enabled,
     ],
   );
 
@@ -688,6 +713,9 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
 
   const activeCompletion = getActiveCompletion();
   const shouldShowSuggestions = activeCompletion.showSuggestions;
+  useEffect(() => {
+    onSuggestionsVisibilityChange?.(shouldShowSuggestions);
+  }, [onSuggestionsVisibilityChange, shouldShowSuggestions]);
 
   const showAutoAcceptStyling =
     !shellModeActive && approvalMode === ApprovalMode.AUTO_EDIT;

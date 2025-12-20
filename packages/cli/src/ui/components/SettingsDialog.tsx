@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Text } from 'ink';
+import { AsyncFzf } from 'fzf';
 import { theme } from '../semantic-colors.js';
 import type { LoadedSettings, Settings } from '../../config/settings.js';
 import { SettingScope } from '../../config/settings.js';
@@ -36,6 +37,7 @@ import {
   type SettingsValue,
   TOGGLE_TYPES,
 } from '../../config/settingsSchema.js';
+import { TextInput } from './shared/TextInput.js';
 
 interface SettingsDialogProps {
   settings: LoadedSettings;
@@ -47,6 +49,14 @@ interface SettingsDialogProps {
 
 const maxItemsToShow = 8;
 
+interface FzfResult {
+  item: string;
+  start: number;
+  end: number;
+  score: number;
+  positions?: number[];
+}
+
 export function SettingsDialog({
   settings,
   onSelect,
@@ -57,10 +67,14 @@ export function SettingsDialog({
   // Get vim mode context to sync vim mode changes
   const { vimEnabled, toggleVimEnabled } = useVimMode();
 
-  // Focus state: 'settings' or 'scope'
-  const [focusSection, setFocusSection] = useState<'settings' | 'scope'>(
-    'settings',
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredKeys, setFilteredKeys] = useState<string[]>(
+    getDialogSettingKeys(),
   );
+  // Focus state: 'search', 'settings' or 'scope'
+  const [focusSection, setFocusSection] = useState<
+    'search' | 'settings' | 'scope'
+  >('settings');
   // Scope selector state (User by default)
   const [selectedScope, setSelectedScope] = useState<SettingScope>(
     SettingScope.User,
@@ -118,8 +132,58 @@ export function SettingsDialog({
     setShowRestartPrompt(newRestartRequired.size > 0);
   }, [selectedScope, settings, globalPendingChanges]);
 
+  const { fzfInstance, searchMap } = useMemo(() => {
+    const keys = getDialogSettingKeys();
+    const map = new Map<string, string>();
+    const searchItems: string[] = [];
+
+    keys.forEach((key) => {
+      const def = getSettingDefinition(key);
+      const label = def?.label || key;
+      searchItems.push(label);
+      map.set(label.toLowerCase(), key);
+    });
+
+    const fzf = new AsyncFzf(searchItems, {
+      fuzzy: 'v2',
+      casing: 'case-insensitive',
+    });
+    return { fzfInstance: fzf, searchMap: map };
+  }, []);
+
+  // Perform search
+  useEffect(() => {
+    let active = true;
+    if (!searchQuery.trim() || !fzfInstance) {
+      setFilteredKeys(getDialogSettingKeys());
+      return;
+    }
+
+    const doSearch = async () => {
+      const results = await fzfInstance.find(searchQuery);
+
+      if (!active) return;
+
+      const matchedKeys = new Set<string>();
+      results.forEach((res: FzfResult) => {
+        const key = searchMap.get(res.item.toLowerCase());
+        if (key) matchedKeys.add(key);
+      });
+      setFilteredKeys(Array.from(matchedKeys));
+      setActiveSettingIndex(0); // Reset cursor
+      setScrollOffset(0);
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    doSearch();
+
+    return () => {
+      active = false;
+    };
+  }, [searchQuery, fzfInstance, searchMap]);
+
   const generateSettingsItems = () => {
-    const settingKeys = getDialogSettingKeys();
+    const settingKeys = searchQuery ? filteredKeys : getDialogSettingKeys();
 
     return settingKeys.map((key: string) => {
       const definition = getSettingDefinition(key);
@@ -471,11 +535,40 @@ export function SettingsDialog({
   const showScrollUp = items.length > effectiveMaxItemsToShow;
   const showScrollDown = items.length > effectiveMaxItemsToShow;
 
+  useEffect(() => {
+    setActiveSettingIndex(0);
+    setScrollOffset(0);
+  }, [filteredKeys]);
+
+
   useKeypress(
     (key) => {
       const { name, ctrl } = key;
-      if (name === 'tab' && showScopeSelection) {
-        setFocusSection((prev) => (prev === 'settings' ? 'scope' : 'settings'));
+      if (name === 'tab') {
+        if (showScopeSelection) {
+          setFocusSection((prev) =>
+            prev === 'settings'
+              ? 'scope'
+              : prev === 'scope'
+              ? 'search'
+              : 'settings',
+          );
+        } else {
+          setFocusSection((prev) =>
+            prev === 'settings' ? 'search' : 'settings',
+          );
+        }
+      }
+      if (name === '/' && !editingKey) {
+        setFocusSection('search');
+        return;
+      }
+      if (focusSection === 'search') {
+        if (name === 'escape') {
+          setSearchQuery('');
+          setFocusSection('settings');
+        }
+        return;
       }
       if (focusSection === 'settings') {
         // If editing, capture input and control keys
@@ -785,6 +878,20 @@ export function SettingsDialog({
           {focusSection === 'settings' ? '> ' : '  '}
           {t('Settings')}
         </Text>
+        <Box marginTop={1} marginBottom={1}>
+          <Box flexDirection="row" alignItems="center">
+            <Text color={theme.text.secondary}>{t('Search')}:</Text>
+            <Box marginLeft={1} width={40}>
+              <TextInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder={t('Search settings')}
+                isActive={focusSection === 'search'}
+                inputWidth={40}
+              />
+            </Box>
+          </Box>
+        </Box>
         <Box height={1} />
         {showScrollUp && <Text color={theme.text.secondary}>▲</Text>}
         {visibleItems.map((item, idx) => {
@@ -920,7 +1027,7 @@ export function SettingsDialog({
 
         <Box height={1} />
         <Text color={theme.text.secondary}>
-          {t('(Use Enter to select{{tabText}})', {
+          {t('(Use Enter to select, / to search{{tabText}})', {
             tabText: showScopeSelection ? t(', Tab to change focus') : '',
           })}
         </Text>
