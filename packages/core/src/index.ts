@@ -6,6 +6,7 @@
 
 // Export config
 export * from './config/config.js';
+export * from './config/defaultModelConfigs.js';
 export * from './config/models.js';
 export * from './output/types.js';
 export * from './output/json-formatter.js';
@@ -76,6 +77,15 @@ export * from './services/sessionSummaryService.js';
 export * from './services/sessionSummaryUtils.js';
 export * from './services/sessionService.js';
 export * from './services/fileSystemService.js';
+export {
+  ModelConfigService,
+  type ModelConfigKey as ModelConfigServiceKey,
+  type ModelConfigAlias as ModelConfigAliasConfig,
+  type ModelConfigOverride as ModelConfigOverrideConfig,
+  type ModelConfigServiceConfig,
+  type ResolvedModelConfig,
+} from './services/modelConfigService.js';
+export * from './services/modelConfigServiceTestUtils.js';
 
 // Export IDE specific logic
 export * from './ide/ide-client.js';
@@ -92,6 +102,8 @@ export * from './services/shellExecutionService.js';
 export * from './tools/tools.js';
 export * from './tools/tool-error.js';
 export * from './tools/tool-registry.js';
+export * from './tools/tool-names.js';
+export * from './tools/get-internal-docs.js';
 
 // Export subagents (Phase 1)
 export * from './subagents/index.js';
@@ -131,6 +143,7 @@ export {
   getPolicyDirectories,
   getPolicyTier,
 } from './policy/config.js';
+export * from './resources/resource-registry.js';
 
 // Export specific tool logic
 export * from './tools/read-file.js';

@@ -84,6 +84,10 @@ import { FileExclusions } from '../utils/ignorePatterns.js';
 import { WorkspaceContext } from '../utils/workspaceContext.js';
 import { isToolEnabled, type ToolName } from '../utils/tool-utils.js';
 import { getErrorMessage } from '../utils/errors.js';
+import {
+  ModelConfigService,
+  type ModelConfigServiceConfig,
+} from '../services/modelConfigService.js';
 
 // Local config modules
 import type { FileFilteringOptions } from './constants.js';
@@ -91,6 +95,7 @@ import {
   DEFAULT_FILE_FILTERING_OPTIONS,
   DEFAULT_MEMORY_FILE_FILTERING_OPTIONS,
 } from './constants.js';
+import { DEFAULT_MODEL_CONFIGS } from './defaultModelConfigs.js';
 import { DEFAULT_PAPERT_EMBEDDING_MODEL, DEFAULT_PAPERT_MODEL } from './models.js';
 import { Storage } from './storage.js';
 import { DEFAULT_DASHSCOPE_BASE_URL } from '../core/openaiContentGenerator/constants.js';
@@ -342,6 +347,7 @@ export interface ConfigParameters {
   skipStartupContext?: boolean;
   sdkMode?: boolean;
   sessionSubagents?: SubagentConfig[];
+  modelConfigServiceConfig?: ModelConfigServiceConfig;
 }
 
 function normalizeConfigOutputFormat(
@@ -370,6 +376,7 @@ export class Config {
   private promptRegistry!: PromptRegistry;
   private subagentManager!: SubagentManager;
   private fileSystemService: FileSystemService;
+  private readonly modelConfigService: ModelConfigService;
   private contentGeneratorConfig!: ContentGeneratorConfig;
   private contentGenerator!: ContentGenerator;
   private _generationConfig: Partial<ContentGeneratorConfig>;
@@ -475,6 +482,9 @@ export class Config {
     this.sessionData = params.sessionData;
     this.embeddingModel = params.embeddingModel ?? DEFAULT_PAPERT_EMBEDDING_MODEL;
     this.fileSystemService = new StandardFileSystemService();
+    this.modelConfigService = new ModelConfigService(
+      params.modelConfigServiceConfig ?? DEFAULT_MODEL_CONFIGS,
+    );
     this.sandbox = params.sandbox;
     this.targetDir = path.resolve(params.targetDir);
     this.workspaceContext = new WorkspaceContext(
@@ -1205,6 +1215,10 @@ export class Config {
    */
   setFileSystemService(fileSystemService: FileSystemService): void {
     this.fileSystemService = fileSystemService;
+  }
+
+  getModelConfigService(): ModelConfigService {
+    return this.modelConfigService;
   }
 
   getChatCompression(): ChatCompressionSettings | undefined {
