@@ -47,3 +47,5 @@ junit.xml
 packages/*/coverage/
 .gemini/
 gha-creds-*.json
+
+.agents/

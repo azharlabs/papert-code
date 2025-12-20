@@ -63,6 +63,13 @@ if (!fs.existsSync(sourceDir)) {
 
 copyFilesRecursive(sourceDir, targetDir, sourceDir);
 
+// Copy bundled skills with all files (scripts/assets/etc.).
+const skillsSource = path.join(sourceDir, 'skills');
+const skillsTarget = path.join(targetDir, 'skills');
+if (fs.existsSync(skillsSource)) {
+  fs.cpSync(skillsSource, skillsTarget, { recursive: true });
+}
+
 // Copy example extensions into the bundle.
 const packageName = path.basename(process.cwd());
 if (packageName === 'cli') {

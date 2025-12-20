@@ -40,7 +40,12 @@ import { homedir } from 'node:os';
 import { resolvePath } from '../utils/resolvePath.js';
 import type { Extension } from './extension.js';
 import { annotateActiveExtensions } from './extension.js';
-import { annotateActiveSkills, loadSkills, SkillStorage } from './skill.js';
+import {
+  annotateActiveSkills,
+  ensureBundledSkillsInstalled,
+  loadSkills,
+  SkillStorage,
+} from './skill.js';
 import type { Skill } from './skill.js';
 import { loadSandboxConfig } from './sandboxConfig.js';
 import { appEvents } from '../utils/events.js';
@@ -668,6 +673,8 @@ export async function loadCliConfig(
   const activeExtensions = extensions.filter(
     (_, i) => allExtensions[i].isActive,
   );
+
+  ensureBundledSkillsInstalled();
 
   const skillEnablementManager = new SkillEnablementManager(
     SkillStorage.getUserSkillsDir(),

@@ -13,6 +13,7 @@ import { PAPERT_DIR, Storage } from '@papert-code/papert-code-core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { loadSettings, SettingScope } from './settings.js';
 import { getErrorMessage } from '../utils/errors.js';
 import {
@@ -33,6 +34,7 @@ export const SKILLS_DIRECTORY_NAME = path.join(PAPERT_DIR, 'skills');
 export const WORKSPACE_SKILLS_DIRECTORY_NAME = path.join('.agents', 'skills');
 export const SKILL_FILENAME = 'SKILL.md';
 export const SKILL_INSTALL_METADATA_FILENAME = '.papert-skill-install.json';
+const DEFAULT_SKILLS_DIR = path.join('skills');
 
 export interface Skill {
   path: string;
@@ -81,6 +83,40 @@ export class SkillStorage {
   }
 }
 
+function getBundledSkillsDir(): string | null {
+  try {
+    const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+    return path.join(moduleDir, '..', DEFAULT_SKILLS_DIR);
+  } catch {
+    return null;
+  }
+}
+
+export function ensureBundledSkillsInstalled(): void {
+  const bundledSkillsDir = getBundledSkillsDir();
+  if (!bundledSkillsDir || !fs.existsSync(bundledSkillsDir)) {
+    return;
+  }
+
+  const skillsDir = SkillStorage.getUserSkillsDir();
+  fs.mkdirSync(skillsDir, { recursive: true });
+
+  for (const entry of fs.readdirSync(bundledSkillsDir)) {
+    const bundledSkillDir = path.join(bundledSkillsDir, entry);
+    if (!fs.statSync(bundledSkillDir).isDirectory()) {
+      continue;
+    }
+    if (!fs.existsSync(path.join(bundledSkillDir, SKILL_FILENAME))) {
+      continue;
+    }
+    const destinationPath = path.join(skillsDir, entry);
+    if (fs.existsSync(destinationPath)) {
+      continue;
+    }
+    fs.cpSync(bundledSkillDir, destinationPath, { recursive: true });
+  }
+}
+
 export function getWorkspaceSkills(workspaceDir: string): Skill[] {
   if (path.resolve(workspaceDir) === path.resolve(os.homedir())) {
     return [];
@@ -121,6 +157,7 @@ export function loadSkills(
 }
 
 export function loadUserSkills(): Skill[] {
+  ensureBundledSkillsInstalled();
   const skills = loadSkillsFromDir(SkillStorage.getUserSkillsDir());
 
   const uniqueSkills = new Map<string, Skill>();
