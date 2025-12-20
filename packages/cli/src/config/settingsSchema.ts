@@ -45,8 +45,26 @@ export const TOGGLE_TYPES: ReadonlySet<SettingsType | undefined> = new Set([
 ]);
 
 export interface SettingEnumOption {
-  value: string | number;
+  value: string | number | boolean;
   label: string;
+}
+
+export interface SettingCollectionDefinition {
+  type: SettingsType;
+  description?: string;
+  properties?: SettingsSchema;
+  /** Enum type options  */
+  options?: readonly SettingEnumOption[];
+  /**
+   * Optional reference identifier for generators that emit a `$ref`.
+   * For example, a JSON schema generator can use this to point to a shared definition.
+   */
+  ref?: string;
+  /**
+   * Optional merge strategy for dynamically added properties.
+   * Used when this collection definition is referenced via additionalProperties.
+   */
+  mergeStrategy?: MergeStrategy;
 }
 
 export enum MergeStrategy {
@@ -75,6 +93,18 @@ export interface SettingDefinition {
   mergeStrategy?: MergeStrategy;
   /** Enum type options  */
   options?: readonly SettingEnumOption[];
+  /** Array item schema */
+  items?: SettingCollectionDefinition;
+  /**
+   * Optional reference identifier for generators that emit a `$ref`.
+   * For example, a JSON schema generator can use this to point to a shared definition.
+   */
+  ref?: string;
+  /**
+   * Optional merge strategy for dynamically added properties.
+   * Used when this definition is referenced via additionalProperties.
+   */
+  additionalProperties?: SettingCollectionDefinition;
 }
 
 export interface SettingsSchema {
@@ -1212,6 +1242,273 @@ const SETTINGS_SCHEMA = {
 } as const satisfies SettingsSchema;
 
 export type SettingsSchemaType = typeof SETTINGS_SCHEMA;
+
+export type SettingsJsonSchemaDefinition = Record<string, unknown>;
+
+export const SETTINGS_SCHEMA_DEFINITIONS: Record<
+  string,
+  SettingsJsonSchemaDefinition
+> = {
+  MCPServerConfig: {
+    type: 'object',
+    description:
+      'Definition of a Model Context Protocol (MCP) server configuration.',
+    additionalProperties: false,
+    properties: {
+      command: {
+        type: 'string',
+        description: 'Executable invoked for stdio transport.',
+      },
+      args: {
+        type: 'array',
+        description: 'Command-line arguments for the stdio transport command.',
+        items: { type: 'string' },
+      },
+      env: {
+        type: 'object',
+        description: 'Environment variables to set for the server process.',
+        additionalProperties: { type: 'string' },
+      },
+      cwd: {
+        type: 'string',
+        description: 'Working directory for the server process.',
+      },
+      url: {
+        type: 'string',
+        description: 'SSE transport URL.',
+      },
+      httpUrl: {
+        type: 'string',
+        description: 'Streaming HTTP transport URL.',
+      },
+      headers: {
+        type: 'object',
+        description: 'Additional HTTP headers sent to the server.',
+        additionalProperties: { type: 'string' },
+      },
+      tcp: {
+        type: 'string',
+        description: 'TCP address for websocket transport.',
+      },
+      timeout: {
+        type: 'number',
+        description: 'Timeout in milliseconds for MCP requests.',
+      },
+      trust: {
+        type: 'boolean',
+        description:
+          'Marks the server as trusted. Trusted servers may gain additional capabilities.',
+      },
+      description: {
+        type: 'string',
+        description: 'Human-readable description of the server.',
+      },
+      includeTools: {
+        type: 'array',
+        description:
+          'Subset of tools that should be enabled for this server. When omitted all tools are enabled.',
+        items: { type: 'string' },
+      },
+      excludeTools: {
+        type: 'array',
+        description:
+          'Tools that should be disabled for this server even if exposed.',
+        items: { type: 'string' },
+      },
+      extension: {
+        type: 'object',
+        description:
+          'Metadata describing the Papert Code extension that owns this MCP server.',
+        additionalProperties: { type: ['string', 'boolean', 'number'] },
+      },
+      oauth: {
+        type: 'object',
+        description: 'OAuth configuration for authenticating with the server.',
+        additionalProperties: true,
+      },
+      authProviderType: {
+        type: 'string',
+        description:
+          'Authentication provider used for acquiring credentials (for example `dynamic_discovery`).',
+        enum: [
+          'dynamic_discovery',
+          'google_credentials',
+          'service_account_impersonation',
+        ],
+      },
+      targetAudience: {
+        type: 'string',
+        description:
+          'OAuth target audience (CLIENT_ID.apps.googleusercontent.com).',
+      },
+      targetServiceAccount: {
+        type: 'string',
+        description:
+          'Service account email to impersonate (name@project.iam.gserviceaccount.com).',
+      },
+    },
+  },
+  TelemetrySettings: {
+    type: 'object',
+    description: 'Telemetry configuration for Papert Code.',
+    additionalProperties: false,
+    properties: {
+      enabled: {
+        type: 'boolean',
+        description:
+          'Enable telemetry. When true (default), usage data will be sent to improve the product.',
+      },
+      exporters: {
+        type: 'array',
+        description:
+          'OTLP endpoints that telemetry should be exported to. If unset, the default Papert endpoint is used.',
+        items: { type: 'string' },
+      },
+      serviceContext: {
+        type: 'object',
+        description:
+          'Optional context information that will be attached to telemetry data.',
+        additionalProperties: { type: ['string', 'boolean', 'number'] },
+      },
+      disablePapertDefaults: {
+        type: 'boolean',
+        description:
+          'When true, disables sending telemetry to Papert-managed endpoints.',
+      },
+    },
+  },
+  SummarizeToolOutputSettings: {
+    type: 'object',
+    description:
+      'Per-tool configuration for summarizing tool output to save tokens.',
+    additionalProperties: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        tokenBudget: {
+          type: 'number',
+          description:
+            'Maximum tokens to allocate for summarizing a tool output.',
+        },
+      },
+      required: ['tokenBudget'],
+    },
+  },
+  ChatCompressionSettings: {
+    type: 'object',
+    description: 'Chat compression configuration.',
+    additionalProperties: false,
+    properties: {
+      threshold: {
+        type: 'number',
+        description:
+          'The fraction of context usage at which to trigger context compression (e.g. 0.2, 0.3).',
+      },
+    },
+  },
+  BugCommandSettings: {
+    type: 'object',
+    description: 'Bug command configuration.',
+    additionalProperties: false,
+    properties: {
+      url: {
+        type: 'string',
+        description: 'The URL to open when running the /bug command.',
+      },
+      title: {
+        type: 'string',
+        description: 'Default bug title.',
+      },
+      body: {
+        type: 'string',
+        description: 'Default bug body/description template.',
+      },
+      repo: {
+        type: 'string',
+        description: 'GitHub repository in the form owner/repo.',
+      },
+      labels: {
+        type: 'array',
+        description: 'Default labels to apply to bug reports.',
+        items: { type: 'string' },
+      },
+      assignees: {
+        type: 'array',
+        description: 'Default assignees for bug reports.',
+        items: { type: 'string' },
+      },
+    },
+  },
+  AuthSettings: {
+    type: 'object',
+    description: 'Authentication settings.',
+    additionalProperties: false,
+    properties: {
+      selectedType: {
+        type: 'string',
+        description: 'Selected authentication type.',
+        enum: ['papert', 'openai', 'none'],
+      },
+      enforcedType: {
+        type: 'string',
+        description:
+          'Optional enforced authentication type (e.g., for enterprise policy).',
+        enum: ['papert', 'openai'],
+      },
+      baseUrl: {
+        type: 'string',
+        description: 'Base URL for the API.',
+      },
+      apiKey: {
+        type: 'string',
+        description: 'API key for authentication.',
+      },
+    },
+  },
+  KeyBindingsSettings: {
+    type: 'object',
+    description: 'Keybindings configuration.',
+    additionalProperties: {
+      type: 'array',
+      description: 'Keybinding sequences for a given action.',
+      items: { type: 'string' },
+    },
+  },
+  CustomThemesSettings: {
+    type: 'object',
+    description: 'Custom themes configuration.',
+    additionalProperties: {
+      type: 'object',
+      description: 'Theme definition.',
+      properties: {
+        name: { type: 'string' },
+        type: { type: 'string', enum: ['custom'] },
+        text: {
+          type: 'object',
+          additionalProperties: { type: 'string' },
+        },
+        background: {
+          type: 'object',
+          additionalProperties: { type: 'string' },
+        },
+        banner: {
+          type: 'object',
+          additionalProperties: { type: 'string' },
+        },
+        code: {
+          type: 'object',
+          additionalProperties: { type: 'string' },
+        },
+        diff: {
+          type: 'object',
+          additionalProperties: { type: 'string' },
+        },
+      },
+      required: ['name'],
+      additionalProperties: false,
+    },
+  },
+} as const;
 
 export function getSettingsSchema(): SettingsSchemaType {
   return SETTINGS_SCHEMA;

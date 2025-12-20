@@ -27,6 +27,10 @@ import {
   type SettingDefinition,
   getSettingsSchema,
 } from './settingsSchema.js';
+import {
+  validateSettings,
+  formatValidationError,
+} from './settings-validation.js';
 import { resolveEnvVarsInObject } from '../utils/envVarResolver.js';
 import { customDeepMerge, type MergeableObject } from '../utils/deepMerge.js';
 import { updateSettingsFilePreservingFormat } from '../utils/commentJson.js';
@@ -693,6 +697,15 @@ export function loadSettings(
               );
             }
           }
+        }
+        // Validate settings structure with Zod after migration
+        const validationResult = validateSettings(settingsObject);
+        if (!validationResult.success && validationResult.error) {
+          const errorMessage = formatValidationError(
+            validationResult.error,
+            filePath,
+          );
+          throw new FatalConfigError(errorMessage);
         }
         return { settings: settingsObject as Settings, rawJson: content };
       }
