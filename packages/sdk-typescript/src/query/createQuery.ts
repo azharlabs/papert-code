@@ -47,6 +47,7 @@ export function query({
     model: options.model,
     permissionMode: options.permissionMode,
     env: options.env,
+    skillsPath: options.skillsPath,
     abortController,
     debug: options.debug,
     stderr: options.stderr,

@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import * as path from 'node:path';
 import * as readline from 'node:readline';
 import type { Writable, Readable } from 'node:stream';
 import type { TransportOptions } from '../types/types.js';
@@ -9,6 +10,34 @@ import { AbortError } from '../types/errors.js';
 import { SdkLogger } from '../utils/logger.js';
 
 const logger = SdkLogger.createLogger('ProcessTransport');
+const SKILLS_PATHS_ENV = 'PAPERT_CODE_SKILLS_PATHS';
+
+function parseSkillsPathList(raw: string): string[] {
+  const separator = new RegExp(`[${path.delimiter},]`);
+  return raw.split(separator).map((entry) => entry.trim()).filter(Boolean);
+}
+
+function normalizeSkillsPaths(
+  skillsPath: string | string[] | undefined,
+  existingValue: string | undefined,
+): string | undefined {
+  const paths: string[] = [];
+  if (existingValue) {
+    paths.push(...parseSkillsPathList(existingValue));
+  }
+  if (skillsPath) {
+    if (Array.isArray(skillsPath)) {
+      paths.push(...skillsPath);
+    } else {
+      paths.push(skillsPath);
+    }
+  }
+  const normalized = paths.map((entry) => entry.trim()).filter(Boolean);
+  if (normalized.length === 0) {
+    return undefined;
+  }
+  return Array.from(new Set(normalized)).join(path.delimiter);
+}
 
 export class ProcessTransport implements Transport {
   private childProcess: ChildProcess | null = null;
@@ -43,6 +72,13 @@ export class ProcessTransport implements Transport {
       const cliArgs = this.buildCliArguments();
       const cwd = this.options.cwd ?? process.cwd();
       const env = { ...process.env, ...this.options.env };
+      const skillsPaths = normalizeSkillsPaths(
+        this.options.skillsPath,
+        env[SKILLS_PATHS_ENV],
+      );
+      if (skillsPaths) {
+        env[SKILLS_PATHS_ENV] = skillsPaths;
+      }
 
       const spawnInfo = prepareSpawnInfo(this.options.pathToPapertExecutable);
 

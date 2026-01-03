@@ -22,6 +22,7 @@ import {
 } from './extensions/variables.js';
 import { isWorkspaceTrusted } from './trustedFolders.js';
 import { resolveEnvVarsInObject } from '../utils/envVarResolver.js';
+import { resolvePath } from '../utils/resolvePath.js';
 import {
   cloneFromGit,
   downloadFromGitHubRelease,
@@ -35,6 +36,7 @@ export const WORKSPACE_SKILLS_DIRECTORY_NAME = path.join('.agents', 'skills');
 export const SKILL_FILENAME = 'SKILL.md';
 export const SKILL_INSTALL_METADATA_FILENAME = '.papert-skill-install.json';
 const DEFAULT_SKILLS_DIR = path.join('skills');
+const SKILLS_PATHS_ENV = 'PAPERT_CODE_SKILLS_PATHS';
 
 export interface Skill {
   path: string;
@@ -137,6 +139,10 @@ export function loadSkills(
 ): Skill[] {
   const settings = loadSettings(workspaceDir).merged;
   const allSkills = [...loadUserSkills()];
+  const additionalSkillsDirs = getAdditionalSkillsDirs();
+  for (const skillsDir of additionalSkillsDirs) {
+    allSkills.push(...loadSkillsFromDir(skillsDir, workspaceDir));
+  }
 
   if (isWorkspaceTrusted(settings) ?? true) {
     allSkills.push(...getWorkspaceSkills(workspaceDir));
@@ -909,7 +915,11 @@ export function loadSkillByName(
   name: string,
   workspaceDir: string,
 ): Skill | undefined {
-  const searchDirs = [SkillStorage.getUserSkillsDir(), path.join(workspaceDir, WORKSPACE_SKILLS_DIRECTORY_NAME)];
+  const searchDirs = [
+    SkillStorage.getUserSkillsDir(),
+    ...getAdditionalSkillsDirs(),
+    path.join(workspaceDir, WORKSPACE_SKILLS_DIRECTORY_NAME),
+  ];
   for (const baseDir of searchDirs) {
     if (!fs.existsSync(baseDir)) {
       continue;
@@ -943,4 +953,19 @@ function sanitizeEnvObject(env: Record<string, string>): Record<string, string> 
     sanitized[key] = value;
   }
   return sanitized;
+}
+
+function getAdditionalSkillsDirs(): string[] {
+  const raw = process.env[SKILLS_PATHS_ENV];
+  if (!raw) {
+    return [];
+  }
+  return parseSkillsPathList(raw)
+    .map((entry) => resolvePath(entry.trim()))
+    .filter((entry) => entry.length > 0);
+}
+
+function parseSkillsPathList(raw: string): string[] {
+  const separator = new RegExp(`[${path.delimiter},]`);
+  return raw.split(separator).map((entry) => entry.trim()).filter(Boolean);
 }

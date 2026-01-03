@@ -27,6 +27,7 @@ export type TransportOptions = {
   model?: string;
   permissionMode?: PermissionMode;
   env?: Record<string, string>;
+  skillsPath?: string | string[];
   abortController?: AbortController;
   debug?: boolean;
   stderr?: (message: string) => void;
@@ -124,6 +125,12 @@ export interface QueryOptions {
    * These variables will be merged with the current process environment.
    */
   env?: Record<string, string>;
+
+  /**
+   * Additional skills directories to load. The CLI will scan these paths for skills.
+   * Accepts a single path or a list of paths.
+   */
+  skillsPath?: string | string[];
 
   /**
    * Permission mode controlling how the SDK handles tool execution approval.

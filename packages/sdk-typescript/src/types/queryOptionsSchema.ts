@@ -43,6 +43,7 @@ export const QueryOptionsSchema = z
     model: z.string().optional(),
     pathToPapertExecutable: z.string().optional(),
     env: z.record(z.string(), z.string()).optional(),
+    skillsPath: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
     permissionMode: z.enum(['default', 'plan', 'auto-edit', 'yolo']).optional(),
     canUseTool: z
       .custom<CanUseTool>((val) => typeof val === 'function', {
