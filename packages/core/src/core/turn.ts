@@ -59,10 +59,26 @@ export enum GeminiEventType {
   LoopDetected = 'loop_detected',
   Citation = 'citation',
   Retry = 'retry',
+  AgentExecutionStopped = 'agent_execution_stopped',
+  AgentExecutionBlocked = 'agent_execution_blocked',
 }
 
 export type ServerGeminiRetryEvent = {
   type: GeminiEventType.Retry;
+};
+
+export type ServerGeminiAgentExecutionStoppedEvent = {
+  type: GeminiEventType.AgentExecutionStopped;
+  value: {
+    reason: string;
+  };
+};
+
+export type ServerGeminiAgentExecutionBlockedEvent = {
+  type: GeminiEventType.AgentExecutionBlocked;
+  value: {
+    reason: string;
+  };
 };
 
 export interface StructuredError {
@@ -197,6 +213,8 @@ export type ServerGeminiCitationEvent = {
 
 // The original union type, now composed of the individual types
 export type ServerGeminiStreamEvent =
+  | ServerGeminiAgentExecutionBlockedEvent
+  | ServerGeminiAgentExecutionStoppedEvent
   | ServerGeminiChatCompressedEvent
   | ServerGeminiCitationEvent
   | ServerGeminiContentEvent

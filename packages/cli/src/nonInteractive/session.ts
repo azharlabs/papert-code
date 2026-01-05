@@ -5,6 +5,12 @@
  */
 
 import type { Config } from '@papert-code/papert-code-core';
+import {
+  fireSessionStartHook,
+  fireSessionEndHook,
+  SessionStartSource,
+  SessionEndReason,
+} from '@papert-code/papert-code-core';
 import { StreamJsonInputReader } from './io/StreamJsonInputReader.js';
 import { StreamJsonOutputAdapter } from './io/StreamJsonOutputAdapter.js';
 import { ControlContext } from './control/ControlContext.js';
@@ -49,6 +55,7 @@ class Session {
   private processingPromise: Promise<void> | null = null;
   private isShuttingDown: boolean = false;
   private configInitialized: boolean = false;
+  private sessionHooksFired: boolean = false;
 
   constructor(config: Config, initialPrompt?: CLIUserMessage) {
     this.config = config;
@@ -83,6 +90,16 @@ class Session {
     try {
       await this.config.initialize();
       this.configInitialized = true;
+
+      const hooksEnabled = this.config.getEnableHooks();
+      const hookMessageBus = this.config.getMessageBus();
+      if (hooksEnabled && hookMessageBus && !this.sessionHooksFired) {
+        const sessionStartSource = this.config.getResumedSessionData()
+          ? SessionStartSource.Resume
+          : SessionStartSource.Startup;
+        await fireSessionStartHook(hookMessageBus, sessionStartSource);
+        this.sessionHooksFired = true;
+      }
     } catch (error) {
       if (this.debugMode) {
         console.error('[Session] Failed to initialize config:', error);
@@ -325,6 +342,12 @@ class Session {
           );
         }
       }
+    }
+
+    const hooksEnabled = this.config.getEnableHooks();
+    const hookMessageBus = this.config.getMessageBus();
+    if (hooksEnabled && hookMessageBus && this.sessionHooksFired) {
+      await fireSessionEndHook(hookMessageBus, SessionEndReason.Exit);
     }
 
     this.dispatcher?.shutdown();

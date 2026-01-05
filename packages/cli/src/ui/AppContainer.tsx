@@ -39,6 +39,10 @@ import {
   getErrorMessage,
   getAllGeminiMdFilenames,
   ShellExecutionService,
+  fireSessionStartHook,
+  fireSessionEndHook,
+  SessionStartSource,
+  SessionEndReason,
 } from '@papert-code/papert-code-core';
 import { buildResumedHistoryItems } from './utils/resumeHistoryUtils.js';
 import { validateAuthMethod } from '../config/auth.js';
@@ -243,10 +247,25 @@ export const AppContainer = (props: AppContainerProps) => {
         );
         historyManager.loadHistory(historyItems);
       }
+
+      const hooksEnabled = config.getEnableHooks();
+      const hookMessageBus = config.getMessageBus();
+      if (hooksEnabled && hookMessageBus) {
+        const sessionStartSource = resumedSessionData
+          ? SessionStartSource.Resume
+          : SessionStartSource.Startup;
+        await fireSessionStartHook(hookMessageBus, sessionStartSource);
+      }
     })();
     registerCleanup(async () => {
       const ideClient = await IdeClient.getInstance();
       await ideClient.disconnect();
+
+      const hooksEnabled = config.getEnableHooks();
+      const hookMessageBus = config.getMessageBus();
+      if (hooksEnabled && hookMessageBus) {
+        await fireSessionEndHook(hookMessageBus, SessionEndReason.Exit);
+      }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);

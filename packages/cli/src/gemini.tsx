@@ -10,6 +10,10 @@ import {
   InputFormat,
   logUserPrompt,
   getVersion,
+  fireSessionStartHook,
+  fireSessionEndHook,
+  SessionStartSource,
+  SessionEndReason,
   type Config,
 } from '@papert-code/papert-code-core';
 import { render } from 'ink';
@@ -444,6 +448,18 @@ export async function main() {
     // For non-stream-json mode, initialize config here
     if (inputFormat !== InputFormat.STREAM_JSON) {
       await config.initialize();
+
+      const hooksEnabled = config.getEnableHooks();
+      const hookMessageBus = config.getMessageBus();
+      if (hooksEnabled && hookMessageBus) {
+        const sessionStartSource = config.getResumedSessionData()
+          ? SessionStartSource.Resume
+          : SessionStartSource.Startup;
+        await fireSessionStartHook(hookMessageBus, sessionStartSource);
+        registerCleanup(async () => {
+          await fireSessionEndHook(hookMessageBus, SessionEndReason.Exit);
+        });
+      }
     }
 
     // Only read stdin if NOT in stream-json mode

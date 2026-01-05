@@ -12,6 +12,7 @@ import type {
   PartListUnion,
   Tool,
 } from '@google/genai';
+import { createUserContent } from '@google/genai';
 
 // Config
 import { ApprovalMode, type Config } from '../config/config.js';
@@ -36,6 +37,7 @@ import {
   type ChatCompressionInfo,
   type ServerGeminiStreamEvent,
 } from './turn.js';
+import type { MessageBus } from '../confirmation-bus/message-bus.js';
 
 // Services
 import {
@@ -69,6 +71,8 @@ import { getErrorMessage } from '../utils/errors.js';
 import { checkNextSpeaker } from '../utils/nextSpeakerChecker.js';
 import { flatMapTextParts } from '../utils/partUtils.js';
 import { retryWithBackoff } from '../utils/retry.js';
+import { fireAfterAgentHook, fireBeforeAgentHook } from './clientHookTriggers.js';
+import type { DefaultHookOutput } from '../hooks/types.js';
 
 // IDE integration
 import { ideContextStore } from '../ide/ideContext.js';
@@ -90,6 +94,18 @@ export function isThinkingDefault(model: string) {
 
 const MAX_TURNS = 100;
 
+type BeforeAgentHookReturn =
+  | {
+      type: GeminiEventType.AgentExecutionStopped;
+      value: { reason: string };
+    }
+  | {
+      type: GeminiEventType.AgentExecutionBlocked;
+      value: { reason: string };
+    }
+  | { additionalContext: string | undefined }
+  | undefined;
+
 export class GeminiClient {
   private chat?: GeminiChat;
   private readonly generateContentConfig: GenerateContentConfig = {
@@ -109,8 +125,92 @@ export class GeminiClient {
    */
   private hasFailedCompressionAttempt = false;
 
+  // Hook state to deduplicate BeforeAgent calls and track response for AfterAgent
+  private hookStateMap = new Map<
+    string,
+    {
+      hasFiredBeforeAgent: boolean;
+      cumulativeResponse: string;
+      activeCalls: number;
+      originalRequest: PartListUnion;
+    }
+  >();
+
   constructor(private readonly config: Config) {
     this.loopDetector = new LoopDetectionService(config);
+  }
+
+  private async fireBeforeAgentHookSafe(
+    messageBus: MessageBus,
+    request: PartListUnion,
+    prompt_id: string,
+  ): Promise<BeforeAgentHookReturn> {
+    let hookState = this.hookStateMap.get(prompt_id);
+    if (!hookState) {
+      hookState = {
+        hasFiredBeforeAgent: false,
+        cumulativeResponse: '',
+        activeCalls: 0,
+        originalRequest: request,
+      };
+      this.hookStateMap.set(prompt_id, hookState);
+    }
+
+    hookState.activeCalls++;
+
+    if (hookState.hasFiredBeforeAgent) {
+      return undefined;
+    }
+
+    const hookOutput = await fireBeforeAgentHook(messageBus, request);
+    hookState.hasFiredBeforeAgent = true;
+
+    if (hookOutput?.shouldStopExecution()) {
+      return {
+        type: GeminiEventType.AgentExecutionStopped,
+        value: {
+          reason: hookOutput.getEffectiveReason(),
+        },
+      };
+    }
+
+    if (hookOutput?.isBlockingDecision()) {
+      return {
+        type: GeminiEventType.AgentExecutionBlocked,
+        value: {
+          reason: hookOutput.getEffectiveReason(),
+        },
+      };
+    }
+
+    const additionalContext = hookOutput?.getAdditionalContext();
+    if (additionalContext) {
+      return { additionalContext };
+    }
+    return undefined;
+  }
+
+  private async fireAfterAgentHookSafe(
+    messageBus: MessageBus,
+    currentRequest: PartListUnion,
+    prompt_id: string,
+    responseText: string,
+    turn?: Turn,
+  ): Promise<DefaultHookOutput | undefined> {
+    const hookState = this.hookStateMap.get(prompt_id);
+    if (!hookState || hookState.activeCalls !== 1) {
+      return undefined;
+    }
+
+    if (turn && turn.pendingToolCalls.length > 0) {
+      return undefined;
+    }
+
+    const finalResponseText =
+      hookState.cumulativeResponse || responseText || '[no response text]';
+    const finalRequest = hookState.originalRequest || currentRequest;
+
+    return fireAfterAgentHook(messageBus, finalRequest, finalResponseText);
   }
 
   async initialize() {
@@ -412,10 +512,18 @@ export class GeminiClient {
     options?: { isContinuation: boolean },
     turns: number = MAX_TURNS,
   ): AsyncGenerator<ServerGeminiStreamEvent, Turn> {
-    if (!options?.isContinuation) {
-      this.loopDetector.reset(prompt_id);
-      this.lastPromptId = prompt_id;
+    const hooksEnabled = this.config.getEnableHooks();
+    const messageBus = this.config.getMessageBus();
 
+    if (this.lastPromptId !== prompt_id) {
+      this.loopDetector.reset(prompt_id);
+      if (this.lastPromptId) {
+        this.hookStateMap.delete(this.lastPromptId);
+      }
+      this.lastPromptId = prompt_id;
+    }
+
+    if (!options?.isContinuation) {
       // record user message for session management
       this.config.getChatRecordingService()?.recordUserMessage(request);
     }
@@ -431,6 +539,39 @@ export class GeminiClient {
     const boundedTurns = Math.min(turns, MAX_TURNS);
     if (!boundedTurns) {
       return new Turn(this.getChat(), prompt_id);
+    }
+
+    if (hooksEnabled && messageBus) {
+      const hookResult = await this.fireBeforeAgentHookSafe(
+        messageBus,
+        request,
+        prompt_id,
+      );
+      if (hookResult) {
+        if (
+          'type' in hookResult &&
+          hookResult.type === GeminiEventType.AgentExecutionStopped
+        ) {
+          // Add user message to history before returning so it's kept in the transcript
+          this.getChat().addHistory(createUserContent(request));
+          yield hookResult;
+          return new Turn(this.getChat(), prompt_id);
+        }
+        if (
+          'type' in hookResult &&
+          hookResult.type === GeminiEventType.AgentExecutionBlocked
+        ) {
+          yield hookResult;
+          return new Turn(this.getChat(), prompt_id);
+        }
+        if ('additionalContext' in hookResult) {
+          const additionalContext = hookResult.additionalContext;
+          if (additionalContext) {
+            const requestArray = Array.isArray(request) ? request : [request];
+            request = [...requestArray, { text: additionalContext }];
+          }
+        }
+      }
     }
 
     const compressed = await this.tryCompressChat(prompt_id, false);
@@ -514,95 +655,170 @@ export class GeminiClient {
       this.forceFullIdeContext = false;
     }
 
+    let responseText = '';
     const turn = new Turn(this.getChat(), prompt_id);
 
-    if (!this.config.getSkipLoopDetection()) {
-      const loopDetected = await this.loopDetector.turnStarted(signal);
-      if (loopDetected) {
-        yield { type: GeminiEventType.LoopDetected };
-        return turn;
-      }
-    }
-
-    // append system reminders to the request
-    let requestToSent = await flatMapTextParts(request, async (text) => [text]);
-    if (!options?.isContinuation) {
-      const systemReminders = [];
-
-      // add subagent system reminder if there are subagents
-      const hasTaskTool = this.config.getToolRegistry().getTool(TaskTool.Name);
-      const subagents = (await this.config.getSubagentManager().listSubagents())
-        .filter((subagent) => subagent.level !== 'builtin')
-        .map((subagent) => subagent.name);
-
-      if (hasTaskTool && subagents.length > 0) {
-        systemReminders.push(getSubagentSystemReminder(subagents));
-      }
-
-      // add plan mode system reminder if approval mode is plan
-      if (this.config.getApprovalMode() === ApprovalMode.PLAN) {
-        systemReminders.push(
-          getPlanModeSystemReminder(this.config.getSdkMode()),
-        );
-      }
-
-      requestToSent = [...systemReminders, ...requestToSent];
-    }
-
-    const resultStream = turn.run(
-      this.config.getModel(),
-      requestToSent,
-      signal,
-    );
-    for await (const event of resultStream) {
+    try {
       if (!this.config.getSkipLoopDetection()) {
-        if (this.loopDetector.addAndCheck(event)) {
+        const loopDetected = await this.loopDetector.turnStarted(signal);
+        if (loopDetected) {
           yield { type: GeminiEventType.LoopDetected };
           return turn;
         }
       }
-      yield event;
-      if (event.type === GeminiEventType.Error) {
-        return turn;
-      }
-    }
-    if (!turn.pendingToolCalls.length && signal && !signal.aborted) {
-      // Check if next speaker check is needed
-      if (this.config.getQuotaErrorOccurred()) {
-        return turn;
+
+      // append system reminders to the request
+      let requestToSent = await flatMapTextParts(request, async (text) => [
+        text,
+      ]);
+      if (!options?.isContinuation) {
+        const systemReminders = [];
+
+        // add subagent system reminder if there are subagents
+        const hasTaskTool = this.config.getToolRegistry().getTool(TaskTool.Name);
+        const subagents = (
+          await this.config.getSubagentManager().listSubagents()
+        )
+          .filter((subagent) => subagent.level !== 'builtin')
+          .map((subagent) => subagent.name);
+
+        if (hasTaskTool && subagents.length > 0) {
+          systemReminders.push(getSubagentSystemReminder(subagents));
+        }
+
+        // add plan mode system reminder if approval mode is plan
+        if (this.config.getApprovalMode() === ApprovalMode.PLAN) {
+          systemReminders.push(
+            getPlanModeSystemReminder(this.config.getSdkMode()),
+          );
+        }
+
+        requestToSent = [...systemReminders, ...requestToSent];
       }
 
-      if (this.config.getSkipNextSpeakerCheck()) {
-        return turn;
-      }
-
-      const nextSpeakerCheck = await checkNextSpeaker(
-        this.getChat(),
-        this.config,
+      const resultStream = turn.run(
+        this.config.getModel(),
+        requestToSent,
         signal,
-        prompt_id,
       );
-      logNextSpeakerCheck(
-        this.config,
-        new NextSpeakerCheckEvent(
-          prompt_id,
-          turn.finishReason?.toString() || '',
-          nextSpeakerCheck?.next_speaker || '',
-        ),
-      );
-      if (nextSpeakerCheck?.next_speaker === 'model') {
-        const nextRequest = [{ text: 'Please continue.' }];
-        // This recursive call's events will be yielded out, but the final
-        // turn object will be from the top-level call.
-        yield* this.sendMessageStream(
-          nextRequest,
+      for await (const event of resultStream) {
+        if (!this.config.getSkipLoopDetection()) {
+          if (this.loopDetector.addAndCheck(event)) {
+            yield { type: GeminiEventType.LoopDetected };
+            return turn;
+          }
+        }
+        if (event.type === GeminiEventType.Content) {
+          responseText = responseText
+            ? `${responseText}${event.value}`
+            : event.value;
+        }
+        yield event;
+        if (event.type === GeminiEventType.Error) {
+          return turn;
+        }
+      }
+
+      if (hooksEnabled) {
+        const hookState = this.hookStateMap.get(prompt_id);
+        if (hookState && responseText) {
+          hookState.cumulativeResponse = hookState.cumulativeResponse
+            ? `${hookState.cumulativeResponse}\n${responseText}`
+            : responseText;
+        }
+      }
+
+      if (!turn.pendingToolCalls.length && signal && !signal.aborted) {
+        // Check if next speaker check is needed
+        if (this.config.getQuotaErrorOccurred()) {
+          return turn;
+        }
+
+        if (this.config.getSkipNextSpeakerCheck()) {
+          return turn;
+        }
+
+        const nextSpeakerCheck = await checkNextSpeaker(
+          this.getChat(),
+          this.config,
           signal,
           prompt_id,
-          options,
-          boundedTurns - 1,
         );
+        logNextSpeakerCheck(
+          this.config,
+          new NextSpeakerCheckEvent(
+            prompt_id,
+            turn.finishReason?.toString() || '',
+            nextSpeakerCheck?.next_speaker || '',
+          ),
+        );
+        if (nextSpeakerCheck?.next_speaker === 'model') {
+          const nextRequest = [{ text: 'Please continue.' }];
+          // This recursive call's events will be yielded out, but the final
+          // turn object will be from the top-level call.
+          yield* this.sendMessageStream(
+            nextRequest,
+            signal,
+            prompt_id,
+            options,
+            boundedTurns - 1,
+          );
+        }
+      }
+
+      if (hooksEnabled && messageBus) {
+        const hookOutput = await this.fireAfterAgentHookSafe(
+          messageBus,
+          request,
+          prompt_id,
+          responseText,
+          turn,
+        );
+
+        if (hookOutput?.shouldStopExecution()) {
+          yield {
+            type: GeminiEventType.AgentExecutionStopped,
+            value: {
+              reason: hookOutput.getEffectiveReason(),
+            },
+          };
+          return turn;
+        }
+
+        if (hookOutput?.isBlockingDecision()) {
+          const continueReason = hookOutput.getEffectiveReason();
+          yield {
+            type: GeminiEventType.AgentExecutionBlocked,
+            value: {
+              reason: continueReason,
+            },
+          };
+          const continueRequest = [{ text: continueReason }];
+          yield* this.sendMessageStream(
+            continueRequest,
+            signal,
+            prompt_id,
+            options,
+            boundedTurns - 1,
+          );
+        }
+      }
+    } finally {
+      const hookState = this.hookStateMap.get(prompt_id);
+      if (hookState) {
+        hookState.activeCalls--;
+        const isPendingTools =
+          turn?.pendingToolCalls && turn.pendingToolCalls.length > 0;
+        const isAborted = signal?.aborted;
+
+        if (hookState.activeCalls <= 0) {
+          if (!isPendingTools || isAborted) {
+            this.hookStateMap.delete(prompt_id);
+          }
+        }
       }
     }
+
     return turn;
   }
 

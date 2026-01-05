@@ -15,6 +15,8 @@ import { getResponseText } from '../utils/partUtils.js';
 import { logChatCompression } from '../telemetry/loggers.js';
 import { makeChatCompressionEvent } from '../telemetry/types.js';
 import { getInitialChatHistory } from '../utils/environmentContext.js';
+import { firePreCompressHook } from '../core/sessionHookTriggers.js';
+import { PreCompressTrigger } from '../hooks/types.js';
 
 /**
  * Threshold for compression token count as a fraction of the model's token limit.
@@ -104,6 +106,15 @@ export class ChatCompressionService {
           compressionStatus: CompressionStatus.NOOP,
         },
       };
+    }
+
+    const hooksEnabled = config.getEnableHooks();
+    const messageBus = config.getMessageBus();
+    if (hooksEnabled && messageBus) {
+      const trigger = force
+        ? PreCompressTrigger.Manual
+        : PreCompressTrigger.Auto;
+      await firePreCompressHook(messageBus, trigger);
     }
 
     const originalTokenCount = uiTelemetryService.getLastPromptTokenCount();

@@ -7,7 +7,13 @@
 import type { SlashCommand } from './types.js';
 import { CommandKind } from './types.js';
 import { t } from '../../i18n/index.js';
-import { uiTelemetryService } from '@papert-code/papert-code-core';
+import {
+  uiTelemetryService,
+  fireSessionEndHook,
+  fireSessionStartHook,
+  SessionEndReason,
+  SessionStartSource,
+} from '@papert-code/papert-code-core';
 
 export const clearCommand: SlashCommand = {
   name: 'clear',
@@ -20,6 +26,11 @@ export const clearCommand: SlashCommand = {
     const { config } = context.services;
 
     if (config) {
+      const messageBus = config.getMessageBus();
+      if (config.getEnableHooks() && messageBus) {
+        await fireSessionEndHook(messageBus, SessionEndReason.Clear);
+      }
+
       const newSessionId = config.startNewSession();
 
       // Reset UI telemetry metrics for the new session
@@ -39,6 +50,10 @@ export const clearCommand: SlashCommand = {
         await geminiClient.resetChat();
       } else {
         context.ui.setDebugMessage(t('Starting a new session and clearing.'));
+      }
+
+      if (config.getEnableHooks() && messageBus) {
+        await fireSessionStartHook(messageBus, SessionStartSource.Clear);
       }
     } else {
       context.ui.setDebugMessage(t('Starting a new session and clearing.'));

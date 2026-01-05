@@ -235,6 +235,13 @@ export class ChatRecordingService {
   }
 
   /**
+   * Returns the path to the conversation file, ensuring it exists.
+   */
+  getConversationFilePath(): string {
+    return this.ensureConversationFile();
+  }
+
+  /**
    * Creates base fields for a ChatRecord.
    */
   private createBaseRecord(

@@ -110,6 +110,11 @@ import {
 import { randomUUID } from 'node:crypto';
 import { ContextManager } from '../services/contextManager.js';
 import { generateAndSaveSummary } from '../services/sessionSummaryUtils.js';
+import type { HookDefinition, HookEventName } from '../hooks/types.js';
+import { HookSystem } from '../hooks/index.js';
+import { PolicyEngine } from '../policy/policy-engine.js';
+import type { PolicyEngineConfig } from '../policy/types.js';
+import { MessageBus } from '../confirmation-bus/message-bus.js';
 
 // Re-export types
 export type { AnyToolInvocation, FileFilteringOptions, MCPOAuthConfig };
@@ -361,6 +366,12 @@ export interface ConfigParameters {
   sdkMode?: boolean;
   sessionSubagents?: SubagentConfig[];
   modelConfigServiceConfig?: ModelConfigServiceConfig;
+  enableHooks?: boolean;
+  hooks?: { [K in HookEventName]?: HookDefinition[] } & { disabled?: string[] };
+  projectHooks?: { [K in HookEventName]?: HookDefinition[] } & {
+    disabled?: string[];
+  };
+  policyEngineConfig?: PolicyEngineConfig;
 }
 
 function normalizeConfigOutputFormat(
@@ -490,6 +501,17 @@ export class Config {
   private readonly truncateToolOutputThreshold: number;
   private readonly truncateToolOutputLines: number;
   private readonly enableToolOutputTruncation: boolean;
+  private readonly enableHooks: boolean;
+  private readonly hooks:
+    | ({ [K in HookEventName]?: HookDefinition[] } & { disabled?: string[] })
+    | undefined;
+  private readonly projectHooks:
+    | ({ [K in HookEventName]?: HookDefinition[] } & { disabled?: string[] })
+    | undefined;
+  private readonly disabledHooks: string[];
+  private readonly policyEngine: PolicyEngine;
+  private readonly messageBus: MessageBus;
+  private hookSystem?: HookSystem;
   private readonly eventEmitter?: EventEmitter;
   private readonly useSmartEdit: boolean;
   private contextManager?: ContextManager;
@@ -613,6 +635,18 @@ export class Config {
     this.truncateToolOutputLines =
       params.truncateToolOutputLines ?? DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES;
     this.enableToolOutputTruncation = params.enableToolOutputTruncation ?? true;
+    this.enableHooks = params.enableHooks ?? false;
+    this.hooks = params.hooks;
+    this.projectHooks = params.projectHooks;
+    this.disabledHooks =
+      (params.hooks && 'disabled' in params.hooks
+        ? params.hooks.disabled
+        : undefined) ?? [];
+    this.policyEngine = new PolicyEngine({
+      ...params.policyEngineConfig,
+      allowHooks: this.enableHooks,
+    });
+    this.messageBus = new MessageBus(this.policyEngine, this.debugMode);
     this.useSmartEdit = params.useSmartEdit ?? false;
     this.extensionManagement = params.extensionManagement ?? true;
     this.storage = new Storage(this.targetDir);
@@ -658,6 +692,11 @@ export class Config {
     }
 
     this.toolRegistry = await this.createToolRegistry();
+
+    if (this.enableHooks) {
+      this.hookSystem = new HookSystem(this);
+      await this.hookSystem.initialize();
+    }
 
     await this.refreshContextMemory();
 
@@ -1346,6 +1385,38 @@ export class Config {
 
   getEnableToolOutputTruncation(): boolean {
     return this.enableToolOutputTruncation;
+  }
+
+  getEnableHooks(): boolean {
+    return this.enableHooks;
+  }
+
+  getHookSystem(): HookSystem | undefined {
+    return this.hookSystem;
+  }
+
+  getHooks():
+    | ({ [K in HookEventName]?: HookDefinition[] } & { disabled?: string[] })
+    | undefined {
+    return this.hooks;
+  }
+
+  getProjectHooks():
+    | ({ [K in HookEventName]?: HookDefinition[] } & { disabled?: string[] })
+    | undefined {
+    return this.projectHooks;
+  }
+
+  getDisabledHooks(): string[] {
+    return this.disabledHooks;
+  }
+
+  getMessageBus(): MessageBus {
+    return this.messageBus;
+  }
+
+  getPolicyEngine(): PolicyEngine {
+    return this.policyEngine;
   }
 
   getTruncateToolOutputThreshold(): number {

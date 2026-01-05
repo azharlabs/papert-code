@@ -557,6 +557,41 @@ export const useGeminiStream = (
     [addItem, pendingHistoryItemRef, setPendingHistoryItem, config, setThought],
   );
 
+  const handleAgentExecutionStoppedEvent = useCallback(
+    (reason: string, userMessageTimestamp: number) => {
+      if (pendingHistoryItemRef.current) {
+        addItem(pendingHistoryItemRef.current, userMessageTimestamp);
+        setPendingHistoryItem(null);
+      }
+      addItem(
+        {
+          type: MessageType.INFO,
+          text: `Agent execution stopped: ${reason}`,
+        },
+        userMessageTimestamp,
+      );
+      setIsResponding(false);
+    },
+    [addItem, pendingHistoryItemRef, setPendingHistoryItem, setIsResponding],
+  );
+
+  const handleAgentExecutionBlockedEvent = useCallback(
+    (reason: string, userMessageTimestamp: number) => {
+      if (pendingHistoryItemRef.current) {
+        addItem(pendingHistoryItemRef.current, userMessageTimestamp);
+        setPendingHistoryItem(null);
+      }
+      addItem(
+        {
+          type: MessageType.WARNING,
+          text: `Agent execution blocked: ${reason}`,
+        },
+        userMessageTimestamp,
+      );
+    },
+    [addItem, pendingHistoryItemRef, setPendingHistoryItem],
+  );
+
   const handleCitationEvent = useCallback(
     (text: string, userMessageTimestamp: number) => {
       if (!showCitations(settings)) {
@@ -736,6 +771,18 @@ export const useGeminiStream = (
           case ServerGeminiEventType.Error:
             handleErrorEvent(event.value, userMessageTimestamp);
             break;
+          case ServerGeminiEventType.AgentExecutionStopped:
+            handleAgentExecutionStoppedEvent(
+              event.value.reason,
+              userMessageTimestamp,
+            );
+            break;
+          case ServerGeminiEventType.AgentExecutionBlocked:
+            handleAgentExecutionBlockedEvent(
+              event.value.reason,
+              userMessageTimestamp,
+            );
+            break;
           case ServerGeminiEventType.ChatCompressed:
             handleChatCompressionEvent(event.value, userMessageTimestamp);
             break;
@@ -782,6 +829,8 @@ export const useGeminiStream = (
       handleContentEvent,
       handleUserCancelledEvent,
       handleErrorEvent,
+      handleAgentExecutionBlockedEvent,
+      handleAgentExecutionStoppedEvent,
       scheduleToolCalls,
       handleChatCompressionEvent,
       handleFinishedEvent,

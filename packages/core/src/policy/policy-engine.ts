@@ -4,7 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { PolicyDecision, type PolicyEngineConfig, type PolicyRule } from './types.js';
+import {
+  PolicyDecision,
+  type PolicyEngineConfig,
+  type PolicyRule,
+  type HookExecutionContext,
+} from './types.js';
 import { stableStringify } from './stable-stringify.js';
 import { debugLogger } from '../utils/debugLogger.js';
 
@@ -12,6 +17,7 @@ export class PolicyEngine {
   private rules: PolicyRule[];
   private readonly defaultDecision: PolicyDecision;
   private readonly nonInteractive: boolean;
+  private readonly allowHooks: boolean;
 
   constructor(config: PolicyEngineConfig = {}) {
     this.rules = (config.rules ?? []).sort(
@@ -19,6 +25,7 @@ export class PolicyEngine {
     );
     this.defaultDecision = config.defaultDecision ?? PolicyDecision.ASK_USER;
     this.nonInteractive = config.nonInteractive ?? false;
+    this.allowHooks = config.allowHooks ?? true;
   }
 
   check(
@@ -40,6 +47,17 @@ export class PolicyEngine {
       `[PolicyEngine.check] no matching rule for ${toolCall.name}, using default ${this.defaultDecision}`,
     );
     return this.applyNonInteractiveMode(this.defaultDecision);
+  }
+
+  checkHook(context: HookExecutionContext): PolicyDecision {
+    if (!this.allowHooks) {
+      debugLogger.debug(
+        `[PolicyEngine.checkHook] hooks disabled, denying ${context.eventName}`,
+      );
+      return PolicyDecision.DENY;
+    }
+
+    return PolicyDecision.ALLOW;
   }
 
   addRule(rule: PolicyRule): void {

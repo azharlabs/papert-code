@@ -26,10 +26,13 @@ import {
   type ResumedSessionData,
   type FileFilteringOptions,
   type MCPServerConfig,
+  type HookDefinition,
+  type HookEventName,
   getVersion,
 } from '@papert-code/papert-code-core';
 import { extensionsCommand } from '../commands/extensions.js';
 import { skillsCommand } from '../commands/skills.js';
+import { hooksCommand } from '../commands/hooks.js';
 import type { Settings } from './settings.js';
 import yargs, { type Argv } from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -56,6 +59,7 @@ import { isWorkspaceTrusted } from './trustedFolders.js';
 import type { ExtensionEnablementManager } from './extensions/extensionEnablement.js';
 import { SkillEnablementManager } from './skills/skillEnablement.js';
 import { buildWebSearchConfig } from './webSearch.js';
+import { createPolicyEngineConfig } from './policy.js';
 
 // Simple console logger for now - replace with actual logger if available
 const logger = {
@@ -545,6 +549,9 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     yargsInstance.command(extensionsCommand);
   }
   yargsInstance.command(skillsCommand);
+  if (settings?.tools?.enableHooks) {
+    yargsInstance.command(hooksCommand);
+  }
 
   yargsInstance
     .version(await getVersion()) // This will enable the --version flag based on package.json
@@ -648,13 +655,21 @@ export function isDebugMode(argv: CliArgs): boolean {
   );
 }
 
+export interface LoadCliConfigOptions {
+  projectHooks?: { [K in HookEventName]?: HookDefinition[] } & {
+    disabled?: string[];
+  };
+}
+
 export async function loadCliConfig(
   settings: Settings,
   extensions: Extension[],
   extensionEnablementManager: ExtensionEnablementManager,
   argv: CliArgs,
   cwd: string = process.cwd(),
+  options: LoadCliConfigOptions = {},
 ): Promise<Config> {
+  const { projectHooks } = options;
   const debugMode = isDebugMode(argv);
 
   const memoryImportFormat = settings.context?.importFormat || 'tree';
@@ -869,6 +884,26 @@ export async function loadCliConfig(
     extraExcludes.length > 0 ? extraExcludes : undefined,
     argv.excludeTools,
   );
+  const allowedTools = argv.allowedTools || settings.tools?.allowed || [];
+
+  const effectiveSettings: Settings = {
+    ...settings,
+    tools: {
+      ...settings.tools,
+      allowed: allowedTools,
+      exclude: excludeTools,
+    },
+    mcp: {
+      ...settings.mcp,
+      allowed: argv.allowedMcpServerNames ?? settings.mcp?.allowed,
+    },
+  };
+
+  const policyEngineConfig = await createPolicyEngineConfig(
+    effectiveSettings,
+    approvalMode,
+  );
+  policyEngineConfig.nonInteractive = !interactive;
   const blockedMcpServers: Array<{ name: string; extensionName: string }> = [];
 
   if (!argv.allowedMcpServerNames) {
@@ -949,7 +984,8 @@ export async function loadCliConfig(
     question,
     fullContext: argv.allFiles || false,
     coreTools: argv.coreTools || settings.tools?.core || undefined,
-    allowedTools: argv.allowedTools || settings.tools?.allowed || undefined,
+    allowedTools: allowedTools.length > 0 ? allowedTools : undefined,
+    policyEngineConfig,
     excludeTools,
     toolDiscoveryCommand: settings.tools?.discoveryCommand,
     toolCallCommand: settings.tools?.callCommand,
@@ -1042,6 +1078,9 @@ export async function loadCliConfig(
     output: {
       format: outputSettingsFormat,
     },
+    enableHooks: settings.tools?.enableHooks ?? false,
+    hooks: settings.hooks || {},
+    projectHooks: projectHooks || {},
   });
 }
 

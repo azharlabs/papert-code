@@ -38,6 +38,10 @@ import {
   modifyWithEditor,
 } from '../tools/modifiable-tool.js';
 import * as Diff from 'diff';
+import {
+  executeToolWithHooks,
+  fireToolNotificationHook,
+} from './coreToolHookTriggers.js';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { doesToolInvocationMatch } from '../utils/tool-utils.js';
@@ -860,6 +864,12 @@ export class CoreToolScheduler {
               continue;
             }
 
+            const messageBus = this.config.getMessageBus();
+            const hooksEnabled = this.config.getEnableHooks();
+            if (hooksEnabled && messageBus) {
+              await fireToolNotificationHook(messageBus, confirmationDetails);
+            }
+
             // Allow IDE to resolve confirmation
             if (
               confirmationDetails.type === 'edit' &&
@@ -1092,9 +1102,9 @@ export class CoreToolScheduler {
         // Introduce a generic callbacks object for the execute method to handle
         // things like `onPid` and `onLiveOutput`. This will make the scheduler
         // agnostic to the invocation type.
-        let promise: Promise<ToolResult>;
+        let setPidCallback: ((pid: number) => void) | undefined;
         if (invocation instanceof ShellToolInvocation) {
-          const setPidCallback = (pid: number) => {
+          setPidCallback = (pid: number) => {
             this.toolCalls = this.toolCalls.map((tc) =>
               tc.request.callId === callId && tc.status === 'executing'
                 ? { ...tc, pid }
@@ -1102,22 +1112,22 @@ export class CoreToolScheduler {
             );
             this.notifyToolCallsUpdate();
           };
-          promise = invocation.execute(
+        }
+
+        try {
+          const messageBus = this.config.getMessageBus();
+          const hooksEnabled = this.config.getEnableHooks();
+          const toolResult: ToolResult = await executeToolWithHooks(
+            invocation,
+            toolName,
             signal,
+            messageBus,
+            hooksEnabled,
+            scheduledCall.tool,
             liveOutputCallback,
             shellExecutionConfig,
             setPidCallback,
           );
-        } else {
-          promise = invocation.execute(
-            signal,
-            liveOutputCallback,
-            shellExecutionConfig,
-          );
-        }
-
-        try {
-          const toolResult: ToolResult = await promise;
           if (signal.aborted) {
             this.setStatusInternal(
               callId,

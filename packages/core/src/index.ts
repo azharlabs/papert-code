@@ -10,6 +10,10 @@ export * from './config/defaultModelConfigs.js';
 export * from './config/models.js';
 export * from './output/types.js';
 export * from './output/json-formatter.js';
+export * from './confirmation-bus/types.js';
+export * from './confirmation-bus/message-bus.js';
+export * from './hooks/index.js';
+export * from './hooks/types.js';
 
 // Export Core Logic
 export * from './core/client.js';

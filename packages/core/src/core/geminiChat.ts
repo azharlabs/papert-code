@@ -14,6 +14,7 @@ import type {
   SendMessageParameters,
   Part,
   Tool,
+  GenerateContentParameters,
   GenerateContentResponseUsageMetadata,
 } from '@google/genai';
 import { ApiError, createUserContent } from '@google/genai';
@@ -36,6 +37,11 @@ import {
 } from '../telemetry/types.js';
 import { handleFallback } from '../fallback/handler.js';
 import { uiTelemetryService } from '../telemetry/uiTelemetry.js';
+import {
+  fireAfterModelHook,
+  fireBeforeModelHook,
+  fireBeforeToolSelectionHook,
+} from './geminiChatHookTriggers.js';
 
 export enum StreamEventType {
   /** A regular content chunk from the API. */
@@ -345,6 +351,13 @@ export class GeminiChat {
     params: SendMessageParameters,
     prompt_id: string,
   ): Promise<AsyncGenerator<GenerateContentResponse>> {
+    let lastModelToUse = model;
+    let lastConfig: GenerateContentConfig = {
+      ...this.generationConfig,
+      ...params.config,
+    };
+    let lastContentsToUse: Content[] = requestContents;
+
     const apiCall = () => {
       const modelToUse = this.config.isInFallbackMode()
         ? this.config.getActiveModel()
@@ -359,11 +372,89 @@ export class GeminiChat {
         );
       }
 
+      const config: GenerateContentConfig = {
+        ...this.generationConfig,
+        ...params.config,
+      };
+      let contentsToUse = requestContents;
+
+      const hooksEnabled = this.config.getEnableHooks();
+      const messageBus = this.config.getMessageBus();
+      if (hooksEnabled && messageBus) {
+        // Fire BeforeModel hook
+        return (async () => {
+          const beforeModelResult = await fireBeforeModelHook(messageBus, {
+            model: modelToUse,
+            config,
+            contents: contentsToUse,
+          });
+
+          if (beforeModelResult.blocked) {
+            const syntheticResponse = beforeModelResult.syntheticResponse;
+            if (syntheticResponse) {
+              return (async function* () {
+                yield syntheticResponse;
+              })();
+            }
+            return (async function* () {
+              // Empty generator - no response
+            })();
+          }
+
+          if (beforeModelResult.modifiedConfig) {
+            Object.assign(config, beforeModelResult.modifiedConfig);
+          }
+          if (
+            beforeModelResult.modifiedContents &&
+            Array.isArray(beforeModelResult.modifiedContents)
+          ) {
+            contentsToUse = beforeModelResult.modifiedContents as Content[];
+          }
+
+          // Fire BeforeToolSelection hook
+          const toolSelectionResult = await fireBeforeToolSelectionHook(
+            messageBus,
+            {
+              model: modelToUse,
+              config,
+              contents: contentsToUse,
+            },
+          );
+
+          if (toolSelectionResult.toolConfig) {
+            config.toolConfig = toolSelectionResult.toolConfig;
+          }
+          if (
+            toolSelectionResult.tools &&
+            Array.isArray(toolSelectionResult.tools)
+          ) {
+            config.tools = toolSelectionResult.tools as Tool[];
+          }
+
+          lastModelToUse = modelToUse;
+          lastConfig = config;
+          lastContentsToUse = contentsToUse;
+
+          return this.config.getContentGenerator().generateContentStream(
+            {
+              model: modelToUse,
+              contents: contentsToUse,
+              config,
+            },
+            prompt_id,
+          );
+        })();
+      }
+
+      lastModelToUse = modelToUse;
+      lastConfig = config;
+      lastContentsToUse = contentsToUse;
+
       return this.config.getContentGenerator().generateContentStream(
         {
           model: modelToUse,
-          contents: requestContents,
-          config: { ...this.generationConfig, ...params.config },
+          contents: contentsToUse,
+          config,
         },
         prompt_id,
       );
@@ -388,7 +479,13 @@ export class GeminiChat {
       authType: this.config.getContentGeneratorConfig()?.authType,
     });
 
-    return this.processStreamResponse(model, streamResponse);
+    const originalRequest: GenerateContentParameters = {
+      model: lastModelToUse,
+      config: lastConfig,
+      contents: lastContentsToUse,
+    };
+
+    return this.processStreamResponse(model, streamResponse, originalRequest);
   }
 
   /**
@@ -493,6 +590,7 @@ export class GeminiChat {
   private async *processStreamResponse(
     model: string,
     streamResponse: AsyncGenerator<GenerateContentResponse>,
+    originalRequest: GenerateContentParameters,
   ): AsyncGenerator<GenerateContentResponse> {
     // Collect ALL parts from the model response (including thoughts for recording)
     const allModelParts: Part[] = [];
@@ -530,7 +628,18 @@ export class GeminiChat {
         }
       }
 
-      yield chunk; // Yield every chunk to the UI immediately.
+      const hooksEnabled = this.config.getEnableHooks();
+      const messageBus = this.config.getMessageBus();
+      if (hooksEnabled && messageBus && originalRequest && chunk) {
+        const hookResult = await fireAfterModelHook(
+          messageBus,
+          originalRequest,
+          chunk,
+        );
+        yield hookResult.response;
+      } else {
+        yield chunk;
+      }
     }
 
     // Consolidate text parts for history (merges adjacent text parts).
