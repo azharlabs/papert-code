@@ -272,7 +272,8 @@ export default function AutoMVP() {
                 } else if (data.data && typeof data.data === 'object') {
                   const kind = data.data.kind;
                   const text = data.data.text;
-                  if (kind === 'delta') return;
+                  // Ignore partial deltas, but keep streaming the rest of the events.
+                  if (kind === 'delta') continue;
                   const prefix =
                     kind === 'thinking'
                       ? '[thinking] '
