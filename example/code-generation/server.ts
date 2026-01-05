@@ -1,11 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import fs from 'fs/promises';
+import { existsSync } from 'fs';
 import path from 'path';
 import os from 'os';
-import { createProgrammaticCliArgs, createPapertAgent } from '@papert-code/papert-code/api';
-import { AuthType } from '@papert-code/papert-code-core';
+import { query } from '@papert-code/sdk-typescript';
 import 'dotenv/config';
+import { randomUUID } from 'crypto';
 
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
@@ -78,8 +79,31 @@ async function writeFiles(dir: string, files: { path: string, content: string }[
   }
 }
 
+const resolvePapertExecutable = () => {
+  const repoRoot = path.resolve(process.cwd(), '..', '..');
+  const distCli = path.join(repoRoot, 'dist', 'cli.js');
+  if (existsSync(distCli)) {
+    return distCli;
+  }
+  const tsCli = path.join(repoRoot, 'packages', 'cli', 'src', 'index.ts');
+  return `tsx:${tsCli}`;
+};
+
+type SendEvent = (type: string, data: any) => void;
+
+type PendingApproval = {
+  runId: string;
+  decide: (decision: 'allow' | 'deny') => void;
+  timeout: NodeJS.Timeout;
+};
+
+const pendingApprovals = new Map<string, PendingApproval>();
+
 // Helper to capture logs and stream response
-async function streamResponse(res: express.Response, action: () => Promise<any>) {
+async function streamResponse(
+  res: express.Response,
+  action: (sendEvent: SendEvent) => Promise<any>,
+) {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
@@ -87,7 +111,7 @@ async function streamResponse(res: express.Response, action: () => Promise<any>)
   const originalStdout = process.stdout.write;
   const originalStderr = process.stderr.write;
 
-  const sendEvent = (type: string, data: any) => {
+  const sendEvent: SendEvent = (type: string, data: any) => {
     res.write(`data: ${JSON.stringify({ type, data })}\n\n`);
   };
 
@@ -109,7 +133,7 @@ async function streamResponse(res: express.Response, action: () => Promise<any>)
   };
 
   try {
-    const result = await action();
+    const result = await action(sendEvent);
     sendEvent('result', result);
   } catch (error: any) {
     console.error('Action failed:', error);
@@ -121,6 +145,54 @@ async function streamResponse(res: express.Response, action: () => Promise<any>)
     res.end();
   }
 }
+
+const requestToolApproval = (
+  sendEvent: SendEvent,
+  runId: string,
+  toolName: string,
+  toolInput: Record<string, unknown>,
+  suggestions: unknown,
+  signal: AbortSignal,
+) =>
+  new Promise<{ behavior: 'allow'; updatedInput: Record<string, unknown> } | { behavior: 'deny'; message: string }>(
+    (resolve) => {
+      const requestId = randomUUID();
+      const timeout = setTimeout(() => {
+        pendingApprovals.delete(requestId);
+        resolve({ behavior: 'deny', message: 'Approval timed out.' });
+      }, 25000);
+
+      const decide = (decision: 'allow' | 'deny') => {
+        if (decision === 'allow') {
+          resolve({ behavior: 'allow', updatedInput: toolInput });
+        } else {
+          resolve({ behavior: 'deny', message: 'Denied by user.' });
+        }
+      };
+
+      pendingApprovals.set(requestId, { runId, decide, timeout });
+      sendEvent('log', `> Approval needed for ${toolName}`);
+      sendEvent('permission_request', {
+        requestId,
+        runId,
+        toolName,
+        input: toolInput,
+        suggestions,
+      });
+
+      const onAbort = () => {
+        clearTimeout(timeout);
+        pendingApprovals.delete(requestId);
+        resolve({ behavior: 'deny', message: 'Approval canceled.' });
+      };
+
+      if (signal.aborted) {
+        onAbort();
+      } else {
+        signal.addEventListener('abort', onAbort, { once: true });
+      }
+    },
+  );
 
 // --- Project API Endpoints ---
 
@@ -189,30 +261,74 @@ app.patch('/api/projects/:id', async (req, res) => {
   }
 });
 
+app.post('/api/approve-tool', (req, res) => {
+  const { requestId, decision, runId } = req.body || {};
+
+  if (!requestId || !decision || !runId) {
+    return res.status(400).json({ error: 'requestId, decision, and runId are required.' });
+  }
+
+  const pending = pendingApprovals.get(requestId);
+  if (!pending) {
+    return res.status(404).json({ error: 'Approval request not found.' });
+  }
+  if (pending.runId !== runId) {
+    return res.status(400).json({ error: 'Approval run mismatch.' });
+  }
+
+  clearTimeout(pending.timeout);
+  pendingApprovals.delete(requestId);
+  pending.decide(decision === 'allow' ? 'allow' : 'deny');
+
+  return res.json({ success: true });
+});
+
 app.post('/api/generate', async (req, res) => {
-  const { prompt } = req.body;
+  const { prompt, autoApprove = true, runId } = req.body;
   if (!prompt) {
     return res.status(400).json({ error: 'Prompt is required' });
   }
 
-  await streamResponse(res, async () => {
+  await streamResponse(res, async (sendEvent) => {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'papercode-'));
     console.log(`Generating in temp dir: ${tempDir}`);
 
-    // try {
-    const agent = await createPapertAgent({
-      cliArgs: createProgrammaticCliArgs({
-        model: 'gemini-3-pro-preview',
-        outputFormat: 'text',
-        approvalMode: 'yolo',
-      }),
-      workspaceDir: tempDir,
+      const q = query({
+        prompt,
+        options: {
+          cwd: tempDir,
+          model: 'gemini-2.5-flash',
+          skillsPath: path.join(process.cwd(), 'skills'),
+          permissionMode: autoApprove ? 'yolo' : 'default',
+          authType: 'openai',
+          pathToPapertExecutable: resolvePapertExecutable(),
+          canUseTool: autoApprove
+          ? undefined
+          : (toolName, input, { suggestions, signal }) =>
+              requestToolApproval(
+                sendEvent,
+                runId || tempDir,
+                toolName,
+                input,
+                suggestions,
+                signal,
+              ),
+      },
     });
 
-    await agent.runPrompt(prompt, {
-      authType: AuthType.USE_OPENAI,
-      promptId: `gen-${Date.now()}`,
-    });
+    let resultError: string | null = null;
+    for await (const message of q) {
+      if (message.type === 'result') {
+        if (message.is_error) {
+          resultError = message.error?.message || 'Generation failed.';
+        }
+        break;
+      }
+    }
+
+    if (resultError) {
+      throw new Error(resultError);
+    }
 
     const files = await readFilesRecursively(tempDir);
     const previewable = files.some(f => f.path.endsWith('.html') || f.path.endsWith('.jsx') || f.path.endsWith('.tsx') || f.path === 'package.json');
@@ -229,31 +345,54 @@ app.post('/api/generate', async (req, res) => {
 });
 
 app.post('/api/refine', async (req, res) => {
-  const { prompt, files } = req.body;
+  const { prompt, files, autoApprove = true, runId } = req.body;
   if (!prompt || !files) {
     return res.status(400).json({ error: 'Prompt and files are required' });
   }
 
-  await streamResponse(res, async () => {
+  await streamResponse(res, async (sendEvent) => {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'papercode-refine-'));
     console.log(`Refining in temp dir: ${tempDir}`);
 
     try {
       await writeFiles(tempDir, files);
 
-      const agent = await createPapertAgent({
-        cliArgs: createProgrammaticCliArgs({
+      const q = query({
+        prompt,
+        options: {
+          cwd: tempDir,
           model: 'gemini-2.0-flash-exp',
-          outputFormat: 'text',
-          approvalMode: 'yolo',
-        }),
-        workspaceDir: tempDir,
+          skillsPath: path.join(process.cwd(), 'skills'),
+          permissionMode: autoApprove ? 'yolo' : 'default',
+          authType: 'openai',
+          pathToPapertExecutable: resolvePapertExecutable(),
+          canUseTool: autoApprove
+            ? undefined
+            : (toolName, input, { suggestions, signal }) =>
+                requestToolApproval(
+                  sendEvent,
+                  runId || tempDir,
+                  toolName,
+                  input,
+                  suggestions,
+                  signal,
+                ),
+        },
       });
 
-      await agent.runPrompt(prompt, {
-        authType: AuthType.USE_OPENAI,
-        promptId: `refine-${Date.now()}`,
-      });
+      let resultError: string | null = null;
+      for await (const message of q) {
+        if (message.type === 'result') {
+          if (message.is_error) {
+            resultError = message.error?.message || 'Refinement failed.';
+          }
+          break;
+        }
+      }
+
+      if (resultError) {
+        throw new Error(resultError);
+      }
 
       const newFiles = await readFilesRecursively(tempDir);
       return { files: newFiles };

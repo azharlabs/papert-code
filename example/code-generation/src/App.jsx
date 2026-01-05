@@ -34,7 +34,7 @@ import {
   Trash2
 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
-import { wasmBundlerService } from './services/WasmBundlerService';
+import { WebContainer } from '@webcontainer/api';
 
 // --- API Configuration ---
 // No client-side API key needed, using backend proxy.
@@ -64,12 +64,14 @@ const getFileIcon = (filename) => {
 // --- Main App Component ---
 export default function AutoMVP() {
   const [view, setView] = useState('input'); // input | generating | result | projects
-  const [provider, setProvider] = useState('Papert-code');
+  const [provider, setProvider] = useState('Papert Code');
   const [prdText, setPrdText] = useState('');
   const [logs, setLogs] = useState([]);
   const [activeTab, setActiveTab] = useState('code'); // preview | code
   const [theme, setTheme] = useState('dark');
   const [showConsole, setShowConsole] = useState(false);
+  const [autoApprove, setAutoApprove] = useState(true);
+  const [pendingApprovals, setPendingApprovals] = useState([]);
 
   // Project State
   const [files, setFiles] = useState([]); // Array of { path, content }
@@ -80,6 +82,10 @@ export default function AutoMVP() {
   // WebContainer State
   const [previewUrl, setPreviewUrl] = useState('');
   const [isBundling, setIsBundling] = useState(false);
+  const webcontainerRef = useRef(null);
+  const webcontainerProcessRef = useRef(null);
+  const webcontainerInstallRef = useRef(false);
+  const webcontainerProjectRef = useRef(null);
 
   // Refinement & Controls
   const [chatInput, setChatInput] = useState('');
@@ -114,7 +120,15 @@ export default function AutoMVP() {
   // Load Projects from Backend
   useEffect(() => {
     fetch('/api/projects')
-      .then(res => res.json())
+      .then(async (res) => {
+        if (res.status === 204) return [];
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `HTTP ${res.status}`);
+        }
+        const text = await res.text();
+        return text ? JSON.parse(text) : [];
+      })
       .then(data => {
         if (Array.isArray(data)) {
           setProjects(data);
@@ -200,10 +214,16 @@ export default function AutoMVP() {
     loadJSZip().catch(e => console.error("Failed to load JSZip", e));
   }, []);
 
-  // Initialize WASM Bundler
   useEffect(() => {
-    wasmBundlerService.initialize().catch(e => console.error("Failed to init WASM bundler", e));
-  }, []);
+    if (activeProjectId && webcontainerProjectRef.current !== activeProjectId) {
+      webcontainerInstallRef.current = false;
+      webcontainerProjectRef.current = activeProjectId;
+      if (webcontainerProcessRef.current?.kill) {
+        webcontainerProcessRef.current.kill();
+      }
+      webcontainerProcessRef.current = null;
+    }
+  }, [activeProjectId]);
 
   // Cleanup interval
   useEffect(() => {
@@ -216,7 +236,7 @@ export default function AutoMVP() {
   }, [chatHistory, isRefining]);
 
   // --- Helper: Fetch Stream ---
-  const fetchStream = async (url, body, onLog, onResult, onError) => {
+  const fetchStream = async (url, body, onLog, onResult, onError, onPermission) => {
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -248,6 +268,7 @@ export default function AutoMVP() {
               if (data.type === 'log') onLog(data.data);
               if (data.type === 'result') onResult(data.data);
               if (data.type === 'error') onError(data.data);
+              if (data.type === 'permission_request' && onPermission) onPermission(data.data);
             } catch (e) {
               console.error('Failed to parse stream data', e);
             }
@@ -273,9 +294,10 @@ export default function AutoMVP() {
       });
     }
 
+    const runId = `gen-${projectId}-${attempt}`;
     await fetchStream(
       '/api/generate',
-      { prompt: promptText },
+      { prompt: promptText, autoApprove, runId },
       (log) => {
         setLogs(prev => {
           const next = [...prev, `> ${log}`];
@@ -288,11 +310,11 @@ export default function AutoMVP() {
 
         if (preparedFiles.length === 0) {
           setLogs(prev => {
-            const next = [...prev, `> No files generated. Retrying...`];
+            const next = [...prev, `> No files generated. Please try again or refine your prompt.`];
             logsRef.current = next;
             return next;
           });
-          setTimeout(() => attemptGeneration(promptText, projectId, attempt + 1), 2000);
+          setError('No files generated.');
           return;
         }
 
@@ -320,7 +342,10 @@ export default function AutoMVP() {
         }
         setTimeout(() => setView('result'), 800);
       },
-      (err) => setError(err)
+      (err) => setError(err),
+      (permissionRequest) => {
+        setPendingApprovals(prev => [...prev, permissionRequest]);
+      }
     );
   };
 
@@ -333,6 +358,7 @@ export default function AutoMVP() {
     setError(null);
     setFiles([]);
     setChatHistory([{ role: 'system', text: "Project generated. You can now edit the code directly or ask me to refine it." }]);
+    setPendingApprovals([]);
 
     if (intervalRef.current) clearInterval(intervalRef.current);
 
@@ -352,6 +378,7 @@ export default function AutoMVP() {
     setPrdText('');
     setView('input');
     setPreviewUrl('');
+    setPendingApprovals([]);
   };
 
   const handleLoadProject = async (projectSummary) => {
@@ -456,6 +483,7 @@ export default function AutoMVP() {
     const userRequest = chatInput;
     setChatInput('');
     setIsRefining(true);
+    setPendingApprovals([]);
     setChatHistory(prev => [...prev, { role: 'user', text: userRequest }]);
 
     // Show logs in chat or a separate view? User asked for "like view page"
@@ -468,9 +496,10 @@ export default function AutoMVP() {
     const startLogIndex = chatHistory.length + 1;
     setChatHistory(prev => [...prev, { role: 'system', text: 'Refining...' }]);
 
+    const runId = `refine-${Date.now()}`;
     await fetchStream(
       '/api/refine',
-      { prompt: userRequest, files: files },
+      { prompt: userRequest, files: files, autoApprove, runId },
       (log) => {
         // Option A: Stream into chat
         // setChatHistory(prev => [...prev, { role: 'log', text: log }]);
@@ -485,6 +514,9 @@ export default function AutoMVP() {
       },
       (err) => {
         setChatHistory(prev => [...prev, { role: 'system', text: `Error refining: ${err}` }]);
+      },
+      (permissionRequest) => {
+        setPendingApprovals(prev => [...prev, permissionRequest]);
       }
     );
 
@@ -589,6 +621,37 @@ export default function AutoMVP() {
   };
 
 
+  const buildWebContainerTree = (projectFiles = []) => {
+    const root = {};
+
+    projectFiles.forEach(({ path, content }) => {
+      const parts = path.split('/').filter(Boolean);
+      let current = root;
+
+      parts.forEach((part, index) => {
+        const isFile = index === parts.length - 1;
+        if (isFile) {
+          current[part] = { file: { contents: content ?? '' } };
+        } else {
+          current[part] = current[part] || { directory: {} };
+          current = current[part].directory;
+        }
+      });
+    });
+
+    return root;
+  };
+
+  const getPackageJson = (projectFiles = []) => {
+    const pkg = projectFiles.find(f => f.path === 'package.json');
+    if (!pkg) return null;
+    try {
+      return JSON.parse(pkg.content);
+    } catch {
+      return null;
+    }
+  };
+
   const runPreview = async () => {
     if (detectNextProject(files)) {
       setLogs(prev => [...prev, '> Detected Next.js project. Preview bundling is disabled for Next.js apps.']);
@@ -599,57 +662,69 @@ export default function AutoMVP() {
     setIsBundling(true);
     setPreviewUrl('');
     setActiveTab('preview');
-    setLogs(prev => [...prev, '> Bundling with ESBuild WASM...']);
+    setLogs(prev => [...prev, '> Starting WebContainer preview...']);
 
     try {
-      const entryPoint = wasmBundlerService.findEntryPoint(files);
-      if (!entryPoint) {
-        setLogs(prev => [...prev, '> No entry point found for bundling. Showing inline preview instead.']);
+      const pkg = getPackageJson(files);
+      if (!pkg) {
+        setLogs(prev => [...prev, '> No package.json found. Showing inline preview instead.']);
         return;
       }
 
-      const bundlePromise = wasmBundlerService.bundle(files, entryPoint);
-      const timeoutMs = 12000;
-      const bundledCode = await Promise.race([
-        bundlePromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Bundling timed out. This project may be too large for inline preview.')), timeoutMs))
-      ]);
-      setLogs(prev => [...prev, '> Bundle successful.']);
+      const scripts = pkg.scripts || {};
+      const devScript = scripts.dev ? 'dev' : scripts.start ? 'start' : null;
 
-      const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body { margin: 0; font-family: system-ui, sans-serif; }
-    #root { height: 100vh; }
-  </style>
-  <script type="module">
-    ${bundledCode}
-  </script>
-</head>
-<body>
-  <div id="root"></div>
-</body>
-</html>
-      `;
+      if (!devScript) {
+        setLogs(prev => [...prev, '> No dev or start script found. Showing inline preview instead.']);
+        return;
+      }
 
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      setPreviewUrl(url);
-      setLogs(prev => [...prev, '> Preview ready.']);
+      if (!webcontainerRef.current) {
+        setLogs(prev => [...prev, '> Booting WebContainer...']);
+        webcontainerRef.current = await WebContainer.boot();
+        webcontainerRef.current.on('server-ready', (_port, url) => {
+          setPreviewUrl(url);
+          setLogs(prev => [...prev, `> Preview ready at ${url}`]);
+        });
+      }
+
+      await webcontainerRef.current.mount(buildWebContainerTree(files));
+
+      if (!webcontainerInstallRef.current) {
+        setLogs(prev => [...prev, '> Installing dependencies...']);
+        const installProcess = await webcontainerRef.current.spawn('npm', ['install']);
+        installProcess.output.pipeTo(new WritableStream({
+          write(data) {
+            setLogs(prev => [...prev, `> ${data}`]);
+          }
+        }));
+        const installExit = await installProcess.exit;
+        if (installExit !== 0) {
+          throw new Error('npm install failed.');
+        }
+        webcontainerInstallRef.current = true;
+      }
+
+      if (!webcontainerProcessRef.current) {
+        setLogs(prev => [...prev, '> Starting dev server...']);
+        webcontainerProcessRef.current = await webcontainerRef.current.spawn('npm', [
+          'run',
+          devScript,
+          '--',
+          '--host',
+          '0.0.0.0',
+          '--port',
+          '5173'
+        ]);
+        webcontainerProcessRef.current.output.pipeTo(new WritableStream({
+          write(data) {
+            setLogs(prev => [...prev, `> ${data}`]);
+          }
+        }));
+      }
     } catch (e) {
       console.error('Preview error', e);
-      const isTimeout = e?.message?.includes('Bundling timed out');
-      if (isTimeout) {
-        setLogs(prev => [...prev, '> Bundling timed out. Disabling preview for this project.']);
-        setIsPreviewable(false);
-        setPreviewUrl('');
-      } else {
-        setLogs(prev => [...prev, `> Bundling error: ${e.message}`]);
-      }
+      setLogs(prev => [...prev, `> Preview error: ${e.message}`]);
     } finally {
       setIsBundling(false);
     }
@@ -767,7 +842,7 @@ export default function AutoMVP() {
       return (
         <div className="flex flex-col items-center justify-center h-full text-slate-400">
           <Loader size={32} className="animate-spin mb-4" />
-          <p>Bundling application...</p>
+          <p>Starting preview...</p>
         </div>
       );
     }
@@ -851,6 +926,58 @@ export default function AutoMVP() {
     }
   };
 
+  const handleApprovalDecision = async (approval, decision) => {
+    try {
+      await fetch('/api/approve-tool', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId: approval.requestId,
+          runId: approval.runId,
+          decision
+        })
+      });
+      setPendingApprovals(prev => prev.filter(item => item.requestId !== approval.requestId));
+      setLogs(prev => [...prev, `> ${decision === 'allow' ? 'Approved' : 'Denied'} ${approval.toolName}`]);
+    } catch (e) {
+      console.error('Failed to submit approval decision', e);
+      setLogs(prev => [...prev, `> Failed to submit approval for ${approval.toolName}`]);
+    }
+  };
+
+  const renderApprovalRequests = () => {
+    if (autoApprove || pendingApprovals.length === 0) return null;
+
+    return (
+      <div className="mt-4 border-t dark:border-slate-800 border-slate-200 pt-4 space-y-4">
+        {pendingApprovals.map((approval) => (
+          <div key={approval.requestId} className="rounded-lg border dark:border-slate-800 border-slate-200 bg-slate-950/30 p-3">
+            <div className="text-xs font-bold text-amber-400 mb-2">
+              Approval required: {approval.toolName}
+            </div>
+            <pre className="text-[10px] text-slate-400 whitespace-pre-wrap break-words max-h-40 overflow-auto mb-3">
+              {JSON.stringify(approval.input ?? {}, null, 2)}
+            </pre>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleApprovalDecision(approval, 'allow')}
+                className="px-2 py-1 rounded bg-emerald-600/20 text-emerald-300 text-[11px] font-bold hover:bg-emerald-500/40"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => handleApprovalDecision(approval, 'deny')}
+                className="px-2 py-1 rounded bg-red-600/20 text-red-300 text-[11px] font-bold hover:bg-red-500/40"
+              >
+                Deny
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen dark:bg-slate-900 dark:text-slate-100 bg-slate-50 text-slate-900 font-sans selection:bg-indigo-500/30">
       {/* Header */}
@@ -876,7 +1003,7 @@ export default function AutoMVP() {
               {theme === 'dark' ? <Sun size={20} className="text-yellow-400" /> : <Moon size={20} className="text-slate-600" />}
             </button>
             <span className="px-2 py-1 bg-slate-800 rounded border border-slate-700 text-xs font-mono">
-              Provider: Papert-code
+              Provider: Papert Code SDK
             </span>
           </div>
         </div>
@@ -900,14 +1027,14 @@ export default function AutoMVP() {
             <div className="dark:bg-slate-800/50 bg-white border dark:border-slate-700 border-slate-200 rounded-2xl p-1 shadow-2xl">
               <div className="p-6 space-y-6">
                 <div className="grid grid-cols-3 gap-4">
-                  {['Papert-code'].map(p => (
+                  {['Papert Code'].map(p => (
                     <button
                       key={p}
                       onClick={() => setProvider(p)}
-                      disabled={p !== 'Papert-code'}
+                      disabled={p !== 'Papert Code'}
                       className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all 
                         ${provider === p ? 'bg-blue-900/40 border-blue-500 ring-1 ring-blue-500' : 'dark:bg-slate-800 bg-slate-100 dark:border-slate-700 border-slate-200 opacity-60'}
-                        ${p !== 'Papert-code' && 'cursor-not-allowed opacity-40'}
+                        ${p !== 'Papert Code' && 'cursor-not-allowed opacity-40'}
                       `}
                     >
                       <div className="p-2 rounded-lg bg-slate-700">
@@ -916,6 +1043,26 @@ export default function AutoMVP() {
                       <span className="font-medium text-sm dark:text-slate-200 text-slate-700">{p}</span>
                     </button>
                   ))}
+                </div>
+
+                <div className="flex items-center justify-between rounded-xl border dark:border-slate-700 border-slate-200 dark:bg-slate-900/60 bg-slate-100 px-4 py-3">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Auto-approve tools</div>
+                    <div className="text-xs text-slate-500">Allow all tool permissions during generation.</div>
+                  </div>
+                  <button
+                    onClick={() => setAutoApprove(!autoApprove)}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                      autoApprove ? 'bg-emerald-500' : 'bg-slate-400'
+                    }`}
+                    aria-pressed={autoApprove}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                        autoApprove ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
                 </div>
 
                 <textarea
@@ -978,6 +1125,7 @@ export default function AutoMVP() {
                     <span className="dark:text-slate-300 text-slate-700">{log}</span>
                   </div>
                 ))}
+                {renderApprovalRequests()}
                 {error && (
                   <button onClick={() => setView('input')} className="mt-4 text-red-400 hover:underline">
                     Error: {error}. Click to retry.
@@ -1139,6 +1287,7 @@ export default function AutoMVP() {
                       {logs.map((log, i) => (
                         <div key={i}>{log}</div>
                       ))}
+                      {renderApprovalRequests()}
                     </div>
                   )}
 
