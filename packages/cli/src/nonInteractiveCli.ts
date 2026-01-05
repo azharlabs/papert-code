@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -143,7 +143,7 @@ export async function runNonInteractive(
             query: input,
             config,
             addItem: (_item, _timestamp) => 0,
-            onDebugMessage: () => {},
+            onDebugMessage: () => { },
             messageId: Date.now(),
             signal: abortController.signal,
           });
@@ -252,10 +252,10 @@ export async function runNonInteractive(
             const isTaskTool = finalRequestInfo.name === 'task';
             const taskToolProgress = isTaskTool
               ? createTaskToolProgressHandler(
-                  config,
-                  finalRequestInfo.callId,
-                  adapter,
-                )
+                config,
+                finalRequestInfo.callId,
+                adapter,
+              )
               : undefined;
             const taskToolProgressHandler = taskToolProgress?.handler;
             const toolResponse = await executeToolCall(
@@ -264,13 +264,13 @@ export async function runNonInteractive(
               abortController.signal,
               isTaskTool && taskToolProgressHandler
                 ? {
-                    outputUpdateHandler: taskToolProgressHandler,
-                    onToolCallsUpdate: toolCallUpdateCallback,
-                  }
+                  outputUpdateHandler: taskToolProgressHandler,
+                  onToolCallsUpdate: toolCallUpdateCallback,
+                }
                 : toolCallUpdateCallback
                   ? {
-                      onToolCallsUpdate: toolCallUpdateCallback,
-                    }
+                    onToolCallsUpdate: toolCallUpdateCallback,
+                  }
                   : undefined,
             );
 

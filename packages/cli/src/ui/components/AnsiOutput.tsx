@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -32,18 +32,18 @@ export const AnsiOutputText: React.FC<AnsiOutputProps> = ({
     <Text key={lineIndex}>
       {line.length > 0
         ? line.map((token: AnsiToken, tokenIndex: number) => (
-            <Text
-              key={tokenIndex}
-              color={token.inverse ? token.bg : token.fg}
-              backgroundColor={token.inverse ? token.fg : token.bg}
-              dimColor={token.dim}
-              bold={token.bold}
-              italic={token.italic}
-              underline={token.underline}
-            >
-              {token.text}
-            </Text>
-          ))
+          <Text
+            key={tokenIndex}
+            color={token.inverse ? token.bg : token.fg}
+            backgroundColor={token.inverse ? token.fg : token.bg}
+            dimColor={token.dim}
+            bold={token.bold}
+            italic={token.italic}
+            underline={token.underline}
+          >
+            {token.text}
+          </Text>
+        ))
         : null}
     </Text>
   ));

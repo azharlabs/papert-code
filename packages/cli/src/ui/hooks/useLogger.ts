@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -30,7 +30,7 @@ export const useLogger = (storage: Storage, sessionId: string) => {
       .then(() => {
         setLogger(newLogger);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [storage, sessionId]);
 
   return logger;

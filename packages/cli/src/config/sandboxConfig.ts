@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -81,7 +81,7 @@ function getSandboxCommand(
   if (sandbox === true) {
     throw new FatalSandboxError(
       'GEMINI_SANDBOX is true but failed to determine command for sandbox; ' +
-        'install docker or podman or specify command in GEMINI_SANDBOX',
+      'install docker or podman or specify command in GEMINI_SANDBOX',
     );
   }
 

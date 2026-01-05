@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -508,8 +508,8 @@ export const useGeminiStream = (
           const updatedTools = pendingHistoryItemRef.current.tools.map(
             (tool) =>
               tool.status === ToolCallStatus.Pending ||
-              tool.status === ToolCallStatus.Confirming ||
-              tool.status === ToolCallStatus.Executing
+                tool.status === ToolCallStatus.Confirming ||
+                tool.status === ToolCallStatus.Executing
                 ? { ...tool, status: ToolCallStatus.Canceled }
                 : tool,
           );

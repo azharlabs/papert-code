@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -54,9 +54,8 @@ export function createShowMemoryAction(
       const name = allNamesTheSame ? contextFileNames[0] : 'context';
       addMessage({
         type: MessageType.INFO,
-        content: `Loaded memory from ${fileCount} ${name} file${
-          fileCount > 1 ? 's' : ''
-        }.`,
+        content: `Loaded memory from ${fileCount} ${name} file${fileCount > 1 ? 's' : ''
+          }.`,
         timestamp: new Date(),
       });
     }

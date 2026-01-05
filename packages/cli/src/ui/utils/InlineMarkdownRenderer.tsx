@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -126,7 +126,7 @@ const RenderInlineInternal: React.FC<RenderInlineProps> = ({
         fullMatch.startsWith('<u>') &&
         fullMatch.endsWith('</u>') &&
         fullMatch.length >
-          UNDERLINE_TAG_START_LENGTH + UNDERLINE_TAG_END_LENGTH - 1 // -1 because length is compared to combined length of start and end tags
+        UNDERLINE_TAG_START_LENGTH + UNDERLINE_TAG_END_LENGTH - 1 // -1 because length is compared to combined length of start and end tags
       ) {
         renderedNode = (
           <Text key={key} underline>

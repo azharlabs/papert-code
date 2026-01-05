@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -107,7 +107,7 @@ describe('useInputHistoryStore', () => {
         .mockRejectedValue(new Error('Logger error')),
     };
 
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
     const { result } = renderHook(() => useInputHistoryStore());
 

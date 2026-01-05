@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -165,7 +165,7 @@ describe('ThemeManager', () => {
       vi.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(mockTheme));
       const consoleWarnSpy = vi
         .spyOn(console, 'warn')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       const result = themeManager.setActiveTheme('/untrusted/my-theme.json');
 

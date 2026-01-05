@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -94,7 +94,7 @@ async function updateAction(context: CommandContext, args: string) {
               context.ui.addConfirmUpdateExtensionRequest,
             ),
           context.ui.extensionsUpdateState.get(extension.name)?.status ??
-            ExtensionUpdateState.UNKNOWN,
+          ExtensionUpdateState.UNKNOWN,
           context.ui.dispatchExtensionStateUpdate,
         );
         if (updateInfo) updateInfos.push(updateInfo);

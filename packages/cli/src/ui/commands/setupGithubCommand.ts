@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,7 +9,7 @@ import * as fs from 'node:fs';
 import { Writable } from 'node:stream';
 import { ProxyAgent } from 'undici';
 
-import type { CommandContext , SlashCommand, SlashCommandActionReturn } from './types.js';
+import type { CommandContext, SlashCommand, SlashCommandActionReturn } from './types.js';
 import {
   getGitRepoRoot,
   getLatestGitHubRelease,

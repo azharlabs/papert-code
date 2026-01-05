@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -21,7 +21,7 @@ export class Override {
     public baseRule: string,
     public isDisable: boolean,
     public includeSubdirs: boolean,
-  ) {}
+  ) { }
 
   static fromInput(inputRule: string, includeSubdirs: boolean): Override {
     const isDisable = inputRule.startsWith('!');

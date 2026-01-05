@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -35,7 +35,7 @@ class MockCommandLoader implements ICommandLoader {
 
 describe('CommandService', () => {
   beforeEach(() => {
-    vi.spyOn(console, 'debug').mockImplementation(() => {});
+    vi.spyOn(console, 'debug').mockImplementation(() => { });
   });
 
   afterEach(() => {

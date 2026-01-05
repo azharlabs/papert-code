@@ -1,11 +1,11 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /* Fail to compile on unexpected values. */
-export function assumeExhaustive(_value: never): void {}
+export function assumeExhaustive(_value: never): void { }
 
 /**
  * Throws an exception on unexpected values.

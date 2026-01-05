@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -77,8 +77,8 @@ d('BOM end-to-end integration', () => {
     if (expectedText === null) {
       expect(
         lower.includes('binary') ||
-          lower.includes('skipped binary file') ||
-          lower.includes('cannot display'),
+        lower.includes('skipped binary file') ||
+        lower.includes('cannot display'),
       ).toBeTruthy();
     } else {
       expect(output.includes(expectedText)).toBeTruthy();

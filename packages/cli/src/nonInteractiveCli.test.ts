@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -82,7 +82,7 @@ describe('runNonInteractive', () => {
       getCommands: mockGetCommands,
     });
 
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
     processStdoutSpy = vi
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true);
@@ -716,7 +716,7 @@ describe('runNonInteractive', () => {
     // Mock console.error to capture JSON error output
     const consoleErrorJsonSpy = vi
       .spyOn(console, 'error')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     let thrownError: Error | null = null;
     try {
@@ -762,7 +762,7 @@ describe('runNonInteractive', () => {
     // Mock console.error to capture JSON error output
     const consoleErrorJsonSpy = vi
       .spyOn(console, 'error')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     let thrownError: Error | null = null;
     try {

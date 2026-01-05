@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,13 +13,13 @@ const mockCommands: readonly SlashCommand[] = [
   {
     name: 'help',
     description: 'Show help',
-    action: async () => {},
+    action: async () => { },
     kind: CommandKind.BUILT_IN,
   },
   {
     name: 'commit',
     description: 'Commit changes',
-    action: async () => {},
+    action: async () => { },
     kind: CommandKind.FILE,
   },
   {
@@ -30,14 +30,14 @@ const mockCommands: readonly SlashCommand[] = [
       {
         name: 'add',
         description: 'Add to memory',
-        action: async () => {},
+        action: async () => { },
         kind: CommandKind.BUILT_IN,
       },
       {
         name: 'clear',
         description: 'Clear memory',
         altNames: ['c'],
-        action: async () => {},
+        action: async () => { },
         kind: CommandKind.BUILT_IN,
       },
     ],

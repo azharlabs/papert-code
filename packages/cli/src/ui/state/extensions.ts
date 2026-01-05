@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -34,13 +34,13 @@ export const initialExtensionUpdatesState: ExtensionUpdatesState = {
 
 export type ExtensionUpdateAction =
   | {
-      type: 'SET_STATE';
-      payload: { name: string; state: ExtensionUpdateState };
-    }
+    type: 'SET_STATE';
+    payload: { name: string; state: ExtensionUpdateState };
+  }
   | {
-      type: 'SET_PROCESSED';
-      payload: { name: string; processed: boolean };
-    }
+    type: 'SET_PROCESSED';
+    payload: { name: string; processed: boolean };
+  }
   | { type: 'BATCH_CHECK_START' }
   | { type: 'BATCH_CHECK_END' };
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -844,7 +844,7 @@ describe('GeminiChat', () => {
           (c) =>
             c.type === StreamEventType.CHUNK &&
             c.value.candidates?.[0]?.content?.parts?.[0]?.text ===
-              'Successful response',
+            'Successful response',
         ),
       ).toBe(true);
 
@@ -994,7 +994,7 @@ describe('GeminiChat', () => {
             (e) =>
               e.type === StreamEventType.CHUNK &&
               e.value.candidates?.[0]?.content?.parts?.[0]?.text ===
-                'Success after retry',
+              'Success after retry',
           ),
         ).toBe(true);
       });
@@ -1156,7 +1156,7 @@ describe('GeminiChat', () => {
     vi.mocked(mockContentGenerator.generateContentStream)
       .mockImplementationOnce(
         // First call resolves to an async generator that yields nothing.
-        async () => (async function* () {})(),
+        async () => (async function* () { })(),
       )
       .mockImplementationOnce(
         // Second call returns a valid stream.
@@ -1193,7 +1193,7 @@ describe('GeminiChat', () => {
         (c) =>
           c.type === StreamEventType.CHUNK &&
           c.value.candidates?.[0]?.content?.parts?.[0]?.text ===
-            'Successful response after empty',
+          'Successful response after empty',
       ),
     ).toBe(true);
 

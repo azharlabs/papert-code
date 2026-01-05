@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -27,7 +27,7 @@ import type { FallbackModelHandler } from './types.js';
 // Mock the telemetry logger and event class
 vi.mock('../telemetry/index.js', () => ({
   logFlashFallback: vi.fn(),
-  FlashFallbackEvent: class {},
+  FlashFallbackEvent: class { },
 }));
 
 const MOCK_PRO_MODEL = DEFAULT_GEMINI_MODEL;
@@ -55,7 +55,7 @@ describe('handleFallback', () => {
     mockConfig = createMockConfig({
       fallbackModelHandler: mockHandler,
     });
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
   });
 
   afterEach(() => {

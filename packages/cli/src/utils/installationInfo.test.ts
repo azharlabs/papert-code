@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -59,7 +59,7 @@ describe('getInstallationInfo', () => {
   });
 
   it('should return UNKNOWN and log error if realpathSync fails', () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
     process.argv[1] = '/path/to/cli';
     const error = new Error('realpath failed');
     mockedRealPathSync.mockImplementation(() => {

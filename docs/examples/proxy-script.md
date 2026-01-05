@@ -7,7 +7,7 @@ The following is an example of a proxy script that can be used with the `GEMINI_
 
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 

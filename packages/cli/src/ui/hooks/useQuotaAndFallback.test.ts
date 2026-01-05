@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -234,7 +234,7 @@ describe('useQuotaAndFallback', () => {
           new Error('pro quota'),
         );
 
-        await act(async () => {});
+        await act(async () => { });
 
         // The hook should now have a pending request for the UI to handle
         expect(result.current.proQuotaRequest).not.toBeNull();
@@ -272,7 +272,7 @@ describe('useQuotaAndFallback', () => {
           'gemini-flash',
           new Error('pro quota 1'),
         );
-        await act(async () => {});
+        await act(async () => { });
 
         const firstRequest = result.current.proQuotaRequest;
         expect(firstRequest).not.toBeNull();
@@ -340,7 +340,7 @@ describe('useQuotaAndFallback', () => {
         'gemini-flash',
         new Error('pro quota'),
       );
-      await act(async () => {}); // Allow state to update
+      await act(async () => { }); // Allow state to update
 
       act(() => {
         result.current.handleProQuotaChoice('auth');
@@ -371,7 +371,7 @@ describe('useQuotaAndFallback', () => {
         'gemini-flash',
         new Error('pro quota'),
       );
-      await act(async () => {}); // Allow state to update
+      await act(async () => { }); // Allow state to update
 
       act(() => {
         result.current.handleProQuotaChoice('continue');

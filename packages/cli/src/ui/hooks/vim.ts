@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -58,9 +58,9 @@ type VimAction =
   | { type: 'CLEAR_COUNT' }
   | { type: 'SET_PENDING_OPERATOR'; operator: 'g' | 'd' | 'c' | null }
   | {
-      type: 'SET_LAST_COMMAND';
-      command: { type: string; count: number } | null;
-    }
+    type: 'SET_LAST_COMMAND';
+    command: { type: string; count: number } | null;
+  }
   | { type: 'CLEAR_PENDING_STATES' }
   | { type: 'ESCAPE_TO_NORMAL' };
 

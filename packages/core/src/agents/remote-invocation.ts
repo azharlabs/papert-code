@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,7 +10,7 @@ import type { AgentDefinition, AgentInvocationResult } from './types.js';
  * Placeholder for remote agent invocation. Currently mirrors local behavior.
  */
 export class RemoteAgentInvocation<TOutput = unknown> {
-  constructor(private readonly definition: AgentDefinition<TOutput>) {}
+  constructor(private readonly definition: AgentDefinition<TOutput>) { }
 
   async run(): Promise<AgentInvocationResult<TOutput>> {
     return {

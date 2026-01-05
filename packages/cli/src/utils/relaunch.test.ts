@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -40,7 +40,7 @@ describe('relaunchOnExitCode', () => {
     processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('PROCESS_EXIT_CALLED');
     });
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
     stdinResumeSpy = vi
       .spyOn(process.stdin, 'resume')
       .mockImplementation(() => process.stdin);
@@ -124,7 +124,7 @@ describe('relaunchAppInChildProcess', () => {
     processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
       throw new Error('PROCESS_EXIT_CALLED');
     });
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
     stdinPauseSpy = vi
       .spyOn(process.stdin, 'pause')
       .mockImplementation(() => process.stdin);

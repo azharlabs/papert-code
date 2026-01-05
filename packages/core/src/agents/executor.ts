@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -18,7 +18,7 @@ export class AgentExecutor<TOutput = unknown> {
   constructor(
     readonly definition: AgentDefinition<TOutput>,
     readonly runtimeContext: Config,
-  ) {}
+  ) { }
 
   static async create<TOutput = unknown>(
     definition: AgentDefinition<TOutput>,

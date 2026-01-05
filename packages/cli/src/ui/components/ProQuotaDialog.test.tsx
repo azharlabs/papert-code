@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -24,7 +24,7 @@ describe('ProQuotaDialog', () => {
       <ProQuotaDialog
         failedModel="gemini-2.5-pro"
         fallbackModel="gemini-2.5-flash"
-        onChoice={() => {}}
+        onChoice={() => { }}
       />,
     );
 

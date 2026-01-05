@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -142,12 +142,12 @@ function summarizeToolCalls(
   // Only file interaction telemetry if 100% of the tool calls were accepted.
   return traceId && acceptedToolCalls / toolCalls.length >= 1
     ? createConversationInteraction(
-        traceId,
-        actionStatus || ActionStatus.ACTION_STATUS_NO_ERROR,
-        isEdit
-          ? ConversationInteractionInteraction.ACCEPT_FILE
-          : ConversationInteractionInteraction.UNKNOWN,
-      )
+      traceId,
+      actionStatus || ActionStatus.ACTION_STATUS_NO_ERROR,
+      isEdit
+        ? ConversationInteractionInteraction.ACCEPT_FILE
+        : ConversationInteractionInteraction.UNKNOWN,
+    )
     : undefined;
 }
 

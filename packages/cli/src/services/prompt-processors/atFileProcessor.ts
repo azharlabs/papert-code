@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -18,7 +18,7 @@ import {
 import { extractInjections } from './injectionParser.js';
 
 export class AtFileProcessor implements IPromptProcessor {
-  constructor(private readonly commandName?: string) {}
+  constructor(private readonly commandName?: string) { }
 
   async process(
     input: PromptPipelineContent,

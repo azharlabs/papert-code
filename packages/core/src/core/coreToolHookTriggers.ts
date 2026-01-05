@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -328,9 +328,8 @@ export async function executeToolWithHooks(
           invocation = tool.build(invocation.params);
         } catch (error) {
           return {
-            llmContent: `Tool parameter modification by hook failed validation: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
+            llmContent: `Tool parameter modification by hook failed validation: ${error instanceof Error ? error.message : String(error)
+              }`,
             returnDisplay: `Tool parameter modification by hook failed validation.`,
             error: {
               type: ToolErrorType.INVALID_TOOL_PARAMS,

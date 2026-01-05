@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -21,8 +21,7 @@ function createIamApiUrl(targetSA: string): string {
 }
 
 export class ServiceAccountImpersonationProvider
-  implements OAuthClientProvider
-{
+  implements OAuthClientProvider {
   private readonly targetServiceAccount: string;
   private readonly targetAudience: string; // OAuth Client Id
   private readonly auth: GoogleAuth;

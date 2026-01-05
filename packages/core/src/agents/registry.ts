@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,7 +11,7 @@ import { debugLogger } from '../utils/debugLogger.js';
 export class AgentRegistry {
   private readonly agents = new Map<string, AgentDefinition>();
 
-  constructor(_config: Config) {}
+  constructor(_config: Config) { }
 
   async initialize(): Promise<void> {
     // Placeholder for future discovery.

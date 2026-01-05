@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -96,13 +96,13 @@ const MAX_TURNS = 100;
 
 type BeforeAgentHookReturn =
   | {
-      type: GeminiEventType.AgentExecutionStopped;
-      value: { reason: string };
-    }
+    type: GeminiEventType.AgentExecutionStopped;
+    value: { reason: string };
+  }
   | {
-      type: GeminiEventType.AgentExecutionBlocked;
-      value: { reason: string };
-    }
+    type: GeminiEventType.AgentExecutionBlocked;
+    value: { reason: string };
+  }
   | { additionalContext: string | undefined }
   | undefined;
 

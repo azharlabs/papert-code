@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -279,7 +279,7 @@ const renderDiffContent = (
         lastLineNumber !== null &&
         relevantLineNumberForGapCalc !== null &&
         relevantLineNumberForGapCalc >
-          lastLineNumber + MAX_CONTEXT_LINES_WITHOUT_GAP + 1
+        lastLineNumber + MAX_CONTEXT_LINES_WITHOUT_GAP + 1
       ) {
         acc.push(
           <Box key={`gap-${index}`}>

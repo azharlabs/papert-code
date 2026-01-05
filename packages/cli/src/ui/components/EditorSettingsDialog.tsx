@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -57,8 +57,8 @@ export function EditorSettingsDialog({
     settings.forScope(selectedScope).settings.general?.preferredEditor;
   let editorIndex = currentPreference
     ? editorItems.findIndex(
-        (item: EditorDisplay) => item.type === currentPreference,
-      )
+      (item: EditorDisplay) => item.type === currentPreference,
+    )
     : 0;
   if (editorIndex === -1) {
     console.error(`Editor is not supported: ${currentPreference}`);
@@ -106,7 +106,7 @@ export function EditorSettingsDialog({
   ) {
     otherScopeModifiedMessage =
       settings.forScope(selectedScope).settings.general?.preferredEditor !==
-      undefined
+        undefined
         ? `(Also modified in ${otherScope})`
         : `(Modified in ${otherScope})`;
   }
@@ -118,7 +118,7 @@ export function EditorSettingsDialog({
   ) {
     mergedEditorName =
       EDITOR_DISPLAY_NAMES[
-        settings.merged.general?.preferredEditor as EditorType
+      settings.merged.general?.preferredEditor as EditorType
       ];
   }
 

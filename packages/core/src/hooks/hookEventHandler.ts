@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -503,15 +503,15 @@ export class HookEventHandler {
       // Execute hooks according to the plan's strategy
       const results = plan.sequential
         ? await this.hookRunner.executeHooksSequential(
-            plan.hookConfigs,
-            eventName,
-            input,
-          )
+          plan.hookConfigs,
+          eventName,
+          input,
+        )
         : await this.hookRunner.executeHooksParallel(
-            plan.hookConfigs,
-            eventName,
-            input,
-          );
+          plan.hookConfigs,
+          eventName,
+          input,
+        );
 
       // Aggregate results
       const aggregated = this.hookAggregator.aggregateResults(
@@ -575,7 +575,7 @@ export class HookEventHandler {
 
       debugLogger.warn(
         `Hook execution for ${eventName}: ${successCount} succeeded, ${errorCount} failed (${failedNames}), ` +
-          `total duration: ${aggregated.totalDuration}ms`,
+        `total duration: ${aggregated.totalDuration}ms`,
       );
 
       debugLogger.warn(
@@ -584,7 +584,7 @@ export class HookEventHandler {
     } else {
       debugLogger.debug(
         `Hook execution for ${eventName}: ${successCount} hooks executed successfully, ` +
-          `total duration: ${aggregated.totalDuration}ms`,
+        `total duration: ${aggregated.totalDuration}ms`,
       );
     }
 

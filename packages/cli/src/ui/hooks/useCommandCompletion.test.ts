@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -94,7 +94,7 @@ describe('useCommandCompletion', () => {
       initialCursorOffset: cursorOffset ?? text.length,
       viewport: { width: 80, height: 20 },
       isValidPath: () => false,
-      onChange: () => {},
+      onChange: () => { },
     });
   }
 

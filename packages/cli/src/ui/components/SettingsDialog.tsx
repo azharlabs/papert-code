@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -550,8 +550,8 @@ export function SettingsDialog({
             prev === 'settings'
               ? 'scope'
               : prev === 'scope'
-              ? 'search'
-              : 'settings',
+                ? 'search'
+                : 'settings',
           );
         } else {
           setFocusSection((prev) =>

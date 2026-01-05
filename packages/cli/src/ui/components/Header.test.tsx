@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,7 +14,7 @@ import { longAsciiLogo } from './AsciiArt.js';
 vi.mock('../hooks/useTerminalSize.js');
 
 describe('<Header />', () => {
-  beforeEach(() => {});
+  beforeEach(() => { });
 
   it('renders the long logo on a wide terminal', () => {
     vi.spyOn(useTerminalSize, 'useTerminalSize').mockReturnValue({

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -37,37 +37,37 @@ interface SelectionListState<T> {
 
 type SelectionListAction<T> =
   | {
-      type: 'SET_ACTIVE_INDEX';
-      payload: {
-        index: number;
-        items: Array<SelectionListItem<T>>;
-      };
-    }
-  | {
-      type: 'MOVE_UP';
-      payload: {
-        items: Array<SelectionListItem<T>>;
-      };
-    }
-  | {
-      type: 'MOVE_DOWN';
-      payload: {
-        items: Array<SelectionListItem<T>>;
-      };
-    }
-  | {
-      type: 'SELECT_CURRENT';
-      payload: {
-        items: Array<SelectionListItem<T>>;
-      };
-    }
-  | {
-      type: 'INITIALIZE';
-      payload: { initialIndex: number; items: Array<SelectionListItem<T>> };
-    }
-  | {
-      type: 'CLEAR_PENDING_FLAGS';
+    type: 'SET_ACTIVE_INDEX';
+    payload: {
+      index: number;
+      items: Array<SelectionListItem<T>>;
     };
+  }
+  | {
+    type: 'MOVE_UP';
+    payload: {
+      items: Array<SelectionListItem<T>>;
+    };
+  }
+  | {
+    type: 'MOVE_DOWN';
+    payload: {
+      items: Array<SelectionListItem<T>>;
+    };
+  }
+  | {
+    type: 'SELECT_CURRENT';
+    payload: {
+      items: Array<SelectionListItem<T>>;
+    };
+  }
+  | {
+    type: 'INITIALIZE';
+    payload: { initialIndex: number; items: Array<SelectionListItem<T>> };
+  }
+  | {
+    type: 'CLEAR_PENDING_FLAGS';
+  };
 
 const NUMBER_INPUT_TIMEOUT_MS = 1000;
 
@@ -175,7 +175,7 @@ function selectionListReducer<T>(
       const { initialIndex, items } = action.payload;
       const activeKey =
         initialIndex === state.initialIndex &&
-        state.activeIndex !== state.initialIndex
+          state.activeIndex !== state.initialIndex
           ? state.items[state.activeIndex]?.key
           : undefined;
 

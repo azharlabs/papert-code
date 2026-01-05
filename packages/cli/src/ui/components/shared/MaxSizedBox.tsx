@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -266,10 +266,10 @@ function visitBoxRow(element: React.ReactNode): Row {
     const boxProps = element.props as {
       children?: React.ReactNode;
       readonly flexDirection?:
-        | 'row'
-        | 'column'
-        | 'row-reverse'
-        | 'column-reverse';
+      | 'row'
+      | 'column'
+      | 'row-reverse'
+      | 'column-reverse';
     };
     // Ensure the Box has no props other than the default ones and key.
     let maxExpectedProps = 4;

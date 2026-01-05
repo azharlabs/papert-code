@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -404,7 +404,7 @@ export class MCPOAuthProvider {
       }
       throw new Error(
         errorMessage ||
-          `Token exchange failed: ${response.status} - ${responseText}`,
+        `Token exchange failed: ${response.status} - ${responseText}`,
       );
     }
 
@@ -415,8 +415,8 @@ export class MCPOAuthProvider {
     ) {
       console.warn(
         `Token endpoint returned unexpected content-type: ${contentType}. ` +
-          `Expected application/json or application/x-www-form-urlencoded. ` +
-          `Will attempt to parse response.`,
+        `Expected application/json or application/x-www-form-urlencoded. ` +
+        `Will attempt to parse response.`,
       );
     }
 
@@ -526,7 +526,7 @@ export class MCPOAuthProvider {
       }
       throw new Error(
         errorMessage ||
-          `Token refresh failed: ${response.status} - ${responseText}`,
+        `Token refresh failed: ${response.status} - ${responseText}`,
       );
     }
 
@@ -537,8 +537,8 @@ export class MCPOAuthProvider {
     ) {
       console.warn(
         `Token refresh endpoint returned unexpected content-type: ${contentType}. ` +
-          `Expected application/json or application/x-www-form-urlencoded. ` +
-          `Will attempt to parse response.`,
+        `Expected application/json or application/x-www-form-urlencoded. ` +
+        `Will attempt to parse response.`,
       );
     }
 

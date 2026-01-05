@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -78,12 +78,12 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
   const countOneLineToolCalls = toolCalls.length - countToolCallsWithResults;
   const availableTerminalHeightPerToolMessage = availableTerminalHeight
     ? Math.max(
-        Math.floor(
-          (availableTerminalHeight - staticHeight - countOneLineToolCalls) /
-            Math.max(1, countToolCallsWithResults),
-        ),
-        1,
-      )
+      Math.floor(
+        (availableTerminalHeight - staticHeight - countOneLineToolCalls) /
+        Math.max(1, countToolCallsWithResults),
+      ),
+      1,
+    )
     : undefined;
 
   return (

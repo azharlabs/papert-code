@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -211,12 +211,12 @@ export const useShellCommandProcessor = (
                       tools: prevItem.tools.map((tool) =>
                         tool.callId === callId
                           ? {
-                              ...tool,
-                              resultDisplay:
-                                typeof currentDisplayOutput === 'string'
-                                  ? currentDisplayOutput
-                                  : { ansiOutput: currentDisplayOutput },
-                            }
+                            ...tool,
+                            resultDisplay:
+                              typeof currentDisplayOutput === 'string'
+                                ? currentDisplayOutput
+                                : { ansiOutput: currentDisplayOutput },
+                          }
                           : tool,
                       ),
                     };

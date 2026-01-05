@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -91,7 +91,7 @@ async function updateAction(context: CommandContext, args: string) {
               context.ui.addConfirmUpdateSkillRequest,
             ),
           context.ui.skillsUpdateState.get(skill.name)?.status ??
-            SkillUpdateState.UNKNOWN,
+          SkillUpdateState.UNKNOWN,
           context.ui.dispatchSkillStateUpdate,
         );
         if (updateInfo) updateInfos.push(updateInfo);

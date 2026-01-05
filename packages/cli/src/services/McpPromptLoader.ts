@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -23,7 +23,7 @@ import type { PromptArgument } from '@modelcontextprotocol/sdk/types.js';
  * Model-Context-Protocol (MCP) servers.
  */
 export class McpPromptLoader implements ICommandLoader {
-  constructor(private readonly config: Config | null) {}
+  constructor(private readonly config: Config | null) { }
 
   /**
    * Loads all available prompts from all configured MCP servers and adapts
@@ -70,9 +70,8 @@ export class McpPromptLoader implements ICommandLoader {
                   if (arg.description) {
                     helpMessage += `    ${arg.description}\n`;
                   }
-                  helpMessage += `    (required: ${
-                    arg.required ? 'yes' : 'no'
-                  })\n\n`;
+                  helpMessage += `    (required: ${arg.required ? 'yes' : 'no'
+                    })\n\n`;
                 }
                 return {
                   type: 'message',
@@ -127,17 +126,17 @@ export class McpPromptLoader implements ICommandLoader {
               const textContent =
                 Array.isArray(rawContent) && rawContent.length > 0
                   ? rawContent.find(
-                      (item): item is { type?: string; text: string } =>
-                        !!item &&
-                        typeof item === 'object' &&
-                        'text' in item &&
-                        typeof (item as { text?: unknown }).text === 'string',
-                    )
+                    (item): item is { type?: string; text: string } =>
+                      !!item &&
+                      typeof item === 'object' &&
+                      'text' in item &&
+                      typeof (item as { text?: unknown }).text === 'string',
+                  )
                   : rawContent &&
-                      typeof rawContent === 'object' &&
-                      'text' in rawContent &&
-                      typeof (rawContent as { text?: unknown }).text ===
-                        'string'
+                    typeof rawContent === 'object' &&
+                    'text' in rawContent &&
+                    typeof (rawContent as { text?: unknown }).text ===
+                    'string'
                     ? (rawContent as { text: string })
                     : undefined;
 
@@ -175,9 +174,9 @@ export class McpPromptLoader implements ICommandLoader {
               indexOfFirstSpace === 0
                 ? {}
                 : this.parseArgs(
-                    invocation.raw.substring(indexOfFirstSpace),
-                    prompt.arguments,
-                  );
+                  invocation.raw.substring(indexOfFirstSpace),
+                  prompt.arguments,
+                );
             if (promptInputs instanceof Error) {
               promptInputs = {};
             }

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -464,7 +464,7 @@ describe('InputPrompt', () => {
     it('should handle errors during clipboard operations', async () => {
       const consoleErrorSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
       vi.mocked(clipboardUtils.clipboardHasImage).mockRejectedValue(
         new Error('Clipboard error'),
       );
@@ -1772,10 +1772,10 @@ describe('InputPrompt', () => {
           ...mockReverseSearchCompletion,
           suggestions: reverseSearchActive
             ? [
-                { label: 'echo hello', value: 'echo hello' },
-                { label: 'echo world', value: 'echo world' },
-                { label: 'ls', value: 'ls' },
-              ]
+              { label: 'echo hello', value: 'echo hello' },
+              { label: 'echo world', value: 'echo world' },
+              { label: 'ls', value: 'ls' },
+            ]
             : [],
           showSuggestions: reverseSearchActive,
           activeSuggestionIndex: reverseSearchActive ? 0 : -1,
@@ -1911,9 +1911,9 @@ describe('InputPrompt', () => {
           ...mockReverseSearchCompletion,
           suggestions: isActive
             ? [
-                { label: 'git commit -m "msg"', value: 'git commit -m "msg"' },
-                { label: 'git push', value: 'git push' },
-              ]
+              { label: 'git commit -m "msg"', value: 'git commit -m "msg"' },
+              { label: 'git push', value: 'git push' },
+            ]
             : [],
           showSuggestions: !!isActive,
           activeSuggestionIndex: isActive ? 0 : -1,

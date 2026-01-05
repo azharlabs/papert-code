@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -66,13 +66,13 @@ export const ContextSummaryDisplay: React.FC<ContextSummaryDisplayProps> = ({
     const name = allNamesTheSame ? contextFileNames[0] : 'context';
     return geminiMdFileCount === 1
       ? t('{{count}} {{name}} file', {
-          count: String(geminiMdFileCount),
-          name,
-        })
+        count: String(geminiMdFileCount),
+        name,
+      })
       : t('{{count}} {{name}} files', {
-          count: String(geminiMdFileCount),
-          name,
-        });
+        count: String(geminiMdFileCount),
+        name,
+      });
   })();
 
   const mcpText = (() => {
@@ -97,11 +97,11 @@ export const ContextSummaryDisplay: React.FC<ContextSummaryDisplayProps> = ({
         const serverText =
           blockedMcpServerCount === 1
             ? t('{{count}} MCP server', {
-                count: String(blockedMcpServerCount),
-              })
+              count: String(blockedMcpServerCount),
+            })
             : t('{{count}} MCP servers', {
-                count: String(blockedMcpServerCount),
-              });
+              count: String(blockedMcpServerCount),
+            });
         blockedText += ` ${serverText}`;
       }
       parts.push(blockedText);

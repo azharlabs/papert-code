@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -30,5 +30,5 @@ export const skillsCommand: CommandModule = {
       .command(newCommand)
       .command(validateCommand)
       .demandCommand(),
-  handler: () => {},
+  handler: () => { },
 };

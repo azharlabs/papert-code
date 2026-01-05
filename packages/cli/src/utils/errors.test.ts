@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -72,7 +72,7 @@ describe('errors', () => {
     vi.clearAllMocks();
 
     // Mock console.error
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
     // Mock process.exit to throw instead of actually exiting
     processExitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {

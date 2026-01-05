@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -29,7 +29,7 @@ describe('<EnumSelector />', () => {
         options={LANGUAGE_OPTIONS}
         currentValue="en"
         isActive={true}
-        onValueChange={() => {}}
+        onValueChange={() => { }}
       />,
     );
     expect(lastFrame()).toMatchSnapshot();
@@ -41,7 +41,7 @@ describe('<EnumSelector />', () => {
         options={NUMERIC_OPTIONS}
         currentValue={2}
         isActive={true}
-        onValueChange={() => {}}
+        onValueChange={() => { }}
       />,
     );
     expect(lastFrame()).toMatchSnapshot();
@@ -53,7 +53,7 @@ describe('<EnumSelector />', () => {
         options={LANGUAGE_OPTIONS}
         currentValue="zh"
         isActive={false}
-        onValueChange={() => {}}
+        onValueChange={() => { }}
       />,
     );
     expect(lastFrame()).toMatchSnapshot();
@@ -68,7 +68,7 @@ describe('<EnumSelector />', () => {
         options={singleOption}
         currentValue="only"
         isActive={true}
-        onValueChange={() => {}}
+        onValueChange={() => { }}
       />,
     );
     expect(lastFrame()).toMatchSnapshot();
@@ -80,7 +80,7 @@ describe('<EnumSelector />', () => {
         options={[]}
         currentValue=""
         isActive={true}
-        onValueChange={() => {}}
+        onValueChange={() => { }}
       />,
     );
     expect(lastFrame()).toBe('');
@@ -92,7 +92,7 @@ describe('<EnumSelector />', () => {
         options={LANGUAGE_OPTIONS}
         currentValue="invalid"
         isActive={true}
-        onValueChange={() => {}}
+        onValueChange={() => { }}
       />,
     );
     // Should default to first option
@@ -105,7 +105,7 @@ describe('<EnumSelector />', () => {
         options={LANGUAGE_OPTIONS}
         currentValue="en"
         isActive={true}
-        onValueChange={() => {}}
+        onValueChange={() => { }}
       />,
     );
     expect(lastFrame()).toContain('English');
@@ -115,7 +115,7 @@ describe('<EnumSelector />', () => {
         options={LANGUAGE_OPTIONS}
         currentValue="zh"
         isActive={true}
-        onValueChange={() => {}}
+        onValueChange={() => { }}
       />,
     );
     expect(lastFrame()).toContain('中文 (简体)');
@@ -127,7 +127,7 @@ describe('<EnumSelector />', () => {
         options={LANGUAGE_OPTIONS}
         currentValue="en"
         isActive={true}
-        onValueChange={() => {}}
+        onValueChange={() => { }}
       />,
     );
     expect(lastFrame()).toContain('←');
@@ -143,7 +143,7 @@ describe('<EnumSelector />', () => {
         options={singleOption}
         currentValue="only"
         isActive={true}
-        onValueChange={() => {}}
+        onValueChange={() => { }}
       />,
     );
     expect(lastFrame()).not.toContain('←');

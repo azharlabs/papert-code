@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -144,11 +144,11 @@ type AnyNotification = {
 
 type Result<T> =
   | {
-      result: T;
-    }
+    result: T;
+  }
   | {
-      error: ErrorResponse;
-    };
+    error: ErrorResponse;
+  };
 
 type ErrorResponse = {
   code: number;

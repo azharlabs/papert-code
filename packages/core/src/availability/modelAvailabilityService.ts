@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -19,10 +19,10 @@ export type ModelHealthStatus = 'terminal' | 'sticky_retry';
 type HealthState =
   | { status: 'terminal'; reason: TerminalUnavailabilityReason }
   | {
-      status: 'sticky_retry';
-      reason: TurnUnavailabilityReason;
-      consumed: boolean;
-    };
+    status: 'sticky_retry';
+    reason: TurnUnavailabilityReason;
+    consumed: boolean;
+  };
 
 export interface ModelAvailabilitySnapshot {
   available: boolean;

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -130,16 +130,16 @@ export interface OpenDialogActionReturn {
   type: 'dialog';
 
   dialog:
-    | 'help'
-    | 'auth'
-    | 'theme'
-    | 'editor'
-    | 'settings'
-    | 'model'
-    | 'subagent_create'
-    | 'subagent_list'
-    | 'permissions'
-    | 'approval-mode';
+  | 'help'
+  | 'auth'
+  | 'theme'
+  | 'editor'
+  | 'settings'
+  | 'model'
+  | 'subagent_create'
+  | 'subagent_list'
+  | 'permissions'
+  | 'approval-mode';
 }
 
 /**

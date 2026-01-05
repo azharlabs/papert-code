@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -99,14 +99,14 @@ const _PrepareLabel: React.FC<PrepareLabelProps> = ({
       {before}
       {match
         ? match.split(/(\s+)/).map((part, index) => (
-            <Text
-              key={`match-${index}`}
-              color={theme.background.primary}
-              backgroundColor={theme.text.primary}
-            >
-              {part}
-            </Text>
-          ))
+          <Text
+            key={`match-${index}`}
+            color={theme.background.primary}
+            backgroundColor={theme.text.primary}
+          >
+            {part}
+          </Text>
+        ))
         : null}
       {after}
     </Text>

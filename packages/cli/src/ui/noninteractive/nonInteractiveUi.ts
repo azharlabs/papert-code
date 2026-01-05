@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -16,20 +16,20 @@ import type { SkillUpdateAction } from '../state/skills.js';
 export function createNonInteractiveUI(): CommandContext['ui'] {
   return {
     addItem: (_item, _timestamp) => 0,
-    clear: () => {},
-    setDebugMessage: (_message) => {},
-    loadHistory: (_newHistory) => {},
+    clear: () => { },
+    setDebugMessage: (_message) => { },
+    loadHistory: (_newHistory) => { },
     pendingItem: null,
-    setPendingItem: (_item) => {},
-    toggleCorgiMode: () => {},
+    setPendingItem: (_item) => { },
+    toggleCorgiMode: () => { },
     toggleVimEnabled: async () => false,
-    setGeminiMdFileCount: (_count) => {},
-    reloadCommands: () => {},
+    setGeminiMdFileCount: (_count) => { },
+    reloadCommands: () => { },
     extensionsUpdateState: new Map(),
-    dispatchExtensionStateUpdate: (_action: ExtensionUpdateAction) => {},
-    addConfirmUpdateExtensionRequest: (_request) => {},
+    dispatchExtensionStateUpdate: (_action: ExtensionUpdateAction) => { },
+    addConfirmUpdateExtensionRequest: (_request) => { },
     skillsUpdateState: new Map(),
-    dispatchSkillStateUpdate: (_action: SkillUpdateAction) => {},
-    addConfirmUpdateSkillRequest: (_request) => {},
+    dispatchSkillStateUpdate: (_action: SkillUpdateAction) => { },
+    addConfirmUpdateSkillRequest: (_request) => { },
   };
 }

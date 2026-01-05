@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -62,7 +62,7 @@ describe('Turn', () => {
     };
     turn = new Turn(mockChatInstance as unknown as GeminiChat, 'prompt-id-1');
     mockGetHistory.mockReturnValue([]);
-    mockSendMessageStream.mockResolvedValue((async function* () {})());
+    mockSendMessageStream.mockResolvedValue((async function* () { })());
   });
 
   afterEach(() => {

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -16,7 +16,7 @@ export class AcpFileSystemService implements FileSystemService {
     private readonly sessionId: string,
     private readonly capabilities: acp.FileSystemCapability,
     private readonly fallback: FileSystemService,
-  ) {}
+  ) { }
 
   async readTextFile(filePath: string): Promise<string> {
     if (!this.capabilities.readTextFile) {

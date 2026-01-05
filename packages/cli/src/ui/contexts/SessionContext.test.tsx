@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -207,7 +207,7 @@ describe('SessionStatsContext', () => {
 
   it('should throw an error when useSessionStats is used outside of a provider', () => {
     // Suppress console.error for this test since we expect an error
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
     try {
       // Expect renderHook itself to throw when the hook is used outside a provider

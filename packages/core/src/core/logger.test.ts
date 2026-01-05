@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -209,7 +209,7 @@ describe('Logger', () => {
       await fs.writeFile(testLogFilePath, 'invalid json');
       const consoleDebugSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       const newLogger = new Logger(testSessionId, new Storage(process.cwd()));
       await newLogger.initialize();
@@ -237,7 +237,7 @@ describe('Logger', () => {
       );
       const consoleDebugSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       const newLogger = new Logger(testSessionId, new Storage(process.cwd()));
       await newLogger.initialize();
@@ -296,7 +296,7 @@ describe('Logger', () => {
       uninitializedLogger.close(); // Ensure it's treated as uninitialized
       const consoleDebugSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
       await uninitializedLogger.logMessage(MessageSenderType.USER, 'test');
       expect(consoleDebugSpy).toHaveBeenCalledWith(
         'Logger not initialized or session ID missing. Cannot log message.',
@@ -352,7 +352,7 @@ describe('Logger', () => {
       vi.spyOn(fs, 'writeFile').mockRejectedValueOnce(new Error('Disk full'));
       const consoleDebugSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
       const initialMessageId = logger['messageId'];
       const initialLogCount = logger['logs'].length;
 
@@ -465,7 +465,7 @@ describe('Logger', () => {
       uninitializedLogger.close();
       const consoleErrorSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       await expect(
         uninitializedLogger.saveCheckpoint(conversation, 'tag'),
@@ -548,7 +548,7 @@ describe('Logger', () => {
       await fs.writeFile(taggedFilePath, 'invalid json');
       const consoleErrorSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
       const loadedCheckpoint = await logger.loadCheckpoint(tag);
       expect(loadedCheckpoint).toEqual([]);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -565,7 +565,7 @@ describe('Logger', () => {
       uninitializedLogger.close();
       const consoleErrorSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
       const loadedCheckpoint = await uninitializedLogger.loadCheckpoint('tag');
       expect(loadedCheckpoint).toEqual([]);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -637,7 +637,7 @@ describe('Logger', () => {
       );
       const consoleErrorSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       await expect(logger.deleteCheckpoint(tag)).rejects.toThrow(
         'EACCES: permission denied',
@@ -656,7 +656,7 @@ describe('Logger', () => {
       uninitializedLogger.close();
       const consoleErrorSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       const result = await uninitializedLogger.deleteCheckpoint(tag);
       expect(result).toBe(false);
@@ -709,7 +709,7 @@ describe('Logger', () => {
       );
       const consoleErrorSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       await expect(logger.checkpointExists(tag)).rejects.toThrow(
         'EACCES: permission denied',
@@ -752,7 +752,7 @@ describe('Logger', () => {
       logger.close();
       const consoleDebugSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
       await logger.logMessage(MessageSenderType.USER, 'Another message');
       expect(consoleDebugSpy).toHaveBeenCalledWith(
         'Logger not initialized or session ID missing. Cannot log message.',

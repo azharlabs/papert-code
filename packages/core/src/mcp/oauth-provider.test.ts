@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -138,9 +138,9 @@ describe('MCPOAuthProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockOpenBrowserSecurely.mockClear();
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => { });
+    vi.spyOn(console, 'warn').mockImplementation(() => { });
+    vi.spyOn(console, 'error').mockImplementation(() => { });
 
     // Mock crypto functions
     vi.mocked(crypto.randomBytes).mockImplementation((size: number) => {

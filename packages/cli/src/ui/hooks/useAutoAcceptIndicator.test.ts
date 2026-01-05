@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -102,8 +102,8 @@ describe('useAutoAcceptIndicator', () => {
         getToolRegistry: vi
           .fn()
           .mockReturnValue({ discoverTools: vi.fn() }) as Mock<
-          () => { discoverTools: Mock<() => void> }
-        >,
+            () => { discoverTools: Mock<() => void> }
+          >,
       };
       instanceSetApprovalModeMock.mockImplementation((value: ApprovalMode) => {
         instanceGetApprovalModeMock.mockReturnValue(value);

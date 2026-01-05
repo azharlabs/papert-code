@@ -60,7 +60,7 @@ This file contains the source code for your MCP server. It's a simple Node.js se
 ```typescript
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 

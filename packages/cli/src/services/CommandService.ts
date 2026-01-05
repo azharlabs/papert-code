@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -23,7 +23,7 @@ export class CommandService {
    * Private constructor to enforce the use of the async factory.
    * @param commands A readonly array of the fully loaded and de-duplicated commands.
    */
-  private constructor(private readonly commands: readonly SlashCommand[]) {}
+  private constructor(private readonly commands: readonly SlashCommand[]) { }
 
   /**
    * Asynchronously creates and initializes a new CommandService instance.

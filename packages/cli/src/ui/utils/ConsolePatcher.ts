@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -49,23 +49,23 @@ export class ConsolePatcher {
       type: 'log' | 'warn' | 'error' | 'debug' | 'info',
       originalMethod: (...args: unknown[]) => void,
     ) =>
-    (...args: unknown[]) => {
-      if (this.params.stderr) {
-        if (type !== 'debug' || this.params.debugMode) {
-          this.originalConsoleError(this.formatArgs(args));
-        }
-      } else {
-        if (this.params.debugMode) {
-          originalMethod.apply(console, args);
-        }
+      (...args: unknown[]) => {
+        if (this.params.stderr) {
+          if (type !== 'debug' || this.params.debugMode) {
+            this.originalConsoleError(this.formatArgs(args));
+          }
+        } else {
+          if (this.params.debugMode) {
+            originalMethod.apply(console, args);
+          }
 
-        if (type !== 'debug' || this.params.debugMode) {
-          this.params.onNewMessage?.({
-            type,
-            content: this.formatArgs(args),
-            count: 1,
-          });
+          if (type !== 'debug' || this.params.debugMode) {
+            this.params.onNewMessage?.({
+              type,
+              content: this.formatArgs(args),
+              count: 1,
+            });
+          }
         }
-      }
-    };
+      };
 }

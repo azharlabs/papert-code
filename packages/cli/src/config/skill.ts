@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -681,11 +681,11 @@ export async function installSkill(
 
         const metadata =
           installMetadata.type === 'local' ||
-          installMetadata.type === 'link'
+            installMetadata.type === 'link'
             ? {
-                ...installMetadata,
-                source: resolvedSkillPath,
-              }
+              ...installMetadata,
+              source: resolvedSkillPath,
+            }
             : installMetadata;
         const metadataString = JSON.stringify(metadata, null, 2);
         const metadataPath = path.join(
@@ -817,7 +817,7 @@ export async function uninstallSkill(
     (installed) =>
       installed.config.name.toLowerCase() === skillIdentifier.toLowerCase() ||
       installed.installMetadata?.source.toLowerCase() ===
-        skillIdentifier.toLowerCase(),
+      skillIdentifier.toLowerCase(),
   )?.config.name;
   if (!skillName) {
     throw new Error('Skill not found.');

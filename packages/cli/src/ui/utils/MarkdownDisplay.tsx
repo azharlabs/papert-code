@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -287,18 +287,18 @@ const MarkdownDisplayInternal: React.FC<MarkdownDisplayProps> = ({
 
   if (inCodeBlock) {
     addContentBlock(
-        <RenderCodeBlock
-          key="line-eof"
-          content={codeBlockContent}
-          lang={codeBlockLang}
-          isPending={isPending}
-          availableTerminalHeight={
-            isAlternateBuffer ? undefined : availableTerminalHeight
-          }
-          terminalWidth={terminalWidth}
-        />,
-      );
-    }
+      <RenderCodeBlock
+        key="line-eof"
+        content={codeBlockContent}
+        lang={codeBlockLang}
+        isPending={isPending}
+        availableTerminalHeight={
+          isAlternateBuffer ? undefined : availableTerminalHeight
+        }
+        terminalWidth={terminalWidth}
+      />,
+    );
+  }
 
   // Handle table at end of content
   if (inTable && tableHeaders.length > 0 && tableRows.length > 0) {

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -484,11 +484,10 @@ export const useSlashCommandProcessor = (
                               addItemWithRecording(
                                 {
                                   type: 'error',
-                                  text: `Failed to generate summary before quit: ${
-                                    error instanceof Error
+                                  text: `Failed to generate summary before quit: ${error instanceof Error
                                       ? error.message
                                       : String(error)
-                                  }`,
+                                    }`,
                                 },
                                 Date.now(),
                               );

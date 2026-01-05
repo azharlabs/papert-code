@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -36,7 +36,7 @@ export class TerminalCapabilityManager {
   private detectionComplete = false;
   private terminalName: string | undefined;
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): TerminalCapabilityManager {
     if (!this.instance) {

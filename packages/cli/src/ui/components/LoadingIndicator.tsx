@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -42,11 +42,11 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   const cancelAndTimerContent =
     streamingState !== StreamingState.WaitingForConfirmation
       ? t('(esc to cancel, {{time}})', {
-          time:
-            elapsedTime < 60
-              ? `${elapsedTime}s`
-              : formatDuration(elapsedTime * 1000),
-        })
+        time:
+          elapsedTime < 60
+            ? `${elapsedTime}s`
+            : formatDuration(elapsedTime * 1000),
+      })
       : null;
 
   return (

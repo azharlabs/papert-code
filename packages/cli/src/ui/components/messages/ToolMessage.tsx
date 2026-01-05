@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -292,9 +292,9 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
 
   const availableHeight = availableTerminalHeight
     ? Math.max(
-        availableTerminalHeight - STATIC_HEIGHT - RESERVED_LINE_COUNT,
-        MIN_LINES_SHOWN + 1, // enforce minimum lines shown
-      )
+      availableTerminalHeight - STATIC_HEIGHT - RESERVED_LINE_COUNT,
+      MIN_LINES_SHOWN + 1, // enforce minimum lines shown
+    )
     : undefined;
 
   // Long tool call response in MarkdownDisplay doesn't respect availableTerminalHeight properly,

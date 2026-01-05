@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -189,8 +189,8 @@ export function ThemeDialog({
   const colorizeCodeWidth = Math.max(
     Math.floor(
       (terminalWidth - TOTAL_HORIZONTAL_PADDING) *
-        PREVIEW_PANE_WIDTH_PERCENTAGE *
-        PREVIEW_PANE_WIDTH_SAFETY_MARGIN,
+      PREVIEW_PANE_WIDTH_PERCENTAGE *
+      PREVIEW_PANE_WIDTH_SAFETY_MARGIN,
     ),
     1,
   );

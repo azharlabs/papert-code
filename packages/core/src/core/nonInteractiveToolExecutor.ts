@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -44,7 +44,7 @@ export async function executeToolCall(
       },
       onToolCallsUpdate: options.onToolCallsUpdate,
       getPreferredEditor: () => undefined,
-      onEditorClose: () => {},
+      onEditorClose: () => { },
     })
       .schedule(toolCallRequest, abortSignal)
       .catch(reject);

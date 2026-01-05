@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -157,7 +157,7 @@ describe('commentJson', () => {
 
       const consoleSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       expect(() => {
         updateSettingsFilePreservingFormat(testFilePath, {

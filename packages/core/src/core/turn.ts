@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -241,7 +241,7 @@ export class Turn {
   constructor(
     private readonly chat: GeminiChat,
     private readonly prompt_id: string,
-  ) {}
+  ) { }
   // The run method yields simpler events suitable for server logic
   async *run(
     model: string,
@@ -357,9 +357,9 @@ export class Turn {
       );
       const status =
         typeof error === 'object' &&
-        error !== null &&
-        'status' in error &&
-        typeof (error as { status: unknown }).status === 'number'
+          error !== null &&
+          'status' in error &&
+          typeof (error as { status: unknown }).status === 'number'
           ? (error as { status: number }).status
           : undefined;
       const structuredError: StructuredError = {

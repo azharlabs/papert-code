@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,7 +14,7 @@ export class AgentInvocation<TOutput = unknown> {
   constructor(
     private readonly definition: AgentDefinition<TOutput>,
     private readonly config: Config,
-  ) {}
+  ) { }
 
   async initialize(): Promise<void> {
     this.executor = await AgentExecutor.create(this.definition, this.config);

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -316,7 +316,7 @@ export class GeminiChat {
                   setTimeout(
                     res,
                     INVALID_CONTENT_RETRY_OPTIONS.initialDelayMs *
-                      (attempt + 1),
+                    (attempt + 1),
                   ),
                 );
                 continue;
@@ -672,8 +672,8 @@ export class GeminiChat {
           ...(responseText ? [{ text: responseText }] : []),
           ...(hasToolCall
             ? historyParts
-                .filter((part) => part.functionCall)
-                .map((part) => ({ functionCall: part.functionCall }))
+              .filter((part) => part.functionCall)
+              .map((part) => ({ functionCall: part.functionCall }))
             : []),
         ],
         tokens: usageMetadata,

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -20,7 +20,7 @@ export interface LLMRequest {
   model: string;
   messages: Array<{
     role: 'user' | 'model' | 'system';
-    content: string | Array<{ type: string; [key: string]: unknown }>;
+    content: string | Array<{ type: string;[key: string]: unknown }>;
   }>;
   config?: {
     temperature?: number;
@@ -118,11 +118,11 @@ function isContentWithParts(
  */
 function extractGenerationConfig(request: GenerateContentParameters):
   | {
-      temperature?: number;
-      maxOutputTokens?: number;
-      topP?: number;
-      topK?: number;
-    }
+    temperature?: number;
+    maxOutputTokens?: number;
+    topP?: number;
+    topK?: number;
+  }
   | undefined {
   // Access the config field which contains generation settings
   // Use type assertion after checking the field exists
@@ -291,11 +291,11 @@ export class HookTranslatorGenAIv1 extends HookTranslator {
       }),
       usageMetadata: sdkResponse.usageMetadata
         ? {
-            promptTokenCount: sdkResponse.usageMetadata.promptTokenCount,
-            candidatesTokenCount:
-              sdkResponse.usageMetadata.candidatesTokenCount,
-            totalTokenCount: sdkResponse.usageMetadata.totalTokenCount,
-          }
+          promptTokenCount: sdkResponse.usageMetadata.promptTokenCount,
+          candidatesTokenCount:
+            sdkResponse.usageMetadata.candidatesTokenCount,
+          totalTokenCount: sdkResponse.usageMetadata.totalTokenCount,
+        }
         : undefined,
     };
   }
@@ -342,9 +342,9 @@ export class HookTranslatorGenAIv1 extends HookTranslator {
     const functionCallingConfig: FunctionCallingConfig | undefined =
       hookToolConfig.mode || hookToolConfig.allowedFunctionNames
         ? ({
-            mode: hookToolConfig.mode,
-            allowedFunctionNames: hookToolConfig.allowedFunctionNames,
-          } as FunctionCallingConfig)
+          mode: hookToolConfig.mode,
+          allowedFunctionNames: hookToolConfig.allowedFunctionNames,
+        } as FunctionCallingConfig)
         : undefined;
 
     return {

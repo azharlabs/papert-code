@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -1194,8 +1194,8 @@ describe('KeypressContext - Kitty Protocol', () => {
     let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-      consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+      consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
     });
 
     afterEach(() => {
