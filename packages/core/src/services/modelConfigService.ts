@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -67,7 +67,7 @@ export class ModelConfigService {
   private readonly runtimeAliases: Record<string, ModelConfigAlias> = {};
 
   // TODO(12597): Process config to build a typed alias hierarchy.
-  constructor(private readonly config: ModelConfigServiceConfig) {}
+  constructor(private readonly config: ModelConfigServiceConfig) { }
 
   registerRuntimeModelConfig(aliasName: string, alias: ModelConfigAlias): void {
     this.runtimeAliases[aliasName] = alias;

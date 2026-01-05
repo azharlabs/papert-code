@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -187,13 +187,13 @@ export class KeychainTokenStorage extends BaseTokenStorage {
 
     const servers = this.keytarModule
       ? await this.keytarModule
-          .findCredentials(this.serviceName)
-          .then((creds) => creds.map((c) => c.account))
-          .catch((error: Error) => {
-            throw new Error(
-              `Failed to list servers for clearing: ${error.message}`,
-            );
-          })
+        .findCredentials(this.serviceName)
+        .then((creds) => creds.map((c) => c.account))
+        .catch((error: Error) => {
+          throw new Error(
+            `Failed to list servers for clearing: ${error.message}`,
+          );
+        })
       : [];
     const errors: Error[] = [];
 

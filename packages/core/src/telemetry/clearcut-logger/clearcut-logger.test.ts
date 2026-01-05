@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -42,7 +42,7 @@ interface CustomMatchers<R = unknown> {
 
 declare module 'vitest' {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-object-type
-  interface Matchers<T = any> extends CustomMatchers<T> {}
+  interface Matchers<T = any> extends CustomMatchers<T> { }
 }
 
 expect.extend({

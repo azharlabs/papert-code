@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -42,7 +42,7 @@ describe('summarizers', () => {
     mockGeminiClient = new GeminiClient(mockConfigInstance);
     (mockGeminiClient.generateContent as Mock) = vi.fn();
 
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => { });
   });
 
   afterEach(() => {

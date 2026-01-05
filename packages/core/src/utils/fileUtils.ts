@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -95,15 +95,15 @@ function decodeUTF32(buf: Buffer, littleEndian: boolean): string {
   for (let i = 0; i < usable; i += 4) {
     const cp = littleEndian
       ? (buf[i] |
-          (buf[i + 1] << 8) |
-          (buf[i + 2] << 16) |
-          (buf[i + 3] << 24)) >>>
-        0
+        (buf[i + 1] << 8) |
+        (buf[i + 2] << 16) |
+        (buf[i + 3] << 24)) >>>
+      0
       : (buf[i + 3] |
-          (buf[i + 2] << 8) |
-          (buf[i + 1] << 16) |
-          (buf[i] << 24)) >>>
-        0;
+        (buf[i + 2] << 8) |
+        (buf[i + 1] << 16) |
+        (buf[i] << 24)) >>>
+      0;
     // Valid planes: 0x0000..0x10FFFF excluding surrogates
     if (cp <= 0x10ffff && !(cp >= 0xd800 && cp <= 0xdfff)) {
       out += String.fromCodePoint(cp);
@@ -175,7 +175,7 @@ export function isWithinRoot(
   // unless it's the root path itself (e.g., '/' or 'C:\').
   const rootWithSeparator =
     normalizedRootDirectory === path.sep ||
-    normalizedRootDirectory.endsWith(path.sep)
+      normalizedRootDirectory.endsWith(path.sep)
       ? normalizedRootDirectory
       : normalizedRootDirectory + path.sep;
 
@@ -439,9 +439,8 @@ export async function processSingleFileContent(
         // By default, return nothing to streamline the common case of a successful read_file.
         let returnDisplay = '';
         if (isTruncated) {
-          returnDisplay = `Read lines ${
-            actualStartLine + 1
-          }-${actualEndLine} of ${originalLineCount} from ${relativePathForDisplay}`;
+          returnDisplay = `Read lines ${actualStartLine + 1
+            }-${actualEndLine} of ${originalLineCount} from ${relativePathForDisplay}`;
           if (contentLengthTruncated) {
             returnDisplay += ' (truncated)';
           }

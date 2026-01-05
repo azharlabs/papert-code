@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -41,7 +41,7 @@ export interface GenerateSummaryOptions {
 }
 
 export class SessionSummaryService {
-  constructor(private readonly baseLlmClient: BaseLlmClient) {}
+  constructor(private readonly baseLlmClient: BaseLlmClient) { }
 
   async generateSummary(
     options: GenerateSummaryOptions,

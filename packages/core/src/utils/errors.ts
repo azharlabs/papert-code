@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -70,9 +70,9 @@ export class FatalCancellationError extends FatalError {
   }
 }
 
-export class ForbiddenError extends Error {}
-export class UnauthorizedError extends Error {}
-export class BadRequestError extends Error {}
+export class ForbiddenError extends Error { }
+export class UnauthorizedError extends Error { }
+export class BadRequestError extends Error { }
 
 interface ResponseData {
   error?: {

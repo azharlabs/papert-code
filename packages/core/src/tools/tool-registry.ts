@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -393,8 +393,8 @@ export class ToolRegistry {
         }
         const parameters =
           func.parametersJsonSchema &&
-          typeof func.parametersJsonSchema === 'object' &&
-          !Array.isArray(func.parametersJsonSchema)
+            typeof func.parametersJsonSchema === 'object' &&
+            !Array.isArray(func.parametersJsonSchema)
             ? func.parametersJsonSchema
             : {};
         this.registerTool(

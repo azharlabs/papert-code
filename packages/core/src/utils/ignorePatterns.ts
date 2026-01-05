@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -129,7 +129,7 @@ export interface ExcludeOptions {
  * file exclusion patterns for different tools and use cases.
  */
 export class FileExclusions {
-  constructor(private config?: Config) {}
+  constructor(private config?: Config) { }
 
   /**
    * Gets core ignore patterns for basic file operations like glob.

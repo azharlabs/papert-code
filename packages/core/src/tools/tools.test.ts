@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,7 +13,7 @@ class TestToolInvocation implements ToolInvocation<object, ToolResult> {
   constructor(
     readonly params: object,
     private readonly executeFn: () => Promise<ToolResult>,
-  ) {}
+  ) { }
 
   getDescription(): string {
     return 'A test invocation';

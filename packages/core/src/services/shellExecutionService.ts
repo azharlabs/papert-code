@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -90,21 +90,21 @@ export interface ShellExecutionConfig {
  */
 export type ShellOutputEvent =
   | {
-      /** The event contains a chunk of output data. */
-      type: 'data';
-      /** The decoded string chunk. */
-      chunk: string | AnsiOutput;
-    }
+    /** The event contains a chunk of output data. */
+    type: 'data';
+    /** The decoded string chunk. */
+    chunk: string | AnsiOutput;
+  }
   | {
-      /** Signals that the output stream has been identified as binary. */
-      type: 'binary_detected';
-    }
+    /** Signals that the output stream has been identified as binary. */
+    type: 'binary_detected';
+  }
   | {
-      /** Provides progress updates for a binary stream. */
-      type: 'binary_progress';
-      /** The total number of bytes received so far. */
-      bytesReceived: number;
-    };
+    /** Provides progress updates for a binary stream. */
+    type: 'binary_progress';
+    /** The total number of bytes received so far. */
+    bytesReceived: number;
+  };
 
 interface ActivePty {
   ptyProcess: IPty;
@@ -408,9 +408,8 @@ export class ShellExecutionService {
             stdout + (stderr ? (stdout ? separator : '') + stderr : '');
 
           if (stdoutTruncated || stderrTruncated) {
-            const truncationMessage = `\n[PAPERT_CODE_WARNING: Output truncated. The buffer is limited to ${
-              MAX_CHILD_PROCESS_BUFFER_SIZE / (1024 * 1024)
-            }MB.]`;
+            const truncationMessage = `\n[PAPERT_CODE_WARNING: Output truncated. The buffer is limited to ${MAX_CHILD_PROCESS_BUFFER_SIZE / (1024 * 1024)
+              }MB.]`;
             combinedOutput += truncationMessage;
           }
 

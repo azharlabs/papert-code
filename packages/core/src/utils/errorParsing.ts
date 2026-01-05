@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -73,18 +73,18 @@ function getRateLimitMessage(
       if (isProQuotaExceededError(error)) {
         return isPaidTier
           ? getRateLimitErrorMessageGoogleProQuotaPaid(
-              currentModel || DEFAULT_GEMINI_MODEL,
-              fallbackModel,
-            )
+            currentModel || DEFAULT_GEMINI_MODEL,
+            fallbackModel,
+          )
           : getRateLimitErrorMessageGoogleProQuotaFree(
-              currentModel || DEFAULT_GEMINI_MODEL,
-              fallbackModel,
-            );
+            currentModel || DEFAULT_GEMINI_MODEL,
+            fallbackModel,
+          );
       } else if (isGenericQuotaExceededError(error)) {
         return isPaidTier
           ? getRateLimitErrorMessageGoogleGenericQuotaPaid(
-              currentModel || DEFAULT_GEMINI_MODEL,
-            )
+            currentModel || DEFAULT_GEMINI_MODEL,
+          )
           : getRateLimitErrorMessageGoogleGenericQuotaFree();
       } else {
         return isPaidTier

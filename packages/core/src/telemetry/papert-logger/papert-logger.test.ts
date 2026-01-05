@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -108,7 +108,7 @@ describe('PapertLogger', () => {
       const logger = PapertLogger.getInstance(debugConfig)!;
       const consoleSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       // Fill the queue beyond capacity
       for (let i = 0; i < TEST_ONLY.MAX_EVENTS + 10; i++) {
@@ -133,7 +133,7 @@ describe('PapertLogger', () => {
       const logger = PapertLogger.getInstance(debugConfig)!;
       const consoleSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       // Mock the events deque to throw an error
       const originalPush = logger['events'].push;
@@ -164,7 +164,7 @@ describe('PapertLogger', () => {
       const logger = PapertLogger.getInstance(debugConfig)!;
       const consoleSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       // Manually set the flush in progress flag to simulate concurrent access
       logger['isFlushInProgress'] = true;
@@ -193,7 +193,7 @@ describe('PapertLogger', () => {
       const logger = PapertLogger.getInstance(debugConfig)!;
       const consoleSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       const failedEvents: RumEvent[] = [];
       for (let i = 0; i < TEST_ONLY.MAX_RETRY_EVENTS + 50; i++) {
@@ -220,7 +220,7 @@ describe('PapertLogger', () => {
       const logger = PapertLogger.getInstance(debugConfig)!;
       const consoleSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       // Fill the queue to capacity first
       for (let i = 0; i < TEST_ONLY.MAX_EVENTS; i++) {
@@ -366,7 +366,7 @@ describe('PapertLogger', () => {
       const logger = PapertLogger.getInstance(debugConfig)!;
       const consoleSpy = vi
         .spyOn(console, 'debug')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       // Add an event first
       logger.enqueueLogEvent({

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,5 +17,5 @@ setSimulate429(false);
 // Some dependencies (e.g., undici) expect a global File constructor in Node.
 // Provide a minimal shim for test environment if missing.
 if (typeof (globalThis as unknown as { File?: unknown }).File === 'undefined') {
-  (globalThis as unknown as { File: unknown }).File = class {} as unknown;
+  (globalThis as unknown as { File: unknown }).File = class { } as unknown;
 }

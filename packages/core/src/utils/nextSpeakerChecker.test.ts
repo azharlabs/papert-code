@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -180,7 +180,7 @@ describe('checkNextSpeaker', () => {
   it('should return null if baseLlmClient.generateJson throws an error', async () => {
     const consoleWarnSpy = vi
       .spyOn(console, 'warn')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     (chatInstance.getHistory as Mock).mockReturnValue([
       { role: 'model', parts: [{ text: 'Some model output.' }] },
     ] as Content[]);

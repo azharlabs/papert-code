@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -88,9 +88,9 @@ export interface ChatRecord {
    * to reconstruct the compressed history without mutating the original UI list.
    */
   systemPayload?:
-    | ChatCompressionRecordPayload
-    | SlashCommandRecordPayload
-    | UiTelemetryRecordPayload;
+  | ChatCompressionRecordPayload
+  | SlashCommandRecordPayload
+  | UiTelemetryRecordPayload;
 }
 
 /**

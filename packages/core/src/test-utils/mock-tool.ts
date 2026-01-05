@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -128,7 +128,7 @@ export const MOCK_TOOL_SHOULD_CONFIRM_EXECUTE = () =>
     title: 'Confirm mockTool',
     command: 'mockTool',
     rootCommand: 'mockTool',
-    onConfirm: async () => {},
+    onConfirm: async () => { },
   });
 
 export class MockModifiableToolInvocation extends BaseToolInvocation<
@@ -164,7 +164,7 @@ export class MockModifiableToolInvocation extends BaseToolInvocation<
         fileDiff: 'diff',
         originalContent: 'originalContent',
         newContent: 'newContent',
-        onConfirm: async () => {},
+        onConfirm: async () => { },
       };
     }
     return false;
@@ -180,8 +180,7 @@ export class MockModifiableToolInvocation extends BaseToolInvocation<
  */
 export class MockModifiableTool
   extends BaseDeclarativeTool<Record<string, unknown>, ToolResult>
-  implements ModifiableDeclarativeTool<Record<string, unknown>>
-{
+  implements ModifiableDeclarativeTool<Record<string, unknown>> {
   // Should be overrided in test file. Functionality will be updated in follow
   // up PR which has MockModifiableTool expect MockTool
   executeFn: (params: Record<string, unknown>) => ToolResult | undefined = () =>

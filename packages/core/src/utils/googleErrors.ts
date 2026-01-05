@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -226,10 +226,10 @@ function fromGaxiosError(errorObj: object): ErrorShape | undefined {
     response?: {
       status?: number;
       data?:
-        | {
-            error?: ErrorShape;
-          }
-        | string;
+      | {
+        error?: ErrorShape;
+      }
+      | string;
     };
     error?: ErrorShape;
     code?: number;
@@ -272,10 +272,10 @@ function fromGaxiosError(errorObj: object): ErrorShape | undefined {
 function fromApiError(errorObj: object): ErrorShape | undefined {
   const apiError = errorObj as {
     message?:
-      | {
-          error?: ErrorShape;
-        }
-      | string;
+    | {
+      error?: ErrorShape;
+    }
+    | string;
     code?: number;
   };
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -45,9 +45,9 @@ import * as os from 'node:os';
  */
 export type FileSystemStructure = {
   [name: string]:
-    | string
-    | FileSystemStructure
-    | Array<string | FileSystemStructure>;
+  | string
+  | FileSystemStructure
+  | Array<string | FileSystemStructure>;
 };
 
 /**

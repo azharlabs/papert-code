@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -68,8 +68,7 @@ export class FileLogExporter extends FileExporter implements LogRecordExporter {
 
 export class FileMetricExporter
   extends FileExporter
-  implements PushMetricExporter
-{
+  implements PushMetricExporter {
   export(
     metrics: ResourceMetrics,
     resultCallback: (result: ExportResult) => void,

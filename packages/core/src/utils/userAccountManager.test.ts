@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -102,7 +102,7 @@ describe('UserAccountManager', () => {
       fs.writeFileSync(accountsFile(), 'not valid json');
       const consoleLogSpy = vi
         .spyOn(console, 'log')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       await userAccountManager.cacheGoogleAccount('test1@google.com');
 
@@ -121,7 +121,7 @@ describe('UserAccountManager', () => {
       );
       const consoleLogSpy = vi
         .spyOn(console, 'log')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       await userAccountManager.cacheGoogleAccount('test2@google.com');
 
@@ -161,7 +161,7 @@ describe('UserAccountManager', () => {
       fs.writeFileSync(accountsFile(), '{ "active": "test@google.com"'); // Invalid JSON
       const consoleLogSpy = vi
         .spyOn(console, 'log')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       const account = userAccountManager.getCachedGoogleAccount();
 
@@ -210,7 +210,7 @@ describe('UserAccountManager', () => {
       fs.writeFileSync(accountsFile(), 'not valid json');
       const consoleLogSpy = vi
         .spyOn(console, 'log')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       await userAccountManager.clearCachedGoogleAccount();
 
@@ -272,7 +272,7 @@ describe('UserAccountManager', () => {
       fs.writeFileSync(accountsFile(), 'invalid json');
       const consoleDebugSpy = vi
         .spyOn(console, 'log')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       expect(userAccountManager.getLifetimeGoogleAccounts()).toBe(0);
       expect(consoleDebugSpy).toHaveBeenCalled();
@@ -319,7 +319,7 @@ describe('UserAccountManager', () => {
       );
       const consoleLogSpy = vi
         .spyOn(console, 'log')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       expect(userAccountManager.getLifetimeGoogleAccounts()).toBe(0);
       expect(consoleLogSpy).toHaveBeenCalled();

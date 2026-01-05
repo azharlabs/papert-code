@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -30,7 +30,7 @@ describe('Shell Command Processor - Encoding Functions', () => {
   let mockedChardetDetect: ReturnType<typeof vi.mocked<typeof chardetDetect>>;
 
   beforeEach(() => {
-    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
     mockedExecSync = vi.mocked(execSync);
     mockedOsPlatform = vi.mocked(os.platform);
     mockedChardetDetect = vi.mocked(chardetDetect);

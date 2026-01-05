@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -80,7 +80,7 @@ describe('mcp-client', () => {
     it('should not skip tools even if a parameter is missing a type', async () => {
       const consoleWarnSpy = vi
         .spyOn(console, 'warn')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
       const mockedClient = {
         connect: vi.fn(),
         discover: vi.fn(),
@@ -144,7 +144,7 @@ describe('mcp-client', () => {
     it('should handle errors when discovering prompts', async () => {
       const consoleErrorSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
       const mockedClient = {
         connect: vi.fn(),
         discover: vi.fn(),

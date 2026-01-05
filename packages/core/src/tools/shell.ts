@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -152,11 +152,11 @@ export class ShellToolInvocation extends BaseToolInvocation<
       const commandToExecute = isWindows
         ? finalCommand
         : (() => {
-            // wrap command to append subprocess pids (via pgrep) to temporary file
-            let command = finalCommand.trim();
-            if (!command.endsWith('&')) command += ';';
-            return `{ ${command} }; __code=$?; pgrep -g 0 >${tempFilePath} 2>&1; exit $__code;`;
-          })();
+          // wrap command to append subprocess pids (via pgrep) to temporary file
+          let command = finalCommand.trim();
+          if (!command.endsWith('&')) command += ';';
+          return `{ ${command} }; __code=$?; pgrep -g 0 >${tempFilePath} 2>&1; exit $__code;`;
+        })();
 
       const cwd = this.params.directory || this.config.getTargetDir();
 
@@ -266,8 +266,7 @@ export class ShellToolInvocation extends BaseToolInvocation<
           `Error: ${finalError}`, // Use the cleaned error string.
           `Exit Code: ${result.exitCode ?? '(none)'}`,
           `Signal: ${result.signal ?? '(none)'}`,
-          `Background PIDs: ${
-            backgroundPIDs.length ? backgroundPIDs.join(', ') : '(none)'
+          `Background PIDs: ${backgroundPIDs.length ? backgroundPIDs.join(', ') : '(none)'
           }`,
           `Process Group PGID: ${result.pid ?? '(none)'}`,
         ].join('\n');
@@ -299,11 +298,11 @@ export class ShellToolInvocation extends BaseToolInvocation<
       const summarizeConfig = this.config.getSummarizeToolOutputConfig();
       const executionError = result.error
         ? {
-            error: {
-              message: result.error.message,
-              type: ToolErrorType.SHELL_EXECUTE_ERROR,
-            },
-          }
+          error: {
+            message: result.error.message,
+            type: ToolErrorType.SHELL_EXECUTE_ERROR,
+          },
+        }
         : {};
       if (summarizeConfig && summarizeConfig[ShellTool.Name]) {
         const summary = await summarizeToolOutput(

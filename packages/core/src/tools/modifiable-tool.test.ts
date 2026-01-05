@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -144,7 +144,7 @@ describe('modifyWithEditor', () => {
 
     it('should create temp directory if it does not exist', async () => {
       const diffDir = path.join(os.tmpdir(), 'papert-code-tool-modify-diffs');
-      await fsp.rm(diffDir, { recursive: true, force: true }).catch(() => {});
+      await fsp.rm(diffDir, { recursive: true, force: true }).catch(() => { });
 
       await modifyWithEditor(
         mockParams,
@@ -265,7 +265,7 @@ describe('modifyWithEditor', () => {
   it('should handle temp file cleanup errors gracefully', async () => {
     const consoleErrorSpy = vi
       .spyOn(console, 'error')
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     vi.spyOn(fs, 'unlinkSync').mockImplementation(() => {
       throw new Error('Failed to delete file');
     });

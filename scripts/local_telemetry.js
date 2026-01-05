@@ -2,7 +2,7 @@
 
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -105,11 +105,11 @@ async function main() {
   try {
     execSync('pkill -f "otelcol-contrib"');
     console.log('✅ Stopped existing otelcol-contrib process.');
-  } catch (_e) {} // eslint-disable-line no-empty
+  } catch (_e) { } // eslint-disable-line no-empty
   try {
     execSync('pkill -f "jaeger"');
     console.log('✅ Stopped existing jaeger process.');
-  } catch (_e) {} // eslint-disable-line no-empty
+  } catch (_e) { } // eslint-disable-line no-empty
   try {
     if (fileExists(OTEL_LOG_FILE)) fs.unlinkSync(OTEL_LOG_FILE);
     console.log('✅ Deleted old collector log.');

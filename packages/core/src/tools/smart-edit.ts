@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -351,7 +351,7 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
   constructor(
     private readonly config: Config,
     public params: EditToolParams,
-  ) {}
+  ) { }
 
   toolLocations(): ToolLocation[] {
     return [{ path: this.params.file_path }];
@@ -773,8 +773,7 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
  */
 export class SmartEditTool
   extends BaseDeclarativeTool<EditToolParams, ToolResult>
-  implements ModifiableDeclarativeTool<EditToolParams>
-{
+  implements ModifiableDeclarativeTool<EditToolParams> {
   static readonly Name = ToolNames.EDIT;
 
   constructor(private readonly config: Config) {

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -68,7 +68,7 @@ export function getSystemEncoding(): string | null {
     } catch (error) {
       console.warn(
         `Failed to get Windows code page using 'chcp' command: ${error instanceof Error ? error.message : String(error)}. ` +
-          `Will attempt to detect encoding from command output instead.`,
+        `Will attempt to detect encoding from command output instead.`,
       );
     }
     return null;

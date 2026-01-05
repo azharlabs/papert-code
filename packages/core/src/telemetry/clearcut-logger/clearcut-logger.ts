@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -1095,10 +1095,8 @@ export class ClearcutLogger {
     // Log a warning if we're dropping events
     if (eventsToSend.length > MAX_RETRY_EVENTS && this.config?.getDebugMode()) {
       console.warn(
-        `ClearcutLogger: Dropping ${
-          eventsToSend.length - MAX_RETRY_EVENTS
-        } events due to retry queue limit. Total events: ${
-          eventsToSend.length
+        `ClearcutLogger: Dropping ${eventsToSend.length - MAX_RETRY_EVENTS
+        } events due to retry queue limit. Total events: ${eventsToSend.length
         }, keeping: ${MAX_RETRY_EVENTS}`,
       );
     }

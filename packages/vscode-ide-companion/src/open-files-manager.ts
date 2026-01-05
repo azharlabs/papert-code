@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -148,9 +148,9 @@ export class OpenFilesManager {
 
     file.cursor = editor.selection.active
       ? {
-          line: editor.selection.active.line + 1,
-          character: editor.selection.active.character,
-        }
+        line: editor.selection.active.line + 1,
+        character: editor.selection.active.character,
+      }
       : undefined;
 
     let selectedText: string | undefined =

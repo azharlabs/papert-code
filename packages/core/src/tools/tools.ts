@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -65,9 +65,8 @@ export interface ToolInvocation<
 export abstract class BaseToolInvocation<
   TParams extends object,
   TResult extends ToolResult,
-> implements ToolInvocation<TParams, TResult>
-{
-  constructor(readonly params: TParams) {}
+> implements ToolInvocation<TParams, TResult> {
+  constructor(readonly params: TParams) { }
 
   abstract getDescription(): string;
 
@@ -150,8 +149,7 @@ export interface ToolBuilder<
 export abstract class DeclarativeTool<
   TParams extends object,
   TResult extends ToolResult,
-> implements ToolBuilder<TParams, TResult>
-{
+> implements ToolBuilder<TParams, TResult> {
   constructor(
     readonly name: string,
     readonly displayName: string,
@@ -160,7 +158,7 @@ export abstract class DeclarativeTool<
     readonly parameterSchema: unknown,
     readonly isOutputMarkdown: boolean = true,
     readonly canUpdateOutput: boolean = false,
-  ) {}
+  ) { }
 
   get schema(): FunctionDeclaration {
     return {

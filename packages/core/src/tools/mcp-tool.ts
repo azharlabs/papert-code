@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -176,11 +176,10 @@ class DiscoveredMCPToolInvocation extends BaseToolInvocation<
 
     // Ensure the response is not an error
     if (this.isMCPToolError(rawResponseParts)) {
-      const errorMessage = `MCP tool '${
-        this.serverToolName
-      }' reported tool error for function call: ${safeJsonStringify(
-        functionCalls[0],
-      )} with response: ${safeJsonStringify(rawResponseParts)}`;
+      const errorMessage = `MCP tool '${this.serverToolName
+        }' reported tool error for function call: ${safeJsonStringify(
+          functionCalls[0],
+        )} with response: ${safeJsonStringify(rawResponseParts)}`;
       return {
         llmContent: errorMessage,
         returnDisplay: `Error: MCP tool '${this.serverToolName}' reported an error.`,
@@ -267,9 +266,8 @@ function transformImageAudioBlock(
 ): Part[] {
   return [
     {
-      text: `[Tool '${toolName}' provided the following ${
-        block.type
-      } data with mime-type: ${block.mimeType}]`,
+      text: `[Tool '${toolName}' provided the following ${block.type
+        } data with mime-type: ${block.mimeType}]`,
     },
     {
       inlineData: {
@@ -378,9 +376,8 @@ function getStringifiedResultForDisplay(rawResponse: Part[]): string {
         if (block.resource?.text) {
           return block.resource.text;
         }
-        return `[Embedded Resource: ${
-          block.resource?.mimeType || 'unknown type'
-        }]`;
+        return `[Embedded Resource: ${block.resource?.mimeType || 'unknown type'
+          }]`;
       default:
         return `[Unknown content type: ${(block as { type: string }).type}]`;
     }

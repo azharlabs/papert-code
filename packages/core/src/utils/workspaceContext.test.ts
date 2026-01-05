@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -392,7 +392,7 @@ describe('WorkspaceContext with optional directories', () => {
     fs.mkdirSync(existingDir1, { recursive: true });
     fs.mkdirSync(existingDir2, { recursive: true });
 
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => { });
   });
 
   afterEach(() => {

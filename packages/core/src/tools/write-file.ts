@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -354,8 +354,7 @@ class WriteFileToolInvocation extends BaseToolInvocation<
  */
 export class WriteFileTool
   extends BaseDeclarativeTool<WriteFileToolParams, ToolResult>
-  implements ModifiableDeclarativeTool<WriteFileToolParams>
-{
+  implements ModifiableDeclarativeTool<WriteFileToolParams> {
   static readonly Name: string = ToolNames.WRITE_FILE;
 
   constructor(private readonly config: Config) {
@@ -413,9 +412,8 @@ export class WriteFileTool
         }
       }
     } catch (statError: unknown) {
-      return `Error accessing path properties for validation: ${filePath}. Reason: ${
-        statError instanceof Error ? statError.message : String(statError)
-      }`;
+      return `Error accessing path properties for validation: ${filePath}. Reason: ${statError instanceof Error ? statError.message : String(statError)
+        }`;
     }
 
     return null;
