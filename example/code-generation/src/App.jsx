@@ -78,6 +78,8 @@ export default function AutoMVP() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isPreviewable, setIsPreviewable] = useState(true);
   const [error, setError] = useState(null);
+  const [followUpPrompt, setFollowUpPrompt] = useState('');
+  const [basePrompt, setBasePrompt] = useState('');
 
   // WebContainer State
   const [previewUrl, setPreviewUrl] = useState('');
@@ -321,21 +323,39 @@ export default function AutoMVP() {
     }
 
     const runId = `gen-${projectId}-${attempt}`;
+    const modelOutputs = [];
     await fetchStream(
       '/api/generate',
       { prompt: promptText, autoApprove, runId },
-      appendLogLines,
+      (log, prefix) => {
+        appendLogLines(log, prefix);
+        if (prefix && prefix.includes('[model]')) {
+          const text = String(log ?? '').replace(/\r/g, '').trim();
+          if (!text) return;
+          text.split('\n').forEach((line) => {
+            const trimmed = line.trim();
+            if (trimmed) modelOutputs.push(trimmed);
+          });
+        }
+      },
       (data) => {
         const preparedFiles = processFiles(data.files);
 
         if (preparedFiles.length === 0) {
-          appendLogLines('No files generated. Please try again or refine your prompt.');
-          setError('No files generated.');
+          const followUpText =
+            modelOutputs.length > 0
+              ? modelOutputs.join('\n')
+              : 'The model requested more details to proceed.';
+          setFollowUpPrompt(followUpText);
+          setPrdText('');
+          setView('input');
           return;
         }
 
         setFiles(preparedFiles);
         setIsPreviewable(data.previewable !== false);
+        setFollowUpPrompt('');
+        setBasePrompt('');
 
         // Create/Update Project
         const newProject = {
@@ -381,7 +401,11 @@ export default function AutoMVP() {
     appendLogLines('Initializing agent...');
 
     const projectId = Date.now().toString();
-    await attemptGeneration(prdText, projectId);
+    if (!followUpPrompt) setBasePrompt(prdText);
+    const promptText = followUpPrompt
+      ? `${basePrompt || prdText}\n\nFollow-up questions:\n${followUpPrompt}\n\nUser answers:\n${prdText}`
+      : prdText;
+    await attemptGeneration(promptText, projectId);
   };
 
   const handleNewProject = () => {
@@ -390,6 +414,8 @@ export default function AutoMVP() {
     setLogs([]);
     setChatHistory([]);
     setPrdText('');
+    setFollowUpPrompt('');
+    setBasePrompt('');
     setView('input');
     setPreviewUrl('');
     setPendingApprovals([]);
@@ -410,6 +436,8 @@ export default function AutoMVP() {
       setLogs(project.logs || []);
       setChatHistory(project.chatHistory || []);
       setPrdText(project.prdText || '');
+      setFollowUpPrompt('');
+      setBasePrompt('');
       setView('result');
       setView('result');
       setPreviewUrl('');
@@ -1078,6 +1106,20 @@ export default function AutoMVP() {
                     />
                   </button>
                 </div>
+
+                {followUpPrompt && (
+                  <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-amber-200">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-amber-300">
+                      More Details Needed
+                    </div>
+                    <pre className="mt-2 whitespace-pre-wrap text-sm text-amber-100">
+                      {followUpPrompt}
+                    </pre>
+                    <div className="mt-2 text-xs text-amber-200/80">
+                      Answer the questions below and click Generate to continue.
+                    </div>
+                  </div>
+                )}
 
                 <textarea
                   value={prdText}
