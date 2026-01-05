@@ -266,6 +266,23 @@ export default function AutoMVP() {
             try {
               const data = JSON.parse(line.slice(6));
               if (data.type === 'log') onLog(data.data);
+              if (data.type === 'model_output') {
+                if (typeof data.data === 'string') {
+                  onLog(data.data, '[model] ');
+                } else if (data.data && typeof data.data === 'object') {
+                  const kind = data.data.kind;
+                  const text = data.data.text;
+                  if (kind === 'delta') return;
+                  const prefix =
+                    kind === 'thinking'
+                      ? '[thinking] '
+                      : kind === 'delta'
+                        ? '[model:partial] '
+                        : '[model] ';
+                    // kind === 'thinking' ? '[thinking] ' : '[model] ';
+                  onLog(text, prefix);
+                }
+              }
               if (data.type === 'result') onResult(data.data);
               if (data.type === 'error') onError(data.data);
               if (data.type === 'permission_request' && onPermission) onPermission(data.data);
@@ -282,38 +299,36 @@ export default function AutoMVP() {
 
   // Logs Ref to avoid staleness in closures
   const logsRef = useRef([]);
+  const appendLogLines = (raw, prefix = '') => {
+    const text = String(raw ?? '').replace(/\r/g, '');
+    const lines = text.split('\n').filter((line) => line.trim() !== '');
+    if (lines.length === 0) return;
+    setLogs((prev) => {
+      const next = [
+        ...prev,
+        ...lines.map((line) => `> ${prefix}${line}`),
+      ];
+      logsRef.current = next;
+      return next;
+    });
+  };
 
   // --- CORE: Generate Code ---
   const attemptGeneration = async (promptText, projectId, attempt = 1) => {
     if (attempt > 1) {
-      const msg = `> Attempt ${attempt}: Retrying generation...`;
-      setLogs(prev => {
-        const next = [...prev, msg];
-        logsRef.current = next;
-        return next;
-      });
+      appendLogLines(`Attempt ${attempt}: Retrying generation...`);
     }
 
     const runId = `gen-${projectId}-${attempt}`;
     await fetchStream(
       '/api/generate',
       { prompt: promptText, autoApprove, runId },
-      (log) => {
-        setLogs(prev => {
-          const next = [...prev, `> ${log}`];
-          logsRef.current = next;
-          return next;
-        });
-      },
+      appendLogLines,
       (data) => {
         const preparedFiles = processFiles(data.files);
 
         if (preparedFiles.length === 0) {
-          setLogs(prev => {
-            const next = [...prev, `> No files generated. Please try again or refine your prompt.`];
-            logsRef.current = next;
-            return next;
-          });
+          appendLogLines('No files generated. Please try again or refine your prompt.');
           setError('No files generated.');
           return;
         }
@@ -362,9 +377,7 @@ export default function AutoMVP() {
 
     if (intervalRef.current) clearInterval(intervalRef.current);
 
-    const initLog = `> Initializing agent...`;
-    setLogs([initLog]);
-    logsRef.current = [initLog];
+    appendLogLines('Initializing agent...');
 
     const projectId = Date.now().toString();
     await attemptGeneration(prdText, projectId);
@@ -500,11 +513,11 @@ export default function AutoMVP() {
     await fetchStream(
       '/api/refine',
       { prompt: userRequest, files: files, autoApprove, runId },
-      (log) => {
+      (log, prefix) => {
         // Option A: Stream into chat
         // setChatHistory(prev => [...prev, { role: 'log', text: log }]);
         // Option B: Update the main logs state and maybe show a mini terminal
-        setLogs(prev => [...prev, `> ${log}`]);
+        appendLogLines(log, prefix);
       },
       (data) => {
         const preparedFiles = processFiles(data.files);
@@ -938,10 +951,10 @@ export default function AutoMVP() {
         })
       });
       setPendingApprovals(prev => prev.filter(item => item.requestId !== approval.requestId));
-      setLogs(prev => [...prev, `> ${decision === 'allow' ? 'Approved' : 'Denied'} ${approval.toolName}`]);
+      appendLogLines(`${decision === 'allow' ? 'Approved' : 'Denied'} ${approval.toolName}`);
     } catch (e) {
       console.error('Failed to submit approval decision', e);
-      setLogs(prev => [...prev, `> Failed to submit approval for ${approval.toolName}`]);
+      appendLogLines(`Failed to submit approval for ${approval.toolName}`);
     }
   };
 

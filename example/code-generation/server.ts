@@ -99,6 +99,68 @@ type PendingApproval = {
 
 const pendingApprovals = new Map<string, PendingApproval>();
 
+const safeStringify = (value: unknown) => {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+};
+
+const sendModelOutput = (
+  sendEvent: SendEvent,
+  kind: 'model' | 'thinking' | 'delta',
+  text: string,
+) => {
+  const trimmed = text.trim();
+  if (!trimmed) return;
+  sendEvent('model_output', { kind, text: trimmed });
+};
+
+const describeToolUse = (
+  toolName: string,
+  input: Record<string, unknown> | null | undefined,
+  cwd: string,
+) => {
+  if (!input || typeof input !== 'object') {
+    return `${toolName} ${safeStringify(input)}`;
+  }
+
+  const filePath =
+    (input.file_path as string | undefined) ||
+    (input.path as string | undefined) ||
+    (input.filePath as string | undefined);
+
+  if (typeof filePath === 'string') {
+    const relativePath = path.relative(cwd, filePath);
+    const displayPath =
+      relativePath && !relativePath.startsWith('..')
+        ? relativePath
+        : filePath;
+    return `${toolName} ${displayPath}`;
+  }
+
+  if (toolName === 'run_shell_command') {
+    const command = input.command;
+    if (typeof command === 'string') {
+      return `${toolName} ${command}`;
+    }
+  }
+
+  return `${toolName} ${safeStringify(input)}`;
+};
+
+const emitGeneratedFiles = (sendEvent: SendEvent, files: { path: string }[]) => {
+  sendEvent('log', `Generated ${files.length} files.`);
+  const maxFiles = 50;
+  files.slice(0, maxFiles).forEach((file) => {
+    sendEvent('log', `+ ${file.path}`);
+  });
+  if (files.length > maxFiles) {
+    sendEvent('log', `...and ${files.length - maxFiles} more files.`);
+  }
+};
+
 // Helper to capture logs and stream response
 async function streamResponse(
   res: express.Response,
@@ -171,7 +233,7 @@ const requestToolApproval = (
       };
 
       pendingApprovals.set(requestId, { runId, decide, timeout });
-      sendEvent('log', `> Approval needed for ${toolName}`);
+      sendEvent('log', `Approval needed for ${toolName}`);
       sendEvent('permission_request', {
         requestId,
         runId,
@@ -293,31 +355,78 @@ app.post('/api/generate', async (req, res) => {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'papercode-'));
     console.log(`Generating in temp dir: ${tempDir}`);
 
-      const q = query({
-        prompt,
-        options: {
-          cwd: tempDir,
-          model: 'gemini-2.5-flash',
-          skillsPath: path.join(process.cwd(), 'skills'),
-          permissionMode: autoApprove ? 'yolo' : 'default',
-          authType: 'openai',
-          pathToPapertExecutable: resolvePapertExecutable(),
-          canUseTool: autoApprove
-          ? undefined
-          : (toolName, input, { suggestions, signal }) =>
-              requestToolApproval(
-                sendEvent,
-                runId || tempDir,
-                toolName,
-                input,
-                suggestions,
-                signal,
-              ),
+    const q = query({
+      prompt,
+      options: {
+        cwd: tempDir,
+        model: 'gpt-5.2',
+        skillsPath: path.join(process.cwd(), 'skills'),
+        permissionMode: autoApprove ? 'yolo' : 'default',
+        authType: 'openai',
+        pathToPapertExecutable: resolvePapertExecutable(),
+        includePartialMessages: true,
+        canUseTool: autoApprove
+        ? undefined
+        : (toolName, input, { suggestions, signal }) =>
+            requestToolApproval(
+              sendEvent,
+              runId || tempDir,
+              toolName,
+              input,
+              suggestions,
+              signal,
+            ),
       },
     });
 
     let resultError: string | null = null;
     for await (const message of q) {
+      if (message?.type === 'assistant') {
+        const content = message.message?.content;
+        if (Array.isArray(content)) {
+          for (const block of content) {
+            if (block?.type === 'text' && block.text?.trim()) {
+              sendModelOutput(sendEvent, 'model', block.text);
+            }
+            if (block?.type === 'thinking' && block.thinking?.trim()) {
+              sendModelOutput(sendEvent, 'thinking', block.thinking);
+            }
+            if (block?.type === 'tool_use') {
+              sendEvent(
+                'log',
+                `tool: ${describeToolUse(block.name, block.input, tempDir)}`,
+              );
+            }
+            if (block?.type === 'tool_result' && block.is_error) {
+              const errorDetails =
+                typeof block.content === 'string'
+                  ? block.content
+                  : safeStringify(block.content);
+              sendEvent(
+                'log',
+                `tool_error: ${block.tool_use_id} ${errorDetails}`,
+              );
+            }
+          }
+        }
+      }
+      if (message?.type === 'stream_event') {
+        const event = message.event;
+        if (
+          event?.type === 'content_block_delta' &&
+          event.delta?.type === 'text_delta' &&
+          event.delta.text?.trim()
+        ) {
+          sendModelOutput(sendEvent, 'delta', event.delta.text);
+        }
+        if (
+          event?.type === 'content_block_delta' &&
+          event.delta?.type === 'thinking_delta' &&
+          event.delta.thinking?.trim()
+        ) {
+          sendModelOutput(sendEvent, 'thinking', event.delta.thinking);
+        }
+      }
       if (message.type === 'result') {
         if (message.is_error) {
           resultError = message.error?.message || 'Generation failed.';
@@ -332,6 +441,7 @@ app.post('/api/generate', async (req, res) => {
 
     const files = await readFilesRecursively(tempDir);
     const previewable = files.some(f => f.path.endsWith('.html') || f.path.endsWith('.jsx') || f.path.endsWith('.tsx') || f.path === 'package.json');
+    emitGeneratedFiles(sendEvent, files);
 
     return { files, previewable };
     // } finally {
@@ -361,11 +471,12 @@ app.post('/api/refine', async (req, res) => {
         prompt,
         options: {
           cwd: tempDir,
-          model: 'gemini-2.0-flash-exp',
+          model: 'gpt-5.2',
           skillsPath: path.join(process.cwd(), 'skills'),
           permissionMode: autoApprove ? 'yolo' : 'default',
           authType: 'openai',
           pathToPapertExecutable: resolvePapertExecutable(),
+          includePartialMessages: true,
           canUseTool: autoApprove
             ? undefined
             : (toolName, input, { suggestions, signal }) =>
@@ -382,6 +493,52 @@ app.post('/api/refine', async (req, res) => {
 
       let resultError: string | null = null;
       for await (const message of q) {
+        if (message?.type === 'assistant') {
+          const content = message.message?.content;
+          if (Array.isArray(content)) {
+            for (const block of content) {
+              if (block?.type === 'text' && block.text?.trim()) {
+                sendModelOutput(sendEvent, 'model', block.text);
+              }
+              if (block?.type === 'thinking' && block.thinking?.trim()) {
+                sendModelOutput(sendEvent, 'thinking', block.thinking);
+              }
+              if (block?.type === 'tool_use') {
+                sendEvent(
+                  'log',
+                  `tool: ${describeToolUse(block.name, block.input, tempDir)}`,
+                );
+              }
+              if (block?.type === 'tool_result' && block.is_error) {
+                const errorDetails =
+                  typeof block.content === 'string'
+                    ? block.content
+                    : safeStringify(block.content);
+                sendEvent(
+                  'log',
+                  `tool_error: ${block.tool_use_id} ${errorDetails}`,
+                );
+              }
+            }
+          }
+        }
+        if (message?.type === 'stream_event') {
+          const event = message.event;
+          if (
+            event?.type === 'content_block_delta' &&
+            event.delta?.type === 'text_delta' &&
+            event.delta.text?.trim()
+          ) {
+            sendModelOutput(sendEvent, 'delta', event.delta.text);
+          }
+          if (
+            event?.type === 'content_block_delta' &&
+            event.delta?.type === 'thinking_delta' &&
+            event.delta.thinking?.trim()
+          ) {
+            sendModelOutput(sendEvent, 'thinking', event.delta.thinking);
+          }
+        }
         if (message.type === 'result') {
           if (message.is_error) {
             resultError = message.error?.message || 'Refinement failed.';
@@ -395,6 +552,7 @@ app.post('/api/refine', async (req, res) => {
       }
 
       const newFiles = await readFilesRecursively(tempDir);
+      emitGeneratedFiles(sendEvent, newFiles);
       return { files: newFiles };
     } finally {
       try {
