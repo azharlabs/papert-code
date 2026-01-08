@@ -43,6 +43,7 @@ export {
   logExtensionUninstall,
   logRipgrepFallback,
   logNextSpeakerCheck,
+  logModelRouting,
   logAuth,
 } from './loggers.js';
 export type { SlashCommandEvent, ChatCompressionEvent } from './types.js';
@@ -62,6 +63,7 @@ export {
   ToolOutputTruncatedEvent,
   RipgrepFallbackEvent,
   NextSpeakerCheckEvent,
+  ModelRoutingEvent,
   AuthEvent,
 } from './types.js';
 export { makeSlashCommandEvent, makeChatCompressionEvent } from './types.js';
@@ -79,6 +81,7 @@ export {
   recordInvalidChunk,
   recordContentRetry,
   recordContentRetryFailure,
+  recordModelRoutingMetrics,
   // Performance monitoring functions
   recordStartupPerformance,
   recordMemoryUsage,

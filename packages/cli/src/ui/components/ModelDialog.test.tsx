@@ -16,6 +16,7 @@ import {
   MAINLINE_CODER,
   MAINLINE_VLM,
 } from '../models/availableModels.js';
+import { DEFAULT_GEMINI_MODEL_AUTO } from '@papert-code/papert-code-core';
 
 vi.mock('../hooks/useKeypress.js', () => ({
   useKeypress: vi.fn(),
@@ -90,14 +91,16 @@ describe('<ModelDialog />', () => {
     expect(mockedSelect).toHaveBeenCalledTimes(1);
 
     const props = mockedSelect.mock.calls[0][0];
-    expect(props.items).toHaveLength(AVAILABLE_MODELS_PAPERT.length);
-    expect(props.items[0].value).toBe(MAINLINE_CODER);
-    expect(props.items[1].value).toBe(MAINLINE_VLM);
+    // Main view has 2 options: Auto and Manual
+    expect(props.items).toHaveLength(2);
+    expect(props.items[0].value).toBe(DEFAULT_GEMINI_MODEL_AUTO);
+    expect(props.items[1].value).toBe('Manual');
     expect(props.showNumbers).toBe(true);
   });
 
   it('initializes with the model from ConfigContext', () => {
-    const mockGetModel = vi.fn(() => MAINLINE_VLM);
+    // If model is Manual (index 1)
+    const mockGetModel = vi.fn(() => MAINLINE_CODER);
     renderComponent({}, { getModel: mockGetModel });
 
     expect(mockGetModel).toHaveBeenCalled();
@@ -191,7 +194,7 @@ describe('<ModelDialog />', () => {
   });
 
   it('updates initialIndex when config context changes', () => {
-    const mockGetModel = vi.fn(() => MAINLINE_CODER);
+    const mockGetModel = vi.fn(() => DEFAULT_GEMINI_MODEL_AUTO);
     const mockGetAuthType = vi.fn(() => 'papert-oauth');
     const { rerender } = render(
       <ConfigContext.Provider
@@ -208,7 +211,8 @@ describe('<ModelDialog />', () => {
 
     expect(mockedSelect.mock.calls[0][0].initialIndex).toBe(0);
 
-    mockGetModel.mockReturnValue(MAINLINE_VLM);
+    // Switch to a model that falls back to Manual (index 1)
+    mockGetModel.mockReturnValue(MAINLINE_CODER);
     const newMockConfig = {
       getModel: mockGetModel,
       getAuthType: mockGetAuthType,

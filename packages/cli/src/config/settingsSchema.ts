@@ -530,6 +530,16 @@ const SETTINGS_SCHEMA = {
         description: 'The Gemini model to use for conversations.',
         showInDialog: false,
       },
+      useModelRouter: {
+        type: 'boolean',
+        label: 'Enable Model Routing',
+        category: 'Model',
+        requiresRestart: false,
+        default: true,
+        description:
+          'Enable dynamic model routing for auto model selection (e.g., choose between fast and pro models per request).',
+        showInDialog: false,
+      },
       maxSessionTurns: {
         type: 'number',
         label: 'Max Session Turns',

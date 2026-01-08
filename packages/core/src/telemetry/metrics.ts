@@ -8,7 +8,7 @@ import type { Attributes, Meter, Counter, Histogram } from '@opentelemetry/api';
 import { diag, metrics, ValueType } from '@opentelemetry/api';
 import { SERVICE_NAME, EVENT_CHAT_COMPRESSION } from './constants.js';
 import type { Config } from '../config/config.js';
-import type { ModelSlashCommandEvent } from './types.js';
+import type { ModelRoutingEvent, ModelSlashCommandEvent } from './types.js';
 
 const TOOL_CALL_COUNT = `${SERVICE_NAME}.tool.call.count`;
 const TOOL_CALL_LATENCY = `${SERVICE_NAME}.tool.call.latency`;
@@ -21,6 +21,8 @@ const INVALID_CHUNK_COUNT = `${SERVICE_NAME}.chat.invalid_chunk.count`;
 const CONTENT_RETRY_COUNT = `${SERVICE_NAME}.chat.content_retry.count`;
 const CONTENT_RETRY_FAILURE_COUNT = `${SERVICE_NAME}.chat.content_retry_failure.count`;
 const MODEL_SLASH_COMMAND_CALL_COUNT = `${SERVICE_NAME}.slash_command.model.call_count`;
+const MODEL_ROUTING_LATENCY = `${SERVICE_NAME}.model_routing.latency`;
+const MODEL_ROUTING_FAILURE_COUNT = `${SERVICE_NAME}.model_routing.failure.count`;
 export const SUBAGENT_EXECUTION_COUNT = `${SERVICE_NAME}.subagent.execution.count`;
 
 // Performance Monitoring Metrics
@@ -117,6 +119,15 @@ const COUNTER_DEFINITIONS = {
       'slash_command.model.model_name': string;
     },
   },
+  [MODEL_ROUTING_FAILURE_COUNT]: {
+    description: 'Counts model routing failures.',
+    valueType: ValueType.INT,
+    assign: (c: Counter) => (modelRoutingFailureCounter = c),
+    attributes: {} as {
+      'routing.decision_source': string;
+      'routing.error_message'?: string;
+    },
+  },
   [EVENT_CHAT_COMPRESSION]: {
     description: 'Counts chat compression events.',
     valueType: ValueType.INT,
@@ -136,6 +147,16 @@ const HISTOGRAM_DEFINITIONS = {
     assign: (h: Histogram) => (toolCallLatencyHistogram = h),
     attributes: {} as {
       function_name: string;
+    },
+  },
+  [MODEL_ROUTING_LATENCY]: {
+    description: 'Latency of model routing decisions in milliseconds.',
+    unit: 'ms',
+    valueType: ValueType.INT,
+    assign: (h: Histogram) => (modelRoutingLatencyHistogram = h),
+    attributes: {} as {
+      'routing.decision_model': string;
+      'routing.decision_source': string;
     },
   },
   [API_REQUEST_LATENCY]: {
@@ -332,6 +353,8 @@ let contentRetryCounter: Counter | undefined;
 let contentRetryFailureCounter: Counter | undefined;
 let subagentExecutionCounter: Counter | undefined;
 let modelSlashCommandCallCounter: Counter | undefined;
+let modelRoutingLatencyHistogram: Histogram | undefined;
+let modelRoutingFailureCounter: Counter | undefined;
 
 // Performance Monitoring Metrics
 let startupTimeHistogram: Histogram | undefined;
@@ -526,6 +549,32 @@ export function recordModelSlashCommand(
     ...baseMetricDefinition.getCommonAttributes(config),
     'slash_command.model.model_name': event.model_name,
   });
+}
+
+export function recordModelRoutingMetrics(
+  config: Config,
+  event: ModelRoutingEvent,
+): void {
+  if (
+    !modelRoutingLatencyHistogram ||
+    !modelRoutingFailureCounter ||
+    !isMetricsInitialized
+  )
+    return;
+
+  modelRoutingLatencyHistogram.record(event.routing_latency_ms, {
+    ...baseMetricDefinition.getCommonAttributes(config),
+    'routing.decision_model': event.decision_model,
+    'routing.decision_source': event.decision_source,
+  });
+
+  if (event.failed) {
+    modelRoutingFailureCounter.add(1, {
+      ...baseMetricDefinition.getCommonAttributes(config),
+      'routing.decision_source': event.decision_source,
+      'routing.error_message': event.error_message,
+    });
+  }
 }
 
 // Performance Monitoring Functions

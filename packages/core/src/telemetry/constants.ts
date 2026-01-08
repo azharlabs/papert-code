@@ -34,6 +34,7 @@ export const EVENT_FILE_OPERATION = 'papert-code.file_operation';
 export const EVENT_MODEL_SLASH_COMMAND = 'papert-code.slash_command.model';
 export const EVENT_SUBAGENT_EXECUTION = 'papert-code.subagent_execution';
 export const EVENT_AUTH = 'papert-code.auth';
+export const EVENT_MODEL_ROUTING = 'papert-code.model_routing';
 
 // Performance Events
 export const EVENT_STARTUP_PERFORMANCE = 'papert-code.startup.performance';

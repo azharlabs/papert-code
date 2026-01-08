@@ -73,6 +73,7 @@ import { flatMapTextParts } from '../utils/partUtils.js';
 import { retryWithBackoff } from '../utils/retry.js';
 import { fireAfterAgentHook, fireBeforeAgentHook } from './clientHookTriggers.js';
 import type { DefaultHookOutput } from '../hooks/types.js';
+import type { RoutingContext } from '../routing/routingStrategy.js';
 
 // IDE integration
 import { ideContextStore } from '../ide/ideContext.js';
@@ -116,6 +117,7 @@ export class GeminiClient {
 
   private readonly loopDetector: LoopDetectionService;
   private lastPromptId: string | undefined = undefined;
+  private currentSequenceModel: string | null = null;
   private lastSentIdeContext: IdeContext | undefined;
   private forceFullIdeContext = true;
 
@@ -512,6 +514,7 @@ export class GeminiClient {
     options?: { isContinuation: boolean },
     turns: number = MAX_TURNS,
   ): AsyncGenerator<ServerGeminiStreamEvent, Turn> {
+    this.config.resetTurn?.();
     const hooksEnabled = this.config.getEnableHooks();
     const messageBus = this.config.getMessageBus();
 
@@ -521,6 +524,7 @@ export class GeminiClient {
         this.hookStateMap.delete(this.lastPromptId);
       }
       this.lastPromptId = prompt_id;
+      this.currentSequenceModel = null;
     }
 
     if (!options?.isContinuation) {
@@ -696,11 +700,25 @@ export class GeminiClient {
         requestToSent = [...systemReminders, ...requestToSent];
       }
 
-      const resultStream = turn.run(
-        this.config.getModel(),
-        requestToSent,
+      const routingContext: RoutingContext = {
+        history: this.getChat().getHistory(true),
+        request,
         signal,
-      );
+      };
+
+      let modelToUse = this.config.getModel();
+      const shouldRoute = this.config.getUseModelRouter?.() ?? false;
+      if (this.currentSequenceModel) {
+        modelToUse = this.currentSequenceModel;
+      } else if (shouldRoute) {
+        const router = this.config.getModelRouterService();
+        const decision = await router.route(routingContext);
+        modelToUse = decision.model;
+      }
+      this.currentSequenceModel = modelToUse;
+      this.config.setActiveModel?.(modelToUse);
+
+      const resultStream = turn.run(modelToUse, requestToSent, signal);
       for await (const event of resultStream) {
         if (!this.config.getSkipLoopDetection()) {
           if (this.loopDetector.addAndCheck(event)) {

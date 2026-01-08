@@ -35,6 +35,7 @@ import type {
   ToolOutputTruncatedEvent,
   ExtensionEnableEvent,
   ModelSlashCommandEvent,
+  ModelRoutingEvent,
   ExtensionDisableEvent,
   AuthEvent,
   RipgrepFallbackEvent,
@@ -442,6 +443,22 @@ export class PapertLogger {
     const rumEvent = this.createActionEvent('user', 'model_slash_command', {
       snapshots: JSON.stringify({
         model_name: event.model_name,
+      }),
+    });
+
+    this.enqueueLogEvent(rumEvent);
+    this.flushIfNeeded();
+  }
+
+  logModelRoutingEvent(event: ModelRoutingEvent): void {
+    const rumEvent = this.createActionEvent('model', 'model_routing', {
+      snapshots: JSON.stringify({
+        decision_model: event.decision_model,
+        decision_source: event.decision_source,
+        routing_latency_ms: event.routing_latency_ms,
+        reasoning: event.reasoning,
+        failed: event.failed,
+        error_message: event.error_message,
       }),
     });
 

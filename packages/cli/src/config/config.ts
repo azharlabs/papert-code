@@ -1016,6 +1016,7 @@ export async function loadCliConfig(
     fileDiscoveryService: fileService,
     bugCommand: settings.advanced?.bugCommand,
     model: resolvedModel,
+    useModelRouter: settings.model?.useModelRouter ?? true,
     extensionContextFilePaths,
     sessionTokenLimit: settings.model?.sessionTokenLimit ?? -1,
     maxSessionTurns:

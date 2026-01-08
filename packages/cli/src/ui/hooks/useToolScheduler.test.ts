@@ -29,8 +29,8 @@ import {
   DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES,
   DEFAULT_TRUNCATE_TOOL_OUTPUT_THRESHOLD,
   ApprovalMode,
-  MockTool,
 } from '@papert-code/papert-code-core';
+import { MockTool } from '@papert-code/papert-code-core/dist/src/test-utils/mock-tool.js';
 import { ToolCallStatus } from '../types.js';
 
 // Mocks

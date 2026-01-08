@@ -115,6 +115,7 @@ import { HookSystem } from '../hooks/index.js';
 import { PolicyEngine } from '../policy/policy-engine.js';
 import type { PolicyEngineConfig } from '../policy/types.js';
 import { MessageBus } from '../confirmation-bus/message-bus.js';
+import { ModelRouterService } from '../routing/modelRouterService.js';
 
 // Re-export types
 export type { AnyToolInvocation, FileFilteringOptions, MCPOAuthConfig };
@@ -372,6 +373,7 @@ export interface ConfigParameters {
     disabled?: string[];
   };
   policyEngineConfig?: PolicyEngineConfig;
+  useModelRouter?: boolean;
 }
 
 function normalizeConfigOutputFormat(
@@ -402,6 +404,7 @@ export class Config {
   private fileSystemService: FileSystemService;
   private readonly modelConfigService: ModelConfigService;
   private readonly modelAvailabilityService: ModelAvailabilityService;
+  private readonly modelRouterService: ModelRouterService;
   private contentGeneratorConfig!: ContentGeneratorConfig;
   private contentGenerator!: ContentGenerator;
   private _generationConfig: Partial<ContentGeneratorConfig>;
@@ -514,6 +517,7 @@ export class Config {
   private hookSystem?: HookSystem;
   private readonly eventEmitter?: EventEmitter;
   private readonly useSmartEdit: boolean;
+  private readonly useModelRouter: boolean;
   private contextManager?: ContextManager;
   private sessionSummaryHandlersRegistered = false;
 
@@ -648,6 +652,7 @@ export class Config {
     });
     this.messageBus = new MessageBus(this.policyEngine, this.debugMode);
     this.useSmartEdit = params.useSmartEdit ?? false;
+    this.useModelRouter = params.useModelRouter ?? true;
     this.extensionManagement = params.extensionManagement ?? true;
     this.storage = new Storage(this.targetDir);
     this.vlmSwitchMode = params.vlmSwitchMode;
@@ -666,6 +671,7 @@ export class Config {
       setGlobalDispatcher(new ProxyAgent(this.getProxy() as string));
     }
     this.geminiClient = new GeminiClient(this);
+    this.modelRouterService = new ModelRouterService(this);
     this.chatRecordingService = new ChatRecordingService(this);
   }
 
@@ -881,6 +887,14 @@ export class Config {
 
   getModelAvailabilityService(): ModelAvailabilityService {
     return this.modelAvailabilityService;
+  }
+
+  getModelRouterService(): ModelRouterService {
+    return this.modelRouterService;
+  }
+
+  getUseModelRouter(): boolean {
+    return this.useModelRouter;
   }
 
   getUserTier(): UserTierId | undefined {

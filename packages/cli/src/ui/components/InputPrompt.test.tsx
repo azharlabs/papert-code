@@ -200,7 +200,7 @@ describe('InputPrompt', () => {
     };
   });
 
-  const wait = (ms = 50) => new Promise((resolve) => setTimeout(resolve, ms));
+  const wait = (ms = 100) => new Promise((resolve) => setTimeout(resolve, ms));
 
   it('should call shellHistory.getPreviousCommand on up arrow in shell mode', async () => {
     props.shellModeActive = true;

@@ -34,6 +34,7 @@ import {
   EVENT_EXTENSION_INSTALL,
   EVENT_MODEL_SLASH_COMMAND,
   EVENT_EXTENSION_DISABLE,
+  EVENT_MODEL_ROUTING,
   EVENT_SUBAGENT_EXECUTION,
   EVENT_MALFORMED_JSON_RESPONSE,
   EVENT_INVALID_CHUNK,
@@ -47,6 +48,7 @@ import {
   recordContentRetryFailure,
   recordFileOperationMetric,
   recordInvalidChunk,
+  recordModelRoutingMetrics,
   recordModelSlashCommand,
   recordSubagentExecutionMetrics,
   recordTokenUsageMetrics,
@@ -81,6 +83,7 @@ import type {
   ExtensionUninstallEvent,
   ExtensionInstallEvent,
   ModelSlashCommandEvent,
+  ModelRoutingEvent,
   SubagentExecutionEvent,
   MalformedJsonResponseEvent,
   InvalidChunkEvent,
@@ -750,6 +753,28 @@ export function logModelSlashCommand(
   };
   logger.emit(logRecord);
   recordModelSlashCommand(config, event);
+}
+
+export function logModelRouting(
+  config: Config,
+  event: ModelRoutingEvent,
+): void {
+  PapertLogger.getInstance(config)?.logModelRoutingEvent(event);
+  if (!isTelemetrySdkInitialized()) return;
+
+  const attributes: LogAttributes = {
+    ...getCommonAttributes(config),
+    ...event,
+    'event.name': EVENT_MODEL_ROUTING,
+  };
+
+  const logger = logs.getLogger(SERVICE_NAME);
+  const logRecord: LogRecord = {
+    body: `Model routing decision. Model: ${event.decision_model}, Source: ${event.decision_source}`,
+    attributes,
+  };
+  logger.emit(logRecord);
+  recordModelRoutingMetrics(config, event);
 }
 
 export function logExtensionInstallEvent(
