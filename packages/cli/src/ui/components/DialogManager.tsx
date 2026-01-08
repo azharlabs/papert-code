@@ -35,6 +35,7 @@ import { IdeTrustChangeDialog } from './IdeTrustChangeDialog.js';
 import { WelcomeBackDialog } from './WelcomeBackDialog.js';
 import { ModelSwitchDialog } from './ModelSwitchDialog.js';
 import { AgentCreationWizard } from './subagents/create/AgentCreationWizard.js';
+import { SessionBrowser } from './SessionBrowser.js';
 import { AgentsManagerDialog } from './subagents/manage/AgentsManagerDialog.js';
 import {
   QuitConfirmationDialog,
@@ -279,6 +280,18 @@ export const DialogManager = ({
       );
     }
   }
+
+  if (uiState.isSessionBrowserOpen) {
+    return (
+      <SessionBrowser
+        config={config}
+        onResumeSession={uiActions.handleResumeSession}
+        onDeleteSession={uiActions.handleDeleteSession}
+        onExit={uiActions.closeSessionBrowser}
+      />
+    );
+  }
+
   if (uiState.isEditorDialogOpen) {
     return (
       <Box flexDirection="column">

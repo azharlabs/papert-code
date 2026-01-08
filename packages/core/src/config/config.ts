@@ -808,6 +808,19 @@ export class Config {
   }
 
   /**
+   * Resumes a session from persisted data and resets session-scoped services.
+   */
+  resumeSession(sessionData: ResumedSessionData): void {
+    this.sessionId = sessionData.conversation.sessionId;
+    this.sessionData = sessionData;
+    this.chatRecordingService = new ChatRecordingService(this);
+    if (this.initialized) {
+      logStartSession(this, new StartSessionEvent(this));
+    }
+  }
+
+
+  /**
    * Returns the resumed session data if this session was resumed from a previous one.
    */
   getResumedSessionData(): ResumedSessionData | undefined {

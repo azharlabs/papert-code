@@ -44,7 +44,6 @@ import {
   SessionStartSource,
   SessionEndReason,
 } from '@papert-code/papert-code-core';
-import { buildResumedHistoryItems } from './utils/resumeHistoryUtils.js';
 import { validateAuthMethod } from '../config/auth.js';
 import { loadHierarchicalGeminiMemory } from '../config/config.js';
 import process from 'node:process';
@@ -53,6 +52,8 @@ import { useMemoryMonitor } from './hooks/useMemoryMonitor.js';
 import { useThemeCommand } from './hooks/useThemeCommand.js';
 import { useAuthCommand } from './auth/useAuth.js';
 import { useQuotaAndFallback } from './hooks/useQuotaAndFallback.js';
+import { useSessionBrowser } from './hooks/useSessionBrowser.js';
+import { useSessionResume } from './hooks/useSessionResume.js';
 import { useEditorSettings } from './hooks/useEditorSettings.js';
 import { useSettingsCommand } from './hooks/useSettingsCommand.js';
 import { useModelCommand } from './hooks/useModelCommand.js';
@@ -239,15 +240,6 @@ export const AppContainer = (props: AppContainerProps) => {
       await config.initialize();
       setConfigInitialized(true);
 
-      const resumedSessionData = config.getResumedSessionData();
-      if (resumedSessionData) {
-        const historyItems = buildResumedHistoryItems(
-          resumedSessionData,
-          config,
-        );
-        historyManager.loadHistory(historyItems);
-      }
-
       const hooksEnabled = config.getEnableHooks();
       const hookMessageBus = config.getMessageBus();
       if (hooksEnabled && hookMessageBus) {
@@ -407,6 +399,28 @@ export const AppContainer = (props: AppContainerProps) => {
 
   useInitializationAuthError(initializationResult.authError, onAuthError);
 
+  const resumedSessionData = config.getResumedSessionData();
+  const isGeminiClientInitialized =
+    config.getGeminiClient()?.isInitialized() ?? false;
+
+  const { loadHistoryForResume } = useSessionResume({
+    config,
+    historyManager,
+    refreshStatic,
+    isGeminiClientInitialized,
+    setQuittingMessages,
+    resumedSessionData,
+    isAuthenticating,
+  });
+
+  const {
+    isSessionBrowserOpen,
+    openSessionBrowser,
+    closeSessionBrowser,
+    handleResumeSession,
+    handleDeleteSession,
+  } = useSessionBrowser(config, loadHistoryForResume);
+
   // Sync user tier from config when authentication changes
   // TODO: Implement getUserTier() method on Config if needed
   // useEffect(() => {
@@ -509,6 +523,7 @@ export const AppContainer = (props: AppContainerProps) => {
       openModelDialog,
       openPermissionsDialog,
       openApprovalModeDialog,
+      openSessionBrowser,
       quit: (messages: HistoryItem[]) => {
         setQuittingMessages(messages);
         setTimeout(async () => {
@@ -537,6 +552,7 @@ export const AppContainer = (props: AppContainerProps) => {
       dispatchExtensionStateUpdate,
       openPermissionsDialog,
       openApprovalModeDialog,
+      openSessionBrowser,
       addConfirmUpdateExtensionRequest,
       dispatchSkillStateUpdate,
       addConfirmUpdateSkillRequest,
@@ -1232,6 +1248,7 @@ export const AppContainer = (props: AppContainerProps) => {
     !!quitConfirmationRequest ||
     isThemeDialogOpen ||
     isSettingsDialogOpen ||
+    isSessionBrowserOpen ||
     isModelDialogOpen ||
     isVisionSwitchDialogOpen ||
     isPermissionsDialogOpen ||
@@ -1268,6 +1285,7 @@ export const AppContainer = (props: AppContainerProps) => {
       debugMessage,
       quittingMessages,
       isSettingsDialogOpen,
+      isSessionBrowserOpen,
       isModelDialogOpen,
       isPermissionsDialogOpen,
       isApprovalModeDialogOpen,
@@ -1362,6 +1380,7 @@ export const AppContainer = (props: AppContainerProps) => {
       debugMessage,
       quittingMessages,
       isSettingsDialogOpen,
+      isSessionBrowserOpen,
       isModelDialogOpen,
       isPermissionsDialogOpen,
       isApprovalModeDialogOpen,
@@ -1457,6 +1476,10 @@ export const AppContainer = (props: AppContainerProps) => {
       closeSettingsDialog,
       closeModelDialog,
       closePermissionsDialog,
+      openSessionBrowser,
+      closeSessionBrowser,
+      handleResumeSession,
+      handleDeleteSession,
       setShellModeActive,
       vimHandleInput,
       handleIdePromptComplete,
@@ -1491,6 +1514,10 @@ export const AppContainer = (props: AppContainerProps) => {
       closeSettingsDialog,
       closeModelDialog,
       closePermissionsDialog,
+      openSessionBrowser,
+      closeSessionBrowser,
+      handleResumeSession,
+      handleDeleteSession,
       setShellModeActive,
       vimHandleInput,
       handleIdePromptComplete,

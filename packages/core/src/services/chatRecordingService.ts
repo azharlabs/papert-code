@@ -513,4 +513,23 @@ export class ChatRecordingService {
       return null;
     }
   }
+
+  /**
+   * Deletes a session file by session ID.
+   */
+  deleteSession(sessionId: string): void {
+    try {
+      const chatsDir = path.join(this.config.storage.getProjectTempDir(), 'chats');
+      const sessionPath = path.join(chatsDir, `${sessionId}.jsonl`);
+      fs.unlinkSync(sessionPath);
+      const summaryPath = `${sessionPath}.summary.json`;
+      if (fs.existsSync(summaryPath)) {
+        fs.unlinkSync(summaryPath);
+      }
+    } catch (error) {
+      console.error('Error deleting session file:', error);
+      throw error;
+    }
+  }
+
 }

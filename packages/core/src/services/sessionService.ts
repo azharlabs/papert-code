@@ -132,7 +132,7 @@ export class SessionService {
   }
 
   private getChatsDir(): string {
-    return path.join(this.storage.getProjectDir(), 'chats');
+    return path.join(this.storage.getProjectTempDir(), 'chats');
   }
 
   /**

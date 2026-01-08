@@ -135,6 +135,7 @@ export interface OpenDialogActionReturn {
   | 'theme'
   | 'editor'
   | 'settings'
+  | 'sessionBrowser'
   | 'model'
   | 'subagent_create'
   | 'subagent_list'

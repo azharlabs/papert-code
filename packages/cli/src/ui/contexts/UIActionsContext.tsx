@@ -16,6 +16,7 @@ import {
 import { type SettingScope } from '../../config/settings.js';
 import type { AuthState } from '../types.js';
 import { type VisionSwitchOutcome } from '../components/ModelSwitchDialog.js';
+import type { SessionInfo } from '../../utils/sessionUtils.js';
 import { type OpenAICredentials } from '../components/OpenAIKeyPrompt.js';
 
 export interface UIActions {
@@ -44,6 +45,10 @@ export interface UIActions {
   closeSettingsDialog: () => void;
   closeModelDialog: () => void;
   closePermissionsDialog: () => void;
+  openSessionBrowser: () => void;
+  closeSessionBrowser: () => void;
+  handleResumeSession: (session: SessionInfo) => void;
+  handleDeleteSession: (session: SessionInfo) => Promise<void>;
   setShellModeActive: (value: boolean) => void;
   vimHandleInput: (key: Key) => boolean;
   handleIdePromptComplete: (result: IdeIntegrationNudgeResult) => void;

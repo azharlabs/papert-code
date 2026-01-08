@@ -71,6 +71,7 @@ interface SlashCommandProcessorActions {
   openSettingsDialog: () => void;
   openModelDialog: () => void;
   openPermissionsDialog: () => void;
+  openSessionBrowser: () => void;
   openApprovalModeDialog: () => void;
   quit: (messages: HistoryItem[]) => void;
   setDebugMessage: (message: string) => void;
@@ -432,6 +433,9 @@ export const useSlashCommandProcessor = (
                       return { type: 'handled' };
                     case 'permissions':
                       actions.openPermissionsDialog();
+                      return { type: 'handled' };
+                    case 'sessionBrowser':
+                      actions.openSessionBrowser();
                       return { type: 'handled' };
                     case 'subagent_create':
                       actions.openSubagentCreateDialog();

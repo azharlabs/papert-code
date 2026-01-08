@@ -65,6 +65,7 @@ import {
 import {
   buildApiHistoryFromConversation,
   replayUiTelemetryFromConversation,
+  type ResumedSessionData,
 } from '../services/sessionService.js';
 import { reportError } from '../utils/errorReporting.js';
 import { getErrorMessage } from '../utils/errors.js';
@@ -277,6 +278,15 @@ export class GeminiClient {
 
   async resetChat(): Promise<void> {
     this.chat = await this.startChat();
+  }
+
+  async resumeChat(
+    history: Content[],
+    resumedSessionData: ResumedSessionData,
+  ): Promise<void> {
+    this.config.resumeSession(resumedSessionData);
+    this.lastPromptId = this.config.getSessionId();
+    this.chat = await this.startChat(history);
   }
 
   getLoopDetectionService(): LoopDetectionService {
