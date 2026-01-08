@@ -13,6 +13,8 @@ import { getFolderStructure } from './getFolderStructure.js';
  * @param {Config} config - The runtime configuration and services.
  * @returns {Promise<string>} A promise that resolves to the directory context string.
  */
+export const INITIAL_HISTORY_LENGTH = 2;
+
 export async function getDirectoryContextString(
   config: Config,
 ): Promise<string> {

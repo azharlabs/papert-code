@@ -194,6 +194,16 @@ export type HistoryItemSkillsList = HistoryItemBase & {
   type: 'skills_list';
 };
 
+export interface ChatDetail {
+  name: string;
+  mtime: string;
+}
+
+export type HistoryItemChatList = HistoryItemBase & {
+  type: 'chat_list';
+  chats: ChatDetail[];
+};
+
 export interface ToolDefinition {
   name: string;
   displayName: string;
@@ -280,6 +290,7 @@ export type HistoryItemWithoutId =
   | HistoryItemSkillsList
   | HistoryItemToolsList
   | HistoryItemMcpStatus
+  | HistoryItemChatList
   | HistoryItemHooksList;
 
 export type HistoryItem = HistoryItemWithoutId & { id: number };
@@ -304,6 +315,7 @@ export enum MessageType {
   SKILLS_LIST = 'skills_list',
   TOOLS_LIST = 'tools_list',
   MCP_STATUS = 'mcp_status',
+  CHAT_LIST = 'chat_list',
   HOOKS_LIST = 'hooks_list',
 }
 

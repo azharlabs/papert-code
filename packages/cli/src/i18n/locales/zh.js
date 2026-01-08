@@ -537,6 +537,9 @@ export default {
     '没有可用的聊天客户端来保存对话',
   'Conversation checkpoint saved with tag: {{tag}}.':
     '对话检查点已保存，标签：{{tag}}',
+  'Logger not available.': '日志记录器不可用。',
+  'Cannot resume chat. It was saved with a different authentication method ({{checkpointAuth}}) than the current one ({{currentAuth}}).':
+    '无法恢复对话。该对话保存时使用的认证方法（{{checkpointAuth}}）与当前方法（{{currentAuth}}）不同。',
   'No conversation found to save.': '未找到要保存的对话',
   'No chat client available to share conversation.':
     '没有可用的聊天客户端来分享对话',

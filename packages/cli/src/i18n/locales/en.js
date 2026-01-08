@@ -568,6 +568,9 @@ export default {
     'No chat client available to save conversation.',
   'Conversation checkpoint saved with tag: {{tag}}.':
     'Conversation checkpoint saved with tag: {{tag}}.',
+  'Logger not available.': 'Logger not available.',
+  'Cannot resume chat. It was saved with a different authentication method ({{checkpointAuth}}) than the current one ({{currentAuth}}).':
+    'Cannot resume chat. It was saved with a different authentication method ({{checkpointAuth}}) than the current one ({{currentAuth}}).',
   'No conversation found to save.': 'No conversation found to save.',
   'No chat client available to share conversation.':
     'No chat client available to share conversation.',

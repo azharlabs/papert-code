@@ -11,11 +11,7 @@ import { useKeypress } from '../hooks/useKeypress.js';
 import { DescriptiveRadioButtonSelect } from './shared/DescriptiveRadioButtonSelect.js';
 import { ConfigContext } from '../contexts/ConfigContext.js';
 import type { Config } from '@papert-code/papert-code-core';
-import {
-  AVAILABLE_MODELS_PAPERT,
-  MAINLINE_CODER,
-  MAINLINE_VLM,
-} from '../models/availableModels.js';
+import { MAINLINE_CODER } from '../models/availableModels.js';
 import { DEFAULT_GEMINI_MODEL_AUTO } from '@papert-code/papert-code-core';
 
 vi.mock('../hooks/useKeypress.js', () => ({

@@ -42,6 +42,7 @@ export * from './utils/schemaValidator.js';
 export * from './utils/errors.js';
 export { getErrorStatus } from './utils/httpErrors.js';
 export * from './utils/getFolderStructure.js';
+export * from './utils/environmentContext.js';
 export * from './utils/memoryDiscovery.js';
 export * from './utils/gitIgnoreParser.js';
 export * from './utils/gitUtils.js';
@@ -185,6 +186,7 @@ export { OAuthUtils } from './mcp/oauth-utils.js';
 
 // Export telemetry functions
 export * from './telemetry/index.js';
+export * from './utils/checkpointUtils.js';
 export * from './utils/browser.js';
 // OpenAI Logging Utilities
 export { OpenAILogger, openaiLogger } from './utils/openaiLogger.js';

@@ -45,7 +45,7 @@ export const createMockCommandContext = (
         log: vi.fn(),
         logMessage: vi.fn(),
         saveCheckpoint: vi.fn(),
-        loadCheckpoint: vi.fn().mockResolvedValue([]),
+        loadCheckpoint: vi.fn().mockResolvedValue({ history: [] }),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any, // Cast because Logger is a class.
     },
