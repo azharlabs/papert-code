@@ -130,6 +130,11 @@ const SETTINGS_SCHEMA = {
     description: 'Configuration for MCP servers.',
     showInDialog: false,
     mergeStrategy: MergeStrategy.SHALLOW_MERGE,
+    additionalProperties: {
+      type: 'object',
+      description: 'MCP server configuration.',
+      ref: 'MCPServerConfig',
+    },
   },
 
   general: {
@@ -276,6 +281,7 @@ const SETTINGS_SCHEMA = {
         default: {} as Record<string, CustomTheme>,
         description: 'Custom theme definitions.',
         showInDialog: false,
+        ref: 'CustomThemesSettings',
       },
       hideWindowTitle: {
         type: 'boolean',
@@ -510,6 +516,7 @@ const SETTINGS_SCHEMA = {
     default: undefined as TelemetrySettings | undefined,
     description: 'Telemetry configuration.',
     showInDialog: false,
+    ref: 'TelemetrySettings',
   },
 
   model: {
@@ -560,6 +567,7 @@ const SETTINGS_SCHEMA = {
           | undefined,
         description: 'Settings for summarizing tool output.',
         showInDialog: false,
+        ref: 'SummarizeToolOutputSettings',
       },
       chatCompression: {
         type: 'object',
@@ -569,6 +577,7 @@ const SETTINGS_SCHEMA = {
         default: undefined as ChatCompressionSettings | undefined,
         description: 'Chat compression settings.',
         showInDialog: false,
+        ref: 'ChatCompressionSettings',
       },
       sessionTokenLimit: {
         type: 'number',
@@ -1153,6 +1162,7 @@ const SETTINGS_SCHEMA = {
         default: undefined as BugCommandSettings | undefined,
         description: 'Configuration for the bug report command.',
         showInDialog: false,
+        ref: 'BugCommandSettings',
       },
       tavilyApiKey: {
         type: 'string',
@@ -1544,22 +1554,33 @@ export const SETTINGS_SCHEMA_DEFINITIONS: Record<
         description:
           'Enable telemetry. When true (default), usage data will be sent to improve the product.',
       },
-      exporters: {
-        type: 'array',
-        description:
-          'OTLP endpoints that telemetry should be exported to. If unset, the default Papert endpoint is used.',
-        items: { type: 'string' },
+      target: {
+        type: 'string',
+        description: 'Telemetry target (local or gcp).',
+        enum: ['local', 'gcp'],
       },
-      serviceContext: {
-        type: 'object',
+      otlpEndpoint: {
+        type: 'string',
         description:
-          'Optional context information that will be attached to telemetry data.',
-        additionalProperties: { type: ['string', 'boolean', 'number'] },
+          'OTLP endpoint for telemetry (e.g. http://localhost:4317).',
       },
-      disablePapertDefaults: {
+      otlpProtocol: {
+        type: 'string',
+        description: 'OTLP protocol for telemetry (grpc or http).',
+        enum: ['grpc', 'http'],
+      },
+      logPrompts: {
+        type: 'boolean',
+        description: 'Enable or disable logging of user prompts for telemetry.',
+      },
+      outfile: {
+        type: 'string',
+        description: 'Redirect telemetry output to the specified file.',
+      },
+      useCollector: {
         type: 'boolean',
         description:
-          'When true, disables sending telemetry to Papert-managed endpoints.',
+          'Use the telemetry collector when set by environment or settings.',
       },
     },
   },
@@ -1577,7 +1598,6 @@ export const SETTINGS_SCHEMA_DEFINITIONS: Record<
             'Maximum tokens to allocate for summarizing a tool output.',
         },
       },
-      required: ['tokenBudget'],
     },
   },
   ChatCompressionSettings: {
@@ -1585,10 +1605,10 @@ export const SETTINGS_SCHEMA_DEFINITIONS: Record<
     description: 'Chat compression configuration.',
     additionalProperties: false,
     properties: {
-      threshold: {
+      contextPercentageThreshold: {
         type: 'number',
         description:
-          'The fraction of context usage at which to trigger context compression (e.g. 0.2, 0.3).',
+          'A value between 0 and 1 that specifies the token threshold for compression as a percentage of the model token limit.',
       },
     },
   },

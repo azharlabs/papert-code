@@ -17,11 +17,13 @@
   },
   "scripts": {
     "start": "cross-env node scripts/start.js",
+    "start:a2a-server": "node scripts/start_a2a_server.js",
     "debug": "cross-env DEBUG=1 node --inspect-brk scripts/start.js",
     "auth:npm": "npx google-artifactregistry-auth",
     "auth:docker": "gcloud auth configure-docker us-west1-docker.pkg.dev",
     "auth": "npm run auth:npm && npm run auth:docker",
     "generate": "node scripts/generate-git-commit-info.js",
+    "generate:settings-schema": "node --import tsx scripts/generate-settings-schema.ts",
     "build": "node scripts/build.js",
     "build-and-start": "npm run build && npm run start",
     "build:vscode": "node scripts/build_vscode_companion.js",

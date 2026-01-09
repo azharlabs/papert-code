@@ -1,0 +1,1954 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Papert Code Settings",
+  "description": "Schema for Papert Code settings.json.",
+  "type": "object",
+  "properties": {
+    "mcpServers": {
+      "type": "object",
+      "title": "MCP Servers",
+      "description": "Configuration for MCP servers.",
+      "default": {},
+      "x-papert": {
+        "category": "Advanced",
+        "requiresRestart": true,
+        "showInDialog": false,
+        "mergeStrategy": "shallow_merge"
+      },
+      "additionalProperties": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/MCPServerConfig"
+          },
+          {
+            "description": "MCP server configuration."
+          }
+        ]
+      }
+    },
+    "general": {
+      "type": "object",
+      "title": "General",
+      "description": "General application settings.",
+      "default": {},
+      "x-papert": {
+        "category": "General",
+        "requiresRestart": false,
+        "showInDialog": false
+      },
+      "properties": {
+        "preferredEditor": {
+          "type": "string",
+          "title": "Preferred Editor",
+          "description": "The preferred editor to open files in.",
+          "x-papert": {
+            "category": "General",
+            "requiresRestart": false,
+            "showInDialog": false
+          }
+        },
+        "vimMode": {
+          "type": "boolean",
+          "title": "Vim Mode",
+          "description": "Enable Vim keybindings",
+          "default": false,
+          "x-papert": {
+            "category": "General",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "disableAutoUpdate": {
+          "type": "boolean",
+          "title": "Disable Auto Update",
+          "description": "Disable automatic updates",
+          "default": false,
+          "x-papert": {
+            "category": "General",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "disableUpdateNag": {
+          "type": "boolean",
+          "title": "Disable Update Nag",
+          "description": "Disable update notification prompts.",
+          "default": false,
+          "x-papert": {
+            "category": "General",
+            "requiresRestart": false,
+            "showInDialog": false
+          }
+        },
+        "checkpointing": {
+          "type": "object",
+          "title": "Checkpointing",
+          "description": "Session checkpointing settings.",
+          "default": {},
+          "x-papert": {
+            "category": "General",
+            "requiresRestart": true,
+            "showInDialog": false
+          },
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Enable Checkpointing",
+              "description": "Enable session checkpointing for recovery",
+              "default": false,
+              "x-papert": {
+                "category": "General",
+                "requiresRestart": true,
+                "showInDialog": false
+              }
+            }
+          }
+        },
+        "debugKeystrokeLogging": {
+          "type": "boolean",
+          "title": "Debug Keystroke Logging",
+          "description": "Enable debug logging of keystrokes to the console.",
+          "default": false,
+          "x-papert": {
+            "category": "General",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "language": {
+          "oneOf": [
+            {
+              "const": "auto",
+              "title": "Auto (detect from system)"
+            },
+            {
+              "const": "en",
+              "title": "English"
+            },
+            {
+              "const": "zh",
+              "title": "中文 (Chinese)"
+            }
+          ],
+          "type": "string",
+          "title": "Language",
+          "description": "The language for the user interface. Use \"auto\" to detect from system settings. You can also use custom language codes (e.g., \"es\", \"fr\") by placing JS language files in ~/.papert/locales/ (e.g., ~/.papert/locales/es.js).",
+          "default": "auto",
+          "x-papert": {
+            "category": "General",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "title": "Output",
+      "description": "Settings for the CLI output.",
+      "default": {},
+      "x-papert": {
+        "category": "General",
+        "requiresRestart": false,
+        "showInDialog": false
+      },
+      "properties": {
+        "format": {
+          "oneOf": [
+            {
+              "const": "text",
+              "title": "Text"
+            },
+            {
+              "const": "json",
+              "title": "JSON"
+            }
+          ],
+          "type": "string",
+          "title": "Output Format",
+          "description": "The format of the CLI output.",
+          "default": "text",
+          "x-papert": {
+            "category": "General",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "title": "UI",
+      "description": "User interface settings.",
+      "default": {},
+      "x-papert": {
+        "category": "UI",
+        "requiresRestart": false,
+        "showInDialog": false
+      },
+      "properties": {
+        "theme": {
+          "type": "string",
+          "title": "Theme",
+          "description": "The color theme for the UI.",
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": false,
+            "showInDialog": false
+          }
+        },
+        "customThemes": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/CustomThemesSettings"
+            },
+            {
+              "title": "Custom Themes",
+              "description": "Custom theme definitions.",
+              "default": {},
+              "x-papert": {
+                "category": "UI",
+                "requiresRestart": false,
+                "showInDialog": false
+              }
+            }
+          ]
+        },
+        "hideWindowTitle": {
+          "type": "boolean",
+          "title": "Hide Window Title",
+          "description": "Hide the window title bar",
+          "default": false,
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": true,
+            "showInDialog": true
+          }
+        },
+        "showStatusInTitle": {
+          "type": "boolean",
+          "title": "Show Status in Title",
+          "description": "Show Gemini CLI status and thoughts in the terminal window title",
+          "default": false,
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "hideTips": {
+          "type": "boolean",
+          "title": "Hide Tips",
+          "description": "Hide helpful tips in the UI",
+          "default": false,
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "hideBanner": {
+          "type": "boolean",
+          "title": "Hide Banner",
+          "description": "Hide the application banner",
+          "default": false,
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "hideContextSummary": {
+          "type": "boolean",
+          "title": "Hide Context Summary",
+          "description": "Hide the context summary (GEMINI.md, MCP servers) above the input.",
+          "default": false,
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "footer": {
+          "type": "object",
+          "title": "Footer",
+          "description": "Settings for the footer.",
+          "default": {},
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": false,
+            "showInDialog": false
+          },
+          "properties": {
+            "hideCWD": {
+              "type": "boolean",
+              "title": "Hide CWD",
+              "description": "Hide the current working directory path in the footer.",
+              "default": false,
+              "x-papert": {
+                "category": "UI",
+                "requiresRestart": false,
+                "showInDialog": true
+              }
+            },
+            "hideSandboxStatus": {
+              "type": "boolean",
+              "title": "Hide Sandbox Status",
+              "description": "Hide the sandbox status indicator in the footer.",
+              "default": false,
+              "x-papert": {
+                "category": "UI",
+                "requiresRestart": false,
+                "showInDialog": true
+              }
+            },
+            "hideModelInfo": {
+              "type": "boolean",
+              "title": "Hide Model Info",
+              "description": "Hide the model name and context usage in the footer.",
+              "default": false,
+              "x-papert": {
+                "category": "UI",
+                "requiresRestart": false,
+                "showInDialog": true
+              }
+            }
+          }
+        },
+        "hideFooter": {
+          "type": "boolean",
+          "title": "Hide Footer",
+          "description": "Hide the footer from the UI",
+          "default": false,
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "showMemoryUsage": {
+          "type": "boolean",
+          "title": "Show Memory Usage",
+          "description": "Display memory usage information in the UI",
+          "default": false,
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "showLineNumbers": {
+          "type": "boolean",
+          "title": "Show Line Numbers",
+          "description": "Show line numbers in the chat.",
+          "default": false,
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "showCitations": {
+          "type": "boolean",
+          "title": "Show Citations",
+          "description": "Show citations for generated text in the chat.",
+          "default": false,
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "customWittyPhrases": {
+          "type": "array",
+          "items": {},
+          "title": "Custom Witty Phrases",
+          "description": "Custom witty phrases to display during loading.",
+          "default": [],
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": false,
+            "showInDialog": false
+          }
+        },
+        "enableWelcomeBack": {
+          "type": "boolean",
+          "title": "Enable Welcome Back",
+          "description": "Show welcome back dialog when returning to a project with conversation history.",
+          "default": true,
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "accessibility": {
+          "type": "object",
+          "title": "Accessibility",
+          "description": "Accessibility settings.",
+          "default": {},
+          "x-papert": {
+            "category": "UI",
+            "requiresRestart": true,
+            "showInDialog": false
+          },
+          "properties": {
+            "disableLoadingPhrases": {
+              "type": "boolean",
+              "title": "Disable Loading Phrases",
+              "description": "Disable loading phrases for accessibility",
+              "default": false,
+              "x-papert": {
+                "category": "UI",
+                "requiresRestart": true,
+                "showInDialog": true
+              }
+            },
+            "screenReader": {
+              "type": "boolean",
+              "title": "Screen Reader Mode",
+              "description": "Render output in plain-text to be more screen reader accessible",
+              "x-papert": {
+                "category": "UI",
+                "requiresRestart": true,
+                "showInDialog": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "ide": {
+      "type": "object",
+      "title": "IDE",
+      "description": "IDE integration settings.",
+      "default": {},
+      "x-papert": {
+        "category": "IDE",
+        "requiresRestart": true,
+        "showInDialog": false
+      },
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "title": "IDE Mode",
+          "description": "Enable IDE integration mode",
+          "default": false,
+          "x-papert": {
+            "category": "IDE",
+            "requiresRestart": true,
+            "showInDialog": true
+          }
+        },
+        "hasSeenNudge": {
+          "type": "boolean",
+          "title": "Has Seen IDE Integration Nudge",
+          "description": "Whether the user has seen the IDE integration nudge.",
+          "default": false,
+          "x-papert": {
+            "category": "IDE",
+            "requiresRestart": false,
+            "showInDialog": false
+          }
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "title": "Privacy",
+      "description": "Privacy-related settings.",
+      "default": {},
+      "x-papert": {
+        "category": "Privacy",
+        "requiresRestart": true,
+        "showInDialog": false
+      },
+      "properties": {
+        "usageStatisticsEnabled": {
+          "type": "boolean",
+          "title": "Enable Usage Statistics",
+          "description": "Enable collection of usage statistics",
+          "default": true,
+          "x-papert": {
+            "category": "Privacy",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        }
+      }
+    },
+    "telemetry": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "#/$defs/TelemetrySettings"
+        }
+      ],
+      "title": "Telemetry",
+      "description": "Telemetry configuration.",
+      "x-papert": {
+        "category": "Advanced",
+        "requiresRestart": true,
+        "showInDialog": false
+      }
+    },
+    "model": {
+      "type": "object",
+      "title": "Model",
+      "description": "Settings related to the generative model.",
+      "default": {},
+      "x-papert": {
+        "category": "Model",
+        "requiresRestart": false,
+        "showInDialog": false
+      },
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Model",
+          "description": "The Gemini model to use for conversations.",
+          "x-papert": {
+            "category": "Model",
+            "requiresRestart": false,
+            "showInDialog": false
+          }
+        },
+        "useModelRouter": {
+          "type": "boolean",
+          "title": "Enable Model Routing",
+          "description": "Enable dynamic model routing for auto model selection (e.g., choose between fast and pro models per request).",
+          "default": true,
+          "x-papert": {
+            "category": "Model",
+            "requiresRestart": false,
+            "showInDialog": false
+          }
+        },
+        "maxSessionTurns": {
+          "type": "number",
+          "title": "Max Session Turns",
+          "description": "Maximum number of user/model/tool turns to keep in a session. -1 means unlimited.",
+          "default": -1,
+          "x-papert": {
+            "category": "Model",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "summarizeToolOutput": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/SummarizeToolOutputSettings"
+            },
+            {
+              "title": "Summarize Tool Output",
+              "description": "Settings for summarizing tool output.",
+              "x-papert": {
+                "category": "Model",
+                "requiresRestart": false,
+                "showInDialog": false
+              }
+            }
+          ]
+        },
+        "chatCompression": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ChatCompressionSettings"
+            },
+            {
+              "title": "Chat Compression",
+              "description": "Chat compression settings.",
+              "x-papert": {
+                "category": "Model",
+                "requiresRestart": false,
+                "showInDialog": false
+              }
+            }
+          ]
+        },
+        "sessionTokenLimit": {
+          "type": "number",
+          "title": "Session Token Limit",
+          "description": "The maximum number of tokens allowed in a session.",
+          "x-papert": {
+            "category": "Model",
+            "requiresRestart": false,
+            "showInDialog": false
+          }
+        },
+        "skipNextSpeakerCheck": {
+          "type": "boolean",
+          "title": "Skip Next Speaker Check",
+          "description": "Skip the next speaker check.",
+          "default": true,
+          "x-papert": {
+            "category": "Model",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "skipLoopDetection": {
+          "type": "boolean",
+          "title": "Skip Loop Detection",
+          "description": "Disable all loop detection checks (streaming and LLM).",
+          "default": false,
+          "x-papert": {
+            "category": "Model",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "skipStartupContext": {
+          "type": "boolean",
+          "title": "Skip Startup Context",
+          "description": "Avoid sending the workspace startup context at the beginning of each session.",
+          "default": false,
+          "x-papert": {
+            "category": "Model",
+            "requiresRestart": true,
+            "showInDialog": true
+          }
+        },
+        "enableOpenAILogging": {
+          "type": "boolean",
+          "title": "Enable OpenAI Logging",
+          "description": "Enable OpenAI logging.",
+          "default": false,
+          "x-papert": {
+            "category": "Model",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "openAILoggingDir": {
+          "type": "string",
+          "title": "OpenAI Logging Directory",
+          "description": "Custom directory path for OpenAI API logs. If not specified, defaults to logs/openai in the current working directory.",
+          "x-papert": {
+            "category": "Model",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "generationConfig": {
+          "type": "object",
+          "title": "Generation Configuration",
+          "description": "Generation configuration settings.",
+          "x-papert": {
+            "category": "Model",
+            "requiresRestart": false,
+            "showInDialog": false
+          },
+          "properties": {
+            "timeout": {
+              "type": "number",
+              "title": "Timeout",
+              "description": "Request timeout in milliseconds.",
+              "x-papert": {
+                "category": "Generation Configuration",
+                "requiresRestart": false,
+                "showInDialog": true,
+                "parentKey": "generationConfig",
+                "childKey": "timeout"
+              }
+            },
+            "maxRetries": {
+              "type": "number",
+              "title": "Max Retries",
+              "description": "Maximum number of retries for failed requests.",
+              "x-papert": {
+                "category": "Generation Configuration",
+                "requiresRestart": false,
+                "showInDialog": true,
+                "parentKey": "generationConfig",
+                "childKey": "maxRetries"
+              }
+            },
+            "disableCacheControl": {
+              "type": "boolean",
+              "title": "Disable Cache Control",
+              "description": "Disable cache control for DashScope providers.",
+              "default": false,
+              "x-papert": {
+                "category": "Generation Configuration",
+                "requiresRestart": false,
+                "showInDialog": true,
+                "parentKey": "generationConfig",
+                "childKey": "disableCacheControl"
+              }
+            }
+          }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "title": "Context",
+      "description": "Settings for managing context provided to the model.",
+      "default": {},
+      "x-papert": {
+        "category": "Context",
+        "requiresRestart": false,
+        "showInDialog": false
+      },
+      "properties": {
+        "fileName": {
+          "type": "object",
+          "title": "Context File Name",
+          "description": "The name of the context file.",
+          "x-papert": {
+            "category": "Context",
+            "requiresRestart": false,
+            "showInDialog": false
+          }
+        },
+        "importFormat": {
+          "type": "string",
+          "title": "Memory Import Format",
+          "description": "The format to use when importing memory.",
+          "x-papert": {
+            "category": "Context",
+            "requiresRestart": false,
+            "showInDialog": false
+          }
+        },
+        "discoveryMaxDirs": {
+          "type": "number",
+          "title": "Memory Discovery Max Dirs",
+          "description": "Maximum number of directories to search for memory.",
+          "default": 200,
+          "x-papert": {
+            "category": "Context",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "includeDirectories": {
+          "type": "array",
+          "items": {},
+          "title": "Include Directories",
+          "description": "Additional directories to include in the workspace context. Missing directories will be skipped with a warning.",
+          "default": [],
+          "x-papert": {
+            "category": "Context",
+            "requiresRestart": false,
+            "showInDialog": false,
+            "mergeStrategy": "concat"
+          }
+        },
+        "loadMemoryFromIncludeDirectories": {
+          "type": "boolean",
+          "title": "Load Memory From Include Directories",
+          "description": "Whether to load memory files from include directories.",
+          "default": false,
+          "x-papert": {
+            "category": "Context",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "fileFiltering": {
+          "type": "object",
+          "title": "File Filtering",
+          "description": "Settings for git-aware file filtering.",
+          "default": {},
+          "x-papert": {
+            "category": "Context",
+            "requiresRestart": true,
+            "showInDialog": false
+          },
+          "properties": {
+            "respectGitIgnore": {
+              "type": "boolean",
+              "title": "Respect .gitignore",
+              "description": "Respect .gitignore files when searching",
+              "default": true,
+              "x-papert": {
+                "category": "Context",
+                "requiresRestart": true,
+                "showInDialog": true
+              }
+            },
+            "respectPapertIgnore": {
+              "type": "boolean",
+              "title": "Respect .papertignore",
+              "description": "Respect .papertignore files when searching",
+              "default": true,
+              "x-papert": {
+                "category": "Context",
+                "requiresRestart": true,
+                "showInDialog": true
+              }
+            },
+            "enableRecursiveFileSearch": {
+              "type": "boolean",
+              "title": "Enable Recursive File Search",
+              "description": "Enable recursive file search functionality",
+              "default": true,
+              "x-papert": {
+                "category": "Context",
+                "requiresRestart": true,
+                "showInDialog": true
+              }
+            },
+            "disableFuzzySearch": {
+              "type": "boolean",
+              "title": "Disable Fuzzy Search",
+              "description": "Disable fuzzy search when searching for files.",
+              "default": false,
+              "x-papert": {
+                "category": "Context",
+                "requiresRestart": true,
+                "showInDialog": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "tools": {
+      "type": "object",
+      "title": "Tools",
+      "description": "Settings for built-in and custom tools.",
+      "default": {},
+      "x-papert": {
+        "category": "Tools",
+        "requiresRestart": true,
+        "showInDialog": false
+      },
+      "properties": {
+        "sandbox": {
+          "type": "object",
+          "title": "Sandbox",
+          "description": "Sandbox execution environment (can be a boolean or a path string).",
+          "x-papert": {
+            "category": "Tools",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        },
+        "shell": {
+          "type": "object",
+          "title": "Shell",
+          "description": "Settings for shell execution.",
+          "default": {},
+          "x-papert": {
+            "category": "Tools",
+            "requiresRestart": false,
+            "showInDialog": false
+          },
+          "properties": {
+            "enableInteractiveShell": {
+              "type": "boolean",
+              "title": "Enable Interactive Shell",
+              "description": "Use node-pty for an interactive shell experience. Fallback to child_process still applies.",
+              "default": false,
+              "x-papert": {
+                "category": "Tools",
+                "requiresRestart": true,
+                "showInDialog": true
+              }
+            },
+            "pager": {
+              "type": "string",
+              "title": "Pager",
+              "description": "The pager command to use for shell output. Defaults to `cat`.",
+              "default": "cat",
+              "x-papert": {
+                "category": "Tools",
+                "requiresRestart": false,
+                "showInDialog": false
+              }
+            },
+            "showColor": {
+              "type": "boolean",
+              "title": "Show Color",
+              "description": "Show color in shell output.",
+              "default": false,
+              "x-papert": {
+                "category": "Tools",
+                "requiresRestart": false,
+                "showInDialog": true
+              }
+            }
+          }
+        },
+        "autoAccept": {
+          "type": "boolean",
+          "title": "Auto Accept",
+          "description": "Automatically accept and execute tool calls that are considered safe (e.g., read-only operations).",
+          "default": false,
+          "x-papert": {
+            "category": "Tools",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "core": {
+          "type": "array",
+          "items": {},
+          "title": "Core Tools",
+          "description": "Paths to core tool definitions.",
+          "x-papert": {
+            "category": "Tools",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        },
+        "allowed": {
+          "type": "array",
+          "items": {},
+          "title": "Allowed Tools",
+          "description": "A list of tool names that will bypass the confirmation dialog.",
+          "x-papert": {
+            "category": "Advanced",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "items": {},
+          "title": "Exclude Tools",
+          "description": "Tool names to exclude from discovery.",
+          "x-papert": {
+            "category": "Tools",
+            "requiresRestart": true,
+            "showInDialog": false,
+            "mergeStrategy": "union"
+          }
+        },
+        "approvalMode": {
+          "oneOf": [
+            {
+              "const": "plan",
+              "title": "Plan"
+            },
+            {
+              "const": "default",
+              "title": "Default"
+            },
+            {
+              "const": "auto-edit",
+              "title": "Auto Edit"
+            },
+            {
+              "const": "yolo",
+              "title": "YOLO"
+            }
+          ],
+          "type": "string",
+          "title": "Approval Mode",
+          "description": "Approval mode for tool usage. Controls how tools are approved before execution.",
+          "default": "default",
+          "x-papert": {
+            "category": "Tools",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "discoveryCommand": {
+          "type": "string",
+          "title": "Tool Discovery Command",
+          "description": "Command to run for tool discovery.",
+          "x-papert": {
+            "category": "Tools",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        },
+        "callCommand": {
+          "type": "string",
+          "title": "Tool Call Command",
+          "description": "Command to run for tool calls.",
+          "x-papert": {
+            "category": "Tools",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        },
+        "useRipgrep": {
+          "type": "boolean",
+          "title": "Use Ripgrep",
+          "description": "Use ripgrep for file content search instead of the fallback implementation. Provides faster search performance.",
+          "default": true,
+          "x-papert": {
+            "category": "Tools",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "useBuiltinRipgrep": {
+          "type": "boolean",
+          "title": "Use Builtin Ripgrep",
+          "description": "Use the bundled ripgrep binary. When set to false, the system-level \"rg\" command will be used instead. This setting is only effective when useRipgrep is true.",
+          "default": true,
+          "x-papert": {
+            "category": "Tools",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "enableToolOutputTruncation": {
+          "type": "boolean",
+          "title": "Enable Tool Output Truncation",
+          "description": "Enable truncation of large tool outputs.",
+          "default": true,
+          "x-papert": {
+            "category": "General",
+            "requiresRestart": true,
+            "showInDialog": true
+          }
+        },
+        "truncateToolOutputThreshold": {
+          "type": "number",
+          "title": "Tool Output Truncation Threshold",
+          "description": "Truncate tool output if it is larger than this many characters. Set to -1 to disable.",
+          "default": 25000,
+          "x-papert": {
+            "category": "General",
+            "requiresRestart": true,
+            "showInDialog": true
+          }
+        },
+        "truncateToolOutputLines": {
+          "type": "number",
+          "title": "Tool Output Truncation Lines",
+          "description": "The number of lines to keep when truncating tool output.",
+          "default": 1000,
+          "x-papert": {
+            "category": "General",
+            "requiresRestart": true,
+            "showInDialog": true
+          }
+        },
+        "enableHooks": {
+          "type": "boolean",
+          "title": "Enable Hooks System",
+          "description": "Enable the hooks system for intercepting and customizing Papert Code behavior. When enabled, hooks configured in settings will execute at appropriate lifecycle events (BeforeTool, AfterTool, BeforeModel, etc.). Requires MessageBus integration.",
+          "default": false,
+          "x-papert": {
+            "category": "Advanced",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        }
+      }
+    },
+    "mcp": {
+      "type": "object",
+      "title": "MCP",
+      "description": "Settings for Model Context Protocol (MCP) servers.",
+      "default": {},
+      "x-papert": {
+        "category": "MCP",
+        "requiresRestart": true,
+        "showInDialog": false
+      },
+      "properties": {
+        "serverCommand": {
+          "type": "string",
+          "title": "MCP Server Command",
+          "description": "Command to start an MCP server.",
+          "x-papert": {
+            "category": "MCP",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        },
+        "allowed": {
+          "type": "array",
+          "items": {},
+          "title": "Allow MCP Servers",
+          "description": "A list of MCP servers to allow.",
+          "x-papert": {
+            "category": "MCP",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        },
+        "excluded": {
+          "type": "array",
+          "items": {},
+          "title": "Exclude MCP Servers",
+          "description": "A list of MCP servers to exclude.",
+          "x-papert": {
+            "category": "MCP",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        }
+      }
+    },
+    "useSmartEdit": {
+      "type": "boolean",
+      "title": "Use Smart Edit",
+      "description": "Enable the smart-edit tool instead of the replace tool.",
+      "default": false,
+      "x-papert": {
+        "category": "Advanced",
+        "requiresRestart": false,
+        "showInDialog": false
+      }
+    },
+    "security": {
+      "type": "object",
+      "title": "Security",
+      "description": "Security-related settings.",
+      "default": {},
+      "x-papert": {
+        "category": "Security",
+        "requiresRestart": true,
+        "showInDialog": false
+      },
+      "properties": {
+        "folderTrust": {
+          "type": "object",
+          "title": "Folder Trust",
+          "description": "Settings for folder trust.",
+          "default": {},
+          "x-papert": {
+            "category": "Security",
+            "requiresRestart": false,
+            "showInDialog": false
+          },
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Folder Trust",
+              "description": "Setting to track whether Folder trust is enabled.",
+              "default": false,
+              "x-papert": {
+                "category": "Security",
+                "requiresRestart": true,
+                "showInDialog": true
+              }
+            }
+          }
+        },
+        "auth": {
+          "type": "object",
+          "title": "Authentication",
+          "description": "Authentication settings.",
+          "default": {},
+          "x-papert": {
+            "category": "Security",
+            "requiresRestart": true,
+            "showInDialog": false
+          },
+          "properties": {
+            "selectedType": {
+              "type": "string",
+              "title": "Selected Auth Type",
+              "description": "The currently selected authentication type.",
+              "x-papert": {
+                "category": "Security",
+                "requiresRestart": true,
+                "showInDialog": false
+              }
+            },
+            "enforcedType": {
+              "type": "string",
+              "title": "Enforced Auth Type",
+              "description": "The required auth type. If this does not match the selected auth type, the user will be prompted to re-authenticate.",
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": true,
+                "showInDialog": false
+              }
+            },
+            "useExternal": {
+              "type": "boolean",
+              "title": "Use External Auth",
+              "description": "Whether to use an external authentication flow.",
+              "x-papert": {
+                "category": "Security",
+                "requiresRestart": true,
+                "showInDialog": false
+              }
+            },
+            "apiKey": {
+              "type": "string",
+              "title": "API Key",
+              "description": "API key for OpenAI compatible authentication.",
+              "x-papert": {
+                "category": "Security",
+                "requiresRestart": true,
+                "showInDialog": false
+              }
+            },
+            "baseUrl": {
+              "type": "string",
+              "title": "Base URL",
+              "description": "Base URL for OpenAI compatible API.",
+              "x-papert": {
+                "category": "Security",
+                "requiresRestart": true,
+                "showInDialog": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "advanced": {
+      "type": "object",
+      "title": "Advanced",
+      "description": "Advanced settings for power users.",
+      "default": {},
+      "x-papert": {
+        "category": "Advanced",
+        "requiresRestart": true,
+        "showInDialog": false
+      },
+      "properties": {
+        "autoConfigureMemory": {
+          "type": "boolean",
+          "title": "Auto Configure Max Old Space Size",
+          "description": "Automatically configure Node.js memory limits",
+          "default": false,
+          "x-papert": {
+            "category": "Advanced",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        },
+        "dnsResolutionOrder": {
+          "type": "string",
+          "title": "DNS Resolution Order",
+          "description": "The DNS resolution order.",
+          "x-papert": {
+            "category": "Advanced",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        },
+        "excludedEnvVars": {
+          "type": "array",
+          "items": {},
+          "title": "Excluded Project Environment Variables",
+          "description": "Environment variables to exclude from project context.",
+          "default": [
+            "DEBUG",
+            "DEBUG_MODE"
+          ],
+          "x-papert": {
+            "category": "Advanced",
+            "requiresRestart": false,
+            "showInDialog": false,
+            "mergeStrategy": "union"
+          }
+        },
+        "bugCommand": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/BugCommandSettings"
+            },
+            {
+              "title": "Bug Command",
+              "description": "Configuration for the bug report command.",
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": false,
+                "showInDialog": false
+              }
+            }
+          ]
+        },
+        "tavilyApiKey": {
+          "type": "string",
+          "title": "Tavily API Key (Deprecated)",
+          "description": "⚠️ DEPRECATED: Please use webSearch.provider configuration instead. Legacy API key for the Tavily API.",
+          "x-papert": {
+            "category": "Advanced",
+            "requiresRestart": false,
+            "showInDialog": false
+          }
+        }
+      }
+    },
+    "webSearch": {
+      "type": "object",
+      "title": "Web Search",
+      "description": "Configuration for web search providers.",
+      "x-papert": {
+        "category": "Advanced",
+        "requiresRestart": true,
+        "showInDialog": false
+      }
+    },
+    "experimental": {
+      "type": "object",
+      "title": "Experimental",
+      "description": "Setting to enable experimental features",
+      "default": {},
+      "x-papert": {
+        "category": "Experimental",
+        "requiresRestart": true,
+        "showInDialog": false
+      },
+      "properties": {
+        "extensionManagement": {
+          "type": "boolean",
+          "title": "Extension Management",
+          "description": "Enable extension management features.",
+          "default": true,
+          "x-papert": {
+            "category": "Experimental",
+            "requiresRestart": true,
+            "showInDialog": false
+          }
+        },
+        "visionModelPreview": {
+          "type": "boolean",
+          "title": "Vision Model Preview",
+          "description": "Enable vision model support and auto-switching functionality. When disabled, vision models like papert-vl-max-latest will be hidden and auto-switching will not occur.",
+          "default": true,
+          "x-papert": {
+            "category": "Experimental",
+            "requiresRestart": false,
+            "showInDialog": true
+          }
+        },
+        "vlmSwitchMode": {
+          "type": "string",
+          "title": "VLM Switch Mode",
+          "description": "Default behavior when images are detected in input. Values: once (one-time switch), session (switch for entire session), persist (continue with current model). If not set, user will be prompted each time. This is a temporary experimental feature.",
+          "x-papert": {
+            "category": "Experimental",
+            "requiresRestart": false,
+            "showInDialog": false
+          }
+        }
+      }
+    },
+    "hooks": {
+      "type": "object",
+      "title": "Hooks",
+      "description": "Hook configurations for intercepting and customizing agent behavior.",
+      "default": {},
+      "x-papert": {
+        "category": "Advanced",
+        "requiresRestart": false,
+        "showInDialog": false
+      },
+      "properties": {
+        "disabled": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Hook command name"
+          },
+          "title": "Disabled Hooks",
+          "description": "List of hook names (commands) that should be disabled. Hooks in this list will not execute even if configured.",
+          "default": [],
+          "x-papert": {
+            "category": "Advanced",
+            "requiresRestart": false,
+            "showInDialog": false,
+            "mergeStrategy": "union"
+          }
+        },
+        "BeforeTool": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/HookDefinitionArray"
+            },
+            {
+              "title": "Before Tool Hooks",
+              "description": "Hooks that execute before tool execution. Can intercept, validate, or modify tool calls.",
+              "default": [],
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": false,
+                "showInDialog": false,
+                "mergeStrategy": "concat"
+              }
+            }
+          ]
+        },
+        "AfterTool": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/HookDefinitionArray"
+            },
+            {
+              "title": "After Tool Hooks",
+              "description": "Hooks that execute after tool execution. Can process results, log outputs, or trigger follow-up actions.",
+              "default": [],
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": false,
+                "showInDialog": false,
+                "mergeStrategy": "concat"
+              }
+            }
+          ]
+        },
+        "BeforeAgent": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/HookDefinitionArray"
+            },
+            {
+              "title": "Before Agent Hooks",
+              "description": "Hooks that execute before agent loop starts. Can set up context or initialize resources.",
+              "default": [],
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": false,
+                "showInDialog": false,
+                "mergeStrategy": "concat"
+              }
+            }
+          ]
+        },
+        "AfterAgent": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/HookDefinitionArray"
+            },
+            {
+              "title": "After Agent Hooks",
+              "description": "Hooks that execute after agent loop completes. Can perform cleanup or summarize results.",
+              "default": [],
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": false,
+                "showInDialog": false,
+                "mergeStrategy": "concat"
+              }
+            }
+          ]
+        },
+        "Notification": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/HookDefinitionArray"
+            },
+            {
+              "title": "Notification Hooks",
+              "description": "Hooks that execute on notification events (errors, warnings, info). Can log or alert on specific conditions.",
+              "default": [],
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": false,
+                "showInDialog": false,
+                "mergeStrategy": "concat"
+              }
+            }
+          ]
+        },
+        "SessionStart": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/HookDefinitionArray"
+            },
+            {
+              "title": "Session Start Hooks",
+              "description": "Hooks that execute when a session starts. Can initialize session-specific resources or state.",
+              "default": [],
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": false,
+                "showInDialog": false,
+                "mergeStrategy": "concat"
+              }
+            }
+          ]
+        },
+        "SessionEnd": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/HookDefinitionArray"
+            },
+            {
+              "title": "Session End Hooks",
+              "description": "Hooks that execute when a session ends. Can perform cleanup or persist session data.",
+              "default": [],
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": false,
+                "showInDialog": false,
+                "mergeStrategy": "concat"
+              }
+            }
+          ]
+        },
+        "PreCompress": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/HookDefinitionArray"
+            },
+            {
+              "title": "Pre-Compress Hooks",
+              "description": "Hooks that execute before chat history compression. Can back up or analyze conversation before compression.",
+              "default": [],
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": false,
+                "showInDialog": false,
+                "mergeStrategy": "concat"
+              }
+            }
+          ]
+        },
+        "BeforeModel": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/HookDefinitionArray"
+            },
+            {
+              "title": "Before Model Hooks",
+              "description": "Hooks that execute before LLM requests. Can modify prompts, inject context, or control model parameters.",
+              "default": [],
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": false,
+                "showInDialog": false,
+                "mergeStrategy": "concat"
+              }
+            }
+          ]
+        },
+        "AfterModel": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/HookDefinitionArray"
+            },
+            {
+              "title": "After Model Hooks",
+              "description": "Hooks that execute after LLM responses. Can process outputs, extract information, or log interactions.",
+              "default": [],
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": false,
+                "showInDialog": false,
+                "mergeStrategy": "concat"
+              }
+            }
+          ]
+        },
+        "BeforeToolSelection": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/HookDefinitionArray"
+            },
+            {
+              "title": "Before Tool Selection Hooks",
+              "description": "Hooks that execute before tool selection. Can filter or prioritize available tools dynamically.",
+              "default": [],
+              "x-papert": {
+                "category": "Advanced",
+                "requiresRestart": false,
+                "showInDialog": false,
+                "mergeStrategy": "concat"
+              }
+            }
+          ]
+        }
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {},
+        "description": "Custom hook event arrays that contain hook definitions for user-defined events"
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "title": "Extensions",
+      "description": "Settings for extensions.",
+      "default": {},
+      "x-papert": {
+        "category": "Extensions",
+        "requiresRestart": true,
+        "showInDialog": false
+      },
+      "properties": {
+        "disabled": {
+          "type": "array",
+          "items": {},
+          "title": "Disabled Extensions",
+          "description": "List of disabled extensions.",
+          "default": [],
+          "x-papert": {
+            "category": "Extensions",
+            "requiresRestart": true,
+            "showInDialog": false,
+            "mergeStrategy": "union"
+          }
+        },
+        "workspacesWithMigrationNudge": {
+          "type": "array",
+          "items": {},
+          "title": "Workspaces with Migration Nudge",
+          "description": "List of workspaces for which the migration nudge has been shown.",
+          "default": [],
+          "x-papert": {
+            "category": "Extensions",
+            "requiresRestart": false,
+            "showInDialog": false,
+            "mergeStrategy": "union"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "MCPServerConfig": {
+      "type": "object",
+      "description": "Definition of a Model Context Protocol (MCP) server configuration.",
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "Executable invoked for stdio transport."
+        },
+        "args": {
+          "type": "array",
+          "description": "Command-line arguments for the stdio transport command.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env": {
+          "type": "object",
+          "description": "Environment variables to set for the server process.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "cwd": {
+          "type": "string",
+          "description": "Working directory for the server process."
+        },
+        "url": {
+          "type": "string",
+          "description": "SSE transport URL."
+        },
+        "httpUrl": {
+          "type": "string",
+          "description": "Streaming HTTP transport URL."
+        },
+        "headers": {
+          "type": "object",
+          "description": "Additional HTTP headers sent to the server.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "tcp": {
+          "type": "string",
+          "description": "TCP address for websocket transport."
+        },
+        "timeout": {
+          "type": "number",
+          "description": "Timeout in milliseconds for MCP requests."
+        },
+        "trust": {
+          "type": "boolean",
+          "description": "Marks the server as trusted. Trusted servers may gain additional capabilities."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the server."
+        },
+        "includeTools": {
+          "type": "array",
+          "description": "Subset of tools that should be enabled for this server. When omitted all tools are enabled.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excludeTools": {
+          "type": "array",
+          "description": "Tools that should be disabled for this server even if exposed.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extension": {
+          "type": "object",
+          "description": "Metadata describing the Papert Code extension that owns this MCP server.",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "boolean",
+              "number"
+            ]
+          }
+        },
+        "oauth": {
+          "type": "object",
+          "description": "OAuth configuration for authenticating with the server.",
+          "additionalProperties": true
+        },
+        "authProviderType": {
+          "type": "string",
+          "description": "Authentication provider used for acquiring credentials (for example `dynamic_discovery`).",
+          "enum": [
+            "dynamic_discovery",
+            "google_credentials",
+            "service_account_impersonation"
+          ]
+        },
+        "targetAudience": {
+          "type": "string",
+          "description": "OAuth target audience (CLIENT_ID.apps.googleusercontent.com)."
+        },
+        "targetServiceAccount": {
+          "type": "string",
+          "description": "Service account email to impersonate (name@project.iam.gserviceaccount.com)."
+        }
+      }
+    },
+    "TelemetrySettings": {
+      "type": "object",
+      "description": "Telemetry configuration for Papert Code.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable telemetry. When true (default), usage data will be sent to improve the product."
+        },
+        "target": {
+          "type": "string",
+          "description": "Telemetry target (local or gcp).",
+          "enum": [
+            "local",
+            "gcp"
+          ]
+        },
+        "otlpEndpoint": {
+          "type": "string",
+          "description": "OTLP endpoint for telemetry (e.g. http://localhost:4317)."
+        },
+        "otlpProtocol": {
+          "type": "string",
+          "description": "OTLP protocol for telemetry (grpc or http).",
+          "enum": [
+            "grpc",
+            "http"
+          ]
+        },
+        "logPrompts": {
+          "type": "boolean",
+          "description": "Enable or disable logging of user prompts for telemetry."
+        },
+        "outfile": {
+          "type": "string",
+          "description": "Redirect telemetry output to the specified file."
+        },
+        "useCollector": {
+          "type": "boolean",
+          "description": "Use the telemetry collector when set by environment or settings."
+        }
+      }
+    },
+    "SummarizeToolOutputSettings": {
+      "type": "object",
+      "description": "Per-tool configuration for summarizing tool output to save tokens.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tokenBudget": {
+            "type": "number",
+            "description": "Maximum tokens to allocate for summarizing a tool output."
+          }
+        }
+      }
+    },
+    "ChatCompressionSettings": {
+      "type": "object",
+      "description": "Chat compression configuration.",
+      "additionalProperties": false,
+      "properties": {
+        "contextPercentageThreshold": {
+          "type": "number",
+          "description": "A value between 0 and 1 that specifies the token threshold for compression as a percentage of the model token limit."
+        }
+      }
+    },
+    "BugCommandSettings": {
+      "type": "object",
+      "description": "Bug command configuration.",
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The URL to open when running the /bug command."
+        },
+        "title": {
+          "type": "string",
+          "description": "Default bug title."
+        },
+        "body": {
+          "type": "string",
+          "description": "Default bug body/description template."
+        },
+        "repo": {
+          "type": "string",
+          "description": "GitHub repository in the form owner/repo."
+        },
+        "labels": {
+          "type": "array",
+          "description": "Default labels to apply to bug reports.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "assignees": {
+          "type": "array",
+          "description": "Default assignees for bug reports.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "AuthSettings": {
+      "type": "object",
+      "description": "Authentication settings.",
+      "additionalProperties": false,
+      "properties": {
+        "selectedType": {
+          "type": "string",
+          "description": "Selected authentication type.",
+          "enum": [
+            "papert",
+            "openai",
+            "none"
+          ]
+        },
+        "enforcedType": {
+          "type": "string",
+          "description": "Optional enforced authentication type (e.g., for enterprise policy).",
+          "enum": [
+            "papert",
+            "openai"
+          ]
+        },
+        "baseUrl": {
+          "type": "string",
+          "description": "Base URL for the API."
+        },
+        "apiKey": {
+          "type": "string",
+          "description": "API key for authentication."
+        }
+      }
+    },
+    "KeyBindingsSettings": {
+      "type": "object",
+      "description": "Keybindings configuration.",
+      "additionalProperties": {
+        "type": "array",
+        "description": "Keybinding sequences for a given action.",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "CustomThemesSettings": {
+      "type": "object",
+      "description": "Custom themes configuration.",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Theme definition.",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "custom"
+            ]
+          },
+          "text": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "background": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "banner": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "code": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "diff": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "HookDefinitionArray": {
+      "type": "array",
+      "description": "Array of hook definition objects for a specific event.",
+      "items": {
+        "type": "object",
+        "description": "Hook definition specifying matcher pattern and hook configurations.",
+        "properties": {
+          "matcher": {
+            "type": "string",
+            "description": "Pattern to match against the event context (tool name, notification type, etc.). Supports exact match, regex (/pattern/), and wildcards (*)."
+          },
+          "hooks": {
+            "type": "array",
+            "description": "Hooks to execute when the matcher matches.",
+            "items": {
+              "type": "object",
+              "description": "Individual hook configuration.",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Unique identifier for the hook."
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of hook (currently only \"command\" supported)."
+                },
+                "command": {
+                  "type": "string",
+                  "description": "Shell command to execute. Receives JSON input via stdin and returns JSON output via stdout."
+                },
+                "description": {
+                  "type": "string",
+                  "description": "A description of the hook."
+                },
+                "timeout": {
+                  "type": "number",
+                  "description": "Timeout in milliseconds for hook execution."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
