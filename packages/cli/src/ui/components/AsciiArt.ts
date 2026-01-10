@@ -8,18 +8,18 @@ export const shortAsciiLogo = `
 ▗▄▄▖  ▗▄▖ ▗▄▄▖ ▗▄▄▄▖▗▄▄▖▗▄▄▄▖
 ▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌▐▌   ▐▌ ▐▌ █  
 ▐▛▀▘ ▐▛▀▜▌▐▛▀▘ ▐▛▀▀▘▐▛▀▚▖ █  
-▐▌   ▐▌ ▐▌▐▌   ▐▙▄▄▖▐▌ ▐▌ █  By Mohamed Azharudeen M
+▐▌   ▐▌ ▐▌▐▌   ▐▙▄▄▖▐▌ ▐▌ █  
     `;
 export const longAsciiLogo = `
 ▗▄▄▖  ▗▄▖ ▗▄▄▖ ▗▄▄▄▖▗▄▄▖▗▄▄▄▖
 ▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌▐▌   ▐▌ ▐▌ █  
 ▐▛▀▘ ▐▛▀▜▌▐▛▀▘ ▐▛▀▀▘▐▛▀▚▖ █  
-▐▌   ▐▌ ▐▌▐▌   ▐▙▄▄▖▐▌ ▐▌ █  By Mohamed Azharudeen M
+▐▌   ▐▌ ▐▌▐▌   ▐▙▄▄▖▐▌ ▐▌ █  
 `;
 
 export const tinyAsciiLogo = `
 ▗▄▄▖ 
 ▐▌ ▐▌
 ▐▛▀▘ 
-▐▌   By Mohamed Azharudeen M
+▐▌   
 `;
