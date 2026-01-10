@@ -32,7 +32,7 @@ import chalk from 'chalk';
 import type { ConfirmationRequest } from '../ui/types.js';
 
 export const SKILLS_DIRECTORY_NAME = path.join(PAPERT_DIR, 'skills');
-export const WORKSPACE_SKILLS_DIRECTORY_NAME = path.join('.agents', 'skills');
+export const WORKSPACE_SKILLS_DIRECTORY_NAME = path.join(PAPERT_DIR, 'skills');
 export const SKILL_FILENAME = 'SKILL.md';
 export const SKILL_INSTALL_METADATA_FILENAME = '.papert-skill-install.json';
 const DEFAULT_SKILLS_DIR = path.join('skills');
