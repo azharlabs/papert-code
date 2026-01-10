@@ -155,6 +155,7 @@ export interface CliArgs {
   coreTools: string[] | undefined;
   excludeTools: string[] | undefined;
   authType: string | undefined;
+  cwd: string | undefined;
 }
 
 function normalizeOutputFormat(
@@ -480,6 +481,10 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
           type: 'string',
           choices: [AuthType.USE_OPENAI, AuthType.PAPERT_OAUTH],
           description: 'Authentication type',
+        })
+        .option('cwd', {
+          type: 'string',
+          description: 'Current working directory',
         })
         .deprecateOption(
           'show-memory-usage',

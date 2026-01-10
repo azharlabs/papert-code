@@ -55,7 +55,7 @@ vi.mock('./config/config.js', () => ({
     getQuestion: vi.fn(() => ''),
     isInteractive: () => false,
   } as unknown as Config),
-  parseArguments: vi.fn().mockResolvedValue({}),
+  parseArguments: vi.fn().mockResolvedValue({ cwd: undefined }),
   isDebugMode: vi.fn(() => false),
 }));
 
@@ -497,6 +497,7 @@ describe('gemini.tsx main function kitty protocol', () => {
       contextFile: undefined,
       skills: undefined,
       listSkills: undefined,
+      cwd: undefined,
     });
 
     await main();

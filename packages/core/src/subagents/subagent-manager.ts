@@ -533,7 +533,14 @@ export class SubagentManager {
       const description = String(descriptionRaw);
 
       // Extract optional fields
-      const tools = frontmatter['tools'] as string[] | undefined;
+      // Handle tools as either array or comma-separated string
+      let tools: string[] | undefined;
+      const toolsRaw = frontmatter['tools'];
+      if (Array.isArray(toolsRaw)) {
+        tools = toolsRaw as string[];
+      } else if (typeof toolsRaw === 'string') {
+        tools = toolsRaw.split(',').map((t) => t.trim()).filter((t) => t.length > 0);
+      }
       const modelConfig = frontmatter['modelConfig'] as
         | Record<string, unknown>
         | undefined;

@@ -19,7 +19,7 @@ import {
 import { render } from 'ink';
 import dns from 'node:dns';
 import os from 'node:os';
-import { basename } from 'node:path';
+import path, { basename } from 'node:path';
 import v8 from 'node:v8';
 import React from 'react';
 import { validateAuthMethod } from './config/auth.js';
@@ -213,6 +213,8 @@ export async function main() {
 
   let argv = await parseArguments(settings.merged);
 
+  const targetCwd = argv.cwd ? path.resolve(argv.cwd) : process.cwd();
+
   // Check for invalid input combinations early to prevent crashes
   if (argv.promptInteractive && !process.stdin.isTTY) {
     console.error(
@@ -346,6 +348,7 @@ export async function main() {
       extensions,
       extensionEnablementManager,
       argv,
+      targetCwd,
     );
 
     if (config.getListExtensions()) {
@@ -424,7 +427,7 @@ export async function main() {
     const startupWarnings = [
       ...(await getStartupWarnings()),
       ...(await getUserStartupWarnings({
-        workspaceRoot: process.cwd(),
+        workspaceRoot: targetCwd,
         useRipgrep: settings.merged.tools?.useRipgrep ?? true,
         useBuiltinRipgrep: settings.merged.tools?.useBuiltinRipgrep ?? true,
       })),
@@ -438,7 +441,7 @@ export async function main() {
         config,
         settings,
         startupWarnings,
-        process.cwd(),
+        targetCwd,
         initializationResult!,
       );
       return;
