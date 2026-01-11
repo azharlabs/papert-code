@@ -15,6 +15,12 @@ export * from './confirmation-bus/message-bus.js';
 export * from './hooks/index.js';
 export * from './hooks/types.js';
 
+// Export plugins
+export * from './plugins/types.js';
+export * from './plugins/pluginEventBus.js';
+export * from './plugins/pluginLoader.js';
+export * from './plugins/pluginSystem.js';
+
 // Export Core Logic
 export * from './core/client.js';
 export * from './core/contentGenerator.js';

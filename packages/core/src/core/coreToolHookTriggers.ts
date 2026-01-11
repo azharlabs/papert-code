@@ -27,6 +27,7 @@ import { debugLogger } from '../utils/debugLogger.js';
 import type { ShellExecutionConfig } from '../index.js';
 import type { AnyToolInvocation } from '../tools/tools.js';
 import { ShellToolInvocation } from '../tools/shell.js';
+import type { PluginSystem } from '../plugins/pluginSystem.js';
 
 /**
  * Serializable representation of tool confirmation details for hooks.
@@ -270,6 +271,7 @@ export async function executeToolWithHooks(
   liveOutputCallback?: (outputChunk: ToolResultDisplay) => void,
   shellExecutionConfig?: ShellExecutionConfig,
   setPidCallback?: (pid: number) => void,
+  pluginSystem?: PluginSystem,
 ): Promise<ToolResult> {
   const toolInput = (invocation.params || {}) as Record<string, unknown>;
   let inputWasModified = false;
@@ -341,6 +343,18 @@ export async function executeToolWithHooks(
     }
   }
 
+  if (pluginSystem) {
+    try {
+      await pluginSystem.getEventBus().emit(
+        'tool.execute.before',
+        { toolName, args: invocation.params ?? {} },
+        { config: pluginSystem.config },
+      );
+    } catch (error) {
+      debugLogger.debug(`Plugin tool.execute.before failed for ${toolName}:`, error);
+    }
+  }
+
   // Execute the actual tool
   let toolResult: ToolResult;
   if (setPidCallback && invocation instanceof ShellToolInvocation) {
@@ -373,6 +387,27 @@ export async function executeToolWithHooks(
         toolResult.llmContent,
         { text: modificationMsg },
       ];
+    }
+  }
+
+  if (pluginSystem) {
+    try {
+      await pluginSystem.getEventBus().emit(
+        'tool.execute.after',
+        {
+          toolName,
+          args: invocation.params ?? {},
+          result: {
+            llmContent: toolResult.llmContent,
+            returnDisplay: toolResult.returnDisplay,
+            error: toolResult.error,
+          },
+          error: toolResult.error?.message,
+        },
+        { config: pluginSystem.config },
+      );
+    } catch (error) {
+      debugLogger.debug(`Plugin tool.execute.after failed for ${toolName}:`, error);
     }
   }
 

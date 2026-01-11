@@ -372,6 +372,10 @@ export interface ConfigParameters {
   projectHooks?: { [K in HookEventName]?: HookDefinition[] } & {
     disabled?: string[];
   };
+  enablePlugins?: boolean;
+  plugins?: string[];
+  enableNpmPlugins?: boolean;
+  autoInstallNpmPlugins?: boolean;
   policyEngineConfig?: PolicyEngineConfig;
   useModelRouter?: boolean;
 }
@@ -505,6 +509,10 @@ export class Config {
   private readonly truncateToolOutputLines: number;
   private readonly enableToolOutputTruncation: boolean;
   private readonly enableHooks: boolean;
+  private readonly enablePlugins: boolean;
+  private readonly plugins: string[];
+  private readonly enableNpmPlugins: boolean;
+  private readonly autoInstallNpmPlugins: boolean;
   private readonly hooks:
     | ({ [K in HookEventName]?: HookDefinition[] } & { disabled?: string[] })
     | undefined;
@@ -515,6 +523,7 @@ export class Config {
   private readonly policyEngine: PolicyEngine;
   private readonly messageBus: MessageBus;
   private hookSystem?: HookSystem;
+  private pluginSystem?: import('../plugins/pluginSystem.js').PluginSystem;
   private readonly eventEmitter?: EventEmitter;
   private readonly useSmartEdit: boolean;
   private readonly useModelRouter: boolean;
@@ -640,6 +649,10 @@ export class Config {
       params.truncateToolOutputLines ?? DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES;
     this.enableToolOutputTruncation = params.enableToolOutputTruncation ?? true;
     this.enableHooks = params.enableHooks ?? false;
+    this.enablePlugins = params.enablePlugins ?? false;
+    this.plugins = params.plugins ?? [];
+    this.enableNpmPlugins = params.enableNpmPlugins ?? false;
+    this.autoInstallNpmPlugins = params.autoInstallNpmPlugins ?? false;
     this.hooks = params.hooks;
     this.projectHooks = params.projectHooks;
     this.disabledHooks =
@@ -702,6 +715,12 @@ export class Config {
     if (this.enableHooks) {
       this.hookSystem = new HookSystem(this);
       await this.hookSystem.initialize();
+    }
+
+    if (this.enablePlugins) {
+      const { PluginSystem } = await import('../plugins/pluginSystem.js');
+      this.pluginSystem = new PluginSystem(this);
+      await this.pluginSystem.initialize();
     }
 
     await this.refreshContextMemory();
@@ -1420,6 +1439,26 @@ export class Config {
 
   getHookSystem(): HookSystem | undefined {
     return this.hookSystem;
+  }
+
+  getEnablePlugins(): boolean {
+    return this.enablePlugins;
+  }
+
+  getPlugins(): string[] {
+    return this.plugins;
+  }
+
+  getEnableNpmPlugins(): boolean {
+    return this.enableNpmPlugins;
+  }
+
+  getAutoInstallNpmPlugins(): boolean {
+    return this.autoInstallNpmPlugins;
+  }
+
+  getPluginSystem(): import('../plugins/pluginSystem.js').PluginSystem | undefined {
+    return this.pluginSystem;
   }
 
   getHooks():
