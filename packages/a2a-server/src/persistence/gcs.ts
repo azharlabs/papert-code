@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -299,7 +299,7 @@ export class GCSTaskStore implements TaskStore {
 }
 
 export class NoOpTaskStore implements TaskStore {
-  constructor(private realStore: TaskStore) {}
+  constructor(private realStore: TaskStore) { }
 
   async save(task: SDKTask): Promise<void> {
     logger.info(`[NoOpTaskStore] save called for task ${task.id} - IGNORED`);

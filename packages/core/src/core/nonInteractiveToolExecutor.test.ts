@@ -63,6 +63,12 @@ describe('executeToolCall', () => {
       getUseModelRouter: () => false,
       getGeminiClient: () => null, // No client needed for these tests
       getChatRecordingService: () => undefined,
+      getEnableHooks: () => false,
+      getMessageBus: () => undefined,
+      getPluginSystem: () => ({
+        getHooks: () => [],
+      }),
+      getModel: () => 'test-model',
     } as unknown as Config;
 
     abortController = new AbortController();
@@ -309,7 +315,7 @@ describe('executeToolCall', () => {
             name: 'testTool',
             id: 'call6',
             response: {
-              output: 'Binary content of type image/png was processed.',
+              output: 'Binary content provided (1 item(s)).',
             },
           },
         },

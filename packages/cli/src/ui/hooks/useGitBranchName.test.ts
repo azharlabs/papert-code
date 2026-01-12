@@ -24,7 +24,7 @@ vi.mock('@papert-code/papert-code-core', async () => {
   };
 });
 
-// Mock fs and fs/promises
+// Mock fs
 vi.mock('node:fs', async () => {
   const memfs = await vi.importActual<typeof import('memfs')>('memfs');
   return {
@@ -33,9 +33,13 @@ vi.mock('node:fs', async () => {
   };
 });
 
+// Mock fs/promises - Fix applied here
 vi.mock('node:fs/promises', async () => {
   const memfs = await vi.importActual<typeof import('memfs')>('memfs');
-  return memfs.fs.promises;
+  return {
+    ...memfs.fs.promises,
+    default: memfs.fs.promises, // Critical: Add default export
+  };
 });
 
 const CWD = '/test/project';

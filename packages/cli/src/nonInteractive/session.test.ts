@@ -70,6 +70,7 @@ function createConfig(overrides: ConfigOverrides = {}): Config {
     getApprovalMode: () => 'auto',
     getOutputFormat: () => 'stream-json',
     getEnableHooks: () => false,
+    getMessageBus: () => undefined,
     initialize: vi.fn(),
   };
   return { ...base, ...overrides } as unknown as Config;

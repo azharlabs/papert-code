@@ -26,5 +26,7 @@ exports[`<SessionSummaryDisplay /> > renders the summary display with a title 1`
 │                                                                                                  │
 │  » Tip: For a full token breakdown, run \`/stats model\`.                                          │
 │                                                                                                  │
+│  Cache Efficiency: 50.0%                                                                         │
+│                                                                                                  │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯"
 `;

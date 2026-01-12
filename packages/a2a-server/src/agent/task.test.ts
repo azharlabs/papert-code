@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -531,7 +531,7 @@ describe('Task', () => {
     it('should correctly initialize and update promptId and promptCount', async () => {
       const mockConfig = createMockConfig();
       mockConfig.getGeminiClient = vi.fn().mockReturnValue({
-        sendMessageStream: vi.fn().mockReturnValue((async function* () {})()),
+        sendMessageStream: vi.fn().mockReturnValue((async function* () { })()),
       });
       mockConfig.getSessionId = () => 'test-session-id';
 

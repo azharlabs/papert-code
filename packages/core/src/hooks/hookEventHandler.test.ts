@@ -17,7 +17,6 @@ import {
   SessionStartSource,
   type HookExecutionResult,
 } from './types.js';
-import { createMockMessageBus } from '../test-utils/mock-message-bus.js';
 
 // Mock debugLogger
 const mockDebugLogger = vi.hoisted(() => ({
@@ -28,9 +27,18 @@ const mockDebugLogger = vi.hoisted(() => ({
 }));
 
 // Mock coreEvents
-const mockCoreEvents = vi.hoisted(() => ({
-  emitFeedback: vi.fn(),
-}));
+const mockCoreEvents = vi.hoisted(() => {
+  const createTestMessageBus = () => ({
+    publish: vi.fn(),
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+  });
+  const bus = createTestMessageBus();
+  return {
+    ...bus,
+    emitFeedback: vi.fn(),
+  };
+});
 
 vi.mock('../utils/debugLogger.js', () => ({
   debugLogger: mockDebugLogger,
@@ -61,10 +69,19 @@ describe('HookEventHandler', () => {
     mockConfig = {
       getSessionId: vi.fn().mockReturnValue('test-session'),
       getWorkingDir: vi.fn().mockReturnValue('/test/project'),
+      storage: {
+        getProjectTempDir: vi.fn().mockReturnValue('/test/project/.papert/tmp'),
+      },
       getChatRecordingService: vi.fn().mockReturnValue({
         getConversationFilePath: vi
           .fn()
           .mockReturnValue('/test/project/.papert/tmp/chats/session.json'),
+      }),
+      getEnableHooks: vi.fn().mockReturnValue(true),
+      getMessageBus: vi.fn().mockReturnValue({
+        publish: vi.fn(),
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
       }),
     } as unknown as Config;
 
@@ -86,7 +103,7 @@ describe('HookEventHandler', () => {
       mockHookPlanner,
       mockHookRunner,
       mockHookAggregator,
-      createMockMessageBus(),
+      mockCoreEvents,
     );
   });
 
@@ -217,13 +234,11 @@ describe('HookEventHandler', () => {
 
       await hookEventHandler.fireBeforeToolEvent('EditTool', {});
 
-      expect(mockCoreEvents.emitFeedback).toHaveBeenCalledWith(
-        'warning',
+      expect(mockDebugLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('./fail.sh'),
       );
-      expect(mockCoreEvents.emitFeedback).toHaveBeenCalledWith(
-        'warning',
-        expect.stringContaining('F12'),
+      expect(mockDebugLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('BeforeTool'),
       );
     });
   });
@@ -579,7 +594,7 @@ describe('HookEventHandler', () => {
         HookEventName.BeforeTool,
         expect.objectContaining({
           session_id: 'test-session',
-          transcript_path: '/test/project/.gemini/tmp/chats/session.json',
+          transcript_path: '/test/project/.papert/tmp/chats/session.json',
           cwd: '/test/project',
           hook_event_name: 'BeforeTool',
           timestamp: expect.any(String),

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,6 +9,7 @@ import * as path from 'node:path';
 import { homedir } from 'node:os';
 
 import type { MCPServerConfig } from '@papert-code/papert-code-core';
+
 import {
   debugLogger,
   PAPERT_DIR,

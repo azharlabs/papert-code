@@ -1,22 +1,19 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import request from 'supertest';
 import type express from 'express';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
-
-import { createApp, updateCoderAgentCardUrl } from './app.js';
+import { createApp } from './app.js';
 import type { TaskMetadata } from '../types.js';
 import { createMockConfig } from '../utils/testing_utils.js';
 import { debugLogger, type Config } from '@papert-code/papert-code-core';
+import { requestApp } from './test-utils.js';
 
 // Mock the logger to avoid polluting test output
 // Comment out to help debug
@@ -71,20 +68,20 @@ vi.mock('../config/config.js', async () => {
 
 describe('Agent Server Endpoints', () => {
   let app: express.Express;
-  let server: Server;
   let testWorkspace: string;
 
   const createTask = (contextId: string) =>
-    request(app)
-      .post('/tasks')
-      .send({
+    requestApp(app, {
+      method: 'POST',
+      path: '/tasks',
+      body: {
         contextId,
         agentSettings: {
           kind: 'agent-settings',
           workspacePath: testWorkspace,
         },
-      })
-      .set('Content-Type', 'application/json');
+      },
+    });
 
   beforeAll(async () => {
     // Create a unique temporary directory for the workspace to avoid conflicts
@@ -92,25 +89,9 @@ describe('Agent Server Endpoints', () => {
       path.join(os.tmpdir(), 'gemini-agent-test-'),
     );
     app = await createApp();
-    await new Promise<void>((resolve) => {
-      server = app.listen(0, () => {
-        const port = (server.address() as AddressInfo).port;
-        updateCoderAgentCardUrl(port);
-        resolve();
-      });
-    });
   });
 
   afterAll(async () => {
-    if (server) {
-      await new Promise<void>((resolve, reject) => {
-        server.close((err) => {
-          if (err) return reject(err);
-          resolve();
-        });
-      });
-    }
-
     if (testWorkspace) {
       try {
         fs.rmSync(testWorkspace, { recursive: true, force: true });
@@ -129,34 +110,45 @@ describe('Agent Server Endpoints', () => {
   it('should get metadata for a specific task via GET /tasks/:taskId/metadata', async () => {
     const createResponse = await createTask('test-context-2');
     const taskId = createResponse.body;
-    const response = await request(app).get(`/tasks/${taskId}/metadata`);
+    const response = await requestApp(app, {
+      method: 'GET',
+      path: `/tasks/${taskId}/metadata`,
+    });
     expect(response.status).toBe(200);
-    expect(response.body.metadata.id).toBe(taskId);
+    expect((response.body as { metadata: TaskMetadata }).metadata.id).toBe(
+      taskId,
+    );
   }, 6000);
 
   it('should get metadata for all tasks via GET /tasks/metadata', async () => {
     const createResponse = await createTask('test-context-3');
     const taskId = createResponse.body;
-    const response = await request(app).get('/tasks/metadata');
+    const response = await requestApp(app, {
+      method: 'GET',
+      path: '/tasks/metadata',
+    });
     expect(response.status).toBe(200);
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body.length).toBeGreaterThan(0);
-    const taskMetadata = response.body.find(
-      (m: TaskMetadata) => m.id === taskId,
-    );
+    const metadata = response.body as TaskMetadata[];
+    expect(Array.isArray(metadata)).toBe(true);
+    expect(metadata.length).toBeGreaterThan(0);
+    const taskMetadata = metadata.find((m) => m.id === taskId);
     expect(taskMetadata).toBeDefined();
   });
 
   it('should return 404 for a non-existent task', async () => {
-    const response = await request(app).get('/tasks/fake-task/metadata');
+    const response = await requestApp(app, {
+      method: 'GET',
+      path: '/tasks/fake-task/metadata',
+    });
     expect(response.status).toBe(404);
   });
 
   it('should return agent metadata via GET /.well-known/agent-card.json', async () => {
-    const response = await request(app).get('/.well-known/agent-card.json');
-    const port = (server.address() as AddressInfo).port;
+    const response = await requestApp(app, {
+      method: 'GET',
+      path: '/.well-known/agent-card.json',
+    });
     expect(response.status).toBe(200);
-    expect(response.body.name).toBe('Gemini SDLC Agent');
-    expect(response.body.url).toBe(`http://localhost:${port}/`);
+    expect((response.body as { name: string }).name).toBe('Papert Code Agent');
   });
 });

@@ -1,23 +1,12 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { describe, it, expect, vi } from 'vitest';
 import { ExtensionsCommand, ListExtensionsCommand } from './extensions.js';
 import type { CommandContext } from './types.js';
-
-const mockListExtensions = vi.hoisted(() => vi.fn());
-vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
-  const original =
-    await importOriginal<typeof import('@papert-code/papert-code-core')>();
-
-  return {
-    ...original,
-    listExtensions: mockListExtensions,
-  };
-});
 
 describe('ExtensionsCommand', () => {
   it('should have the correct name', () => {
@@ -42,14 +31,17 @@ describe('ExtensionsCommand', () => {
 
   it('should default to listing extensions', async () => {
     const command = new ExtensionsCommand();
-    const mockConfig = { config: {} } as CommandContext;
+    const mockGetExtensions = vi.fn();
+    const mockConfig = {
+      config: { getExtensions: mockGetExtensions },
+    } as CommandContext;
     const mockExtensions = [{ name: 'ext1' }];
-    mockListExtensions.mockReturnValue(mockExtensions);
+    mockGetExtensions.mockReturnValue(mockExtensions);
 
     const result = await command.execute(mockConfig, []);
 
     expect(result).toEqual({ name: 'extensions list', data: mockExtensions });
-    expect(mockListExtensions).toHaveBeenCalledWith(mockConfig.config);
+    expect(mockGetExtensions).toHaveBeenCalledWith();
   });
 });
 
@@ -59,22 +51,28 @@ describe('ListExtensionsCommand', () => {
     expect(command.name).toEqual('extensions list');
   });
 
-  it('should call listExtensions with the provided config', async () => {
+  it('should call getExtensions on the provided config', async () => {
     const command = new ListExtensionsCommand();
-    const mockConfig = { config: {} } as CommandContext;
+    const mockGetExtensions = vi.fn();
+    const mockConfig = {
+      config: { getExtensions: mockGetExtensions },
+    } as CommandContext;
     const mockExtensions = [{ name: 'ext1' }];
-    mockListExtensions.mockReturnValue(mockExtensions);
+    mockGetExtensions.mockReturnValue(mockExtensions);
 
     const result = await command.execute(mockConfig, []);
 
     expect(result).toEqual({ name: 'extensions list', data: mockExtensions });
-    expect(mockListExtensions).toHaveBeenCalledWith(mockConfig.config);
+    expect(mockGetExtensions).toHaveBeenCalledWith();
   });
 
   it('should return a message when no extensions are installed', async () => {
     const command = new ListExtensionsCommand();
-    const mockConfig = { config: {} } as CommandContext;
-    mockListExtensions.mockReturnValue([]);
+    const mockGetExtensions = vi.fn();
+    const mockConfig = {
+      config: { getExtensions: mockGetExtensions },
+    } as CommandContext;
+    mockGetExtensions.mockReturnValue([]);
 
     const result = await command.execute(mockConfig, []);
 
@@ -82,6 +80,6 @@ describe('ListExtensionsCommand', () => {
       name: 'extensions list',
       data: 'No extensions installed.',
     });
-    expect(mockListExtensions).toHaveBeenCalledWith(mockConfig.config);
+    expect(mockGetExtensions).toHaveBeenCalledWith();
   });
 });

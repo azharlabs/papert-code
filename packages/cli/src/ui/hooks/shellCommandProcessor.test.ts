@@ -15,8 +15,49 @@ import {
   type Mock,
 } from 'vitest';
 
+// 1. Hoisted variables for Core mocks
 const mockIsBinary = vi.hoisted(() => vi.fn());
 const mockShellExecutionService = vi.hoisted(() => vi.fn());
+
+// 2. Define OS mock data
+const osMockData = vi.hoisted(() => ({
+  platform: vi.fn(() => 'linux'),
+  tmpdir: vi.fn(() => '/tmp'),
+  homedir: vi.fn(() => '/tmp'),
+  release: vi.fn(() => '1.0.0'),
+  type: vi.fn(() => 'Linux'),
+  endianness: vi.fn(() => 'LE'),
+  arch: vi.fn(() => 'x64'),
+}));
+
+// 3. Define FS mock data
+const fsMockData = vi.hoisted(() => ({
+  existsSync: vi.fn(() => false),
+  readFileSync: vi.fn(() => Buffer.from('')),
+  unlinkSync: vi.fn(),
+  promises: {
+    readFile: vi.fn(),
+  },
+}));
+
+// 4. Define Crypto mock data
+const cryptoMockData = vi.hoisted(() => ({
+  randomBytes: vi.fn(() => Buffer.from('abcdef', 'hex')),
+}));
+
+// 5. Apply mocks. 
+// CRITICAL FIX: We spread the mock data AND provide a 'default' property.
+// This supports both "import * as fs" and "import fs from 'fs'".
+vi.mock('os', () => ({ ...osMockData, default: osMockData }));
+vi.mock('node:os', () => ({ ...osMockData, default: osMockData }));
+vi.mock('fs', () => ({ ...fsMockData, default: fsMockData }));
+vi.mock('node:fs', () => ({ ...fsMockData, default: fsMockData }));
+vi.mock('crypto', () => ({ ...cryptoMockData, default: cryptoMockData }));
+vi.mock('node:crypto', () => ({ ...cryptoMockData, default: cryptoMockData }));
+
+vi.mock('../utils/textUtils.js');
+
+// 6. Mock the Core library
 vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
   const original =
     await importOriginal<typeof import('@papert-code/papert-code-core')>();
@@ -26,10 +67,6 @@ vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
     isBinary: mockIsBinary,
   };
 });
-vi.mock('fs');
-vi.mock('os');
-vi.mock('crypto');
-vi.mock('../utils/textUtils.js');
 
 import {
   useShellCommandProcessor,
@@ -78,6 +115,7 @@ describe('useShellCommandProcessor', () => {
     } as Config;
     mockGeminiClient = { addHistory: vi.fn() } as unknown as GeminiClient;
 
+    // We can use mockReturnValue on the methods inside our hoisted objects
     vi.mocked(os.platform).mockReturnValue('linux');
     vi.mocked(os.tmpdir).mockReturnValue('/tmp');
     (vi.mocked(crypto.randomBytes) as Mock).mockReturnValue(

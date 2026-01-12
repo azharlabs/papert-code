@@ -20,6 +20,7 @@ import { AuthType } from '../core/contentGenerator.js';
 import {
   DEFAULT_GEMINI_FLASH_MODEL,
   DEFAULT_GEMINI_MODEL,
+  DEFAULT_GEMINI_MODEL_AUTO,
 } from '../config/models.js';
 import { logFlashFallback } from '../telemetry/index.js';
 import type { FallbackModelHandler } from './types.js';
@@ -39,7 +40,32 @@ const createMockConfig = (overrides: Partial<Config> = {}): Config =>
   ({
     isInFallbackMode: vi.fn(() => false),
     setFallbackMode: vi.fn(),
-    fallbackHandler: undefined,
+    setActiveModel: vi.fn(),
+    fallbackModelHandler: undefined,
+    getFallbackModelHandler: vi.fn(() => overrides.fallbackModelHandler),
+    getModel: vi.fn(() => DEFAULT_GEMINI_MODEL_AUTO),
+    getEnableHooks: vi.fn().mockReturnValue(false),
+    getMessageBus: vi.fn().mockReturnValue(undefined),
+    getAvailabilityPolicyChain: vi.fn().mockReturnValue([
+      { model: MOCK_PRO_MODEL, actions: { quota: 'ask' } },
+      {
+        model: FALLBACK_MODEL,
+        actions: { quota: 'retry' },
+        isLastResort: true,
+      },
+    ]),
+    getModelAvailabilityService: vi.fn().mockReturnValue({
+      isFeaturePolicyAllow: vi.fn().mockReturnValue(true),
+      selectFirstAvailable: vi.fn().mockImplementation((models: string[]) => {
+        if (models.includes(FALLBACK_MODEL)) {
+          return { selectedModel: FALLBACK_MODEL };
+        }
+        if (models.includes(MOCK_PRO_MODEL)) {
+          return { selectedModel: MOCK_PRO_MODEL };
+        }
+        return { selectedModel: null };
+      }),
+    }),
     ...overrides,
   }) as unknown as Config;
 
@@ -95,38 +121,6 @@ describe('handleFallback', () => {
     expect(result).toBeNull();
   });
 
-  describe('when handler returns "retry"', () => {
-    it('should activate fallback mode, log telemetry, and return true', async () => {
-      mockHandler.mockResolvedValue('retry');
-
-      const result = await handleFallback(
-        mockConfig,
-        MOCK_PRO_MODEL,
-        AUTH_OAUTH,
-      );
-
-      expect(result).toBe(true);
-      expect(mockConfig.setFallbackMode).toHaveBeenCalledWith(true);
-      expect(logFlashFallback).toHaveBeenCalled();
-    });
-  });
-
-  describe('when handler returns "stop"', () => {
-    it('should activate fallback mode, log telemetry, and return false', async () => {
-      mockHandler.mockResolvedValue('stop');
-
-      const result = await handleFallback(
-        mockConfig,
-        MOCK_PRO_MODEL,
-        AUTH_OAUTH,
-      );
-
-      expect(result).toBe(false);
-      expect(mockConfig.setFallbackMode).toHaveBeenCalledWith(true);
-      expect(logFlashFallback).toHaveBeenCalled();
-    });
-  });
-
   describe('when handler returns "auth"', () => {
     it('should NOT activate fallback mode and return false', async () => {
       mockHandler.mockResolvedValue('auth');
@@ -155,7 +149,7 @@ describe('handleFallback', () => {
 
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Fallback UI handler failed:',
+        'Fallback handler failed:',
         new Error(
           'Unexpected fallback intent received from fallbackModelHandler: "null"',
         ),
@@ -193,10 +187,8 @@ describe('handleFallback', () => {
       AUTH_OAUTH,
     );
 
-    // Should still return true to allow the retry (which will use the active fallback mode)
-    expect(result).toBe(true);
-    // Should still consult the handler
-    expect(mockHandler).toHaveBeenCalled();
+    // No additional fallback action is taken while already in fallback mode.
+    expect(result).toBeNull();
     // But should not mutate state or log telemetry again
     expect(activeFallbackConfig.setFallbackMode).not.toHaveBeenCalled();
     expect(logFlashFallback).not.toHaveBeenCalled();
@@ -210,7 +202,7 @@ describe('handleFallback', () => {
 
     expect(result).toBeNull();
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Fallback UI handler failed:',
+      'Fallback handler failed:',
       handlerError,
     );
     expect(mockConfig.setFallbackMode).not.toHaveBeenCalled();

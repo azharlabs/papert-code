@@ -118,6 +118,8 @@ describe('ChatCompressionService', () => {
     mockConfig = {
       getChatCompression: vi.fn(),
       getContentGenerator: vi.fn(),
+      getEnableHooks: vi.fn().mockReturnValue(false),
+      getMessageBus: vi.fn().mockReturnValue(undefined),
     } as unknown as Config;
 
     vi.mocked(tokenLimit).mockReturnValue(1000);

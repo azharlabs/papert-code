@@ -1,12 +1,12 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { InitCommand } from './init.js';
-import { performInit } from '@papert-code/papert-code-core';
+import { getCurrentGeminiMdFilename } from '@papert-code/papert-code-core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { CoderAgentExecutor } from '../agent/executor.js';
@@ -14,17 +14,8 @@ import { CoderAgentEvent } from '../types.js';
 import type { ExecutionEventBus } from '@a2a-js/sdk/server';
 import { createMockConfig } from '../utils/testing_utils.js';
 import type { CommandContext } from './types.js';
-import type { CommandActionReturn, Config } from '@papert-code/papert-code-core';
+import type { Config } from '@papert-code/papert-code-core';
 import { logger } from '../utils/logger.js';
-
-vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@papert-code/papert-code-core')>();
-  return {
-    ...actual,
-    performInit: vi.fn(),
-  };
-});
 
 vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
@@ -78,12 +69,9 @@ describe('InitCommand', () => {
   });
 
   describe('execute', () => {
-    it('handles info from performInit', async () => {
-      vi.mocked(performInit).mockReturnValue({
-        type: 'message',
-        messageType: 'info',
-        content: 'GEMINI.md already exists.',
-      } as CommandActionReturn);
+    it('handles info when papert.md already exists', async () => {
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      const contextFileName = getCurrentGeminiMdFilename();
 
       await command.execute(context, []);
 
@@ -94,7 +82,12 @@ describe('InitCommand', () => {
           status: expect.objectContaining({
             state: 'completed',
             message: expect.objectContaining({
-              parts: [{ kind: 'text', text: 'GEMINI.md already exists.' }],
+              parts: [
+                {
+                  kind: 'text',
+                  text: expect.stringContaining(contextFileName),
+                },
+              ],
             }),
           }),
         }),
@@ -106,48 +99,42 @@ describe('InitCommand', () => {
           status: expect.objectContaining({
             state: 'completed',
             message: expect.objectContaining({
-              parts: [{ kind: 'text', text: 'GEMINI.md already exists.' }],
+              parts: [
+                {
+                  kind: 'text',
+                  text: expect.stringContaining(contextFileName),
+                },
+              ],
             }),
           }),
         }),
       );
     });
 
-    it('handles error from performInit', async () => {
-      vi.mocked(performInit).mockReturnValue({
+    it('returns an error if CODER_AGENT_WORKSPACE_PATH is missing', async () => {
+      delete process.env['CODER_AGENT_WORKSPACE_PATH'];
+
+      const result = await command.execute(context, []);
+
+      expect(result.data).toEqual({
         type: 'message',
         messageType: 'error',
-        content: 'An error occurred.',
-      } as CommandActionReturn);
-
-      await command.execute(context, []);
-
-      expect(publishSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          kind: 'status-update',
-          status: expect.objectContaining({
-            state: 'failed',
-            message: expect.objectContaining({
-              parts: [{ kind: 'text', text: 'An error occurred.' }],
-            }),
-          }),
-        }),
-      );
+        content:
+          'CODER_AGENT_WORKSPACE_PATH must be set to run the init command.',
+      });
+      expect(publishSpy).not.toHaveBeenCalled();
     });
 
     describe('when handling submit_prompt', () => {
       beforeEach(() => {
-        vi.mocked(performInit).mockReturnValue({
-          type: 'submit_prompt',
-          content: 'Create a new GEMINI.md file.',
-        } as CommandActionReturn);
+        vi.mocked(fs.existsSync).mockReturnValue(false);
       });
 
       it('writes the file and executes the agent', async () => {
         await command.execute(context, []);
 
         expect(fs.writeFileSync).toHaveBeenCalledWith(
-          path.join(mockWorkspacePath, 'GEMINI.md'),
+          path.join(mockWorkspacePath, 'papert.md'),
           '',
           'utf8',
         );
@@ -157,12 +144,13 @@ describe('InitCommand', () => {
       it('passes autoExecute to the agent executor', async () => {
         await command.execute(context, []);
 
+        const contextFileName = getCurrentGeminiMdFilename();
         expect(mockExecute).toHaveBeenCalledWith(
           expect.objectContaining({
             userMessage: expect.objectContaining({
               parts: expect.arrayContaining([
                 expect.objectContaining({
-                  text: 'Create a new GEMINI.md file.',
+                  text: expect.stringContaining(contextFileName),
                 }),
               ]),
               metadata: {

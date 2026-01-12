@@ -81,7 +81,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       mcpCommand,
       memoryCommand,
       modelCommand,
-      ...(this.config?.getFolderTrust() ? [permissionsCommand] : []),
+      ...(this.config?.getFolderTrust?.() ? [permissionsCommand] : []),
       resumeCommand,
       quitCommand,
       quitConfirmCommand,
@@ -93,8 +93,8 @@ export class BuiltinCommandLoader implements ICommandLoader {
       settingsCommand,
       vimCommand,
       terminalSetupCommand,
-      ...(this.config?.getEnableHooks() ? [hooksCommand] : []),
-      ...(this.config?.getEnablePlugins() ? [pluginsCommand] : []),
+      ...(this.config?.getEnableHooks?.() ? [hooksCommand] : []),
+      ...(this.config?.getEnablePlugins?.() ? [pluginsCommand] : []),
     ];
 
     return allDefinitions.filter((cmd): cmd is SlashCommand => cmd !== null);

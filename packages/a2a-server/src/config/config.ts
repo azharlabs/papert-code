@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -96,7 +96,7 @@ export async function loadConfig(
     showMemoryUsage: settings.showMemoryUsage || false,
     approvalMode:
       process.env['PAPERT_YOLO_MODE'] === 'true' ||
-      process.env['GEMINI_YOLO_MODE'] === 'true'
+        process.env['GEMINI_YOLO_MODE'] === 'true'
         ? ApprovalMode.YOLO
         : ApprovalMode.DEFAULT,
     mcpServers: settings.mcpServers,

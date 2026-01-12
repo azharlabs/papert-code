@@ -154,8 +154,7 @@ export class FileCommandLoader implements ICommandLoader {
 
     // 3. Skill commands (processed after user/project)
     if (this.config) {
-      const activeSkills = this.config
-        .getSkills()
+      const activeSkills = (this.config.getSkills?.() ?? [])
         .filter((skill) => skill.isActive)
         .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -169,8 +168,7 @@ export class FileCommandLoader implements ICommandLoader {
 
     // 4. Extension commands (processed last to detect all conflicts)
     if (this.config) {
-      const activeExtensions = this.config
-        .getExtensions()
+      const activeExtensions = (this.config.getExtensions?.() ?? [])
         .filter((ext) => ext.isActive)
         .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically for deterministic loading
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,7 +14,6 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-const mockPerformRestore = vi.hoisted(() => vi.fn());
 const mockLoggerInfo = vi.hoisted(() => vi.fn());
 const mockGetCheckpointInfoList = vi.hoisted(() => vi.fn());
 
@@ -23,7 +22,6 @@ vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
     await importOriginal<typeof import('@papert-code/papert-code-core')>();
   return {
     ...original,
-    performRestore: mockPerformRestore,
     getCheckpointInfoList: mockGetCheckpointInfoList,
   };
 });
@@ -48,13 +46,14 @@ describe('RestoreCommand', () => {
     git: {},
   } as CommandContext;
 
-  it('should return error if no checkpoint name is provided', async () => {
+  it('should list available checkpoints when no name is provided', async () => {
     const command = new RestoreCommand();
+    mockFs.readdir.mockResolvedValue([]);
     const result = await command.execute(mockConfig, []);
     expect(result.data).toEqual({
       type: 'message',
-      messageType: 'error',
-      content: 'Please provide a checkpoint name to restore.',
+      messageType: 'info',
+      content: 'No restorable tool calls found.',
     });
   });
 
@@ -67,21 +66,14 @@ describe('RestoreCommand', () => {
       },
       history: [],
       clientHistory: [],
-      commitHash: '123',
     };
     mockFs.readFile.mockResolvedValue(JSON.stringify(toolCallData));
-    const restoreContent = {
-      type: 'message',
-      messageType: 'info',
-      content: 'Restored',
-    };
-    mockPerformRestore.mockReturnValue(
-      (async function* () {
-        yield restoreContent;
-      })(),
-    );
     const result = await command.execute(mockConfig, ['checkpoint1.json']);
-    expect(result.data).toEqual([restoreContent]);
+    expect(result.data).toEqual({
+      type: 'tool',
+      toolName: 'test-tool',
+      toolArgs: {},
+    });
   });
 
   it('should show "file not found" error for a non-existent checkpoint', async () => {

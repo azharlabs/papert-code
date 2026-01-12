@@ -26,8 +26,8 @@ export const clearCommand: SlashCommand = {
     const { config } = context.services;
 
     if (config) {
-      const messageBus = config.getMessageBus();
-      if (config.getEnableHooks() && messageBus) {
+      const messageBus = config.getMessageBus?.();
+      if (config.getEnableHooks?.() && messageBus) {
         await fireSessionEndHook(messageBus, SessionEndReason.Clear);
       }
 
@@ -52,7 +52,7 @@ export const clearCommand: SlashCommand = {
         context.ui.setDebugMessage(t('Starting a new session and clearing.'));
       }
 
-      if (config.getEnableHooks() && messageBus) {
+      if (config.getEnableHooks?.() && messageBus) {
         await fireSessionStartHook(messageBus, SessionStartSource.Clear);
       }
     } else {

@@ -27,12 +27,167 @@ import * as clipboardUtils from '../utils/clipboardUtils.js';
 import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
 import stripAnsi from 'strip-ansi';
 import chalk from 'chalk';
+import type { Key } from '../hooks/useKeypress.js';
 
 vi.mock('../hooks/useShellHistory.js');
 vi.mock('../hooks/useCommandCompletion.js');
 vi.mock('../hooks/useInputHistory.js');
 vi.mock('../hooks/useReverseSearchCompletion.js');
 vi.mock('../utils/clipboardUtils.js');
+const keypressHandlers: Array<(key: Key) => void> = [];
+vi.mock('../hooks/useKeypress.js', () => ({
+  useKeypress: (
+    handler: (key: Key) => void,
+    options?: { isActive?: boolean },
+  ) => {
+    if (options?.isActive === false) {
+      return;
+    }
+    keypressHandlers.push(handler);
+  },
+}));
+
+const PASTE_START = '\x1B[200~';
+const PASTE_END = '\x1B[201~';
+
+const ctrlSequenceToName: Record<string, string> = {
+  '\x01': 'a',
+  '\x03': 'c',
+  '\x05': 'e',
+  '\x0c': 'l',
+  '\x0e': 'n',
+  '\x10': 'p',
+  '\x12': 'r',
+  '\x16': 'v',
+};
+
+const arrowSequences: Record<string, string> = {
+  '\u001B[A': 'up',
+  '\u001B[B': 'down',
+  '\u001B[C': 'right',
+  '\u001B[D': 'left',
+};
+
+const dispatchKey = (key: Key) => {
+  for (const handler of keypressHandlers) {
+    handler(key);
+  }
+};
+
+const emitKeysFromInput = (input: string) => {
+  if (!input) return;
+
+  const pasteStartIndex = input.indexOf(PASTE_START);
+  const pasteEndIndex = input.lastIndexOf(PASTE_END);
+  if (pasteStartIndex !== -1 && pasteEndIndex !== -1) {
+    const pasted = input.slice(
+      pasteStartIndex + PASTE_START.length,
+      pasteEndIndex,
+    );
+    dispatchKey({
+      name: '',
+      ctrl: false,
+      meta: false,
+      shift: false,
+      paste: true,
+      sequence: pasted,
+    });
+    return;
+  }
+
+  const arrowName = arrowSequences[input];
+  if (arrowName) {
+    dispatchKey({
+      name: arrowName,
+      ctrl: false,
+      meta: false,
+      shift: false,
+      paste: false,
+      sequence: input,
+    });
+    return;
+  }
+
+  const ctrlName = ctrlSequenceToName[input];
+  if (ctrlName) {
+    dispatchKey({
+      name: ctrlName,
+      ctrl: true,
+      meta: false,
+      shift: false,
+      paste: false,
+      sequence: input,
+    });
+    return;
+  }
+
+  if (input === '\r') {
+    dispatchKey({
+      name: 'return',
+      ctrl: false,
+      meta: false,
+      shift: false,
+      paste: false,
+      sequence: input,
+    });
+    return;
+  }
+
+  if (input === '\t') {
+    dispatchKey({
+      name: 'tab',
+      ctrl: false,
+      meta: false,
+      shift: false,
+      paste: false,
+      sequence: input,
+    });
+    return;
+  }
+
+  if (input === '\x1B') {
+    dispatchKey({
+      name: 'escape',
+      ctrl: false,
+      meta: false,
+      shift: false,
+      paste: false,
+      sequence: input,
+    });
+    return;
+  }
+
+  for (const ch of input) {
+    dispatchKey({
+      name: ch,
+      ctrl: false,
+      meta: false,
+      shift: false,
+      paste: false,
+      sequence: ch,
+    });
+  }
+};
+
+vi.mock('../../test-utils/render.js', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../../test-utils/render.js')>();
+  return {
+    ...actual,
+    renderWithProviders: (
+      component: Parameters<typeof actual.renderWithProviders>[0],
+      options?: Parameters<typeof actual.renderWithProviders>[1],
+    ) => {
+      const result = actual.renderWithProviders(component, options);
+      const originalWrite = result.stdin.write.bind(result.stdin);
+      result.stdin.write = (data: string) => {
+        emitKeysFromInput(String(data));
+        return originalWrite(data);
+      };
+      return result;
+    },
+  };
+});
 
 const mockSlashCommands: SlashCommand[] = [
   {
@@ -86,6 +241,7 @@ describe('InputPrompt', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    keypressHandlers.length = 0;
 
     mockCommandContext = createMockCommandContext();
 

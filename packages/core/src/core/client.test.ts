@@ -363,6 +363,9 @@ describe('Gemini Client (client.ts)', () => {
       getUseSmartEdit: vi.fn().mockReturnValue(false),
       getUseModelRouter: vi.fn().mockReturnValue(false),
       getProjectRoot: vi.fn().mockReturnValue('/test/project/root'),
+      getActiveModel: vi.fn().mockReturnValue('test-model'),
+      getEnableHooks: vi.fn().mockReturnValue(false),
+      getMessageBus: vi.fn().mockReturnValue(undefined),
       storage: {
         getProjectTempDir: vi.fn().mockReturnValue('/test/temp'),
         getProjectDir: vi
@@ -378,6 +381,12 @@ describe('Gemini Client (client.ts)', () => {
       }),
       getSubagentManager: vi.fn().mockReturnValue(mockSubagentManager),
       getSkipLoopDetection: vi.fn().mockReturnValue(false),
+      getEnableHooks: vi.fn().mockReturnValue(false),
+      getMessageBus: vi.fn().mockReturnValue(undefined),
+      getPluginSystem: vi.fn().mockReturnValue(undefined),
+      getEnableToolOutputTruncation: vi.fn().mockReturnValue(false),
+      getActiveModel: vi.fn().mockReturnValue('test-model'),
+      getAuthType: vi.fn().mockReturnValue(AuthType.USE_GEMINI),
       getChatRecordingService: vi.fn().mockReturnValue(undefined),
       getResumedSessionData: vi.fn().mockReturnValue(undefined),
     } as unknown as Config;
@@ -2340,6 +2349,9 @@ ${JSON.stringify(
 
       // Mock config to be in fallback mode
       vi.spyOn(client['config'], 'isInFallbackMode').mockReturnValue(true);
+      vi
+        .spyOn(client['config'], 'getActiveModel')
+        .mockReturnValue(DEFAULT_GEMINI_FLASH_MODEL);
 
       await client.generateContent(
         contents,

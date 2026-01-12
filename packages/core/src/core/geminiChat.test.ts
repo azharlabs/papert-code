@@ -125,10 +125,15 @@ describe('GeminiChat', () => {
       storage: {
         getProjectTempDir: vi.fn().mockReturnValue('/test/temp'),
       },
-      getToolRegistry: vi.fn().mockReturnValue({
-        getTool: vi.fn(),
-      }),
       getContentGenerator: vi.fn().mockReturnValue(mockContentGenerator),
+      getEnableHooks: vi.fn().mockReturnValue(false),
+      getMessageBus: vi.fn().mockReturnValue(undefined),
+      getActiveModel: vi.fn().mockImplementation(() =>
+        mockConfig.isInFallbackMode() ? DEFAULT_GEMINI_FLASH_MODEL : 'gemini-pro'
+      ),
+      getModelAvailabilityService: vi.fn().mockReturnValue({
+        isFeaturePolicyAllow: vi.fn().mockReturnValue(true),
+      }),
     } as unknown as Config;
 
     // Disable 429 simulation for tests

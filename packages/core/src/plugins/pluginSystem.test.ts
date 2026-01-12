@@ -13,6 +13,10 @@ import { PluginSystem } from './pluginSystem.js';
 function createMockConfig(projectRoot: string) {
   return {
     getProjectRoot: () => projectRoot,
+    getEnableNpmPlugins: () => false,
+    getPlugins: () => [],
+    getAutoInstallNpmPlugins: () => false,
+    isTrustedFolder: () => false,
   } as any;
 }
 

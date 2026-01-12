@@ -27,7 +27,7 @@ export const renderWithProviders = (
   render(
     <SettingsContext.Provider value={settings}>
       <ShellFocusContext.Provider value={shellFocus}>
-        <KeypressProvider kittyProtocolEnabled={true}>
+        <KeypressProvider kittyProtocolEnabled={true} pasteWorkaround={true}>
           {component}
         </KeypressProvider>
       </ShellFocusContext.Provider>

@@ -13,6 +13,33 @@ import { UIStateContext } from '../contexts/UIStateContext.js';
 import { UIActionsContext } from '../contexts/UIActionsContext.js';
 import type { UIState } from '../contexts/UIStateContext.js';
 import type { UIActions } from '../contexts/UIActionsContext.js';
+import { act } from 'react';
+import type { Key } from '../hooks/useKeypress.js';
+
+const keypressHandlers = new Set<(key: Key) => void>();
+vi.mock('../hooks/useKeypress.js', () => ({
+  useKeypress: (handler: (key: Key) => void, options?: { isActive: boolean }) => {
+    if (options?.isActive === false) {
+      return;
+    }
+    keypressHandlers.add(handler);
+  },
+}));
+
+const triggerKey = (name: string, sequence = name) => {
+  act(() => {
+    keypressHandlers.forEach((handler) =>
+      handler({
+        name,
+        ctrl: false,
+        meta: false,
+        shift: false,
+        paste: false,
+        sequence,
+      }),
+    );
+  });
+};
 
 const createMockUIState = (overrides: Partial<UIState> = {}): UIState => {
   // AuthDialog only uses authError and pendingAuthType
@@ -67,6 +94,7 @@ describe('AuthDialog', () => {
     process.env['GEMINI_API_KEY'] = '';
     process.env['PAPERT_DEFAULT_AUTH_TYPE'] = '';
     vi.clearAllMocks();
+    keypressHandlers.clear();
   });
 
   afterEach(() => {
@@ -417,7 +445,7 @@ describe('AuthDialog', () => {
       new Set(),
     );
 
-    const { lastFrame, stdin, unmount } = renderAuthDialog(
+    const { lastFrame, unmount } = renderAuthDialog(
       settings,
       {},
       { handleAuthSelect },
@@ -425,7 +453,7 @@ describe('AuthDialog', () => {
     await wait();
 
     // Simulate pressing escape key
-    stdin.write('\u001b'); // ESC key
+    triggerKey('escape', '\u001b');
     await wait();
 
     // Should show error message instead of calling handleAuthSelect
@@ -471,7 +499,7 @@ describe('AuthDialog', () => {
       new Set(),
     );
 
-    const { lastFrame, stdin, unmount } = renderAuthDialog(
+    const { lastFrame, unmount } = renderAuthDialog(
       settings,
       { authError: 'Initial error' },
       { handleAuthSelect },
@@ -481,7 +509,7 @@ describe('AuthDialog', () => {
     expect(lastFrame()).toContain('Initial error');
 
     // Simulate pressing escape key
-    stdin.write('\u001b'); // ESC key
+    triggerKey('escape', '\u001b');
     await wait();
 
     // Should not call handleAuthSelect
@@ -524,7 +552,7 @@ describe('AuthDialog', () => {
       new Set(),
     );
 
-    const { stdin, unmount } = renderAuthDialog(
+    const { unmount } = renderAuthDialog(
       settings,
       {},
       { handleAuthSelect },
@@ -532,7 +560,7 @@ describe('AuthDialog', () => {
     await wait();
 
     // Simulate pressing escape key
-    stdin.write('\u001b'); // ESC key
+    triggerKey('escape', '\u001b');
     await wait();
 
     // Should call handleAuthSelect with undefined to exit

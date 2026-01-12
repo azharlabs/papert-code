@@ -19,7 +19,7 @@ export type { Key };
  */
 export function useKeypress(
   onKeypress: KeypressHandler,
-  { isActive }: { isActive: boolean },
+  { isActive = true }: { isActive?: boolean } = {},
 ) {
   const { subscribe, unsubscribe } = useKeypressContext();
 

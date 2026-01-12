@@ -1,37 +1,71 @@
 /**
  * @license
- * * Copyright 2026 Papert-code
+ * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import yargs from 'yargs';
 import { addCommand } from './add.js';
 import { loadSettings, SettingScope } from '../../config/settings.js';
 
-vi.mock('fs/promises', () => ({
-  readFile: vi.fn(),
-  writeFile: vi.fn(),
-}));
+/**
+ * Vitest hoists vi.mock() calls, so mock factories must be hoist-safe.
+ * Use function declarations (hoisted), not const arrow functions.
+ */
+async function makeFsPromisesMock() {
+  const actual = await vi.importActual<typeof import('node:fs/promises')>(
+    'node:fs/promises',
+  );
 
-vi.mock('os', () => {
-  const homedir = vi.fn(() => '/home/user');
-  return {
-    default: {
-      homedir,
-    },
-    homedir,
+  const mocked = {
+    ...actual,
+    readFile: vi.fn(),
+    writeFile: vi.fn(),
+    mkdir: vi.fn(),
+    access: vi.fn(),
+    stat: vi.fn(),
+    readdir: vi.fn(),
+    rm: vi.fn(),
   };
-});
+
+  return {
+    ...mocked,
+    default: mocked, // important: supports default import usage
+  };
+}
+
+async function makeOsMock() {
+  const actual = await vi.importActual<typeof import('node:os')>('node:os');
+
+  const patched = {
+    ...actual,
+    homedir: vi.fn(() => '/home/user'),
+  };
+
+  return {
+    ...patched,
+    default: patched, // supports default import usage
+  };
+}
+
+vi.mock('node:fs/promises', makeFsPromisesMock);
+vi.mock('fs/promises', makeFsPromisesMock);
+
+vi.mock('node:os', makeOsMock);
+vi.mock('os', makeOsMock);
 
 vi.mock('../../config/settings.js', async () => {
-  const actual = await vi.importActual('../../config/settings.js');
+  const actual = await vi.importActual<typeof import('../../config/settings.js')>(
+    '../../config/settings.js',
+  );
   return {
     ...actual,
     loadSettings: vi.fn(),
   };
 });
 
-const mockedLoadSettings = loadSettings as vi.Mock;
+const mockedLoadSettings = loadSettings as unknown as vi.Mock;
 
 describe('mcp add command', () => {
   let parser: yargs.Argv;
@@ -40,11 +74,13 @@ describe('mcp add command', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-    const yargsInstance = yargs([]).command(addCommand);
-    parser = yargsInstance;
+
+    parser = yargs([]).command(addCommand);
     mockSetValue = vi.fn();
     mockConsoleError = vi.fn();
+
     vi.spyOn(console, 'error').mockImplementation(mockConsoleError);
+
     mockedLoadSettings.mockReturnValue({
       forScope: () => ({ settings: {} }),
       setValue: mockSetValue,
@@ -276,15 +312,10 @@ describe('mcp add command', () => {
       });
 
       it('should write to the WORKSPACE scope, not the USER scope', async () => {
-        await parser.parseAsync(`add my-new-server echo`);
+        await parser.parseAsync('add my-new-server echo');
 
-        // We expect setValue to be called once.
         expect(mockSetValue).toHaveBeenCalledTimes(1);
-
-        // We get the scope that setValue was called with.
         const calledScope = mockSetValue.mock.calls[0][0];
-
-        // We assert that the scope was Workspace, not User.
         expect(calledScope).toBe(SettingScope.Workspace);
       });
     });

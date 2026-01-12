@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -311,9 +311,9 @@ export class Task {
 
     logger.info(
       '[Task] Scheduler output update for tool call ' +
-        toolCallId +
-        ': ' +
-        outputAsText,
+      toolCallId +
+      ': ' +
+      outputAsText,
     );
     const artifact: Artifact = {
       artifactId: `tool-${toolCallId}-output`,
@@ -437,8 +437,8 @@ export class Task {
     ) {
       logger.info(
         '[Task] ' +
-          (this.autoExecute ? '' : 'YOLO mode enabled. ') +
-          'Auto-approving all tool calls.',
+        (this.autoExecute ? '' : 'YOLO mode enabled. ') +
+        'Auto-approving all tool calls.',
       );
       toolCalls.forEach((tc: ToolCall) => {
         if (tc.status === 'awaiting_approval' && tc.confirmationDetails) {
@@ -485,7 +485,7 @@ export class Task {
       onAllToolCallsComplete: this._schedulerAllToolCallsComplete.bind(this),
       onToolCallsUpdate: this._schedulerToolCallsUpdate.bind(this),
       getPreferredEditor: () => undefined,
-      onEditorClose: () => {},
+      onEditorClose: () => { },
       config: this.config,
     });
     return scheduler;
@@ -720,6 +720,16 @@ export class Task {
         logger.info('[Task] Sending agent thought...');
         this._sendThought(event.value, traceId);
         break;
+      case GeminiEventType.ModelInfo: {
+        const modelInfoValue = (event as { value?: string | { model?: string } })
+          .value;
+        if (typeof modelInfoValue === 'string') {
+          this.modelInfo = modelInfoValue;
+        } else if (modelInfoValue?.model) {
+          this.modelInfo = modelInfoValue.model;
+        }
+        break;
+      }
       case GeminiEventType.Citation:
         logger.info('[Task] Received citation from LLM stream.');
         this._sendCitation(event.value);
@@ -820,8 +830,8 @@ export class Task {
         if (confirmationDetails.type === 'edit') {
           const payload = part.data['newContent']
             ? ({
-                newContent: part.data['newContent'] as string,
-              } as ToolConfirmationPayload)
+              newContent: part.data['newContent'] as string,
+            } as ToolConfirmationPayload)
             : undefined;
           this.skipFinalTrueAfterInlineEdit = !!payload;
           try {
@@ -916,7 +926,7 @@ export class Task {
     aborted: AbortSignal,
   ): AsyncGenerator<ServerGeminiStreamEvent> {
     if (completedToolCalls.length === 0) {
-      yield* (async function* () {})(); // Yield nothing
+      yield* (async function* () { })(); // Yield nothing
       return;
     }
 
@@ -1006,7 +1016,7 @@ export class Task {
         };
         this.setTaskStateAndPublishUpdate('working', stateChange); // Reflect potential background activity
       }
-      yield* (async function* () {})(); // Yield nothing
+      yield* (async function* () { })(); // Yield nothing
     } else {
       logger.info(
         '[Task] No relevant parts in user message for LLM interaction or tool confirmation.',
@@ -1014,7 +1024,7 @@ export class Task {
       // If there's no new text and no confirmations, and no pending tools,
       // it implies we might need to signal input required if nothing else is happening.
       // However, the agent.ts will make this determination after waitForPendingTools.
-      yield* (async function* () {})(); // Yield nothing
+      yield* (async function* () { })(); // Yield nothing
     }
   }
 

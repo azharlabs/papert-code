@@ -30,16 +30,25 @@ vi.mock('../utils/debugLogger.js', () => ({
   debugLogger: mockDebugLogger,
 }));
 
-const { mockTrustedHooksManager, mockCoreEvents } = vi.hoisted(() => ({
-  mockTrustedHooksManager: {
-    getUntrustedHooks: vi.fn().mockReturnValue([]),
-    trustHooks: vi.fn(),
-  },
-  mockCoreEvents: {
-    emitConsoleLog: vi.fn(),
-    emitFeedback: vi.fn(),
-  },
-}));
+const { mockTrustedHooksManager, mockCoreEvents } = vi.hoisted(() => {
+  const createTestMessageBus = () => ({
+    publish: vi.fn(),
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+  });
+  const bus = createTestMessageBus();
+  return {
+    mockTrustedHooksManager: {
+      getUntrustedHooks: vi.fn().mockReturnValue([]),
+      trustHooks: vi.fn(),
+    },
+    mockCoreEvents: {
+      ...bus,
+      emitConsoleLog: vi.fn(),
+      emitFeedback: vi.fn(),
+    },
+  };
+});
 
 vi.mock('./trustedHooks.js', () => ({
   TrustedHooksManager: vi.fn(() => mockTrustedHooksManager),
@@ -69,6 +78,8 @@ describe('HookRegistry', () => {
       getDisabledHooks: vi.fn().mockReturnValue([]),
       isTrustedFolder: vi.fn().mockReturnValue(true),
       getProjectRoot: vi.fn().mockReturnValue('/project'),
+      getEnableHooks: vi.fn().mockReturnValue(true),
+      getMessageBus: vi.fn().mockReturnValue(mockCoreEvents),
     } as unknown as Config;
 
     hookRegistry = new HookRegistry(mockConfig);
@@ -680,8 +691,7 @@ describe('HookRegistry', () => {
         '/project',
         projectHooks,
       );
-      expect(mockCoreEvents.emitFeedback).toHaveBeenCalledWith(
-        'warning',
+      expect(mockDebugLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
           'WARNING: The following project-level hooks have been detected',
         ),
@@ -718,7 +728,7 @@ describe('HookRegistry', () => {
 
       await hookRegistry.initialize();
 
-      expect(mockCoreEvents.emitFeedback).not.toHaveBeenCalled();
+      expect(mockDebugLogger.warn).not.toHaveBeenCalled();
       expect(mockTrustedHooksManager.trustHooks).not.toHaveBeenCalled();
     });
 

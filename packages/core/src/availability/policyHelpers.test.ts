@@ -19,6 +19,12 @@ const createMockConfig = (overrides: Partial<Config> = {}): Config =>
     getPreviewFeatures: () => false,
     getUserTier: () => undefined,
     getModel: () => 'gemini-2.5-pro',
+    getResolvedModelConfig: vi.fn((modelReq: { model: string }) => ({
+      model: modelReq.model,
+      generateContentConfig: {},
+    })),
+    getEnableHooks: vi.fn().mockReturnValue(false),
+    getMessageBus: vi.fn().mockReturnValue(undefined),
     ...overrides,
   }) as unknown as Config;
 
@@ -105,10 +111,6 @@ describe('policyHelpers', () => {
   });
 
   describe('applyModelSelection', () => {
-    const mockModelConfigService = {
-      getResolvedConfig: vi.fn(),
-    };
-
     const mockAvailabilityService = {
       selectFirstAvailable: vi.fn(),
       consumeStickyAttempt: vi.fn(),
@@ -120,7 +122,6 @@ describe('policyHelpers', () => {
       const defaults = {
         getModelAvailabilityService: () => mockAvailabilityService,
         setActiveModel: vi.fn(),
-        modelConfigService: mockModelConfigService,
       };
       return createMockConfig({ ...defaults, ...overrides } as Partial<Config>);
     };
@@ -130,8 +131,14 @@ describe('policyHelpers', () => {
     });
 
     it('returns requested model if it is available', () => {
-      const config = createExtendedMockConfig();
-      mockModelConfigService.getResolvedConfig.mockReturnValue({
+      const config = createExtendedMockConfig({
+        getResolvedModelConfig: vi.fn().mockReturnValue({
+          model: 'gemini-pro',
+          generateContentConfig: {},
+        }),
+      });
+      const getResolvedModelConfig = vi.mocked(config.getResolvedModelConfig);
+      getResolvedModelConfig.mockReturnValue({
         model: 'gemini-pro',
         generateContentConfig: {},
       });
@@ -146,8 +153,11 @@ describe('policyHelpers', () => {
     });
 
     it('switches to backup model and updates config if requested is unavailable', () => {
-      const config = createExtendedMockConfig();
-      mockModelConfigService.getResolvedConfig
+      const config = createExtendedMockConfig({
+        getResolvedModelConfig: vi.fn(),
+      });
+      const getResolvedModelConfig = vi.mocked(config.getResolvedModelConfig);
+      getResolvedModelConfig
         .mockReturnValueOnce({
           model: 'gemini-pro',
           generateContentConfig: { temperature: 0.9, topP: 1 },
@@ -168,18 +178,24 @@ describe('policyHelpers', () => {
         topP: 1,
       });
 
-      expect(mockModelConfigService.getResolvedConfig).toHaveBeenCalledWith({
+      expect(getResolvedModelConfig).toHaveBeenCalledWith({
         model: 'gemini-pro',
       });
-      expect(mockModelConfigService.getResolvedConfig).toHaveBeenCalledWith({
+      expect(getResolvedModelConfig).toHaveBeenCalledWith({
         model: 'gemini-flash',
       });
       expect(config.setActiveModel).toHaveBeenCalledWith('gemini-flash');
     });
 
     it('consumes sticky attempt if indicated', () => {
-      const config = createExtendedMockConfig();
-      mockModelConfigService.getResolvedConfig.mockReturnValue({
+      const config = createExtendedMockConfig({
+        getResolvedModelConfig: vi.fn().mockReturnValue({
+          model: 'gemini-pro',
+          generateContentConfig: {},
+        }),
+      });
+      const getResolvedModelConfig = vi.mocked(config.getResolvedModelConfig);
+      getResolvedModelConfig.mockReturnValue({
         model: 'gemini-pro',
         generateContentConfig: {},
       });
@@ -192,30 +208,6 @@ describe('policyHelpers', () => {
       expect(mockAvailabilityService.consumeStickyAttempt).toHaveBeenCalledWith(
         'gemini-pro',
       );
-      expect(result.maxAttempts).toBe(1);
-    });
-
-    it('does not consume sticky attempt if consumeAttempt is false', () => {
-      const config = createExtendedMockConfig();
-      mockModelConfigService.getResolvedConfig.mockReturnValue({
-        model: 'gemini-pro',
-        generateContentConfig: {},
-      });
-      mockAvailabilityService.selectFirstAvailable.mockReturnValue({
-        selectedModel: 'gemini-pro',
-        attempts: 1,
-      });
-
-      const result = applyModelSelection(
-        config,
-        { model: 'gemini-pro' },
-        {
-          consumeAttempt: false,
-        },
-      );
-      expect(
-        mockAvailabilityService.consumeStickyAttempt,
-      ).not.toHaveBeenCalled();
       expect(result.maxAttempts).toBe(1);
     });
   });

@@ -41,7 +41,7 @@ export default defineConfig({
     },
     server: {
       deps: {
-        inline: [/@google\/gemini-cli-core/],
+        inline: [/@papert-code\/papert-code-core/],
       },
     },
   },

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Google LLC
+ * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,7 +9,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { loadSettings, USER_SETTINGS_PATH } from './settings.js';
-import { debugLogger } from '@papert-code/papert-code-core';
+import { debugLogger, PAPERT_DIR } from '@papert-code/papert-code-core';
 
 const mocks = vi.hoisted(() => {
   const suffix = Math.random().toString(36).slice(2);
@@ -27,13 +27,18 @@ vi.mock('node:os', async (importOriginal) => {
   };
 });
 
-vi.mock('@papert-code/papert-code-core', () => ({
-  GEMINI_DIR: '.gemini',
-  debugLogger: {
-    error: vi.fn(),
-  },
-  getErrorMessage: (error: unknown) => String(error),
-}));
+vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@papert-code/papert-code-core')>();
+
+  return {
+    ...actual,
+    debugLogger: {
+      ...actual.debugLogger,
+      error: vi.fn(),
+    },
+  };
+});
 
 describe('loadSettings', () => {
   const mockHomeDir = path.join(os.tmpdir(), `gemini-home-${mocks.suffix}`);
@@ -41,8 +46,8 @@ describe('loadSettings', () => {
     os.tmpdir(),
     `gemini-workspace-${mocks.suffix}`,
   );
-  const mockGeminiHomeDir = path.join(mockHomeDir, '.gemini');
-  const mockGeminiWorkspaceDir = path.join(mockWorkspaceDir, '.gemini');
+  const mockGeminiHomeDir = path.join(mockHomeDir, PAPERT_DIR);
+  const mockGeminiWorkspaceDir = path.join(mockWorkspaceDir, PAPERT_DIR);
 
   beforeEach(() => {
     vi.clearAllMocks();

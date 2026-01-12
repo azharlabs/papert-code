@@ -100,38 +100,38 @@ describe('retryWithBackoff', () => {
     expect(mockFn).toHaveBeenCalledTimes(3);
   });
 
-  it('should default to 5 maxAttempts if no options are provided', async () => {
-    // This function will fail more than 5 times to ensure all retries are used.
+  it('should default to 3 maxAttempts if no options are provided', async () => {
+    // This function will fail more than 3 times to ensure all retries are used.
     const mockFn = createFailingFunction(10);
 
     const promise = retryWithBackoff(mockFn);
 
-    // Expect it to fail with the error from the 5th attempt.
+    // Expect it to fail with the error from the 3rd attempt.
     // eslint-disable-next-line vitest/valid-expect
     const assertionPromise = expect(promise).rejects.toThrow(
-      'Simulated error attempt 5',
+      'Simulated error attempt 3',
     );
     await vi.runAllTimersAsync();
     await assertionPromise;
 
-    expect(mockFn).toHaveBeenCalledTimes(5);
+    expect(mockFn).toHaveBeenCalledTimes(3);
   });
 
-  it('should default to 5 maxAttempts if options.maxAttempts is undefined', async () => {
-    // This function will fail more than 5 times to ensure all retries are used.
+  it('should default to 3 maxAttempts if options.maxAttempts is undefined', async () => {
+    // This function will fail more than 3 times to ensure all retries are used.
     const mockFn = createFailingFunction(10);
 
     const promise = retryWithBackoff(mockFn, { maxAttempts: undefined });
 
-    // Expect it to fail with the error from the 5th attempt.
+    // Expect it to fail with the error from the 3rd attempt.
     // eslint-disable-next-line vitest/valid-expect
     const assertionPromise = expect(promise).rejects.toThrow(
-      'Simulated error attempt 5',
+      'Simulated error attempt 3',
     );
     await vi.runAllTimersAsync();
     await assertionPromise;
 
-    expect(mockFn).toHaveBeenCalledTimes(5);
+    expect(mockFn).toHaveBeenCalledTimes(3);
   });
 
   it('should not retry if shouldRetry returns false', async () => {
@@ -318,37 +318,40 @@ describe('retryWithBackoff', () => {
       // Verify callback was called with correct auth type
       expect(fallbackCallback).toHaveBeenCalledWith('oauth-personal');
 
-      // Should retry again after fallback
-      expect(mockFn).toHaveBeenCalledTimes(3); // 2 initial attempts + 1 after fallback
+      // Fallback resets attempt counter, so we expect 3 failures + 1 success.
+      expect(mockFn).toHaveBeenCalledTimes(4);
     });
 
-    it('should NOT trigger fallback for API key users', async () => {
-      const fallbackCallback = vi.fn();
+    it('should trigger fallback for API key users', async () => {
+      const fallbackCallback = vi.fn().mockResolvedValue('gemini-2.5-flash');
 
-      const mockFn = vi.fn(async () => {
-        const error: HttpError = new Error('Rate limit exceeded');
-        error.status = 429;
-        throw error;
+      let fallbackOccurred = false;
+      const mockFn = vi.fn().mockImplementation(async () => {
+        if (!fallbackOccurred) {
+          const error: HttpError = new Error('Rate limit exceeded');
+          error.status = 429;
+          throw error;
+        }
+        return 'success';
       });
 
       const promise = retryWithBackoff(mockFn, {
         maxAttempts: 3,
         initialDelayMs: 100,
-        onPersistent429: fallbackCallback,
+        onPersistent429: async (authType?: string) => {
+          fallbackOccurred = true;
+          return await fallbackCallback(authType);
+        },
         authType: 'gemini-api-key',
       });
 
-      // Handle the promise properly to avoid unhandled rejections
-      const resultPromise = promise.catch((error) => error);
       await vi.runAllTimersAsync();
-      const result = await resultPromise;
 
-      // Should fail after all retries without fallback
-      expect(result).toBeInstanceOf(Error);
-      expect(result.message).toBe('Rate limit exceeded');
+      await expect(promise).resolves.toBe('success');
+      expect(fallbackCallback).toHaveBeenCalledWith('gemini-api-key');
 
-      // Callback should not be called for API key users
-      expect(fallbackCallback).not.toHaveBeenCalled();
+      // Fallback resets attempt counter, so we expect 3 failures + 1 success.
+      expect(mockFn).toHaveBeenCalledTimes(4);
     });
 
     it('should reset attempt counter and continue after successful fallback', async () => {

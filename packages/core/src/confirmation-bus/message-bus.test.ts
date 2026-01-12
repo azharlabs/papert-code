@@ -54,7 +54,7 @@ describe('MessageBus', () => {
     });
 
     it('should emit confirmation response when policy allows', async () => {
-      vi.spyOn(policyEngine, 'check').mockResolvedValue(
+      vi.spyOn(policyEngine, 'check').mockReturnValue(
         PolicyDecision.ALLOW,
       );
 
@@ -81,7 +81,7 @@ describe('MessageBus', () => {
     });
 
     it('should emit rejection and response when policy denies', async () => {
-      vi.spyOn(policyEngine, 'check').mockResolvedValue(PolicyDecision.DENY);
+      vi.spyOn(policyEngine, 'check').mockReturnValue(PolicyDecision.DENY);
 
       const responseHandler = vi.fn();
       const rejectionHandler = vi.fn();
@@ -117,7 +117,7 @@ describe('MessageBus', () => {
     });
 
     it('should pass through to UI when policy says ASK_USER', async () => {
-      vi.spyOn(policyEngine, 'check').mockResolvedValue(
+      vi.spyOn(policyEngine, 'check').mockReturnValue(
         PolicyDecision.ASK_USER,
       );
 
@@ -215,9 +215,9 @@ describe('MessageBus', () => {
       messageBus.on('error', errorHandler);
 
       // Mock policyEngine to throw an error
-      vi.spyOn(policyEngine, 'check').mockRejectedValue(
-        new Error('Policy check failed'),
-      );
+      vi.spyOn(policyEngine, 'check').mockImplementation(() => {
+        throw new Error('Policy check failed');
+      });
 
       const request: ToolConfirmationRequest = {
         type: MessageBusType.TOOL_CONFIRMATION_REQUEST,

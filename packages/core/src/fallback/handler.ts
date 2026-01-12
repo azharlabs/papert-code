@@ -63,7 +63,7 @@ async function handlePolicyDrivenFallback(
 
   let fallbackModel: string;
   if (!candidates.length) {
-    fallbackModel = failedModel;
+    return null;
   } else {
     const selection = availability.selectFirstAvailable(
       candidates.map((policy) => policy.model),

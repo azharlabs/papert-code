@@ -9,6 +9,33 @@ import { waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { FolderTrustDialog, FolderTrustChoice } from './FolderTrustDialog.js';
 import * as processUtils from '../../utils/processUtils.js';
+import { act } from 'react';
+import type { Key } from '../hooks/useKeypress.js';
+
+const keypressHandlers = new Set<(key: Key) => void>();
+vi.mock('../hooks/useKeypress.js', () => ({
+  useKeypress: (handler: (key: Key) => void, options?: { isActive: boolean }) => {
+    if (options?.isActive === false) {
+      return;
+    }
+    keypressHandlers.add(handler);
+  },
+}));
+
+const triggerKey = (name: string, sequence = name) => {
+  act(() => {
+    keypressHandlers.forEach((handler) =>
+      handler({
+        name,
+        ctrl: false,
+        meta: false,
+        shift: false,
+        paste: false,
+        sequence,
+      }),
+    );
+  });
+};
 
 vi.mock('../../utils/processUtils.js', () => ({
   relaunchApp: vi.fn(),
@@ -31,6 +58,7 @@ describe('FolderTrustDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedCwd.mockReturnValue('/home/user/project');
+    keypressHandlers.clear();
   });
 
   it('should render the dialog with title and description', () => {
@@ -46,11 +74,11 @@ describe('FolderTrustDialog', () => {
 
   it('should call onSelect with DO_NOT_TRUST when escape is pressed and not restarting', async () => {
     const onSelect = vi.fn();
-    const { stdin } = renderWithProviders(
+    renderWithProviders(
       <FolderTrustDialog onSelect={onSelect} isRestarting={false} />,
     );
 
-    stdin.write('\x1b'); // escape key
+    triggerKey('escape', '\x1b');
 
     await waitFor(() => {
       expect(onSelect).toHaveBeenCalledWith(FolderTrustChoice.DO_NOT_TRUST);
@@ -59,11 +87,11 @@ describe('FolderTrustDialog', () => {
 
   it('should not call onSelect when escape is pressed and is restarting', async () => {
     const onSelect = vi.fn();
-    const { stdin } = renderWithProviders(
+    renderWithProviders(
       <FolderTrustDialog onSelect={onSelect} isRestarting={true} />,
     );
 
-    stdin.write('\x1b'); // escape key
+    triggerKey('escape', '\x1b');
 
     await waitFor(() => {
       expect(onSelect).not.toHaveBeenCalled();
@@ -90,11 +118,11 @@ describe('FolderTrustDialog', () => {
   });
 
   it('should not call process.exit when "r" is pressed and isRestarting is false', async () => {
-    const { stdin } = renderWithProviders(
+    renderWithProviders(
       <FolderTrustDialog onSelect={vi.fn()} isRestarting={false} />,
     );
 
-    stdin.write('r');
+    triggerKey('r');
 
     await waitFor(() => {
       expect(mockedExit).not.toHaveBeenCalled();

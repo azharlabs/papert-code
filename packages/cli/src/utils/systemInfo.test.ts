@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Papert
+ * Copyright 2025 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -15,17 +15,20 @@ import {
 import type { CommandContext } from '../ui/commands/types.js';
 import { createMockCommandContext } from '../test-utils/mockCommandContext.js';
 import * as child_process from 'node:child_process';
-import os from 'node:os';
+import * as os from 'node:os';
 import { IdeClient, getVersion } from '@papert-code/papert-code-core';
 import type { ExecSyncOptions } from 'node:child_process';
 
 vi.mock('node:child_process');
 
-vi.mock('node:os', () => ({
-  default: {
-    release: vi.fn(),
-  },
-}));
+vi.mock('node:os', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:os')>();
+  return {
+    ...actual,
+    homedir: vi.fn(() => '/tmp'),
+    release: vi.fn(() => '25.2.0'),
+  };
+});
 
 vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
   const actual =
@@ -71,7 +74,7 @@ describe('systemInfo', () => {
 
     vi.mocked(getVersion).mockResolvedValue('test-version');
     vi.mocked(child_process.execSync).mockImplementation(
-      (command: string, options?: ExecSyncOptions) => {
+      (_command: string, options?: ExecSyncOptions) => {
         if (
           options &&
           typeof options === 'object' &&
@@ -83,30 +86,41 @@ describe('systemInfo', () => {
         return Buffer.from('10.0.0', 'utf-8');
       },
     );
-    vi.mocked(os.release).mockReturnValue('22.0.0');
+
+    vi.mocked(os.release).mockReturnValue('25.2.0');
+
     process.env['GOOGLE_CLOUD_PROJECT'] = 'test-gcp-project';
+
     Object.defineProperty(process, 'platform', {
       value: 'test-os',
+      configurable: true,
     });
     Object.defineProperty(process, 'arch', {
       value: 'x64',
+      configurable: true,
     });
     Object.defineProperty(process, 'version', {
       value: 'v20.0.0',
+      configurable: true,
     });
   });
 
   afterEach(() => {
     vi.unstubAllEnvs();
+
     Object.defineProperty(process, 'platform', {
       value: originalPlatform,
+      configurable: true,
     });
     Object.defineProperty(process, 'arch', {
       value: originalArch,
+      configurable: true,
     });
     Object.defineProperty(process, 'version', {
       value: originalVersion,
+      configurable: true,
     });
+
     process.env = originalEnv;
     vi.clearAllMocks();
     vi.resetAllMocks();
@@ -115,7 +129,7 @@ describe('systemInfo', () => {
   describe('getNpmVersion', () => {
     it('should return npm version when available', async () => {
       vi.mocked(child_process.execSync).mockImplementation(
-        (command: string, options?: ExecSyncOptions) => {
+        (_command: string, options?: ExecSyncOptions) => {
           if (
             options &&
             typeof options === 'object' &&
@@ -127,6 +141,7 @@ describe('systemInfo', () => {
           return Buffer.from('10.0.0', 'utf-8');
         },
       );
+
       const version = await getNpmVersion();
       expect(version).toBe('10.0.0');
     });
@@ -135,6 +150,7 @@ describe('systemInfo', () => {
       vi.mocked(child_process.execSync).mockImplementation(() => {
         throw new Error('npm not found');
       });
+
       const version = await getNpmVersion();
       expect(version).toBe('unknown');
     });
@@ -197,13 +213,14 @@ describe('systemInfo', () => {
 
   describe('getSystemInfo', () => {
     it('should collect all system information', async () => {
-      // Ensure SANDBOX is not set for this test
       delete process.env['SANDBOX'];
+
       vi.mocked(IdeClient.getInstance).mockResolvedValue({
         getDetectedIdeDisplayName: vi.fn().mockReturnValue('test-ide'),
       } as unknown as IdeClient);
+
       vi.mocked(child_process.execSync).mockImplementation(
-        (command: string, options?: ExecSyncOptions) => {
+        (_command: string, options?: ExecSyncOptions) => {
           if (
             options &&
             typeof options === 'object' &&
@@ -222,7 +239,7 @@ describe('systemInfo', () => {
         cliVersion: 'test-version',
         osPlatform: 'test-os',
         osArch: 'x64',
-        osRelease: '22.0.0',
+        osRelease: '25.2.0',
         nodeVersion: 'v20.0.0',
         npmVersion: '10.0.0',
         sandboxEnv: 'no sandbox',
@@ -235,6 +252,7 @@ describe('systemInfo', () => {
 
     it('should handle missing config gracefully', async () => {
       mockContext.services.config = null;
+
       vi.mocked(IdeClient.getInstance).mockResolvedValue({
         getDetectedIdeDisplayName: vi.fn().mockReturnValue(''),
       } as unknown as IdeClient);
@@ -251,8 +269,9 @@ describe('systemInfo', () => {
       vi.mocked(IdeClient.getInstance).mockResolvedValue({
         getDetectedIdeDisplayName: vi.fn().mockReturnValue('test-ide'),
       } as unknown as IdeClient);
+
       vi.mocked(child_process.execSync).mockImplementation(
-        (command: string, options?: ExecSyncOptions) => {
+        (_command: string, options?: ExecSyncOptions) => {
           if (
             options &&
             typeof options === 'object' &&
@@ -266,7 +285,7 @@ describe('systemInfo', () => {
       );
 
       const { AuthType } = await import('@papert-code/papert-code-core');
-      // Update the mock context to use OpenAI auth
+
       mockContext.services.settings.merged.security!.auth!.selectedType =
         AuthType.USE_OPENAI;
 
@@ -279,11 +298,13 @@ describe('systemInfo', () => {
 
     it('should use sandbox env without prefix for bug reports', async () => {
       process.env['SANDBOX'] = 'papert-code-test-sandbox';
+
       vi.mocked(IdeClient.getInstance).mockResolvedValue({
         getDetectedIdeDisplayName: vi.fn().mockReturnValue(''),
       } as unknown as IdeClient);
+
       vi.mocked(child_process.execSync).mockImplementation(
-        (command: string, options?: ExecSyncOptions) => {
+        (_command: string, options?: ExecSyncOptions) => {
           if (
             options &&
             typeof options === 'object' &&
@@ -305,8 +326,9 @@ describe('systemInfo', () => {
       vi.mocked(IdeClient.getInstance).mockResolvedValue({
         getDetectedIdeDisplayName: vi.fn().mockReturnValue(''),
       } as unknown as IdeClient);
+
       vi.mocked(child_process.execSync).mockImplementation(
-        (command: string, options?: ExecSyncOptions) => {
+        (_command: string, options?: ExecSyncOptions) => {
           if (
             options &&
             typeof options === 'object' &&

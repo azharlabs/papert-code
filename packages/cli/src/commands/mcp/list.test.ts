@@ -1,6 +1,6 @@
 /**
  * @license
- * * Copyright 2026 Papert-code
+ * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -21,37 +21,59 @@ const mockDefaultServers = {
 vi.mock('../../config/settings.js', () => ({
   loadSettings: vi.fn(),
 }));
+
 vi.mock('../../config/extension.js', () => ({
   loadExtensions: vi.fn(),
   ExtensionStorage: {
     getUserExtensionsDir: vi.fn(),
   },
 }));
+
 vi.mock('../../config/defaultMcpServers.js', () => ({
   getDefaultMcpServers: vi.fn(() => ({ ...mockDefaultServers })),
 }));
-vi.mock('@papert-code/papert-code-core', () => ({
-  createTransport: vi.fn(),
-  MCPServerStatus: {
-    CONNECTED: 'CONNECTED',
-    CONNECTING: 'CONNECTING',
-    DISCONNECTED: 'DISCONNECTED',
-  },
-  Storage: vi.fn().mockImplementation((_cwd: string) => ({
+
+vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@papert-code/papert-code-core')>();
+
+  // ✅ Storage needs BOTH constructor usage + static helpers used by SkillStorage
+  const StorageCtor = vi.fn().mockImplementation((_cwd: string) => ({
     getGlobalSettingsPath: () => '/tmp/papert/settings.json',
     getWorkspaceSettingsPath: () => '/tmp/papert/workspace-settings.json',
     getProjectTempDir: () => '/test/home/.papert/tmp/mocked_hash',
-  })),
-  PAPERT_CONFIG_DIR: '.papert',
-  getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : String(e)),
-}));
+  }));
+
+  // ✅ static APIs used by src/config/skill.ts
+  StorageCtor.getUserSkillsDir = vi.fn(() => '/tmp/papert/skills');
+  StorageCtor.getWorkspaceSkillsDir = vi.fn(() => '/tmp/papert/workspace-skills');
+  StorageCtor.getUserPapertDir = vi.fn(() => '/tmp/papert');
+  StorageCtor.getGlobalPapertDir = vi.fn(() => '/tmp/papert');
+  StorageCtor.getPapertConfigDir = vi.fn(() => '/tmp/papert/.papert');
+
+  return {
+    ...actual,
+    createTransport: vi.fn(),
+    MCPServerStatus: {
+      CONNECTED: 'CONNECTED',
+      CONNECTING: 'CONNECTING',
+      DISCONNECTED: 'DISCONNECTED',
+    },
+    Storage: StorageCtor as any,
+
+    PAPERT_CONFIG_DIR: '.papert',
+    PAPERT_DIR: '/tmp/papert', // required by src/config/skill.ts
+    getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : String(e)),
+  };
+});
+
 vi.mock('@modelcontextprotocol/sdk/client/index.js');
 
-const mockedExtensionStorage = ExtensionStorage as vi.Mock;
-const mockedLoadSettings = loadSettings as vi.Mock;
-const mockedLoadExtensions = loadExtensions as vi.Mock;
-const mockedCreateTransport = createTransport as vi.Mock;
-const MockedClient = Client as vi.Mock;
+const mockedExtensionStorage = ExtensionStorage as unknown as vi.Mock;
+const mockedLoadSettings = loadSettings as unknown as vi.Mock;
+const mockedLoadExtensions = loadExtensions as unknown as vi.Mock;
+const mockedCreateTransport = createTransport as unknown as vi.Mock;
+const MockedClient = Client as unknown as vi.Mock;
 
 interface MockClient {
   connect: vi.Mock;
@@ -71,7 +93,7 @@ describe('mcp list command', () => {
   beforeEach(() => {
     vi.resetAllMocks();
 
-    consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+    consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     mockTransport = { close: vi.fn() };
     mockClient = {
@@ -82,6 +104,7 @@ describe('mcp list command', () => {
 
     MockedClient.mockImplementation(() => mockClient);
     mockedCreateTransport.mockResolvedValue(mockTransport);
+
     mockedLoadExtensions.mockReturnValue([]);
     mockedExtensionStorage.getUserExtensionsDir.mockReturnValue(
       '/mocked/extensions/dir',

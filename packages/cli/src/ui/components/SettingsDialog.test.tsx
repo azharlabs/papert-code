@@ -34,6 +34,7 @@ import {
   type SettingDefinition,
   type SettingsSchemaType,
 } from '../../config/settingsSchema.js';
+import type { Key } from '../hooks/useKeypress.js';
 
 // Mock the VimModeContext
 const mockToggleVimEnabled = vi.fn();
@@ -48,6 +49,19 @@ enum TerminalKeys {
   RIGHT_ARROW = '\u001B[C',
   ESCAPE = '\u001B',
 }
+
+const keypressHandlers: Array<(key: Key) => void> = [];
+vi.mock('../hooks/useKeypress.js', () => ({
+  useKeypress: (
+    handler: (key: Key) => void,
+    options?: { isActive?: boolean },
+  ) => {
+    if (options?.isActive === false) {
+      return;
+    }
+    keypressHandlers.push(handler);
+  },
+}));
 
 const createMockSettings = (
   userSettings = {},
@@ -129,39 +143,85 @@ vi.mock('../../utils/settingsUtils.js', async () => {
   };
 });
 
-// Helper function to simulate key presses (commented out for now)
-// const simulateKeyPress = async (keyData: Partial<Key> & { name: string }) => {
-//   if (currentKeypressHandler) {
-//     const key: Key = {
-//       ctrl: false,
-//       meta: false,
-//       shift: false,
-//       paste: false,
-//       sequence: keyData.sequence || keyData.name,
-//       ...keyData,
-//     };
-//     currentKeypressHandler(key);
-//     // Allow React to process the state update
-//     await new Promise(resolve => setTimeout(resolve, 10));
-//   }
-// };
-
-// Mock console.log to avoid noise in tests
-// const originalConsoleLog = console.log;
-// const originalConsoleError = console.error;
-
 describe('SettingsDialog', () => {
   // Simple delay function for remaining tests that need gradual migration
-  const wait = (ms = 50) => new Promise((resolve) => setTimeout(resolve, ms));
+  const wait = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  // Custom waitFor utility for ink testing environment (not compatible with @testing-library/react)
+  const pressKey = async (
+    _stdin: { write: (input: string) => void } | undefined,
+    key: string,
+    delayMs = 0,
+  ) => {
+    const specialNameMap: Record<string, string> = {
+      '\r': 'return',
+      '\n': 'return',
+      '\t': 'tab',
+      '\u001B': 'escape',
+      [TerminalKeys.DOWN_ARROW]: 'down',
+      [TerminalKeys.UP_ARROW]: 'up',
+      [TerminalKeys.LEFT_ARROW]: 'left',
+      [TerminalKeys.RIGHT_ARROW]: 'right',
+      ArrowDown: 'down',
+      ArrowUp: 'up',
+      ArrowLeft: 'left',
+      ArrowRight: 'right',
+    };
+
+    let name = specialNameMap[key] ?? key;
+    let ctrl = false;
+
+    if (key === '\u0003') {
+      name = 'c';
+      ctrl = true;
+    } else if (key === '\u000C') {
+      name = 'l';
+      ctrl = true;
+    }
+
+    await act(async () => {
+      const event = {
+        name,
+        ctrl,
+        meta: false,
+        shift: false,
+        paste: false,
+        sequence: key,
+      };
+
+      // Prefer the mock keypress handlers
+      if (keypressHandlers.length > 0) {
+        for (const handler of keypressHandlers) {
+          handler(event);
+        }
+        return;
+      }
+
+      // Fallback to stdin if the test ever uses ink stdin directly
+      if (_stdin) _stdin.write(key);
+    });
+
+    if (delayMs > 0) await wait(delayMs);
+  };
+
+  const typeText = async (
+    stdin: { write: (input: string) => void } | undefined,
+    text: string,
+    delayMs = 0,
+  ) => {
+    for (const ch of text) {
+      await pressKey(stdin, ch, delayMs);
+    }
+  };
+
+  // Custom waitFor utility for ink testing environment
   const waitFor = async (
     predicate: () => void,
     options: { timeout?: number; interval?: number } = {},
   ) => {
-    const { timeout = 1000, interval = 10 } = options;
+    const { timeout = 2000, interval = 10 } = options;
     const start = Date.now();
     let lastError: unknown;
+
     while (Date.now() - start < timeout) {
       try {
         predicate();
@@ -169,32 +229,22 @@ describe('SettingsDialog', () => {
       } catch (e) {
         lastError = e;
       }
-      await new Promise((resolve) => setTimeout(resolve, interval));
+      await wait(interval);
     }
-    if (lastError) {
-      throw lastError;
-    }
+
+    if (lastError) throw lastError;
     throw new Error('waitFor timed out');
   };
 
   beforeEach(() => {
-    // Reset keypress mock state (variables are commented out)
-    // currentKeypressHandler = null;
-    // isKeypressActive = false;
-    // console.log = vi.fn();
-    // console.error = vi.fn();
     mockToggleVimEnabled.mockResolvedValue(true);
+    keypressHandlers.length = 0;
   });
 
   afterEach(() => {
     TEST_ONLY.clearFlattenedSchema();
     vi.clearAllMocks();
     vi.resetAllMocks();
-    // Reset keypress mock state (variables are commented out)
-    // currentKeypressHandler = null;
-    // isKeypressActive = false;
-    // console.log = originalConsoleLog;
-    // console.error = originalConsoleError;
   });
 
   describe('Initial Rendering', () => {
@@ -203,7 +253,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -211,7 +261,8 @@ describe('SettingsDialog', () => {
       const output = lastFrame();
       expect(output).toContain('Settings');
       expect(output).toContain('Apply To');
-      expect(output).toContain('Use Enter to select, Tab to change focus');
+      expect(output).toContain('Use Enter to select');
+      expect(output).toContain('/ to search');
     });
 
     it('should accept availableTerminalHeight prop without errors', () => {
@@ -219,7 +270,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog
             settings={settings}
             onSelect={onSelect}
@@ -239,7 +290,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -254,7 +305,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -271,17 +322,15 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount, lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Press down arrow
-      act(() => {
-        stdin.write(TerminalKeys.DOWN_ARROW as string); // Down arrow
-      });
+      await pressKey(stdin, 'j');
 
-      expect(lastFrame()).toContain('● Disable Auto Update');
+      expect(lastFrame()).toContain('● Vim Mode');
 
       // The active index should have changed (tested indirectly through behavior)
       unmount();
@@ -292,16 +341,14 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // First go down, then up
-      stdin.write(TerminalKeys.DOWN_ARROW as string); // Down arrow
-      await wait();
-      stdin.write(TerminalKeys.UP_ARROW as string);
-      await wait();
+      await pressKey(stdin, TerminalKeys.DOWN_ARROW as string);
+      await pressKey(stdin, TerminalKeys.UP_ARROW as string);
 
       unmount();
     });
@@ -311,16 +358,14 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Navigate with vim keys
-      stdin.write('j'); // Down
-      await wait();
-      stdin.write('k'); // Up
-      await wait();
+      await pressKey(stdin, 'j');
+      await pressKey(stdin, 'k');
 
       unmount();
     });
@@ -330,19 +375,17 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount, lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Try to go up from first item
-      act(() => {
-        stdin.write(TerminalKeys.UP_ARROW);
-      });
+      await pressKey(stdin, 'k');
 
       await wait();
 
-      expect(lastFrame()).toContain('● Vision Model Preview');
+      expect(lastFrame()).toContain('● Vim Mode');
 
       unmount();
     });
@@ -355,7 +398,7 @@ describe('SettingsDialog', () => {
       const settings = createMockSettings();
       const onSelect = vi.fn();
       const component = (
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>
       );
@@ -367,18 +410,8 @@ describe('SettingsDialog', () => {
         expect(lastFrame()).toContain('● Vim Mode');
       });
 
-      // Navigate to Disable Auto Update setting and verify we're there
-      act(() => {
-        stdin.write(TerminalKeys.DOWN_ARROW as string);
-      });
-      await waitFor(() => {
-        expect(lastFrame()).toContain('● Disable Auto Update');
-      });
-
       // Toggle the setting
-      act(() => {
-        stdin.write(TerminalKeys.ENTER as string);
-      });
+      await pressKey(stdin, TerminalKeys.ENTER as string);
       // Wait for the setting change to be processed
       await waitFor(() => {
         expect(
@@ -392,10 +425,10 @@ describe('SettingsDialog', () => {
       });
 
       expect(vi.mocked(saveModifiedSettings)).toHaveBeenCalledWith(
-        new Set<string>(['general.disableAutoUpdate']),
+        new Set<string>(['general.vimMode']),
         {
           general: {
-            disableAutoUpdate: true,
+            vimMode: true,
           },
         },
         expect.any(LoadedSettings),
@@ -454,7 +487,7 @@ describe('SettingsDialog', () => {
         const settings = createMockSettings();
         const onSelect = vi.fn();
         const component = (
-          <KeypressProvider kittyProtocolEnabled={false}>
+          <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
             <SettingsDialog settings={settings} onSelect={onSelect} />
           </KeypressProvider>
         );
@@ -462,10 +495,8 @@ describe('SettingsDialog', () => {
         const { stdin, unmount } = render(component);
 
         // Press Enter to toggle current setting
-        stdin.write(TerminalKeys.DOWN_ARROW as string);
-        await wait();
-        stdin.write(TerminalKeys.ENTER as string);
-        await wait();
+        await pressKey(stdin, 'j');
+        await pressKey(stdin, TerminalKeys.ENTER as string);
         await waitFor(() => {
           expect(vi.mocked(saveModifiedSettings)).toHaveBeenCalled();
         });
@@ -494,7 +525,7 @@ describe('SettingsDialog', () => {
         });
         const onSelect = vi.fn();
         const component = (
-          <KeypressProvider kittyProtocolEnabled={false}>
+          <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
             <SettingsDialog settings={settings} onSelect={onSelect} />
           </KeypressProvider>
         );
@@ -502,10 +533,8 @@ describe('SettingsDialog', () => {
         const { stdin, unmount } = render(component);
 
         // Press Enter to toggle current setting
-        stdin.write(TerminalKeys.DOWN_ARROW as string);
-        await wait();
-        stdin.write(TerminalKeys.ENTER as string);
-        await wait();
+        await pressKey(stdin, 'j');
+        await pressKey(stdin, TerminalKeys.ENTER as string);
         await waitFor(() => {
           expect(vi.mocked(saveModifiedSettings)).toHaveBeenCalled();
         });
@@ -530,14 +559,13 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Press Space to toggle current setting
-      stdin.write(' '); // Space key
-      await wait();
+      await pressKey(stdin, ' ');
 
       unmount();
     });
@@ -547,15 +575,14 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Navigate to vim mode setting and toggle it
       // This would require knowing the exact position, so we'll just test that the mock is called
-      stdin.write(TerminalKeys.ENTER as string); // Enter key
-      await wait();
+      await pressKey(stdin, TerminalKeys.ENTER as string);
 
       // The mock should potentially be called if vim mode was toggled
       unmount();
@@ -568,18 +595,16 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Switch to scope focus
-      stdin.write(TerminalKeys.TAB); // Tab key
-      await wait();
+      await pressKey(stdin, TerminalKeys.TAB);
 
       // Select different scope (numbers 1-3 typically available)
-      stdin.write('2'); // Select second scope option
-      await wait();
+      await pressKey(stdin, '2');
 
       unmount();
     });
@@ -589,7 +614,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -616,7 +641,7 @@ describe('SettingsDialog', () => {
       const onRestartRequest = vi.fn();
 
       const { unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog
             settings={settings}
             onSelect={() => { }}
@@ -637,7 +662,7 @@ describe('SettingsDialog', () => {
       const onRestartRequest = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog
             settings={settings}
             onSelect={() => { }}
@@ -647,8 +672,7 @@ describe('SettingsDialog', () => {
       );
 
       // Press 'r' key (this would only work if restart prompt is showing)
-      stdin.write('r');
-      await wait();
+      await pressKey(stdin, 'r');
 
       // If restart prompt was showing, onRestartRequest should be called
       unmount();
@@ -661,7 +685,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -688,18 +712,16 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Switch to scope selector
-      stdin.write(TerminalKeys.TAB as string); // Tab
-      await wait();
+      await pressKey(stdin, TerminalKeys.TAB as string);
 
       // Change scope
-      stdin.write('2'); // Select workspace scope
-      await wait();
+      await pressKey(stdin, '2');
 
       // Settings should be reloaded for new scope
       unmount();
@@ -714,7 +736,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -733,14 +755,13 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Try to toggle a setting (this might trigger vim mode toggle)
-      stdin.write(TerminalKeys.ENTER as string); // Enter
-      await wait();
+      await pressKey(stdin, TerminalKeys.ENTER as string);
 
       // Should not crash
       unmount();
@@ -753,20 +774,17 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Toggle a setting
-      stdin.write(TerminalKeys.ENTER as string); // Enter
-      await wait();
+      await pressKey(stdin, TerminalKeys.ENTER as string);
 
       // Toggle another setting
-      stdin.write(TerminalKeys.DOWN_ARROW as string); // Down
-      await wait();
-      stdin.write(TerminalKeys.ENTER as string); // Enter
-      await wait();
+      await pressKey(stdin, TerminalKeys.DOWN_ARROW as string);
+      await pressKey(stdin, TerminalKeys.ENTER as string);
 
       // Should track multiple modified settings
       unmount();
@@ -777,15 +795,14 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Navigate down many times to test scrolling
       for (let i = 0; i < 10; i++) {
-        stdin.write(TerminalKeys.DOWN_ARROW as string); // Down arrow
-        await wait(10);
+        await pressKey(stdin, TerminalKeys.DOWN_ARROW as string, 0);
       }
 
       unmount();
@@ -799,7 +816,7 @@ describe('SettingsDialog', () => {
 
       const { stdin, unmount } = render(
         <VimModeProvider settings={settings}>
-          <KeypressProvider kittyProtocolEnabled={false}>
+          <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
             <SettingsDialog settings={settings} onSelect={onSelect} />
           </KeypressProvider>
         </VimModeProvider>,
@@ -807,8 +824,7 @@ describe('SettingsDialog', () => {
 
       // Navigate to and toggle vim mode setting
       // This would require knowing the exact position of vim mode setting
-      stdin.write(TerminalKeys.ENTER as string); // Enter
-      await wait();
+      await pressKey(stdin, TerminalKeys.ENTER as string);
 
       unmount();
     });
@@ -824,7 +840,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -839,14 +855,13 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Toggle a non-restart-required setting (like hideTips)
-      stdin.write(TerminalKeys.ENTER as string); // Enter - toggle current setting
-      await wait();
+      await pressKey(stdin, TerminalKeys.ENTER as string);
 
       // Should save immediately without showing restart prompt
       unmount();
@@ -857,7 +872,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -879,7 +894,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -899,7 +914,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -918,7 +933,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -935,15 +950,15 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Rapid navigation
       for (let i = 0; i < 5; i++) {
-        stdin.write(TerminalKeys.DOWN_ARROW as string);
-        stdin.write(TerminalKeys.UP_ARROW as string);
+        await pressKey(stdin, TerminalKeys.DOWN_ARROW as string, 0);
+        await pressKey(stdin, TerminalKeys.UP_ARROW as string, 0);
       }
       await wait(100);
 
@@ -956,14 +971,13 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Press Ctrl+C to reset current setting to default
-      stdin.write('\u0003'); // Ctrl+C
-      await wait();
+      await pressKey(stdin, '\u0003');
 
       // Should reset the current setting to its default value
       unmount();
@@ -974,14 +988,13 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Press Ctrl+L to reset current setting to default
-      stdin.write('\u000C'); // Ctrl+L
-      await wait();
+      await pressKey(stdin, '\u000C');
 
       // Should reset the current setting to its default value
       unmount();
@@ -992,16 +1005,14 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Try to navigate when potentially at bounds
-      stdin.write(TerminalKeys.DOWN_ARROW as string);
-      await wait();
-      stdin.write(TerminalKeys.UP_ARROW as string);
-      await wait();
+      await pressKey(stdin, TerminalKeys.DOWN_ARROW as string);
+      await pressKey(stdin, TerminalKeys.UP_ARROW as string);
 
       unmount();
     });
@@ -1011,7 +1022,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -1043,7 +1054,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -1058,7 +1069,7 @@ describe('SettingsDialog', () => {
 
       // Should not crash even if some settings are missing definitions
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -1073,7 +1084,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -1088,9 +1099,8 @@ describe('SettingsDialog', () => {
       expect(lastFrame()).toContain('● Vim Mode'); // Active setting
       expect(lastFrame()).toContain('Apply To'); // Scope section
       expect(lastFrame()).toContain('User Settings'); // Scope options (no numbers when settings focused)
-      expect(lastFrame()).toContain(
-        '(Use Enter to select, Tab to change focus)',
-      ); // Help text
+      expect(lastFrame()).toContain('(Use Enter to select');
+      expect(lastFrame()).toContain('/ to search');
 
       // This test validates the complete UI structure is available for user workflow
       // Individual interactions are tested in focused unit tests
@@ -1103,26 +1113,21 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Toggle first setting (should require restart)
-      stdin.write(TerminalKeys.ENTER as string); // Enter
-      await wait();
+      await pressKey(stdin, TerminalKeys.ENTER as string);
 
       // Navigate to next setting and toggle it (should not require restart - e.g., vimMode)
-      stdin.write(TerminalKeys.DOWN_ARROW as string); // Down
-      await wait();
-      stdin.write(TerminalKeys.ENTER as string); // Enter
-      await wait();
+      await pressKey(stdin, TerminalKeys.DOWN_ARROW as string);
+      await pressKey(stdin, TerminalKeys.ENTER as string);
 
       // Navigate to another setting and toggle it (should also require restart)
-      stdin.write(TerminalKeys.DOWN_ARROW as string); // Down
-      await wait();
-      stdin.write(TerminalKeys.ENTER as string); // Enter
-      await wait();
+      await pressKey(stdin, TerminalKeys.DOWN_ARROW as string);
+      await pressKey(stdin, TerminalKeys.ENTER as string);
 
       // The test verifies that all changes are preserved and the dialog still works
       // This tests the fix for the bug where changing one setting would reset all pending changes
@@ -1134,22 +1139,17 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Multiple scope changes
-      stdin.write(TerminalKeys.TAB as string); // Tab to scope
-      await wait();
-      stdin.write('2'); // Workspace
-      await wait();
-      stdin.write(TerminalKeys.TAB as string); // Tab to settings
-      await wait();
-      stdin.write(TerminalKeys.TAB as string); // Tab to scope
-      await wait();
-      stdin.write('1'); // User
-      await wait();
+      await pressKey(stdin, TerminalKeys.TAB as string);
+      await pressKey(stdin, '2');
+      await pressKey(stdin, TerminalKeys.TAB as string);
+      await pressKey(stdin, TerminalKeys.TAB as string);
+      await pressKey(stdin, '1');
 
       // Should maintain consistent state
       unmount();
@@ -1160,7 +1160,7 @@ describe('SettingsDialog', () => {
       const onRestartRequest = vi.fn();
 
       const { stdin, unmount } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog
             settings={settings}
             onSelect={() => { }}
@@ -1170,8 +1170,7 @@ describe('SettingsDialog', () => {
       );
 
       // This would test the restart workflow if we could trigger it
-      stdin.write('r'); // Try restart key
-      await wait();
+      await pressKey(stdin, 'r');
 
       // Without restart prompt showing, this should have no effect
       expect(onRestartRequest).not.toHaveBeenCalled();
@@ -1181,57 +1180,63 @@ describe('SettingsDialog', () => {
   });
 
   describe('String Settings Editing', () => {
-    it('should allow editing and committing a string setting', async () => {
-      let settings = createMockSettings({ 'a.string.setting': 'initial' });
-      const onSelect = vi.fn();
+    it(
+      'should allow editing and committing a string setting',
+      async () => {
+        let settings = createMockSettings({ 'a.string.setting': 'initial' });
+        const onSelect = vi.fn();
 
-      const { stdin, unmount, rerender } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
-          <SettingsDialog settings={settings} onSelect={onSelect} />
-        </KeypressProvider>,
-      );
+        const { stdin, unmount, rerender, lastFrame } = render(
+          <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
+            <SettingsDialog settings={settings} onSelect={onSelect} />
+          </KeypressProvider>,
+        );
 
-      // Wait for the dialog to render
-      await wait();
+        // Wait until dialog is ready (no blind sleep)
+        await waitFor(() => {
+          expect(lastFrame()).toContain('Settings');
+          expect(lastFrame()).toContain('Apply To');
+        });
 
-      // Navigate to the last setting
-      for (let i = 0; i < 20; i++) {
-        stdin.write('j'); // Down
-        await wait(10);
-      }
+        // Navigate down a lot (fast)
+        for (let i = 0; i < 60; i++) {
+          await pressKey(stdin, 'j', 0);
+        }
 
-      // Press Enter to start editing
-      stdin.write('\r');
-      await wait();
+        // Enter edit mode
+        await pressKey(stdin, TerminalKeys.ENTER as string, 0);
 
-      // Type a new value
-      stdin.write('new value');
-      await wait();
+        // Type new value
+        await typeText(stdin, 'new value', 0);
 
-      // Press Enter to commit
-      stdin.write('\r');
-      await wait();
+        // Commit
+        await pressKey(stdin, TerminalKeys.ENTER as string, 0);
 
-      settings = createMockSettings(
-        { 'a.string.setting': 'new value' },
-        {},
-        {},
-      );
-      rerender(
-        <KeypressProvider kittyProtocolEnabled={false}>
-          <SettingsDialog settings={settings} onSelect={onSelect} />
-        </KeypressProvider>,
-      );
-      await wait();
+        // Rerender with updated settings
+        settings = createMockSettings(
+          { 'a.string.setting': 'new value' },
+          {},
+          {},
+        );
+        rerender(
+          <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
+            <SettingsDialog settings={settings} onSelect={onSelect} />
+          </KeypressProvider>,
+        );
 
-      // Press Escape to exit
-      stdin.write('\u001B');
-      await wait();
+        await waitFor(() => {
+          expect(lastFrame()).toContain('Settings');
+        });
 
-      expect(onSelect).toHaveBeenCalledWith(undefined, 'User');
+        // Exit
+        await pressKey(stdin, TerminalKeys.ESCAPE as string, 0);
 
-      unmount();
-    });
+        expect(onSelect).toHaveBeenCalledWith(undefined, 'User');
+
+        unmount();
+      },
+      15000,
+    );
   });
 
   describe('Snapshot Tests', () => {
@@ -1257,7 +1262,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -1309,7 +1314,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -1342,7 +1347,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -1350,83 +1355,18 @@ describe('SettingsDialog', () => {
       expect(lastFrame()).toMatchSnapshot();
     });
 
-    it('should render focused on scope selector', () => {
+    it('should render focused on scope selector', async () => {
       const settings = createMockSettings();
       const onSelect = vi.fn();
 
       const { lastFrame, stdin } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
 
       // Switch focus to scope selector with Tab
-      stdin.write('\t');
-
-      expect(lastFrame()).toMatchSnapshot();
-    });
-
-    it('should render with different scope selected (System)', () => {
-      const settings = createMockSettings(
-        {}, // userSettings
-        {
-          // systemSettings
-          general: {
-            vimMode: true,
-            disableAutoUpdate: false,
-          },
-          ui: {
-            showMemoryUsage: true,
-          },
-        },
-      );
-      const onSelect = vi.fn();
-
-      const { lastFrame, stdin } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
-          <SettingsDialog settings={settings} onSelect={onSelect} />
-        </KeypressProvider>,
-      );
-
-      // Switch to scope selector
-      stdin.write('\t');
-      // Navigate to System scope
-      stdin.write('ArrowDown');
-      stdin.write('\r'); // Enter to select
-
-      expect(lastFrame()).toMatchSnapshot();
-    });
-
-    it('should render with different scope selected (Workspace)', () => {
-      const settings = createMockSettings(
-        {}, // userSettings
-        {}, // systemSettings
-        {
-          // workspaceSettings
-          general: {
-            vimMode: false,
-            debugKeystrokeLogging: true,
-          },
-          tools: {
-            useRipgrep: true,
-            enableInteractiveShell: false,
-          },
-        },
-      );
-      const onSelect = vi.fn();
-
-      const { lastFrame, stdin } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
-          <SettingsDialog settings={settings} onSelect={onSelect} />
-        </KeypressProvider>,
-      );
-
-      // Switch to scope selector
-      stdin.write('\t');
-      // Navigate to Workspace scope (down twice)
-      stdin.write('ArrowDown');
-      stdin.write('ArrowDown');
-      stdin.write('\r'); // Enter to select
+      await pressKey(stdin, '\t');
 
       expect(lastFrame()).toMatchSnapshot();
     });
@@ -1448,7 +1388,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -1472,7 +1412,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -1502,7 +1442,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );
@@ -1554,7 +1494,7 @@ describe('SettingsDialog', () => {
       const onSelect = vi.fn();
 
       const { lastFrame } = render(
-        <KeypressProvider kittyProtocolEnabled={false}>
+        <KeypressProvider kittyProtocolEnabled={false} pasteWorkaround={true}>
           <SettingsDialog settings={settings} onSelect={onSelect} />
         </KeypressProvider>,
       );

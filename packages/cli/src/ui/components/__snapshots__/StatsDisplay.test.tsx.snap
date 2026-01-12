@@ -211,6 +211,8 @@ exports[`<StatsDisplay /> > renders a table with two models correctly 1`] = `
 │                                                                                                  │
 │  » Tip: For a full token breakdown, run \`/stats model\`.                                          │
 │                                                                                                  │
+│  Cache Efficiency: 40.4%                                                                         │
+│                                                                                                  │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯"
 `;
 
@@ -239,6 +241,8 @@ exports[`<StatsDisplay /> > renders all sections when all data is present 1`] = 
 │  Savings Highlight: 50 (50.0%) of input tokens were served from the cache, reducing costs.       │
 │                                                                                                  │
 │  » Tip: For a full token breakdown, run \`/stats model\`.                                          │
+│                                                                                                  │
+│  Cache Efficiency: 50.0%                                                                         │
 │                                                                                                  │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯"
 `;

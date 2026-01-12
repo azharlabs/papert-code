@@ -26,6 +26,22 @@ export class PluginSystem {
 
   constructor(readonly config: Config) {}
 
+  private getEnableNpmPlugins(): boolean {
+    return this.config.getEnableNpmPlugins();
+  }
+
+  private getPlugins(): string[] {
+    return this.config.getPlugins();
+  }
+
+  private getAutoInstallNpmPlugins(): boolean {
+    return this.config.getAutoInstallNpmPlugins();
+  }
+
+  private isTrustedFolder(): boolean {
+    return this.config.isTrustedFolder();
+  }
+
   getEventBus(): PluginEventBus {
     return this.bus;
   }
@@ -49,19 +65,9 @@ export class PluginSystem {
     });
 
     const npmSpecifiers: string[] = [];
-    const enableNpmPlugins =
-      'getEnableNpmPlugins' in this.config &&
-      typeof this.config.getEnableNpmPlugins === 'function'
-        ? this.config.getEnableNpmPlugins()
-        : false;
 
-    const configuredPlugins =
-      'getPlugins' in this.config && typeof this.config.getPlugins === 'function'
-        ? this.config.getPlugins()
-        : [];
-
-    if (enableNpmPlugins) {
-      for (const raw of configuredPlugins) {
+    if (this.getEnableNpmPlugins()) {
+      for (const raw of this.getPlugins()) {
         const spec = parseNpmPluginSpec(raw);
         try {
           const resolved = resolveNpmPluginSpecifier(spec.packageName, {
@@ -70,19 +76,7 @@ export class PluginSystem {
           });
           npmSpecifiers.push(resolved.specifier);
         } catch {
-          const autoInstallNpmPlugins =
-            'getAutoInstallNpmPlugins' in this.config &&
-            typeof this.config.getAutoInstallNpmPlugins === 'function'
-              ? this.config.getAutoInstallNpmPlugins()
-              : false;
-
-          const isTrustedFolder =
-            'isTrustedFolder' in this.config &&
-            typeof this.config.isTrustedFolder === 'function'
-              ? this.config.isTrustedFolder()
-              : false;
-
-          if (autoInstallNpmPlugins && isTrustedFolder) {
+          if (this.getAutoInstallNpmPlugins() && this.isTrustedFolder()) {
             await installNpmPlugin({
               globalPluginsDir,
               installTarget: getNpmInstallTarget(spec),

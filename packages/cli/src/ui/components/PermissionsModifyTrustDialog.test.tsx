@@ -11,7 +11,34 @@ import type { Mock } from 'vitest';
 import { renderWithProviders } from '../../test-utils/render.js';
 import { PermissionsModifyTrustDialog } from './PermissionsModifyTrustDialog.js';
 import { TrustLevel } from '../../config/trustedFolders.js';
-import { waitFor, act } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
+import { act } from 'react';
+import type { Key } from '../hooks/useKeypress.js';
+
+const keypressHandlers = new Set<(key: Key) => void>();
+vi.mock('../hooks/useKeypress.js', () => ({
+  useKeypress: (handler: (key: Key) => void, options?: { isActive: boolean }) => {
+    if (options?.isActive === false) {
+      return;
+    }
+    keypressHandlers.add(handler);
+  },
+}));
+
+const triggerKey = (name: string, sequence = name) => {
+  act(() => {
+    keypressHandlers.forEach((handler) =>
+      handler({
+        name,
+        ctrl: false,
+        meta: false,
+        shift: false,
+        paste: false,
+        sequence,
+      }),
+    );
+  });
+};
 import * as processUtils from '../../utils/processUtils.js';
 import { usePermissionsModifyTrust } from '../hooks/usePermissionsModifyTrust.js';
 
@@ -46,6 +73,7 @@ describe('PermissionsModifyTrustDialog', () => {
   let mockCommitTrustLevelChange: Mock;
 
   beforeEach(() => {
+    keypressHandlers.clear();
     mockUpdateTrustLevel = vi.fn();
     mockCommitTrustLevelChange = vi.fn();
     vi.mocked(usePermissionsModifyTrust).mockReturnValue({
@@ -122,15 +150,14 @@ describe('PermissionsModifyTrustDialog', () => {
 
   it('should call onExit when escape is pressed', async () => {
     const onExit = vi.fn();
-    const { stdin, lastFrame } = renderWithProviders(
+    const { lastFrame } = renderWithProviders(
       <PermissionsModifyTrustDialog onExit={onExit} addItem={vi.fn()} />,
     );
 
     await waitFor(() => expect(lastFrame()).not.toContain('Loading...'));
 
-    act(() => {
-      stdin.write('\x1b'); // escape key
-    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    triggerKey('escape', '\x1b');
 
     await waitFor(() => {
       expect(onExit).toHaveBeenCalled();
@@ -153,13 +180,14 @@ describe('PermissionsModifyTrustDialog', () => {
     });
 
     const onExit = vi.fn();
-    const { stdin, lastFrame } = renderWithProviders(
+    const { lastFrame } = renderWithProviders(
       <PermissionsModifyTrustDialog onExit={onExit} addItem={vi.fn()} />,
     );
 
     await waitFor(() => expect(lastFrame()).not.toContain('Loading...'));
 
-    act(() => stdin.write('r')); // Press 'r' to restart
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    triggerKey('r');
 
     await waitFor(() => {
       expect(mockCommitTrustLevelChange).toHaveBeenCalled();
@@ -183,13 +211,14 @@ describe('PermissionsModifyTrustDialog', () => {
     });
 
     const onExit = vi.fn();
-    const { stdin, lastFrame } = renderWithProviders(
+    const { lastFrame } = renderWithProviders(
       <PermissionsModifyTrustDialog onExit={onExit} addItem={vi.fn()} />,
     );
 
     await waitFor(() => expect(lastFrame()).not.toContain('Loading...'));
 
-    act(() => stdin.write('\x1b')); // Press escape
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    triggerKey('escape', '\x1b');
 
     await waitFor(() => {
       expect(mockCommitTrustLevelChange).not.toHaveBeenCalled();

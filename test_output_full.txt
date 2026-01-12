@@ -232,9 +232,9 @@ npm warn Unknown cli config "--parallel". This will stop working in the next maj
    ✓ loadCliConfig fileFiltering > should pass 'respectGitIgnore' from settings to config when true 11ms
    ✓ loadCliConfig fileFiltering > should pass 'respectGitIgnore' from settings to config when false 9ms
    × loadCliConfig fileFiltering > should pass 'respectPapertIgnore' from settings to config when true 37ms
-     → c.getFileFilteringrespectPapertIgnore is not a function
+     → c.getFileFilteringRespectPapertIgnore is not a function
    × loadCliConfig fileFiltering > should pass 'respectPapertIgnore' from settings to config when false 4ms
-     → c.getFileFilteringrespectPapertIgnore is not a function
+     → c.getFileFilteringRespectPapertIgnore is not a function
    ✓ loadCliConfig fileFiltering > should pass 'enableRecursiveFileSearch' from settings to config when true 4ms
    ✓ loadCliConfig fileFiltering > should pass 'enableRecursiveFileSearch' from settings to config when false 3ms
    ✓ Output format > should default to TEXT 3ms
@@ -454,11 +454,11 @@ npm warn Unknown cli config "--parallel". This will stop working in the next maj
 ⎯⎯⎯⎯⎯⎯ Failed Tests 34 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  src/config/config.test.ts > loadCliConfig fileFiltering > should pass 'respectPapertIgnore' from settings to config when true
-TypeError: c.getFileFilteringrespectPapertIgnore is not a function
+TypeError: c.getFileFilteringRespectPapertIgnore is not a function
  ❯ getter src/config/config.test.ts:3135:26
     3133|       {
     3134|         property: 'respectPapertIgnore',
-    3135|         getter: (c) => c.getFileFilteringrespectPapertIgnore(),
+    3135|         getter: (c) => c.getFileFilteringRespectPapertIgnore(),
        |                          ^
     3136|         value: true,
     3137|       },
@@ -467,11 +467,11 @@ TypeError: c.getFileFilteringrespectPapertIgnore is not a function
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/34]⎯
 
  FAIL  src/config/config.test.ts > loadCliConfig fileFiltering > should pass 'respectPapertIgnore' from settings to config when false
-TypeError: c.getFileFilteringrespectPapertIgnore is not a function
+TypeError: c.getFileFilteringRespectPapertIgnore is not a function
  ❯ getter src/config/config.test.ts:3140:26
     3138|       {
     3139|         property: 'respectPapertIgnore',
-    3140|         getter: (c) => c.getFileFilteringrespectPapertIgnore(),
+    3140|         getter: (c) => c.getFileFilteringRespectPapertIgnore(),
        |                          ^
     3141|         value: false,
     3142|       },

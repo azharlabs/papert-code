@@ -8,10 +8,35 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import * as processUtils from '../../utils/processUtils.js';
 import { renderWithProviders } from '../../test-utils/render.js';
 import { IdeTrustChangeDialog } from './IdeTrustChangeDialog.js';
+import type { Key } from '../hooks/useKeypress.js';
+
+const keypressHandlers = new Set<(key: Key) => void>();
+vi.mock('../hooks/useKeypress.js', () => ({
+  useKeypress: (handler: (key: Key) => void, options?: { isActive: boolean }) => {
+    if (options?.isActive === false) {
+      return;
+    }
+    keypressHandlers.add(handler);
+  },
+}));
+
+const triggerKey = (name: string, sequence = name) => {
+  keypressHandlers.forEach((handler) =>
+    handler({
+      name,
+      ctrl: false,
+      meta: false,
+      shift: false,
+      paste: false,
+      sequence,
+    }),
+  );
+};
 
 describe('IdeTrustChangeDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    keypressHandlers.clear();
   });
 
   it('renders the correct message for CONNECTION_CHANGE', () => {
@@ -53,35 +78,35 @@ describe('IdeTrustChangeDialog', () => {
     );
   });
 
-  it('calls relaunchApp when "r" is pressed', () => {
+  it('calls relaunchApp when "r" is pressed', async () => {
     const relaunchAppSpy = vi.spyOn(processUtils, 'relaunchApp');
-    const { stdin } = renderWithProviders(
+    renderWithProviders(
       <IdeTrustChangeDialog reason="NONE" />,
     );
 
-    stdin.write('r');
+    triggerKey('r');
 
     expect(relaunchAppSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('calls relaunchApp when "R" is pressed', () => {
+  it('calls relaunchApp when "R" is pressed', async () => {
     const relaunchAppSpy = vi.spyOn(processUtils, 'relaunchApp');
-    const { stdin } = renderWithProviders(
+    renderWithProviders(
       <IdeTrustChangeDialog reason="CONNECTION_CHANGE" />,
     );
 
-    stdin.write('R');
+    triggerKey('R', 'R');
 
     expect(relaunchAppSpy).toHaveBeenCalledTimes(1);
   });
 
   it('does not call relaunchApp when another key is pressed', async () => {
     const relaunchAppSpy = vi.spyOn(processUtils, 'relaunchApp');
-    const { stdin } = renderWithProviders(
+    renderWithProviders(
       <IdeTrustChangeDialog reason="CONNECTION_CHANGE" />,
     );
 
-    stdin.write('a');
+    triggerKey('a');
 
     // Give it a moment to ensure no async actions are triggered
     await new Promise((resolve) => setTimeout(resolve, 50));

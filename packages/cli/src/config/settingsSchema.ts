@@ -692,13 +692,14 @@ const SETTINGS_SCHEMA = {
     showInDialog: false,
     properties: {
       fileName: {
-        type: 'object',
+        type: 'string',
         label: 'Context File Name',
         category: 'Context',
         requiresRestart: false,
         default: undefined as string | string[] | undefined,
         description: 'The name of the context file.',
         showInDialog: false,
+        ref: 'ContextFileName',
       },
       importFormat: {
         type: 'string',
@@ -798,7 +799,7 @@ const SETTINGS_SCHEMA = {
     showInDialog: false,
     properties: {
       sandbox: {
-        type: 'object',
+        type: 'string',
         label: 'Sandbox',
         category: 'Tools',
         requiresRestart: true,
@@ -806,6 +807,7 @@ const SETTINGS_SCHEMA = {
         description:
           'Sandbox execution environment (can be a boolean or a path string).',
         showInDialog: false,
+        ref: 'SandboxSetting',
       },
       shell: {
         type: 'object',
@@ -875,6 +877,9 @@ const SETTINGS_SCHEMA = {
         description:
           'A list of tool names that will bypass the confirmation dialog.',
         showInDialog: false,
+        items: {
+          type: 'string',
+        },
       },
       exclude: {
         type: 'array',
@@ -885,6 +890,9 @@ const SETTINGS_SCHEMA = {
         description: 'Tool names to exclude from discovery.',
         showInDialog: false,
         mergeStrategy: MergeStrategy.UNION,
+        items: {
+          type: 'string',
+        },
       },
       approvalMode: {
         type: 'enum',
@@ -1445,6 +1453,17 @@ export const SETTINGS_SCHEMA_DEFINITIONS: Record<
   string,
   SettingsJsonSchemaDefinition
 > = {
+  ContextFileName: {
+    description: 'Context file name or list of context file names.',
+    anyOf: [
+      { type: 'string' },
+      { type: 'array', items: { type: 'string' } },
+    ],
+  },
+  SandboxSetting: {
+    description: 'Sandbox execution environment (boolean or path string).',
+    anyOf: [{ type: 'boolean' }, { type: 'string' }],
+  },
   MCPServerConfig: {
     type: 'object',
     description:
