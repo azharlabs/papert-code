@@ -14,7 +14,7 @@ import { useKeypress } from './useKeypress.js';
 
 import type { KeypressHandler, Key } from '../contexts/KeypressContext.js';
 
-type UseKeypressMockOptions = { isActive: boolean };
+type UseKeypressMockOptions = { isActive?: boolean };
 
 vi.mock('./useKeypress.js');
 

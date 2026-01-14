@@ -13,6 +13,16 @@ import {
 import { createDefaultPolicy } from './policyCatalog.js';
 import type { Config } from '../config/config.js';
 import { DEFAULT_GEMINI_MODEL_AUTO } from '../config/models.js';
+import type { ResolvedModelConfig } from '../services/modelConfigService.js';
+
+const createResolvedModelConfig = (
+  model: string,
+  generateContentConfig: ResolvedModelConfig['generateContentConfig'] = {},
+): ResolvedModelConfig =>
+  ({
+    model,
+    generateContentConfig,
+  }) as ResolvedModelConfig;
 
 const createMockConfig = (overrides: Partial<Config> = {}): Config =>
   ({
@@ -22,7 +32,7 @@ const createMockConfig = (overrides: Partial<Config> = {}): Config =>
     getResolvedModelConfig: vi.fn((modelReq: { model: string }) => ({
       model: modelReq.model,
       generateContentConfig: {},
-    })),
+    })) as unknown as Config['getResolvedModelConfig'],
     getEnableHooks: vi.fn().mockReturnValue(false),
     getMessageBus: vi.fn().mockReturnValue(undefined),
     ...overrides,
@@ -132,16 +142,14 @@ describe('policyHelpers', () => {
 
     it('returns requested model if it is available', () => {
       const config = createExtendedMockConfig({
-        getResolvedModelConfig: vi.fn().mockReturnValue({
-          model: 'gemini-pro',
-          generateContentConfig: {},
-        }),
+        getResolvedModelConfig: vi
+          .fn()
+          .mockReturnValue(createResolvedModelConfig('gemini-pro')),
       });
       const getResolvedModelConfig = vi.mocked(config.getResolvedModelConfig);
-      getResolvedModelConfig.mockReturnValue({
-        model: 'gemini-pro',
-        generateContentConfig: {},
-      });
+      getResolvedModelConfig.mockReturnValue(
+        createResolvedModelConfig('gemini-pro'),
+      );
       mockAvailabilityService.selectFirstAvailable.mockReturnValue({
         selectedModel: 'gemini-pro',
       });
@@ -158,14 +166,18 @@ describe('policyHelpers', () => {
       });
       const getResolvedModelConfig = vi.mocked(config.getResolvedModelConfig);
       getResolvedModelConfig
-        .mockReturnValueOnce({
-          model: 'gemini-pro',
-          generateContentConfig: { temperature: 0.9, topP: 1 },
-        })
-        .mockReturnValueOnce({
-          model: 'gemini-flash',
-          generateContentConfig: { temperature: 0.1, topP: 1 },
-        });
+        .mockReturnValueOnce(
+          createResolvedModelConfig('gemini-pro', {
+            temperature: 0.9,
+            topP: 1,
+          }),
+        )
+        .mockReturnValueOnce(
+          createResolvedModelConfig('gemini-flash', {
+            temperature: 0.1,
+            topP: 1,
+          }),
+        );
       mockAvailabilityService.selectFirstAvailable.mockReturnValue({
         selectedModel: 'gemini-flash',
       });
@@ -189,16 +201,14 @@ describe('policyHelpers', () => {
 
     it('consumes sticky attempt if indicated', () => {
       const config = createExtendedMockConfig({
-        getResolvedModelConfig: vi.fn().mockReturnValue({
-          model: 'gemini-pro',
-          generateContentConfig: {},
-        }),
+        getResolvedModelConfig: vi
+          .fn()
+          .mockReturnValue(createResolvedModelConfig('gemini-pro')),
       });
       const getResolvedModelConfig = vi.mocked(config.getResolvedModelConfig);
-      getResolvedModelConfig.mockReturnValue({
-        model: 'gemini-pro',
-        generateContentConfig: {},
-      });
+      getResolvedModelConfig.mockReturnValue(
+        createResolvedModelConfig('gemini-pro'),
+      );
       mockAvailabilityService.selectFirstAvailable.mockReturnValue({
         selectedModel: 'gemini-pro',
         attempts: 1,

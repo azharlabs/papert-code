@@ -363,9 +363,6 @@ describe('Gemini Client (client.ts)', () => {
       getUseSmartEdit: vi.fn().mockReturnValue(false),
       getUseModelRouter: vi.fn().mockReturnValue(false),
       getProjectRoot: vi.fn().mockReturnValue('/test/project/root'),
-      getActiveModel: vi.fn().mockReturnValue('test-model'),
-      getEnableHooks: vi.fn().mockReturnValue(false),
-      getMessageBus: vi.fn().mockReturnValue(undefined),
       storage: {
         getProjectTempDir: vi.fn().mockReturnValue('/test/temp'),
         getProjectDir: vi

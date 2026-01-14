@@ -720,16 +720,6 @@ export class Task {
         logger.info('[Task] Sending agent thought...');
         this._sendThought(event.value, traceId);
         break;
-      case GeminiEventType.ModelInfo: {
-        const modelInfoValue = (event as { value?: string | { model?: string } })
-          .value;
-        if (typeof modelInfoValue === 'string') {
-          this.modelInfo = modelInfoValue;
-        } else if (modelInfoValue?.model) {
-          this.modelInfo = modelInfoValue.model;
-        }
-        break;
-      }
       case GeminiEventType.Citation:
         logger.info('[Task] Received citation from LLM stream.');
         this._sendCitation(event.value);

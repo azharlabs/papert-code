@@ -23,13 +23,19 @@ export type RequestResult = {
   headers: Record<string, string | string[] | undefined>;
 };
 
+type ExpressHandle = (
+  req: IncomingMessage,
+  res: ServerResponse,
+  next: (err?: unknown) => void,
+) => void;
+
 export async function requestApp(
   app: express.Express,
   { method, path, headers = {}, body }: RequestOptions,
 ): Promise<RequestResult> {
   const socket = new Socket();
-  socket.readable = true;
-  socket.writable = true;
+  (socket as unknown as { readable: boolean }).readable = true;
+  (socket as unknown as { writable: boolean }).writable = true;
   socket.write = ((chunk: unknown, _encoding?: unknown, callback?: () => void) => {
     if (typeof _encoding === 'function') {
       _encoding();
@@ -41,7 +47,7 @@ export async function requestApp(
     return true;
   }) as typeof socket.write;
 
-  const req = new Readable({ read() {} }) as IncomingMessage;
+  const req = new Readable({ read() {} }) as IncomingMessage & { body?: unknown };
   req.method = method.toUpperCase();
   req.url = path;
   req.headers = { ...headers };
@@ -77,11 +83,15 @@ export async function requestApp(
 
   await new Promise<void>((resolve, reject) => {
     res.on('finish', () => resolve());
-    app.handle(req, res, (err: unknown) => {
-      if (err) {
-        reject(err);
-      }
-    });
+    (app as unknown as { handle: ExpressHandle }).handle(
+      req,
+      res,
+      (err: unknown) => {
+        if (err) {
+          reject(err);
+        }
+      },
+    );
     process.nextTick(() => {
       req.push(null);
     });

@@ -12,6 +12,7 @@ import type { HookPlanner } from './hookPlanner.js';
 import type { HookRunner } from './hookRunner.js';
 import type { HookAggregator } from './hookAggregator.js';
 import { HookEventName, HookType } from './types.js';
+import { createMockMessageBus } from '../test-utils/mock-message-bus.js';
 import {
   NotificationType,
   SessionStartSource,
@@ -62,9 +63,11 @@ describe('HookEventHandler', () => {
   let mockHookPlanner: HookPlanner;
   let mockHookRunner: HookRunner;
   let mockHookAggregator: HookAggregator;
+  let mockMessageBus: ReturnType<typeof createMockMessageBus>;
 
   beforeEach(() => {
     vi.resetAllMocks();
+    mockMessageBus = createMockMessageBus();
 
     mockConfig = {
       getSessionId: vi.fn().mockReturnValue('test-session'),
@@ -78,11 +81,7 @@ describe('HookEventHandler', () => {
           .mockReturnValue('/test/project/.papert/tmp/chats/session.json'),
       }),
       getEnableHooks: vi.fn().mockReturnValue(true),
-      getMessageBus: vi.fn().mockReturnValue({
-        publish: vi.fn(),
-        subscribe: vi.fn(),
-        unsubscribe: vi.fn(),
-      }),
+      getMessageBus: vi.fn().mockReturnValue(mockMessageBus),
     } as unknown as Config;
 
     mockHookPlanner = {
@@ -103,7 +102,7 @@ describe('HookEventHandler', () => {
       mockHookPlanner,
       mockHookRunner,
       mockHookAggregator,
-      mockCoreEvents,
+      mockMessageBus,
     );
   });
 

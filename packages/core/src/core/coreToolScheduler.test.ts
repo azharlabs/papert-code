@@ -1299,7 +1299,12 @@ describe('CoreToolScheduler request queueing', () => {
       getToolRegistry: () => mockToolRegistry,
       getUseSmartEdit: () => false,
       getUseModelRouter: () => false,
-      getGeminiClient: () => null, getModel: () => 'test-model', getPluginSystem: () => undefined, getEnableToolOutputTruncation: () => false, getEnableHooks: () => false, getMessageBus: () => undefined, getPluginSystem: () => undefined, getEnableToolOutputTruncation: () => false, getEnableHooks: () => false, getMessageBus: () => undefined,
+      getGeminiClient: () => null,
+      getModel: () => 'test-model',
+      getPluginSystem: () => undefined,
+      getEnableToolOutputTruncation: () => false,
+      getEnableHooks: () => false,
+      getMessageBus: () => undefined,
       getChatRecordingService: () => undefined,
     } as unknown as Config;
     const scheduler = new CoreToolScheduler({
@@ -1416,7 +1421,12 @@ describe('CoreToolScheduler request queueing', () => {
       getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES,
       getUseSmartEdit: () => false,
       getUseModelRouter: () => false,
-      getGeminiClient: () => null, getModel: () => 'test-model', getPluginSystem: () => undefined, getEnableToolOutputTruncation: () => false, getEnableHooks: () => false, getMessageBus: () => undefined, getPluginSystem: () => undefined, getEnableToolOutputTruncation: () => false, getEnableHooks: () => false, getMessageBus: () => undefined,
+      getGeminiClient: () => null,
+      getModel: () => 'test-model',
+      getPluginSystem: () => undefined,
+      getEnableToolOutputTruncation: () => false,
+      getEnableHooks: () => false,
+      getMessageBus: () => undefined,
       getChatRecordingService: () => undefined,
     } as unknown as Config;
     const scheduler = new CoreToolScheduler({
@@ -1510,7 +1520,12 @@ describe('CoreToolScheduler request queueing', () => {
       getToolRegistry: () => mockToolRegistry,
       getUseSmartEdit: () => false,
       getUseModelRouter: () => false,
-      getGeminiClient: () => null, getModel: () => 'test-model', getPluginSystem: () => undefined, getEnableToolOutputTruncation: () => false, getEnableHooks: () => false, getMessageBus: () => undefined, getPluginSystem: () => undefined, getEnableToolOutputTruncation: () => false, getEnableHooks: () => false, getMessageBus: () => undefined,
+      getGeminiClient: () => null,
+      getModel: () => 'test-model',
+      getPluginSystem: () => undefined,
+      getEnableToolOutputTruncation: () => false,
+      getEnableHooks: () => false,
+      getMessageBus: () => undefined,
       getChatRecordingService: () => undefined,
     } as unknown as Config;
     const scheduler = new CoreToolScheduler({
@@ -1576,7 +1591,12 @@ describe('CoreToolScheduler request queueing', () => {
       getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES,
       getUseSmartEdit: () => false,
       getUseModelRouter: () => false,
-      getGeminiClient: () => null, getModel: () => 'test-model', getPluginSystem: () => undefined, getEnableToolOutputTruncation: () => false, getEnableHooks: () => false, getMessageBus: () => undefined, getPluginSystem: () => undefined, getEnableToolOutputTruncation: () => false, getEnableHooks: () => false, getMessageBus: () => undefined,
+      getGeminiClient: () => null,
+      getModel: () => 'test-model',
+      getPluginSystem: () => undefined,
+      getEnableToolOutputTruncation: () => false,
+      getEnableHooks: () => false,
+      getMessageBus: () => undefined,
       isInteractive: () => true, // Required to prevent auto-denial of tool calls
       getIdeMode: () => false,
       getExperimentalZedIntegration: () => false,
