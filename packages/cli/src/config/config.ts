@@ -111,6 +111,11 @@ export interface CliArgs {
   query: string | undefined;
   remoteUrl?: string | undefined;
   remoteToken?: string | undefined;
+  /**
+   * True when launched by `papert connect`.
+   * When set, the CLI must use the remote daemon via the stream-json control protocol.
+   */
+  remoteControl?: boolean | undefined;
   model: string | undefined;
   sandbox: boolean | string | undefined;
   sandboxImage: string | undefined;
@@ -258,6 +263,12 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     .option('remote-token', {
       type: 'string',
       description: 'Remote daemon server token (used by `papert connect`).',
+    })
+    .option('remote-control', {
+      type: 'boolean',
+      description:
+        'Internal flag: run in remote-control mode (used by `papert connect`).',
+      hidden: true,
     })
     .deprecateOption(
       'proxy',
@@ -594,9 +605,7 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     (result._[0] === 'mcp' ||
       result._[0] === 'extensions' ||
       result._[0] === 'skills' ||
-      result._[0] === 'hooks' ||
-      result._[0] === 'server' ||
-      result._[0] === 'connect')
+      result._[0] === 'hooks')
   ) {
     process.exit(0);
   }
@@ -692,10 +701,13 @@ export async function loadCliConfig(
   cwd: string = process.cwd(),
   options: LoadCliConfigOptions = {},
 ): Promise<Config> {
-  const { projectHooks } = options;
+  let { projectHooks } = options;
   const debugMode = isDebugMode(argv);
 
   const hooksFromHooksJson = loadProjectHooksFromHooksJson(cwd);
+  if (hooksFromHooksJson) {
+    projectHooks = hooksFromHooksJson;
+  }
 
   const memoryImportFormat = settings.context?.importFormat || 'tree';
 
@@ -856,7 +868,9 @@ export async function loadCliConfig(
   const hasQuery = !!argv.query;
   const hasPrompt = !!argv.prompt;
   let interactive: boolean;
-  if (argv.promptInteractive) {
+  if (argv.remoteControl) {
+    interactive = false;
+  } else if (argv.promptInteractive) {
     // Priority 1: Explicit -i flag means interactive
     interactive = true;
   } else if (

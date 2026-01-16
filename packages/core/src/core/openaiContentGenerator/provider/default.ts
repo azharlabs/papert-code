@@ -25,6 +25,7 @@ export class DefaultOpenAICompatibleProvider
     const userAgent = `PapertCode/${version} (${process.platform}; ${process.arch})`;
     return {
       'User-Agent': userAgent,
+      ...(this.contentGeneratorConfig.extraHeaders ?? {}),
     };
   }
 

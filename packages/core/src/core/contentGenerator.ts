@@ -55,6 +55,12 @@ export type ContentGeneratorConfig = {
   model: string;
   apiKey?: string;
   baseUrl?: string;
+  /**
+   * Optional additional headers to include in outbound LLM requests.
+   *
+   * Used by remote-driving (papert connect) to inject `x-papert-session-id`.
+   */
+  extraHeaders?: Record<string, string>;
   vertexai?: boolean;
   authType?: AuthType | undefined;
   enableOpenAILogging?: boolean;

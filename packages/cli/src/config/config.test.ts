@@ -611,6 +611,21 @@ describe('loadCliConfig', () => {
         ),
         argv,
         '/test/project',
+        {
+          projectHooks: {
+            BeforeTool: [
+              {
+                matcher: 'read_file',
+                hooks: [
+                  {
+                    type: 'command',
+                    command: 'echo hi',
+                  },
+                ],
+              },
+            ],
+          },
+        },
       );
 
       expect(config.getProjectHooks()).toEqual({

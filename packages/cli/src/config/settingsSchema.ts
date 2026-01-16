@@ -1019,10 +1019,6 @@ const SETTINGS_SCHEMA = {
             showInDialog: false,
             additionalProperties: {
               type: 'object',
-              label: 'LSP Server',
-              category: 'Tools',
-              requiresRestart: true,
-              default: {},
               description: 'LSP server configuration.',
               properties: {
                 disabled: {

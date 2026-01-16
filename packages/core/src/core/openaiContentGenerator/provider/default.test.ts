@@ -73,6 +73,19 @@ describe('DefaultOpenAICompatibleProvider', () => {
       });
     });
 
+    it('should merge extraHeaders when provided', () => {
+      mockContentGeneratorConfig.extraHeaders = {
+        'x-papert-session-id': 'session-123',
+      };
+
+      const headers = provider.buildHeaders();
+
+      expect(headers).toEqual({
+        'User-Agent': `PapertCode/1.0.0 (${process.platform}; ${process.arch})`,
+        'x-papert-session-id': 'session-123',
+      });
+    });
+
     it('should handle unknown CLI version', () => {
       (
         mockCliConfig.getCliVersion as MockedFunction<

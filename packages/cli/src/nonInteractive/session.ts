@@ -10,6 +10,7 @@ import {
   fireSessionEndHook,
   SessionStartSource,
   SessionEndReason,
+  AuthType,
 } from '@papert-code/papert-code-core';
 import { StreamJsonInputReader } from './io/StreamJsonInputReader.js';
 import { StreamJsonOutputAdapter } from './io/StreamJsonOutputAdapter.js';
@@ -36,6 +37,7 @@ import {
 import { createMinimalSettings } from '../config/settings.js';
 import { runNonInteractive } from '../nonInteractiveCli.js';
 import { ConsolePatcher } from '../ui/utils/ConsolePatcher.js';
+import { createRemoteControlService } from '../remote/remoteControlService.js';
 
 class Session {
   private userMessageQueue: CLIUserMessage[] = [];
@@ -88,6 +90,45 @@ class Session {
     }
 
     try {
+      // Remote-driving hook:
+      // When `papert connect` spawns the CLI in stream-json mode with `--remote-control`,
+      // we want to keep the TUI local but execute all model/tool calls against the
+      // remote daemon. We do that by:
+      //   1) creating a remote session via server token
+      //   2) switching auth to OpenAI-compatible with baseUrl pointing at daemon
+      //   3) injecting `x-papert-session-id` on every request
+      //
+      // This is intentionally localized to stream-json + remote-control to keep the
+      // change minimal.
+      const maybeRemoteUrl = process.env['PAPERT_REMOTE_URL'];
+      const maybeRemoteToken = process.env['PAPERT_REMOTE_TOKEN'];
+
+      if (maybeRemoteUrl && maybeRemoteToken) {
+        const control = await createRemoteControlService({
+          baseUrl: maybeRemoteUrl,
+          serverToken: maybeRemoteToken,
+        });
+
+        const remote = (control as unknown as { remote?: { baseUrl: string; sessionId: string; token: string } }).remote;
+        if (!remote) {
+          throw new Error('Remote control service did not return remote session details');
+        }
+
+        // Override credentials so core uses OpenAIContentGenerator against the daemon.
+        // The daemon expects:
+        //  - Authorization: Bearer <session.token>
+        //  - x-papert-session-id: <session.sessionId>
+        this.config.updateCredentials({
+          apiKey: remote.token,
+          baseUrl: remote.baseUrl,
+          extraHeaders: {
+            'x-papert-session-id': remote.sessionId,
+          },
+        });
+
+        await this.config.refreshAuth(AuthType.USE_OPENAI);
+      }
+
       await this.config.initialize();
       this.configInitialized = true;
 

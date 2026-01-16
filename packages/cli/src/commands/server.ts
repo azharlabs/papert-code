@@ -6,6 +6,8 @@
 
 import type { CommandModule } from 'yargs';
 import { spawn } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 export const serverCommand: CommandModule = {
   command: 'server',
@@ -35,8 +37,8 @@ export const serverCommand: CommandModule = {
       .version(false),
   handler: async (argv) => {
     const token =
-      typeof argv.token === 'string' && argv.token.trim().length > 0
-        ? argv.token.trim()
+      typeof argv['token'] === 'string' && argv['token'].trim().length > 0
+        ? argv['token'].trim()
         : undefined;
 
     const env = {
@@ -44,17 +46,60 @@ export const serverCommand: CommandModule = {
       PAPERT_REMOTE_ENABLED: '1',
       PAPERT_REMOTE_SERVER_TOKEN: token ?? '',
       PAPERT_REMOTE_SESSION_TTL_MS: String(argv['session-ttl-ms'] ?? 60_000),
-      CODER_AGENT_PORT: String(argv.port ?? 41242),
-      CODER_AGENT_HOST: String(argv.host ?? '0.0.0.0'),
+      CODER_AGENT_PORT: String(argv['port'] ?? 41242),
+      CODER_AGENT_HOST: String(argv['host'] ?? '0.0.0.0'),
     };
 
     // Spawn the a2a server binary. This keeps the daemon implementation in one place.
-    const child = spawn('papert-a2a-server', [], {
-      stdio: 'inherit',
-      env,
+    const url = `http://127.0.0.1:${Number(argv['port'] ?? 41242)}`;
+    console.error(
+      `[papert] starting a2a server\n` +
+        `  url:   ${url}\n` +
+        `  port:  ${env.CODER_AGENT_PORT}\n` +
+        `  token: ${env.PAPERT_REMOTE_SERVER_TOKEN}\n` +
+        `  cmd:   papert-a2a-server`
+    );
+
+    const localServerEntrypoint = path.resolve(
+      process.cwd(),
+      'packages/a2a-server/dist/src/http/server.js',
+    );
+
+    const spawnCommand = fs.existsSync(localServerEntrypoint)
+      ? {
+          command: process.execPath,
+          args: [localServerEntrypoint],
+          display: `${process.execPath} ${localServerEntrypoint}`,
+        }
+      : {
+          command: 'papert-a2a-server',
+          args: [],
+          display: 'papert-a2a-server',
+        };
+
+    console.error(`[papert] spawning: ${spawnCommand.display}`);
+
+    let child;
+    try {
+      child = spawn(spawnCommand.command, spawnCommand.args, {
+        stdio: 'inherit',
+        env,
+      });
+    } catch (err) {
+      console.error(`[papert] failed to spawn daemon:`, err);
+      process.exit(1);
+      return;
+    }
+
+    child.on('error', (err) => {
+      console.error(`[papert] daemon spawn error:`, err);
+      process.exit(1);
     });
 
     child.on('close', (code) => {
+      if (code && code !== 0) {
+        console.error(`[papert] papert-a2a-server exited with code ${code}`);
+      }
       process.exit(code ?? 0);
     });
   },

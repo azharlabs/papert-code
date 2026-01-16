@@ -748,6 +748,7 @@ export class Config {
     apiKey?: string;
     baseUrl?: string;
     model?: string;
+    extraHeaders?: Record<string, string>;
   }): void {
     if (credentials.apiKey) {
       this._generationConfig.apiKey = credentials.apiKey;
@@ -757,6 +758,9 @@ export class Config {
     }
     if (credentials.model) {
       this._generationConfig.model = credentials.model;
+    }
+    if (credentials.extraHeaders) {
+      this._generationConfig.extraHeaders = credentials.extraHeaders;
     }
   }
 

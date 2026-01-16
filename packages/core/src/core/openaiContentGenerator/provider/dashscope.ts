@@ -50,6 +50,7 @@ export class DashScopeOpenAICompatibleProvider
       'X-DashScope-CacheControl': 'enable',
       'X-DashScope-UserAgent': userAgent,
       'X-DashScope-AuthType': authType,
+      ...(this.contentGeneratorConfig.extraHeaders ?? {}),
     };
   }
 
