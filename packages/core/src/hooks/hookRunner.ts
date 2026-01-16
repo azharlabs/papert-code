@@ -254,8 +254,9 @@ export class HookRunner {
       // Set up environment variables
       const env = {
         ...process.env,
-        GEMINI_PROJECT_DIR: input.cwd,
+        PAPERT_PROJECT_DIR: input.cwd,
         CLAUDE_PROJECT_DIR: input.cwd, // For compatibility
+        CLAUDE_PLUGIN_ROOT: input.cwd, // For compatibility with Claude-style hooks/hooks.json
       };
 
       const child = spawn(
@@ -398,8 +399,10 @@ export class HookRunner {
     debugLogger.debug(`Expanding hook command: ${command} (cwd: ${input.cwd})`);
     const escapedCwd = escapeShellArg(input.cwd, shellType);
     return command
-      .replace(/\$GEMINI_PROJECT_DIR/g, () => escapedCwd)
-      .replace(/\$CLAUDE_PROJECT_DIR/g, () => escapedCwd); // For compatibility
+      .replace(/\$PAPERT_PROJECT_DIR/g, () => escapedCwd)
+      .replace(/\$CLAUDE_PROJECT_DIR/g, () => escapedCwd) // For compatibility
+      .replace(/\$CLAUDE_PLUGIN_ROOT/g, () => escapedCwd) // For compatibility
+      .replace(/\$\{CLAUDE_PLUGIN_ROOT\}/g, () => escapedCwd); // For compatibility
   }
 
   /**

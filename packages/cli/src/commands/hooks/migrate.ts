@@ -66,7 +66,7 @@ function migrateClaudeHook(claudeHook: unknown): unknown {
     if (typeof migrated['command'] === 'string') {
       migrated['command'] = migrated['command'].replace(
         /\$CLAUDE_PROJECT_DIR/g,
-        '$GEMINI_PROJECT_DIR',
+        '$PAPERT_PROJECT_DIR',
       );
     }
   }

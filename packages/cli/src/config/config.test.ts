@@ -576,6 +576,61 @@ describe('loadCliConfig', () => {
     expect(config.getShowMemoryUsage()).toBe(false);
   });
 
+  it('should load project hooks from hooks/hooks.json when present', async () => {
+    const mockFs = (await import('mock-fs')).default;
+
+    mockFs({
+      '/test/project/hooks/hooks.json': JSON.stringify({
+        hooks: {
+          BeforeTool: [
+            {
+              matcher: 'read_file',
+              hooks: [
+                {
+                  type: 'command',
+                  command: 'echo hi',
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    });
+
+    try {
+      process.argv = ['node', 'script.js'];
+      const argv = await parseArguments({} as Settings);
+      const settings: Settings = {};
+
+      const config = await loadCliConfig(
+        settings,
+        [],
+        new ExtensionEnablementManager(
+          ExtensionStorage.getUserExtensionsDir(),
+          argv.extensions,
+        ),
+        argv,
+        '/test/project',
+      );
+
+      expect(config.getProjectHooks()).toEqual({
+        BeforeTool: [
+          {
+            matcher: 'read_file',
+            hooks: [
+              {
+                type: 'command',
+                command: 'echo hi',
+              },
+            ],
+          },
+        ],
+      });
+    } finally {
+      mockFs.restore();
+    }
+  });
+
   it('should set showMemoryUsage to false by default from settings if CLI flag is not present', async () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments({} as Settings);

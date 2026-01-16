@@ -33,6 +33,7 @@ import {
 import { extensionsCommand } from '../commands/extensions.js';
 import { skillsCommand } from '../commands/skills.js';
 import { hooksCommand } from '../commands/hooks.js';
+import { loadProjectHooksFromHooksJson } from './projectHooks.js';
 import type { Settings } from './settings.js';
 import yargs, { type Argv } from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -677,6 +678,8 @@ export async function loadCliConfig(
   const { projectHooks } = options;
   const debugMode = isDebugMode(argv);
 
+  const hooksFromHooksJson = loadProjectHooksFromHooksJson(cwd);
+
   const memoryImportFormat = settings.context?.importFormat || 'tree';
 
   const ideMode = settings.ide?.enabled ?? false;
@@ -1086,7 +1089,7 @@ export async function loadCliConfig(
     },
     enableHooks: settings.tools?.enableHooks ?? false,
     hooks: settings.hooks || {},
-    projectHooks: projectHooks || {},
+    projectHooks: projectHooks || hooksFromHooksJson || {},
   });
 }
 

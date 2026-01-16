@@ -333,7 +333,7 @@ describe('HookRunner', () => {
       it('should expand environment variables in commands', async () => {
         const configWithEnvVar: HookConfig = {
           type: HookType.Command,
-          command: '$GEMINI_PROJECT_DIR/hooks/test.sh',
+          command: '$PAPERT_PROJECT_DIR/hooks/test.sh',
         };
 
         mockSpawn.mockProcessOn.mockImplementation(
@@ -358,14 +358,15 @@ describe('HookRunner', () => {
           expect.objectContaining({
             shell: false,
             env: expect.objectContaining({
-              GEMINI_PROJECT_DIR: '/test/project',
+              PAPERT_PROJECT_DIR: '/test/project',
               CLAUDE_PROJECT_DIR: '/test/project',
+              CLAUDE_PLUGIN_ROOT: '/test/project',
             }),
           }),
         );
       });
 
-      it('should not allow command injection via GEMINI_PROJECT_DIR', async () => {
+      it('should not allow command injection via PAPERT_PROJECT_DIR', async () => {
         const maliciousCwd = '/test/project; echo "pwned" > /tmp/pwned';
         const mockMaliciousInput: HookInput = {
           ...mockInput,
@@ -374,7 +375,7 @@ describe('HookRunner', () => {
 
         const config: HookConfig = {
           type: HookType.Command,
-          command: 'ls $GEMINI_PROJECT_DIR',
+          command: 'ls $PAPERT_PROJECT_DIR',
         };
 
         // Mock the process closing immediately
@@ -399,6 +400,40 @@ describe('HookRunner', () => {
             expect.stringMatching(/ls (['"]).*echo.*pwned.*\1/),
           ]),
           expect.objectContaining({ shell: false }),
+        );
+      });
+
+      it('should expand CLAUDE_PLUGIN_ROOT in commands', async () => {
+        const configWithEnvVar: HookConfig = {
+          type: HookType.Command,
+          command: '${CLAUDE_PLUGIN_ROOT}/hooks/test.sh',
+        };
+
+        mockSpawn.mockProcessOn.mockImplementation(
+          (event: string, callback: (code: number) => void) => {
+            if (event === 'close') {
+              setImmediate(() => callback(0));
+            }
+          },
+        );
+
+        await hookRunner.executeHook(
+          configWithEnvVar,
+          HookEventName.BeforeTool,
+          mockInput,
+        );
+
+        expect(spawn).toHaveBeenCalledWith(
+          expect.stringMatching(/bash|powershell/),
+          expect.arrayContaining([
+            expect.stringMatching(/['"]?\/test\/project['"]?\/hooks\/test\.sh/),
+          ]),
+          expect.objectContaining({
+            shell: false,
+            env: expect.objectContaining({
+              CLAUDE_PLUGIN_ROOT: '/test/project',
+            }),
+          }),
         );
       });
     });
