@@ -180,6 +180,8 @@ export const useGeminiStream = (
   }, [toolCalls]);
 
   const loopDetectedRef = useRef(false);
+  const lastQueryRef = useRef<PartListUnion | null>(null);
+  const lastPromptIdRef = useRef<string | null>(null);
   const [
     loopDetectionConfirmationRequest,
     setLoopDetectionConfirmationRequest,
@@ -718,19 +720,31 @@ export const useGeminiStream = (
         addItem(
           {
             type: 'info',
-            text: `Loop detection has been disabled for this session. Please try your request again.`,
+            text: `Loop detection has been disabled for this session. Retrying request...`,
           },
           Date.now(),
         );
-      } else {
-        addItem(
-          {
-            type: 'info',
-            text: `A potential loop was detected. This can happen due to repetitive tool calls or other model behavior. The request has been halted.`,
-          },
-          Date.now(),
-        );
+
+        if (lastQueryRef.current && lastPromptIdRef.current) {
+          void submitQuery(
+            lastQueryRef.current,
+            { isContinuation: true },
+            lastPromptIdRef.current,
+          );
+        }
+
+        return;
       }
+
+      // "Keep" means: keep loop detection enabled. The current request was
+      // already stopped by the server when it emitted LoopDetected.
+      addItem(
+        {
+          type: 'info',
+          text: `A potential loop was detected. This can happen due to repetitive tool calls or other model behavior. The request has been halted.`,
+        },
+        Date.now(),
+      );
     },
     [config, addItem],
   );
@@ -904,6 +918,11 @@ export const useGeminiStream = (
         }
 
         const finalQueryToSend = queryToSend;
+
+        // Store the last request so we can retry automatically if loop detection
+        // triggers and the user chooses to disable loop detection for the session.
+        lastQueryRef.current = finalQueryToSend;
+        lastPromptIdRef.current = prompt_id!;
 
         if (!options?.isContinuation) {
           // trigger new prompt event for session stats in CLI

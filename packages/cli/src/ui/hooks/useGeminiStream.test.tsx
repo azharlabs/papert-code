@@ -2827,7 +2827,7 @@ describe('useGeminiStream', () => {
       });
     });
 
-    it('should disable loop detection and show message when user selects "disable"', async () => {
+    it('should disable loop detection and retry automatically when user selects "disable"', async () => {
       const mockLoopDetectionService = {
         disableForSession: vi.fn(),
       };
@@ -2837,13 +2837,25 @@ describe('useGeminiStream', () => {
       };
       mockConfig.getGeminiClient = vi.fn().mockReturnValue(mockClient);
 
-      mockSendMessageStream.mockReturnValueOnce(
-        (async function* () {
-          yield {
-            type: ServerGeminiEventType.LoopDetected,
-          };
-        })(),
-      );
+      // First call: loop detected. Second call: finishes.
+      mockSendMessageStream
+        .mockReturnValueOnce(
+          (async function* () {
+            yield {
+              type: ServerGeminiEventType.LoopDetected,
+            };
+          })(),
+        )
+        .mockReturnValueOnce(
+          (async function* () {
+            yield {
+              type: ServerGeminiEventType.Finished,
+              value: {
+                finishReason: 'STOP',
+              },
+            } as any;
+          })(),
+        );
 
       const { result } = renderTestHook([], mockClient);
 
@@ -2875,10 +2887,15 @@ describe('useGeminiStream', () => {
       expect(mockAddItem).toHaveBeenCalledWith(
         {
           type: 'info',
-          text: 'Loop detection has been disabled for this session. Please try your request again.',
+          text: 'Loop detection has been disabled for this session. Retrying request...',
         },
         expect.any(Number),
       );
+
+      // Verify we retried the request
+      await waitFor(() => {
+        expect(mockSendMessageStream).toHaveBeenCalledTimes(2);
+      });
     });
 
     it('should keep loop detection enabled and show message when user selects "keep"', async () => {
@@ -3003,10 +3020,15 @@ describe('useGeminiStream', () => {
       expect(mockAddItem).toHaveBeenCalledWith(
         {
           type: 'info',
-          text: 'Loop detection has been disabled for this session. Please try your request again.',
+          text: 'Loop detection has been disabled for this session. Retrying request...',
         },
         expect.any(Number),
       );
+
+      // Verify we retried the second request
+      await waitFor(() => {
+        expect(mockSendMessageStream).toHaveBeenCalledTimes(3);
+      });
     });
 
     it('should process LoopDetected event after moving pending history to history', async () => {
