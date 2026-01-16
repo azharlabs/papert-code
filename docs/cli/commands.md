@@ -1,6 +1,9 @@
 # CLI Commands
 
-Papert Code supports several built-in commands to help you manage your session, customize the interface, and control its behavior. These commands are prefixed with a forward slash (`/`), an at symbol (`@`), or an exclamation mark (`!`).
+Papert Code supports several built-in commands to help you manage your session, customize the interface, and control its behavior.
+
+- **Interactive commands** are prefixed with a forward slash (`/`), an at symbol (`@`), or an exclamation mark (`!`).
+- **Terminal commands** are invoked as `papert <command>` (for example, `papert server` and `papert connect`). See [Remote Driving](./remote-driving.md).
 
 ## Slash commands (`/`)
 

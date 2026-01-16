@@ -28,6 +28,8 @@ import { commandRegistry } from '../commands/command-registry.js';
 import { debugLogger } from '@papert-code/papert-code-core';
 import type { Command, CommandArgument } from '../commands/types.js';
 import { GitService } from '@papert-code/papert-code-core';
+import { RemoteSessionStore, type RemoteAuthConfig } from './remoteAuth.js';
+import { createRemoteAuthMiddleware, createRemoteRouter } from './remoteRoutes.js';
 
 type CommandResponse = {
   name: string;
@@ -157,6 +159,14 @@ export async function createApp() {
     const extensions = loadExtensions(workspaceRoot);
     const config = await loadConfig(settings, extensions, 'a2a-server');
 
+    const remoteAuth: RemoteAuthConfig = {
+      enabled: process.env['PAPERT_REMOTE_ENABLED'] === '1',
+      serverToken: process.env['PAPERT_REMOTE_SERVER_TOKEN'],
+      sessionTtlMs: Number(process.env['PAPERT_REMOTE_SESSION_TTL_MS'] ?? 60_000),
+    };
+
+    const remoteSessions = new RemoteSessionStore(remoteAuth);
+
     let git: GitService | undefined;
     if (config.getCheckpointingEnabled()) {
       git = new GitService(config.getTargetDir(), config.storage);
@@ -194,6 +204,23 @@ export async function createApp() {
     expressApp.use((req, res, next) => {
       requestStorage.run({ req }, next);
     });
+
+    // Remote driving control plane + auth/lock enforcement.
+    // This is intentionally mounted before A2A routes so it can protect them.
+    expressApp.use(
+      createRemoteRouter({
+        auth: remoteAuth,
+        sessions: remoteSessions,
+        workspaceRoot,
+      }),
+    );
+    expressApp.use(
+      createRemoteAuthMiddleware({
+        auth: remoteAuth,
+        sessions: remoteSessions,
+        workspaceRoot,
+      }),
+    );
 
     const appBuilder = new A2AExpressApp(requestHandler);
     expressApp = appBuilder.setupRoutes(expressApp, '');

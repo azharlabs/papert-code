@@ -473,6 +473,32 @@ The CLI keeps a history of shell commands you run. To avoid conflicts between di
 
 Environment variables are a common way to configure applications, especially for sensitive information like API keys or for settings that might change between environments. For authentication setup, see the [Authentication documentation](./authentication.md) which covers all available authentication methods.
 
+### Remote driving (daemon/client)
+
+Papert Code includes an optional **remote driving** mode where a CLI instance (the *client*) connects to a long-running Papert Code daemon (the *server*) over HTTP.
+
+The server-side remote driving feature is guarded by the following environment variables:
+
+- **`PAPERT_REMOTE_ENABLED`** (string)
+  - **Values:** `"1"` to enable. Any other value disables remote driving.
+  - **Description:** Enables the remote driving control plane (`/api/v1/*`) and enforces remote-session authentication on the daemon.
+
+- **`PAPERT_REMOTE_SERVER_TOKEN`** (string)
+  - **Required when enabled:** Yes
+  - **Description:** Shared secret used **only** to create/release remote sessions. Clients present this token as a Bearer token when calling control-plane endpoints.
+
+- **`PAPERT_REMOTE_SESSION_TTL_MS`** (number, milliseconds)
+  - **Default:** `60000` (60s)
+  - **Description:** Remote session **lease duration** (time-to-live) used by the daemon.
+
+  The TTL is applied as a sliding lease:
+
+  - When a session is created, the daemon sets `expiresAt = now + PAPERT_REMOTE_SESSION_TTL_MS`.
+  - On **every authenticated request** that includes a valid remote session (i.e., requests carrying `x-papert-session-id` + `Authorization: Bearer <sessionToken>`), the daemon **renews** the lease by setting `expiresAt = now + PAPERT_REMOTE_SESSION_TTL_MS` (a “touch”).
+  - If no qualifying requests are received before `expiresAt`, the session expires and the daemon releases the session and its workspace lock.
+
+  In practice, this means `PAPERT_REMOTE_SESSION_TTL_MS` is the maximum period the client can be idle (no requests) before it must reconnect and create a new session.
+
 The CLI automatically loads environment variables from an `.env` file. The loading order is:
 
 1.  `.env` file in the current working directory.

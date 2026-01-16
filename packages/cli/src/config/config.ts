@@ -33,6 +33,8 @@ import {
 import { extensionsCommand } from '../commands/extensions.js';
 import { skillsCommand } from '../commands/skills.js';
 import { hooksCommand } from '../commands/hooks.js';
+import { serverCommand } from '../commands/server.js';
+import { connectCommand } from '../commands/connect.js';
 import { loadProjectHooksFromHooksJson } from './projectHooks.js';
 import type { Settings } from './settings.js';
 import yargs, { type Argv } from 'yargs';
@@ -107,6 +109,8 @@ function parseApprovalModeValue(value: string): ApprovalMode {
 
 export interface CliArgs {
   query: string | undefined;
+  remoteUrl?: string | undefined;
+  remoteToken?: string | undefined;
   model: string | undefined;
   sandbox: boolean | string | undefined;
   sandboxImage: string | undefined;
@@ -246,6 +250,14 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     .option('proxy', {
       type: 'string',
       description: 'Proxy for Papert Code, like schema://user:password@host:port',
+    })
+    .option('remote-url', {
+      type: 'string',
+      description: 'Remote daemon base URL (used by `papert connect`).',
+    })
+    .option('remote-token', {
+      type: 'string',
+      description: 'Remote daemon server token (used by `papert connect`).',
     })
     .deprecateOption(
       'proxy',
@@ -559,6 +571,9 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     yargsInstance.command(hooksCommand);
   }
 
+  yargsInstance.command(serverCommand);
+  yargsInstance.command(connectCommand);
+
   yargsInstance
     .version(await getVersion()) // This will enable the --version flag based on package.json
     .alias('v', 'version')
@@ -572,15 +587,17 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
 
   // If yargs handled --help/--version it will have exited; nothing to do here.
 
-  // Handle case where MCP subcommands are executed - they should exit the process
-  // and not return to main CLI logic
+  // Handle case where subcommands are executed - they should exit the process
+  // and not return to main CLI logic.
   if (
     result._.length > 0 &&
     (result._[0] === 'mcp' ||
       result._[0] === 'extensions' ||
-      result._[0] === 'skills')
+      result._[0] === 'skills' ||
+      result._[0] === 'hooks' ||
+      result._[0] === 'server' ||
+      result._[0] === 'connect')
   ) {
-    // MCP commands handle their own execution and process exit
     process.exit(0);
   }
 

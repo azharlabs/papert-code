@@ -6,6 +6,7 @@ Within Papert Code, `packages/cli` is the frontend for users to send and receive
 
 - **[Authentication](./authentication.md):** A guide to setting up authentication with Papert OAuth and OpenAI-compatible providers.
 - **[Commands](./commands.md):** A reference for Papert Code CLI commands (e.g., `/help`, `/tools`, `/theme`).
+- **[Remote Driving](./remote-driving.md):** Run the CLI against a remote daemon with `papert server` and `papert connect`.
 - **[Configuration](./configuration.md):** A guide to tailoring Papert Code CLI behavior using configuration files.
 - **[Settings](./settings.md):** How to view and edit settings via the `/settings` command or JSON files.
 - **[Themes](./themes.md)**: A guide to customizing the CLI's appearance with different themes.

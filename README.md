@@ -66,6 +66,13 @@ papert
 > Generate integration tests for the payment flow.
 ```
 
+## Remote driving (daemon/client)
+
+Papert Code supports an optional remote-driving mode where you run a daemon on one machine (or container/VM) and connect to it from another machine.
+
+- User & CLI docs: `docs/cli/remote-driving.md`
+- Protocol & implementation notes: `docs/development/remote-driving.md`
+
 ### Everyday commands
 
 - `/help` — list commands

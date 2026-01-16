@@ -3,6 +3,9 @@ export { AbortError, isAbortError } from './types/errors.js';
 export { Query } from './query/Query.js';
 export { SdkLogger } from './utils/logger.js';
 export { createPapertAgent } from './agent.js';
+export { HttpSseTransport } from './transport/HttpSseTransport.js';
+
+export type { HttpSseTransportOptions } from './transport/HttpSseTransport.js';
 
 export type { QueryOptions } from './query/createQuery.js';
 export type { LogLevel, LoggerConfig, ScopedLogger } from './utils/logger.js';

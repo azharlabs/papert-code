@@ -4,7 +4,21 @@ This document provides a high-level overview of Papert Code's architecture.
 
 ## Core components
 
-Papert Code is primarily composed of two main packages, along with a suite of tools that can be used by the system in the course of handling command-line input:
+Papert Code is primarily composed of two main packages, along with a suite of tools that can be used by the system in the course of handling command-line input.
+
+Papert Code can also run in an optional **remote driving** topology:
+
+- A long-running HTTP daemon (server) hosts the agent/task endpoints and exposes a small *control plane* for remote session creation.
+- A CLI instance (client) connects to the daemon and forwards work over HTTP.
+
+The remote driving mode is implemented primarily by:
+
+- `packages/a2a-server` (daemon HTTP server, including remote session auth + workspace locks)
+- `packages/cli` (client-side session bootstrap and request routing)
+
+For protocol details (endpoints, headers, locking semantics, and streaming), see `docs/development/remote-driving.md`.
+
+Papert Code's local (non-remote) architecture is primarily composed of two main packages, along with a suite of tools that can be used by the system in the course of handling command-line input:
 
 1.  **CLI package (`packages/cli`):**
     - **Purpose:** This contains the user-facing portion of Papert Code, such as handling the initial user input, presenting the final output, and managing the overall user experience.

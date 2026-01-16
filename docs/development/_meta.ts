@@ -1,5 +1,6 @@
 export default {
   architecture: 'Architecture',
+  'remote-driving': 'Remote Driving',
   npm: 'NPM',
   deployment: 'Deployment',
   telemetry: 'Telemetry',
