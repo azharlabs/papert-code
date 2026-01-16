@@ -85,14 +85,44 @@ export function createRemoteAuthMiddleware(options: {
       return next();
     }
 
-    // Allow unauthenticated access to health + session creation.
+    // Read env at request time so tests/boot-time config changes are respected.
+    const docsEnabled = process.env['PAPERT_REMOTE_DOCS_ENABLED'] === '1';
+
+    // NOTE: this middleware is mounted on '/', so req.path can be affected by
+    // how Express routed the request. Prefer req.originalUrl for allowlisting.
+    const urlPath = (() => {
+      const raw = req.originalUrl || req.path;
+      const noQuery = raw.split('?')[0].split('#')[0];
+      try {
+        return decodeURIComponent(noQuery);
+      } catch {
+        return noQuery;
+      }
+    })();
+
+    // Allow unauthenticated access to health + session creation (+ docs when enabled).
     if (
       req.method === 'GET' &&
-      (req.path === '/api/v1/health' || req.path === '/.well-known/agent-card.json')
+      (urlPath === '/api/v1/health' ||
+        urlPath === '/.well-known/agent-card.json' ||
+        (docsEnabled &&
+          (urlPath === '/openapi.json' ||
+            urlPath === '/docs' ||
+            urlPath.startsWith('/docs/'))))
     ) {
       return next();
     }
-    if (req.method === 'POST' && req.path === '/api/v1/sessions') {
+    // Creating sessions is authenticated with the server token (if configured).
+    if (req.method === 'POST' && urlPath === '/api/v1/sessions') {
+      const serverToken = auth.serverToken;
+      if (serverToken) {
+        const bearer = parseBearerToken(req.headers.authorization);
+        if (!bearer || bearer !== serverToken) {
+          res.status(401).json({ error: 'unauthorized' });
+          return;
+        }
+      }
+
       return next();
     }
 

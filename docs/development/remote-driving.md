@@ -30,6 +30,30 @@ To enable them on the daemon process, set:
 - `PAPERT_REMOTE_SERVER_TOKEN=<server-token>`
 - `PAPERT_REMOTE_SESSION_TTL_MS=<milliseconds>` (optional; default: `60000`)
 
+## Swagger/OpenAPI docs
+
+The daemon can optionally serve API documentation:
+
+- **Docs UI:** `GET /docs`
+- **OpenAPI spec:** `GET /openapi.json`
+
+Docs are **disabled by default**.
+
+### Enabling docs
+
+Enable docs with either:
+
+- CLI flag: `papert server --docs`
+- Environment variable: `PAPERT_REMOTE_DOCS_ENABLED=1`
+
+### Interaction with remote auth
+
+Remote driving uses bearer tokens for the control plane and API requests.
+
+When `PAPERT_REMOTE_DOCS_ENABLED=1`, the docs endpoints (`/docs`, `/openapi.json`, and `/docs/*`) are **allowlisted** and do **not** require remote auth headers.
+
+This makes the docs effectively **public**, so only enable them on trusted networks or behind an authenticating proxy.
+
 ## HTTP endpoints
 
 Remote driving introduces a small **control plane** under `/api/v1/*`.

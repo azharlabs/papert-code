@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import type express from 'express';
 import { createApp } from './app.js';
 import { requestApp } from './test-utils.js';
@@ -27,14 +27,21 @@ vi.mock('../config/config.js', async () => {
 describe('Remote driving control plane', () => {
   let app: express.Express;
 
-  beforeAll(async () => {
+  const OLD_ENV = process.env;
+
+  beforeEach(async () => {
+    process.env = { ...OLD_ENV };
+    process.env['NODE_ENV'] = 'test';
     process.env['PAPERT_REMOTE_ENABLED'] = '1';
     process.env['PAPERT_REMOTE_SERVER_TOKEN'] = 'server-secret';
     process.env['PAPERT_REMOTE_SESSION_TTL_MS'] = '60000';
+    delete process.env['PAPERT_REMOTE_DOCS_ENABLED'];
+
+    app = await createApp();
   });
 
-  beforeEach(async () => {
-    app = await createApp();
+  afterEach(() => {
+    process.env = OLD_ENV;
   });
 
   it('GET /api/v1/health returns ok', async () => {
@@ -52,7 +59,7 @@ describe('Remote driving control plane', () => {
     const res = await requestApp(app, {
       method: 'POST',
       path: '/api/v1/sessions',
-      headers: { authorization: 'Bearer server-secret' },
+      headers: { authorization: 'Bearer server-secret', 'content-type': 'application/json' },
     });
 
     expect(res.status).toBe(201);
@@ -68,14 +75,14 @@ describe('Remote driving control plane', () => {
     const first = await requestApp(app, {
       method: 'POST',
       path: '/api/v1/sessions',
-      headers: { authorization: 'Bearer server-secret' },
+      headers: { authorization: 'Bearer server-secret', 'content-type': 'application/json' },
     });
     expect(first.status).toBe(201);
 
     const second = await requestApp(app, {
       method: 'POST',
       path: '/api/v1/sessions',
-      headers: { authorization: 'Bearer server-secret' },
+      headers: { authorization: 'Bearer server-secret', 'content-type': 'application/json' },
     });
     expect(second.status).toBe(409);
 
@@ -91,7 +98,7 @@ describe('Remote driving control plane', () => {
     const third = await requestApp(app, {
       method: 'POST',
       path: '/api/v1/sessions',
-      headers: { authorization: 'Bearer server-secret' },
+      headers: { authorization: 'Bearer server-secret', 'content-type': 'application/json' },
     });
     expect(third.status).toBe(201);
   });

@@ -30,6 +30,18 @@ By default, `papert server`:
 - `--port <port>`: Port to bind to (default: `41242`).
 - `--token <token>`: Server token required by clients to create a remote session.
 - `--session-ttl-ms <ms>`: Remote session lease duration in milliseconds.
+- `--docs`: Enable Swagger/OpenAPI docs (default: disabled). When enabled:
+  - Docs UI is served at `/docs`
+  - OpenAPI spec is served at `/openapi.json`
+
+### API docs (Swagger/OpenAPI)
+
+Docs are **disabled by default**. Enable them with either:
+
+- CLI flag: `papert server --docs`
+- Environment variable: `PAPERT_REMOTE_DOCS_ENABLED=1`
+
+When enabled, the docs endpoints (`/docs`, `/openapi.json`, and `/docs/*`) are **public** and do **not** require the remote server token or session token.
 
 ## Connect from a client (`papert connect`)
 

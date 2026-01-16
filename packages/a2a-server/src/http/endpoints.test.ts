@@ -70,6 +70,8 @@ describe('Agent Server Endpoints', () => {
   let app: express.Express;
   let testWorkspace: string;
 
+  const OLD_ENV = process.env;
+
   const createTask = (contextId: string) =>
     requestApp(app, {
       method: 'POST',
@@ -84,6 +86,14 @@ describe('Agent Server Endpoints', () => {
     });
 
   beforeAll(async () => {
+    process.env = { ...OLD_ENV };
+
+    // Ensure remote driving auth is disabled for these endpoint tests.
+    delete process.env['PAPERT_REMOTE_ENABLED'];
+    delete process.env['PAPERT_REMOTE_SERVER_TOKEN'];
+    delete process.env['PAPERT_REMOTE_SESSION_TTL_MS'];
+    delete process.env['PAPERT_REMOTE_DOCS_ENABLED'];
+
     // Create a unique temporary directory for the workspace to avoid conflicts
     testWorkspace = fs.mkdtempSync(
       path.join(os.tmpdir(), 'gemini-agent-test-'),
@@ -92,6 +102,8 @@ describe('Agent Server Endpoints', () => {
   });
 
   afterAll(async () => {
+    process.env = OLD_ENV;
+
     if (testWorkspace) {
       try {
         fs.rmSync(testWorkspace, { recursive: true, force: true });

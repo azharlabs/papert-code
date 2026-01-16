@@ -197,6 +197,12 @@ export function setTargetDir(agentSettings: AgentSettings | undefined): string {
 }
 
 export function loadEnvironment(): void {
+  // Tests should be hermetic; loading .env files can leak local developer
+  // configuration (e.g. remote auth flags) into the test process.
+  if (process.env['NODE_ENV'] === 'test') {
+    return;
+  }
+
   const envFilePath = findEnvFile(process.cwd());
   if (envFilePath) {
     dotenv.config({ path: envFilePath, override: true });

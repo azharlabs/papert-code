@@ -39,7 +39,7 @@ import { runNonInteractive } from '../nonInteractiveCli.js';
 import { ConsolePatcher } from '../ui/utils/ConsolePatcher.js';
 import { createRemoteControlService } from '../remote/remoteControlService.js';
 
-class Session {
+export class Session {
   private userMessageQueue: CLIUserMessage[] = [];
   private abortController: AbortController;
   private config: Config;

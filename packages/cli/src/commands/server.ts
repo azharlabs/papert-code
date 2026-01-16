@@ -34,6 +34,11 @@ export const serverCommand: CommandModule = {
         description: 'Host to bind to.',
         default: '0.0.0.0',
       })
+      .option('docs', {
+        type: 'boolean',
+        description: 'Enable OpenAPI docs UI at /docs and spec at /openapi.json.',
+        default: false,
+      })
       .version(false),
   handler: async (argv) => {
     const token =
@@ -46,6 +51,7 @@ export const serverCommand: CommandModule = {
       PAPERT_REMOTE_ENABLED: '1',
       PAPERT_REMOTE_SERVER_TOKEN: token ?? '',
       PAPERT_REMOTE_SESSION_TTL_MS: String(argv['session-ttl-ms'] ?? 60_000),
+      PAPERT_REMOTE_DOCS_ENABLED: argv['docs'] ? '1' : '0',
       CODER_AGENT_PORT: String(argv['port'] ?? 41242),
       CODER_AGENT_HOST: String(argv['host'] ?? '0.0.0.0'),
     };

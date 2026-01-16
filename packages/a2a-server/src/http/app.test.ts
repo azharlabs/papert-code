@@ -113,8 +113,25 @@ vi.mock('@papert-code/papert-code-core', async () => {
 describe('E2E Tests', () => {
   let app: express.Express;
 
+  const OLD_ENV = process.env;
+
   beforeAll(async () => {
+    process.env = { ...OLD_ENV };
+
+    // Ensure remote driving auth is disabled for these E2E tests.
+    delete process.env['PAPERT_REMOTE_ENABLED'];
+    delete process.env['PAPERT_REMOTE_SERVER_TOKEN'];
+    delete process.env['PAPERT_REMOTE_SESSION_TTL_MS'];
+    delete process.env['PAPERT_REMOTE_DOCS_ENABLED'];
+
+    // Prevent dotenv from re-enabling remote auth via a checked-in .env file.
+    process.env['NODE_ENV'] = 'test';
+
     app = await createApp();
+  });
+
+  afterAll(() => {
+    process.env = OLD_ENV;
   });
 
   beforeEach(() => {

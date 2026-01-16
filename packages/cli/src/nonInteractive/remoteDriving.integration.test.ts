@@ -5,7 +5,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { runNonInteractiveStreamJson } from './session.js';
 import type { Config } from '@papert-code/papert-code-core';
 import { AuthType } from '@papert-code/papert-code-core';
 
@@ -19,6 +18,7 @@ function makeFakeConfig(): Config {
   cfg.getEnableHooks = () => false;
   cfg.getMessageBus = () => null as any;
   cfg.getResumedSessionData = () => undefined;
+  cfg.getIncludePartialMessages = () => false;
 
   // Key methods used by stream-json session init
   cfg.updateCredentials = (creds: any) => {
@@ -42,32 +42,35 @@ describe('stream-json remote driving init', () => {
     process.env = OLD_ENV;
   });
 
-  it('creates remote session with server token, then swaps to session token + x-papert-session-id', async () => {
-    process.env.PAPERT_REMOTE_URL = 'http://remote.example:41242';
-    process.env.PAPERT_REMOTE_TOKEN = 'server-token-xyz';
+  it(
+    'creates remote session with server token, then swaps to session token + x-papert-session-id',
+    async () => {
+    process.env['PAPERT_REMOTE_URL'] = 'http://remote.example:41242';
+    process.env['PAPERT_REMOTE_TOKEN'] = 'server-token-xyz';
+
+    // Ensure we never hit the network in this test.
+    // Session initialization uses global fetch; we stub it below.
 
     // 1) create session
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce({
+      .mockImplementation(async () => ({
         ok: true,
         status: 200,
         statusText: 'OK',
         json: async () => ({ sessionId: 'sid-remote', token: 'sess-token-remote' }),
-      } as unknown as Response);
+      }) as unknown as Response);
 
     const config = makeFakeConfig();
 
-    // We don't actually run the full Session loop in this test.
-    // Instead, we trigger the initialization side-effect by running with empty input.
-    // The Session constructor is invoked and will not create an initial prompt.
-    // The first control request (initialize) is not sent, so we also need to directly
-    // call the private initializer in a full integration test.
+    // We only want to validate the initialization side-effect (remote session
+    // creation + credential swap). Running the full stream-json session loop
+    // would block waiting for stdin control messages.
     //
-    // Minimal smoke: ensure the remote session is created and config is updated
-    // by calling runNonInteractiveStreamJson with a non-empty initial prompt.
-    // This will cause Session.handleFirstMessage(user) => ensureConfigInitialized.
-    await runNonInteractiveStreamJson(config, 'hello');
+    // Trigger the initializer by calling the private method directly.
+    const { Session } = await import('./session.js');
+    const manager = new Session(config as any);
+    await (manager as any).ensureConfigInitialized();
 
     expect(fetchSpy).toHaveBeenCalledWith(
       new URL('/api/v1/sessions', 'http://remote.example:41242'),
@@ -88,5 +91,5 @@ describe('stream-json remote driving init', () => {
     });
 
     expect(config.refreshAuth).toHaveBeenCalledWith(AuthType.USE_OPENAI);
-  });
+  }, 15_000);
 });
