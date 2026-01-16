@@ -1088,6 +1088,7 @@ export async function loadCliConfig(
       format: outputSettingsFormat,
     },
     enableHooks: settings.tools?.enableHooks ?? false,
+    lsp: settings.tools?.lsp,
     hooks: settings.hooks || {},
     projectHooks: projectHooks || hooksFromHooksJson || {},
   });

@@ -3,6 +3,7 @@ export default {
   'file-system': 'File System',
   'multi-file': 'Multi-File Read',
   shell: 'Shell',
+  lsp: 'LSP',
   'todo-write': 'Todo Write',
   'web-fetch': 'Web Fetch',
   'web-search': 'Web Search',

@@ -22,6 +22,7 @@ export const READ_FILE_TOOL_NAME = 'read_file';
 export const LS_TOOL_NAME = 'list_directory';
 export const MEMORY_TOOL_NAME = 'save_memory';
 export const GET_INTERNAL_DOCS_TOOL_NAME = 'get_internal_docs';
+export const LSP_TOOL_NAME = 'lsp';
 export const EDIT_TOOL_NAMES = new Set([
   EDIT_TOOL_NAME,
   WRITE_FILE_TOOL_NAME,
@@ -51,6 +52,8 @@ export const ALL_BUILTIN_TOOL_NAMES = [
   READ_FILE_TOOL_NAME,
   LS_TOOL_NAME,
   MEMORY_TOOL_NAME,
+  GET_INTERNAL_DOCS_TOOL_NAME,
+  LSP_TOOL_NAME,
   DELEGATE_TO_AGENT_TOOL_NAME,
 ] as const;
 
@@ -70,6 +73,7 @@ export const ToolNames = {
   WEB_SEARCH: WEB_SEARCH_TOOL_NAME,
   LS: LS_TOOL_NAME,
   GET_INTERNAL_DOCS: GET_INTERNAL_DOCS_TOOL_NAME,
+  LSP: LSP_TOOL_NAME,
   DELEGATE_TO_AGENT: DELEGATE_TO_AGENT_TOOL_NAME,
 } as const;
 
@@ -94,6 +98,7 @@ export const ToolDisplayNames = {
   WEB_SEARCH: 'WebSearch',
   LS: 'ListFiles',
   GET_INTERNAL_DOCS: 'GetInternalDocs',
+  LSP: 'Lsp',
   DELEGATE_TO_AGENT: 'DelegateToAgent',
 } as const;
 

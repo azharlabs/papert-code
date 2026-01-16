@@ -45,6 +45,7 @@ import { EditTool } from '../tools/edit.js';
 import { ExitPlanModeTool } from '../tools/exitPlanMode.js';
 import { GlobTool } from '../tools/glob.js';
 import { GrepTool } from '../tools/grep.js';
+import { LspTool } from '../tools/lsp.js';
 import { LSTool } from '../tools/ls.js';
 import { MemoryTool, setGeminiMdFilename } from '../tools/memoryTool.js';
 import { ReadFileTool } from '../tools/read-file.js';
@@ -284,6 +285,7 @@ export interface ConfigParameters {
   embeddingModel?: string;
   sandbox?: SandboxConfig;
   targetDir: string;
+  lsp?: import('../lsp/lspManager.js').LspSettings;
   debugMode: boolean;
   includePartialMessages?: boolean;
   question?: string;
@@ -509,6 +511,7 @@ export class Config {
   private readonly truncateToolOutputLines: number;
   private readonly enableToolOutputTruncation: boolean;
   private readonly enableHooks: boolean;
+  private readonly lspSettings: import('../lsp/lspManager.js').LspSettings | undefined;
   private readonly enablePlugins: boolean;
   private readonly plugins: string[];
   private readonly enableNpmPlugins: boolean;
@@ -649,6 +652,7 @@ export class Config {
       params.truncateToolOutputLines ?? DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES;
     this.enableToolOutputTruncation = params.enableToolOutputTruncation ?? true;
     this.enableHooks = params.enableHooks ?? false;
+    this.lspSettings = params.lsp;
     this.enablePlugins = params.enablePlugins ?? false;
     this.plugins = params.plugins ?? [];
     this.enableNpmPlugins = params.enableNpmPlugins ?? false;
@@ -1441,6 +1445,10 @@ export class Config {
     return this.hookSystem;
   }
 
+  getLspSettings(): import('../lsp/lspManager.js').LspSettings {
+    return this.lspSettings ?? { enabled: false };
+  }
+
   getEnablePlugins(): boolean {
     return this.enablePlugins;
   }
@@ -1641,6 +1649,7 @@ export class Config {
     }
 
     registerCoreTool(GlobTool, this);
+    registerCoreTool(LspTool, this);
     if (this.getUseSmartEdit()) {
       registerCoreTool(SmartEditTool, this);
     } else {

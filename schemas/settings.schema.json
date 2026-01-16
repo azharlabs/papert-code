@@ -1035,6 +1035,124 @@
             "requiresRestart": true,
             "showInDialog": false
           }
+        },
+        "lsp": {
+          "type": "object",
+          "title": "LSP",
+          "description": "Language Server Protocol (LSP) integration settings. Configure servers per language and enable/disable globally.",
+          "default": {
+            "enabled": false,
+            "servers": {}
+          },
+          "x-papert": {
+            "category": "Tools",
+            "requiresRestart": true,
+            "showInDialog": false
+          },
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Enable LSP",
+              "description": "Enable LSP integration.",
+              "default": false,
+              "x-papert": {
+                "category": "Tools",
+                "requiresRestart": true,
+                "showInDialog": true
+              }
+            },
+            "servers": {
+              "type": "object",
+              "title": "LSP Servers",
+              "description": "Map of LSP server configurations keyed by server name (e.g. \"typescript\", \"pyright\").",
+              "default": {},
+              "x-papert": {
+                "category": "Tools",
+                "requiresRestart": true,
+                "showInDialog": false
+              },
+              "additionalProperties": {
+                "type": "object",
+                "title": "LSP Server",
+                "description": "LSP server configuration.",
+                "default": {},
+                "x-papert": {
+                  "category": "Tools",
+                  "requiresRestart": true,
+                  "showInDialog": false
+                },
+                "properties": {
+                  "disabled": {
+                    "type": "boolean",
+                    "title": "Disabled",
+                    "description": "Disable this LSP server.",
+                    "default": false,
+                    "x-papert": {
+                      "category": "Tools",
+                      "requiresRestart": true,
+                      "showInDialog": false
+                    }
+                  },
+                  "command": {
+                    "type": "array",
+                    "title": "Command",
+                    "description": "Command to start the LSP server (e.g. [\\\"typescript-language-server\\\", \\\"--stdio\\\"]).",
+                    "default": [],
+                    "x-papert": {
+                      "category": "Tools",
+                      "requiresRestart": true,
+                      "showInDialog": false
+                    },
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "extensions": {
+                    "type": "array",
+                    "title": "Extensions",
+                    "description": "File extensions handled by this server (e.g. [\\\".ts\\\", \\\".tsx\\\"]).",
+                    "default": [],
+                    "x-papert": {
+                      "category": "Tools",
+                      "requiresRestart": true,
+                      "showInDialog": false
+                    },
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "env": {
+                    "type": "object",
+                    "title": "Environment",
+                    "description": "Environment variables for the server process.",
+                    "default": {},
+                    "x-papert": {
+                      "category": "Tools",
+                      "requiresRestart": true,
+                      "showInDialog": false
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "initialization": {
+                    "type": "object",
+                    "title": "Initialization Options",
+                    "description": "Initialization options sent in the LSP initialize request.",
+                    "default": {},
+                    "x-papert": {
+                      "category": "Tools",
+                      "requiresRestart": true,
+                      "showInDialog": false
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
         }
       }
     },
