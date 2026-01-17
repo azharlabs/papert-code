@@ -8,6 +8,24 @@ import crypto from 'node:crypto';
 
 const crawlCache = new Map<string, string[]>();
 const cacheTimers = new Map<string, NodeJS.Timeout>();
+const MAX_CRAWL_CACHE_ENTRIES = 50;
+
+function touchEntry(key: string, value: string[]): void {
+  crawlCache.delete(key);
+  crawlCache.set(key, value);
+}
+
+function evictOldestEntry(): void {
+  const oldestKey = crawlCache.keys().next().value;
+  if (oldestKey !== undefined) {
+    crawlCache.delete(oldestKey);
+    const timer = cacheTimers.get(oldestKey);
+    if (timer) {
+      clearTimeout(timer);
+      cacheTimers.delete(oldestKey);
+    }
+  }
+}
 
 /**
  * Generates a unique cache key based on the project directory and the content
@@ -32,7 +50,13 @@ export const getCacheKey = (
  * Reads cached data from the in-memory cache.
  * Returns undefined if the key is not found.
  */
-export const read = (key: string): string[] | undefined => crawlCache.get(key);
+export const read = (key: string): string[] | undefined => {
+  const value = crawlCache.get(key);
+  if (value) {
+    touchEntry(key, value);
+  }
+  return value;
+};
 
 /**
  * Writes data to the in-memory cache and sets a timer to evict it after the TTL.
@@ -44,7 +68,10 @@ export const write = (key: string, results: string[], ttlMs: number): void => {
   }
 
   // Store the new data
-  crawlCache.set(key, results);
+  if (!crawlCache.has(key) && crawlCache.size >= MAX_CRAWL_CACHE_ENTRIES) {
+    evictOldestEntry();
+  }
+  touchEntry(key, results);
 
   // Set a timer to automatically delete the cache entry after the TTL
   const timerId = setTimeout(() => {

@@ -34,6 +34,8 @@ type AtCompletionAction =
   | { type: 'ERROR' }
   | { type: 'RESET' };
 
+export const SEARCH_DEBOUNCE_MS = 120;
+
 const initialState: AtCompletionState = {
   status: AtCompletionStatus.IDLE,
   suggestions: [],
@@ -110,6 +112,7 @@ export function useAtCompletion(props: UseAtCompletionProps): void {
   const fileSearch = useRef<FileSearch | null>(null);
   const searchAbortController = useRef<AbortController | null>(null);
   const slowSearchTimer = useRef<NodeJS.Timeout | null>(null);
+  const searchDebounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setSuggestions(state.suggestions);
@@ -125,6 +128,8 @@ export function useAtCompletion(props: UseAtCompletionProps): void {
 
   // Reacts to user input (`pattern`) ONLY.
   useEffect(() => {
+    let shouldScheduleSearch = false;
+
     if (!enabled) {
       // reset when first getting out of completion suggestions
       if (
@@ -133,22 +138,34 @@ export function useAtCompletion(props: UseAtCompletionProps): void {
       ) {
         dispatch({ type: 'RESET' });
       }
-      return;
-    }
-    if (pattern === null) {
+    } else if (pattern === null) {
       dispatch({ type: 'RESET' });
-      return;
-    }
-
-    if (state.status === AtCompletionStatus.IDLE) {
+    } else if (state.status === AtCompletionStatus.IDLE) {
       dispatch({ type: 'INITIALIZE' });
     } else if (
       (state.status === AtCompletionStatus.READY ||
         state.status === AtCompletionStatus.SEARCHING) &&
-      pattern !== state.pattern // Only search if the pattern has changed
+      pattern !== state.pattern
     ) {
-      dispatch({ type: 'SEARCH', payload: pattern });
+      shouldScheduleSearch = true;
     }
+
+    if (shouldScheduleSearch) {
+      if (searchDebounceTimer.current) {
+        clearTimeout(searchDebounceTimer.current);
+      }
+      searchDebounceTimer.current = setTimeout(() => {
+        dispatch({ type: 'SEARCH', payload: pattern });
+        searchDebounceTimer.current = null;
+      }, SEARCH_DEBOUNCE_MS);
+    }
+
+    return () => {
+      if (searchDebounceTimer.current) {
+        clearTimeout(searchDebounceTimer.current);
+        searchDebounceTimer.current = null;
+      }
+    };
   }, [enabled, pattern, state.status, state.pattern]);
 
   // The "Worker" that performs async operations based on status.

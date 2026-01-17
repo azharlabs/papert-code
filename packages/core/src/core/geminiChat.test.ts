@@ -560,7 +560,7 @@ describe('GeminiChat', () => {
       ).resolves.not.toThrow();
     });
 
-    it('should throw InvalidStreamError when no tool call and no finish reason', async () => {
+    it('should succeed when there is text even if finish reason is missing', async () => {
       // Setup: Stream with text but no finish reason and no tool call
       const streamWithoutFinishReason = (async function* () {
         yield {
@@ -580,6 +580,10 @@ describe('GeminiChat', () => {
         streamWithoutFinishReason,
       );
 
+      const consoleWarnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+
       const stream = await chat.sendMessageStream(
         'test-model',
         { message: 'test' },
@@ -592,7 +596,12 @@ describe('GeminiChat', () => {
             // consume stream
           }
         })(),
-      ).rejects.toThrow(InvalidStreamError);
+      ).resolves.not.toThrow();
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'Model test-model stream ended without a finish reason but returned text.',
+      );
+      consoleWarnSpy.mockRestore();
     });
 
     it('should throw InvalidStreamError when no tool call and empty response text', async () => {

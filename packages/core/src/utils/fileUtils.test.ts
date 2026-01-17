@@ -29,6 +29,7 @@ import {
   detectBOM,
   readFileWithEncoding,
   fileExists,
+  resetFileContentCache_TEST_ONLY,
 } from './fileUtils.js';
 import type { Config } from '../config/config.js';
 
@@ -58,6 +59,8 @@ describe('fileUtils', () => {
 
   beforeEach(() => {
     vi.resetAllMocks(); // Reset all mocks, including mime.getType
+
+    resetFileContentCache_TEST_ONLY();
 
     tempRootDir = actualNodeFs.mkdtempSync(
       path.join(os.tmpdir(), 'fileUtils-test-'),
@@ -675,6 +678,17 @@ describe('fileUtils', () => {
       expect(result.llmContent).toBe(content);
       expect(result.returnDisplay).toBe('');
       expect(result.error).toBeUndefined();
+    });
+
+    it('should reuse cached text reads for identical requests', async () => {
+      const content = 'Line A\\nLine B\\nLine C';
+      actualNodeFs.writeFileSync(testTextFilePath, content);
+      const readSpy = vi.spyOn(fsPromises, 'readFile');
+
+      await processSingleFileContent(testTextFilePath, mockConfig);
+      await processSingleFileContent(testTextFilePath, mockConfig);
+
+      expect(readSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should handle file not found', async () => {

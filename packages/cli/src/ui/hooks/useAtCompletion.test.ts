@@ -8,7 +8,10 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { useAtCompletion } from './useAtCompletion.js';
+import {
+  SEARCH_DEBOUNCE_MS,
+  useAtCompletion,
+} from './useAtCompletion.js';
 import type { Config, FileSearch } from '@papert-code/papert-code-core';
 import { FileSearchFactory } from '@papert-code/papert-code-core';
 import type { FileSystemStructure } from '@papert-code/papert-code-test-utils';
@@ -61,6 +64,7 @@ describe('useAtCompletion', () => {
     if (testRootDir) {
       await cleanupTmpDir(testRootDir);
     }
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -140,6 +144,61 @@ describe('useAtCompletion', () => {
         'dir/',
         'file.txt',
       ]);
+    });
+
+    it('debounces rapid pattern updates to avoid redundant searches', async () => {
+      const structure: FileSystemStructure = {
+        'a.txt': '',
+        'b.txt': '',
+        'c.txt': '',
+      };
+      testRootDir = await createTmpDir(structure);
+
+      const mockFileSearch: FileSearch = {
+        initialize: vi.fn().mockResolvedValue(undefined),
+        search: vi.fn(async (pattern: string) => [pattern]),
+      };
+      vi.spyOn(FileSearchFactory, 'create').mockReturnValue(mockFileSearch);
+
+      const { rerender } = renderHook(
+        ({ pattern }) =>
+          useTestHarnessForAtCompletion(true, pattern, mockConfig, testRootDir),
+        { initialProps: { pattern: 'a' } },
+      );
+
+      await waitFor(() => {
+        expect(mockFileSearch.search).toHaveBeenCalledWith(
+          'a',
+          expect.any(Object),
+        );
+      });
+
+      mockFileSearch.search.mockClear();
+
+      vi.useFakeTimers();
+      act(() => {
+        rerender({ pattern: 'b' });
+      });
+      act(() => {
+        rerender({ pattern: 'c' });
+      });
+
+      // Debounce window is still open, so no search yet.
+      expect(mockFileSearch.search).not.toHaveBeenCalled();
+
+      act(() => {
+        vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+      });
+
+      vi.useRealTimers();
+
+      await waitFor(() => {
+        expect(mockFileSearch.search).toHaveBeenCalledWith(
+          'c',
+          expect.any(Object),
+        );
+      });
+      expect(mockFileSearch.search).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -236,10 +295,15 @@ describe('useAtCompletion', () => {
         rerender({ pattern: 'b' });
       });
 
-      // Initially, loading should be false (before 200ms timer)
+      // Advance through the debounce window
+      act(() => {
+        vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+      });
+
+      // The search is now in-flight but still under the slow-loading threshold
       expect(result.current.isLoadingSuggestions).toBe(false);
 
-      // Advance time by exactly 200ms to trigger the loading state
+      // Advance enough time to cross the loading indicator threshold
       act(() => {
         vi.advanceTimersByTime(200);
       });
@@ -293,6 +357,13 @@ describe('useAtCompletion', () => {
       // Now that the first search is in-flight, trigger the second one.
       act(() => {
         rerender({ pattern: 'b' });
+      });
+
+      await waitFor(() => {
+        expect(mockFileSearch.search).toHaveBeenCalledWith(
+          'b',
+          expect.any(Object),
+        );
       });
 
       // The abort should have been called for the first search.

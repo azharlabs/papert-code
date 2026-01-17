@@ -1,20 +1,32 @@
+import { LruCache } from '../LruCache.js';
+
 /**
  * @license
  * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
 
+interface ResultCacheOptions {
+  maxEntries?: number;
+  ttlMs?: number;
+}
+
 /**
  * Implements an in-memory cache for file search results.
  * This cache optimizes subsequent searches by leveraging previously computed results.
  */
 export class ResultCache {
-  private readonly cache: Map<string, string[]>;
+  private readonly cache: LruCache<string, string[]>;
   private hits = 0;
   private misses = 0;
 
-  constructor(private readonly allFiles: string[]) {
-    this.cache = new Map();
+  constructor(
+    private readonly allFiles: string[],
+    options: ResultCacheOptions = {},
+  ) {
+    const maxEntries = options.maxEntries ?? 200;
+    const ttlMs = options.ttlMs ?? 60_000;
+    this.cache = new LruCache<string, string[]>(maxEntries, { ttlMs });
   }
 
   /**
@@ -27,32 +39,25 @@ export class ResultCache {
   async get(
     query: string,
   ): Promise<{ files: string[]; isExactMatch: boolean }> {
-    const isCacheHit = this.cache.has(query);
+    const cached = this.cache.get(query);
+    const isCacheHit = cached !== undefined;
 
     if (isCacheHit) {
       this.hits++;
-      return { files: this.cache.get(query)!, isExactMatch: true };
+      return { files: cached!, isExactMatch: true };
     }
 
     this.misses++;
 
-    // This is the core optimization of the memory cache.
-    // If a user first searches for "foo", and then for "foobar",
-    // we don't need to search through all files again. We can start
-    // from the results of the "foo" search.
-    // This finds the most specific, already-cached query that is a prefix
-    // of the current query.
     let bestBaseQuery = '';
-    for (const key of this.cache?.keys?.() ?? []) {
+    for (const key of this.cache.keys()) {
       if (query.startsWith(key) && key.length > bestBaseQuery.length) {
         bestBaseQuery = key;
       }
     }
 
-    const filesToSearch = bestBaseQuery
-      ? this.cache.get(bestBaseQuery)!
-      : this.allFiles;
-
+    const baseFiles = bestBaseQuery ? this.cache.get(bestBaseQuery) : undefined;
+    const filesToSearch = baseFiles ?? this.allFiles;
     return { files: filesToSearch, isExactMatch: false };
   }
 

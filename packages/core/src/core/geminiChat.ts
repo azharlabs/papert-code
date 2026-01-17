@@ -600,12 +600,24 @@ export class GeminiChat {
 
     let hasToolCall = false;
     let hasFinishReason = false;
+    let lastChunkHadValidText = false;
 
     for await (const chunk of streamResponse) {
       hasFinishReason =
         chunk?.candidates?.some((candidate) => candidate.finishReason) ?? false;
+      let chunkHasValidNonThoughtText = false;
       if (isValidResponse(chunk)) {
         const content = chunk.candidates?.[0]?.content;
+        chunkHasValidNonThoughtText =
+          chunk.candidates?.some((candidate) =>
+            candidate.content?.parts?.some(
+              (part) =>
+                !part.thought &&
+                part.text !== undefined &&
+                typeof part.text === 'string' &&
+                part.text.trim().length > 0,
+            ),
+          ) ?? false;
         if (content?.parts) {
           if (content.parts.some((part) => part.functionCall)) {
             hasToolCall = true;
@@ -617,6 +629,8 @@ export class GeminiChat {
           historyParts.push(...content.parts.filter((part) => !part.thought));
         }
       }
+
+      lastChunkHadValidText = chunkHasValidNonThoughtText;
 
       // Collect token usage for consolidated recording
       if (chunk.usageMetadata) {
@@ -663,6 +677,7 @@ export class GeminiChat {
       .map((part) => part.text)
       .join('')
       .trim();
+    const hasResponseText = responseText.length > 0;
 
     // Record assistant turn with raw Content and metadata
     if (responseText || hasToolCall || usageMetadata) {
@@ -687,16 +702,30 @@ export class GeminiChat {
     // We throw an error only when there's no tool call AND:
     // - No finish reason, OR
     // - Empty response text (e.g., only thoughts with no actual content)
-    if (!hasToolCall && (!hasFinishReason || !responseText)) {
-      if (!hasFinishReason) {
-        throw new InvalidStreamError(
-          'Model stream ended without a finish reason.',
-          'NO_FINISH_REASON',
-        );
-      } else {
+    if (!hasToolCall) {
+      if (!hasResponseText) {
+        if (!hasFinishReason) {
+          throw new InvalidStreamError(
+            'Model stream ended without a finish reason.',
+            'NO_FINISH_REASON',
+          );
+        }
         throw new InvalidStreamError(
           'Model stream ended with empty response text.',
           'NO_RESPONSE_TEXT',
+        );
+      }
+
+      if (!hasFinishReason) {
+        if (!lastChunkHadValidText) {
+          throw new InvalidStreamError(
+            'Model stream ended without a finish reason.',
+            'NO_FINISH_REASON',
+          );
+        }
+
+        console.warn(
+          `Model ${model} stream ended without a finish reason but returned text.`,
         );
       }
     }

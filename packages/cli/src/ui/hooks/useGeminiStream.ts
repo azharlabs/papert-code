@@ -52,6 +52,7 @@ import { findLastSafeSplitPoint } from '../utils/markdownUtilities.js';
 import { useStateAndRef } from './useStateAndRef.js';
 import type { UseHistoryManagerReturn } from './useHistoryManager.js';
 import { useLogger } from './useLogger.js';
+import { STREAM_DEBOUNCE_MS } from '../constants.js';
 import {
   useReactToolScheduler,
   mapToDisplay as mapTrackedToolCallsToDisplay,
@@ -124,6 +125,9 @@ export const useGeminiStream = (
   const [pendingHistoryItem, pendingHistoryItemRef, setPendingHistoryItem] =
     useStateAndRef<HistoryItemWithoutId | null>(null);
   const processedMemoryToolsRef = useRef<Set<string>>(new Set());
+  const streamUpdateTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const streamPendingBufferRef = useRef<string | null>(null);
+  const lastStreamUpdateRef = useRef<number>(0);
   const {
     startNewPrompt,
     getPromptCount,
@@ -194,6 +198,31 @@ export const useGeminiStream = (
     await done;
     setIsResponding(false);
   }, []);
+
+  const clearStreamUpdateTimer = useCallback(() => {
+    if (streamUpdateTimerRef.current) {
+      clearTimeout(streamUpdateTimerRef.current);
+      streamUpdateTimerRef.current = null;
+    }
+  }, []);
+
+  const flushStreamBuffer = useCallback(() => {
+    if (streamPendingBufferRef.current === null) {
+      return;
+    }
+
+    clearStreamUpdateTimer();
+    const pendingType =
+      pendingHistoryItemRef.current?.type === 'gemini_content'
+        ? 'gemini_content'
+        : 'gemini';
+    setPendingHistoryItem({
+      type: pendingType,
+      text: streamPendingBufferRef.current,
+    });
+    lastStreamUpdateRef.current = Date.now();
+    streamPendingBufferRef.current = null;
+  }, [clearStreamUpdateTimer, pendingHistoryItemRef, setPendingHistoryItem]);
   const { handleShellCommand, activeShellPtyId } = useShellCommandProcessor(
     addItem,
     setPendingHistoryItem,
@@ -466,20 +495,27 @@ export const useGeminiStream = (
       // we should maximize the amount of output sent to <Static />.
       const splitPoint = findLastSafeSplitPoint(newGeminiMessageBuffer);
       if (splitPoint === newGeminiMessageBuffer.length) {
-        // Update the existing message with accumulated content
-        setPendingHistoryItem((item) => ({
-          type: item?.type as 'gemini' | 'gemini_content',
-          text: newGeminiMessageBuffer,
-        }));
+        const now = Date.now();
+        const elapsed = now - lastStreamUpdateRef.current;
+        if (elapsed >= STREAM_DEBOUNCE_MS) {
+          setPendingHistoryItem((item) => ({
+            type: item?.type as 'gemini' | 'gemini_content',
+            text: newGeminiMessageBuffer,
+          }));
+          lastStreamUpdateRef.current = now;
+          streamPendingBufferRef.current = null;
+          clearStreamUpdateTimer();
+        } else {
+          streamPendingBufferRef.current = newGeminiMessageBuffer;
+          if (!streamUpdateTimerRef.current) {
+            streamUpdateTimerRef.current = setTimeout(() => {
+              flushStreamBuffer();
+            }, STREAM_DEBOUNCE_MS - elapsed);
+          }
+        }
       } else {
-        // This indicates that we need to split up this Gemini Message.
-        // Splitting a message is primarily a performance consideration. There is a
-        // <Static> component at the root of App.tsx which takes care of rendering
-        // content statically or dynamically. Everything but the last message is
-        // treated as static in order to prevent re-rendering an entire message history
-        // multiple times per-second (as streaming occurs). Prior to this change you'd
-        // see heavy flickering of the terminal. This ensures that larger messages get
-        // broken up so that there are more "statically" rendered.
+        streamPendingBufferRef.current = null;
+        clearStreamUpdateTimer();
         const beforeText = newGeminiMessageBuffer.substring(0, splitPoint);
         const afterText = newGeminiMessageBuffer.substring(splitPoint);
         addItem(
@@ -496,7 +532,13 @@ export const useGeminiStream = (
       }
       return newGeminiMessageBuffer;
     },
-    [addItem, pendingHistoryItemRef, setPendingHistoryItem],
+    [
+      addItem,
+      clearStreamUpdateTimer,
+      flushStreamBuffer,
+      pendingHistoryItemRef,
+      setPendingHistoryItem,
+    ],
   );
 
   const handleUserCancelledEvent = useCallback(
@@ -504,6 +546,8 @@ export const useGeminiStream = (
       if (turnCancelledRef.current) {
         return;
       }
+
+      flushStreamBuffer();
 
       if (pendingHistoryItemRef.current) {
         if (pendingHistoryItemRef.current.type === 'tool_group') {
@@ -537,6 +581,7 @@ export const useGeminiStream = (
 
   const handleErrorEvent = useCallback(
     (eventValue: GeminiErrorEventValue, userMessageTimestamp: number) => {
+      flushStreamBuffer();
       if (pendingHistoryItemRef.current) {
         addItem(pendingHistoryItemRef.current, userMessageTimestamp);
         setPendingHistoryItem(null);
@@ -561,6 +606,7 @@ export const useGeminiStream = (
 
   const handleAgentExecutionStoppedEvent = useCallback(
     (reason: string, userMessageTimestamp: number) => {
+      flushStreamBuffer();
       if (pendingHistoryItemRef.current) {
         addItem(pendingHistoryItemRef.current, userMessageTimestamp);
         setPendingHistoryItem(null);
@@ -579,6 +625,7 @@ export const useGeminiStream = (
 
   const handleAgentExecutionBlockedEvent = useCallback(
     (reason: string, userMessageTimestamp: number) => {
+      flushStreamBuffer();
       if (pendingHistoryItemRef.current) {
         addItem(pendingHistoryItemRef.current, userMessageTimestamp);
         setPendingHistoryItem(null);
@@ -600,6 +647,8 @@ export const useGeminiStream = (
         return;
       }
 
+      flushStreamBuffer();
+
       if (pendingHistoryItemRef.current) {
         addItem(pendingHistoryItemRef.current, userMessageTimestamp);
         setPendingHistoryItem(null);
@@ -611,6 +660,7 @@ export const useGeminiStream = (
 
   const handleFinishedEvent = useCallback(
     (event: ServerGeminiFinishedEvent, userMessageTimestamp: number) => {
+      flushStreamBuffer();
       const finishReason = event.value.reason;
       if (!finishReason) {
         return;
@@ -661,6 +711,7 @@ export const useGeminiStream = (
       eventValue: ServerGeminiChatCompressedEvent['value'],
       userMessageTimestamp: number,
     ) => {
+      flushStreamBuffer();
       if (pendingHistoryItemRef.current) {
         addItem(pendingHistoryItemRef.current, userMessageTimestamp);
         setPendingHistoryItem(null);
@@ -681,7 +732,12 @@ export const useGeminiStream = (
   );
 
   const handleMaxSessionTurnsEvent = useCallback(
-    () =>
+    (userMessageTimestamp: number) => {
+      flushStreamBuffer();
+      if (pendingHistoryItemRef.current) {
+        addItem(pendingHistoryItemRef.current, userMessageTimestamp);
+        setPendingHistoryItem(null);
+      }
       addItem(
         {
           type: 'info',
@@ -689,9 +745,10 @@ export const useGeminiStream = (
             `The session has reached the maximum number of turns: ${config.getMaxSessionTurns()}. ` +
             `Please update this limit in your setting.json file.`,
         },
-        Date.now(),
-      ),
-    [addItem, config],
+        userMessageTimestamp,
+      );
+    },
+    [addItem, config, flushStreamBuffer, pendingHistoryItemRef, setPendingHistoryItem],
   );
 
   const handleSessionTokenLimitExceededEvent = useCallback(
@@ -750,6 +807,7 @@ export const useGeminiStream = (
   );
 
   const handleLoopDetectedEvent = useCallback(() => {
+    flushStreamBuffer();
     // Show the confirmation dialog to choose whether to disable loop detection
     setLoopDetectionConfirmationRequest({
       onComplete: handleLoopDetectionConfirmation,
@@ -805,7 +863,7 @@ export const useGeminiStream = (
             // do nothing
             break;
           case ServerGeminiEventType.MaxSessionTurns:
-            handleMaxSessionTurnsEvent();
+            handleMaxSessionTurnsEvent(userMessageTimestamp);
             break;
           case ServerGeminiEventType.SessionTokenLimitExceeded:
             handleSessionTokenLimitExceededEvent(event.value);
@@ -1200,6 +1258,8 @@ export const useGeminiStream = (
       ),
     [pendingHistoryItem, pendingToolCallGroupDisplay],
   );
+
+  useEffect(() => () => clearStreamUpdateTimer(), [clearStreamUpdateTimer]);
 
   useEffect(() => {
     const saveRestorableToolCalls = async () => {

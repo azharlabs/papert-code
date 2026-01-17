@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { test, expect } from 'vitest';
+import { test, expect, vi } from 'vitest';
 import { ResultCache } from './result-cache.js';
 
 test('ResultCache basic usage', async () => {
@@ -52,4 +52,32 @@ test('ResultCache best base query', async () => {
   const { files: resultFiles, isExactMatch } = await cache.get('foobar');
   expect(resultFiles).toEqual(['foo.txt', 'foobar.js']);
   expect(isExactMatch).toBe(false);
+});
+
+test('ResultCache evicts oldest entries when limit exceeded', async () => {
+  const files = ['a.txt', 'b.txt', 'c.txt'];
+  const cache = new ResultCache(files, { maxEntries: 2, ttlMs: 60_000 });
+
+  cache.set('a', ['a.txt']);
+  cache.set('b', ['b.txt']);
+  cache.set('c', ['c.txt']);
+
+  const { files: resultFiles, isExactMatch } = await cache.get('a');
+  expect(resultFiles).toEqual(files);
+  expect(isExactMatch).toBe(false);
+});
+
+test('ResultCache expires entries after TTL', async () => {
+  vi.useFakeTimers();
+  const files = ['foo.txt', 'bar.js'];
+  const cache = new ResultCache(files, { maxEntries: 10, ttlMs: 50 });
+  cache.set('foo', ['foo.txt']);
+
+  vi.advanceTimersByTime(60);
+
+  const { files: resultFiles, isExactMatch } = await cache.get('foo');
+  expect(resultFiles).toEqual(files);
+  expect(isExactMatch).toBe(false);
+
+  vi.useRealTimers();
 });

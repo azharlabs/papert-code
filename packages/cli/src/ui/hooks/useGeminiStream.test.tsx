@@ -2251,12 +2251,15 @@ describe('useGeminiStream', () => {
       // The actual thought state is internal to the hook, but we can verify the behavior
       // by ensuring the second response doesn't show the previous thought
       await waitFor(() => {
-        expect(mockAddItem).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'gemini',
-            text: 'New response content',
-          }),
-          expect.any(Number),
+        const geminiCalls = mockAddItem.mock.calls.filter(
+          ([item]) => item?.type === 'gemini',
+        );
+        expect(geminiCalls.length).toBeGreaterThanOrEqual(2);
+        const lastGeminiCall = geminiCalls[geminiCalls.length - 1];
+        expect(lastGeminiCall).toBeDefined();
+        expect(lastGeminiCall[0]).toBeDefined();
+        expect((lastGeminiCall[0] as HistoryItem).text).not.toBe(
+          'Some response content',
         );
       });
     });

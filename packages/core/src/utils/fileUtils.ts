@@ -12,9 +12,37 @@ import mime from 'mime/lite';
 import { ToolErrorType } from '../tools/tool-error.js';
 import { BINARY_EXTENSIONS } from './ignorePatterns.js';
 import type { Config } from '../config/config.js';
+import { LruCache } from './LruCache.js';
 
 // Default values for encoding and separator format
 export const DEFAULT_ENCODING: BufferEncoding = 'utf-8';
+
+const FILE_CONTENT_CACHE_MAX_ENTRIES = 100;
+const FILE_CONTENT_CACHE_TTL_MS = 30_000;
+const FILE_CONTENT_CACHE_MAX_BYTES = 256 * 1024;
+
+interface FileContentCacheEntry {
+  result: ProcessedFileReadResult;
+  mtimeMs: number;
+  size: number;
+}
+
+const fileContentCache = new LruCache<string, FileContentCacheEntry>(
+  FILE_CONTENT_CACHE_MAX_ENTRIES,
+  { ttlMs: FILE_CONTENT_CACHE_TTL_MS },
+);
+
+function getFileCacheKey(
+  filePath: string,
+  offset?: number,
+  limit?: number,
+): string {
+  return `${filePath}::${offset ?? 'full'}:${limit ?? 'full'}`;
+}
+
+export function resetFileContentCache_TEST_ONLY(): void {
+  fileContentCache.clear();
+}
 
 // --- Unicode BOM detection & decoding helpers --------------------------------
 
@@ -350,6 +378,18 @@ export async function processSingleFileContent(
     const relativePathForDisplay = path
       .relative(rootDirectory, filePath)
       .replace(/\\/g, '/');
+    const cacheKey = getFileCacheKey(filePath, offset, limit);
+
+    if (fileType === 'text' || fileType === 'svg') {
+      const cached = fileContentCache.get(cacheKey);
+      if (
+        cached &&
+        cached.mtimeMs === stats.mtimeMs &&
+        cached.size === stats.size
+      ) {
+        return cached.result;
+      }
+    }
 
     switch (fileType) {
       case 'binary': {
@@ -367,10 +407,18 @@ export async function processSingleFileContent(
           };
         }
         const content = await readFileWithEncoding(filePath);
-        return {
+        const svgResult: ProcessedFileReadResult = {
           llmContent: content,
           returnDisplay: `Read SVG as text: ${relativePathForDisplay}`,
         };
+        if (Buffer.byteLength(content, DEFAULT_ENCODING) <= FILE_CONTENT_CACHE_MAX_BYTES) {
+          fileContentCache.set(cacheKey, {
+            result: svgResult,
+            mtimeMs: stats.mtimeMs,
+            size: stats.size,
+          });
+        }
+        return svgResult;
       }
       case 'text': {
         // Use BOM-aware reader to avoid leaving a BOM character in content and to support UTF-16/32 transparently
@@ -446,13 +494,24 @@ export async function processSingleFileContent(
           }
         }
 
-        return {
+        const textResult: ProcessedFileReadResult = {
           llmContent,
           returnDisplay,
           isTruncated,
           originalLineCount,
           linesShown: [actualStartLine + 1, actualEndLine],
         };
+        if (
+          Buffer.byteLength(llmContent, DEFAULT_ENCODING) <=
+          FILE_CONTENT_CACHE_MAX_BYTES
+        ) {
+          fileContentCache.set(cacheKey, {
+            result: textResult,
+            mtimeMs: stats.mtimeMs,
+            size: stats.size,
+          });
+        }
+        return textResult;
       }
       case 'image':
       case 'pdf':
