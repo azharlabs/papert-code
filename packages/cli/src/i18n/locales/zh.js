@@ -703,7 +703,7 @@ export default {
   '(Use Enter to Set Auth)': '（使用 Enter 设置认证）',
   'Terms of Services and Privacy Notice for Papert Code':
     'Papert Code 的服务条款和隐私声明',
-  'OpenAI (compatible APIs)': 'OpenAI（兼容 API）',
+  'Custom models (OpenAI compatible APIs)': '自定义模型（兼容 OpenAI API）',
   OpenAI: 'OpenAI',
   'Failed to login. Message: {{message}}': '登录失败。消息：{{message}}',
   'Authentication is enforced to be {{enforcedType}}, but you are currently using {{currentType}}.':

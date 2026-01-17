@@ -38,7 +38,7 @@ export function AuthDialog(): React.JSX.Element {
   const items = [
     {
       key: AuthType.USE_OPENAI,
-      label: t('OpenAI (compatible APIs)'),
+      label: t('Custom models (OpenAI compatible APIs)'),
       value: AuthType.USE_OPENAI,
     },
   ];

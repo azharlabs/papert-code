@@ -189,9 +189,9 @@ describe('AuthDialog', () => {
 
       const { lastFrame } = renderAuthDialog(settings);
 
-      // Since the auth dialog only shows OpenAI option now,
+      // Since the auth dialog only shows the custom models option now,
       // it won't show GEMINI_API_KEY messages
-      expect(lastFrame()).toContain('OpenAI');
+      expect(lastFrame()).toContain('Custom models (OpenAI compatible APIs)');
     });
 
     it('should not show the GEMINI_API_KEY message if PAPERT_DEFAULT_AUTH_TYPE is set to something else', () => {
@@ -277,9 +277,9 @@ describe('AuthDialog', () => {
 
       const { lastFrame } = renderAuthDialog(settings);
 
-      // Since the auth dialog only shows OpenAI option now,
+      // Since the auth dialog only shows the custom models option now,
       // it won't show GEMINI_API_KEY messages
-      expect(lastFrame()).toContain('OpenAI');
+      expect(lastFrame()).toContain('Custom models (OpenAI compatible APIs)');
     });
   });
 
@@ -322,8 +322,10 @@ describe('AuthDialog', () => {
 
       const { lastFrame } = renderAuthDialog(settings);
 
-      // Auth list currently has a single option, so OpenAI should be selected.
-      expect(lastFrame()).toContain('● 1. OpenAI');
+      // Auth list currently has a single option, so the custom models entry should be selected.
+      expect(lastFrame()).toContain(
+        '● 1. Custom models (OpenAI compatible APIs)',
+      );
     });
 
     it('should fall back to default if PAPERT_DEFAULT_AUTH_TYPE is not set', () => {
@@ -363,7 +365,7 @@ describe('AuthDialog', () => {
       const { lastFrame } = renderAuthDialog(settings);
 
       // Default is OpenAI (first option)
-      expect(lastFrame()).toContain('● 1. OpenAI (compatible APIs)');
+      expect(lastFrame()).toContain('● 1. Custom models (OpenAI compatible APIs)');
     });
 
     it('should show an error and fall back to default if PAPERT_DEFAULT_AUTH_TYPE is invalid', () => {
@@ -406,7 +408,7 @@ describe('AuthDialog', () => {
 
       // Since the auth dialog doesn't show PAPERT_DEFAULT_AUTH_TYPE errors anymore,
       // it will just show the default OpenAI option
-      expect(lastFrame()).toContain('● 1. OpenAI (compatible APIs)');
+      expect(lastFrame()).toContain('● 1. Custom models (OpenAI compatible APIs)');
     });
   });
 

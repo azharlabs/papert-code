@@ -746,7 +746,7 @@ export default {
   '(Use Enter to Set Auth)': '(Use Enter to Set Auth)',
   'Terms of Services and Privacy Notice for Papert Code':
     'Terms of Services and Privacy Notice for Papert Code',
-  'OpenAI (compatible APIs)': 'OpenAI (compatible APIs)',
+  'Custom models (OpenAI compatible APIs)': 'Custom models (OpenAI compatible APIs)',
   OpenAI: 'OpenAI',
   'Failed to login. Message: {{message}}':
     'Failed to login. Message: {{message}}',
