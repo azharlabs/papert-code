@@ -923,8 +923,43 @@ describe('HookRunner', () => {
         mockInput,
       );
 
-      expect(result.success).toBe(true);
-      expect(result.output).toEqual(mockOutput);
-    });
+        expect(result.success).toBe(true);
+        expect(result.output).toEqual(mockOutput);
+      });
+
+      it('should treat missing hook file errors as non-blocking', async () => {
+        // Simulate a Python "can't open file" error with exit code 2.
+        mockSpawn.mockStderrOn.mockImplementation(
+          (event: string, callback: (data: Buffer) => void) => {
+            if (event === 'data') {
+              setImmediate(() =>
+                callback(
+                  Buffer.from(
+                    "python3: can't open file '/test/project/hooks/missing.py': [Errno 2] No such file or directory",
+                  ),
+                ),
+              );
+            }
+          },
+        );
+
+        mockSpawn.mockProcessOn.mockImplementation(
+          (event: string, callback: (code: number) => void) => {
+            if (event === 'close') {
+              setImmediate(() => callback(2));
+            }
+          },
+        );
+
+        const result = await hookRunner.executeHook(
+          commandConfig,
+          HookEventName.BeforeTool,
+          mockInput,
+        );
+
+        expect(result.success).toBe(false);
+        expect(result.output?.decision).toBe('allow');
+        expect(result.output?.systemMessage).toContain('Warning:');
+      });
   });
 });

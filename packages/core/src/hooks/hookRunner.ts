@@ -351,10 +351,15 @@ export class HookRunner {
             output = this.convertPlainTextToHookOutput(stdout.trim(), exitCode);
           }
         } else if (exitCode !== EXIT_CODE_SUCCESS && stderr.trim()) {
-          // Convert error output to structured format
+          // Convert error output to structured format, but avoid blocking on missing hook files.
+          const stderrText = stderr.trim();
+          const isMissingFile = this.isMissingHookFileError(stderrText);
+          const effectiveExitCode = isMissingFile
+            ? EXIT_CODE_NON_BLOCKING_ERROR
+            : exitCode || EXIT_CODE_NON_BLOCKING_ERROR;
           output = this.convertPlainTextToHookOutput(
-            stderr.trim(),
-            exitCode || EXIT_CODE_NON_BLOCKING_ERROR,
+            stderrText,
+            effectiveExitCode,
           );
         }
 
@@ -431,5 +436,16 @@ export class HookRunner {
         systemMessage: `Warning: ${text}`,
       };
     }
+  }
+
+  /**
+   * Detect common missing-file errors so we don't treat them as blocking hook denials.
+   */
+  private isMissingHookFileError(stderrText: string): boolean {
+    return (
+      /no such file or directory/i.test(stderrText) ||
+      /can't open file/i.test(stderrText) ||
+      /\bENOENT\b/i.test(stderrText)
+    );
   }
 }

@@ -363,6 +363,13 @@ export class GeminiChat {
         ? this.config.getActiveModel()
         : getEffectiveModel(this.config.isInFallbackMode(), model);
 
+      console.log('[GeminiChat] apiCall invoked:', {
+        modelToUse,
+        isInFallbackMode: this.config.isInFallbackMode(),
+        hooksEnabled: this.config.getEnableHooks(),
+        quotaErrorOccurred: this.config.getQuotaErrorOccurred(),
+      });
+
       if (
         this.config.getQuotaErrorOccurred() &&
         modelToUse === DEFAULT_GEMINI_FLASH_MODEL
@@ -389,13 +396,22 @@ export class GeminiChat {
             contents: contentsToUse,
           });
 
+          console.log('[GeminiChat] BeforeModel hook result:', {
+            blocked: beforeModelResult.blocked,
+            hasSyntheticResponse: !!beforeModelResult.syntheticResponse,
+            hasModifiedConfig: !!beforeModelResult.modifiedConfig,
+            hasModifiedContents: !!beforeModelResult.modifiedContents,
+          });
+
           if (beforeModelResult.blocked) {
             const syntheticResponse = beforeModelResult.syntheticResponse;
             if (syntheticResponse) {
+              console.log('[GeminiChat] Returning synthetic response from hook');
               return (async function* () {
                 yield syntheticResponse;
               })();
             }
+            console.log('[GeminiChat] Hook blocked request with no synthetic response - returning empty generator');
             return (async function* () {
               // Empty generator - no response
             })();
@@ -602,9 +618,20 @@ export class GeminiChat {
     let hasFinishReason = false;
     let lastChunkHadValidText = false;
 
+    let chunkCount = 0;
     for await (const chunk of streamResponse) {
-      hasFinishReason =
-        chunk?.candidates?.some((candidate) => candidate.finishReason) ?? false;
+      chunkCount++;
+      console.log(`[GeminiChat] Chunk ${chunkCount}:`, JSON.stringify({
+        hasCandidates: !!chunk?.candidates,
+        candidatesCount: chunk?.candidates?.length ?? 0,
+        finishReason: chunk?.candidates?.[0]?.finishReason,
+        hasUsageMetadata: !!chunk?.usageMetadata,
+        partsCount: chunk?.candidates?.[0]?.content?.parts?.length ?? 0,
+        textPreview: chunk?.candidates?.[0]?.content?.parts?.[0]?.text?.substring(0, 50),
+      }));
+      if (chunk?.candidates?.some((candidate) => candidate.finishReason)) {
+        hasFinishReason = true;
+      }
       let chunkHasValidNonThoughtText = false;
       if (isValidResponse(chunk)) {
         const content = chunk.candidates?.[0]?.content;
@@ -630,7 +657,9 @@ export class GeminiChat {
         }
       }
 
-      lastChunkHadValidText = chunkHasValidNonThoughtText;
+      if (chunk.candidates && chunk.candidates.length > 0) {
+        lastChunkHadValidText = chunkHasValidNonThoughtText;
+      }
 
       // Collect token usage for consolidated recording
       if (chunk.usageMetadata) {
@@ -694,6 +723,17 @@ export class GeminiChat {
         tokens: usageMetadata,
       });
     }
+
+    // DEBUG: Log stream state before validation
+    console.log('[GeminiChat] Stream validation state:', {
+      hasToolCall,
+      hasFinishReason,
+      hasResponseText,
+      lastChunkHadValidText,
+      responseTextLength: responseText.length,
+      historyPartsCount: historyParts.length,
+      consolidatedPartsCount: consolidatedHistoryParts.length,
+    });
 
     // Stream validation logic: A stream is considered successful if:
     // 1. There's a tool call (tool calls can end without explicit finish reasons), OR
