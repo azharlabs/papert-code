@@ -25,6 +25,9 @@ export const USER_SETTINGS_PATH = path.join(USER_SETTINGS_DIR, 'settings.json');
 // This involves updating the interface and implementing migration logic to support legacy V1 (flat) settings,
 // similar to how packages/cli/src/config/settings.ts handles it.
 export interface Settings {
+  model?: {
+    name?: string;
+  };
   mcpServers?: Record<string, MCPServerConfig>;
   coreTools?: string[];
   excludeTools?: string[];

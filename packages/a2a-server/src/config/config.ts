@@ -66,6 +66,11 @@ export async function loadConfig(
     authSettings?.baseUrl ??
     process.env[OPENAI_BASE_URL_ENV] ??
     undefined;
+  const resolvedModel =
+    process.env['OPENAI_MODEL'] ??
+    process.env['PAPERT_MODEL'] ??
+    settings.model?.name ??
+    DEFAULT_PAPERT_MODEL;
 
   if (resolvedAuthType === AuthType.USE_OPENAI && !openAiApiKey) {
     const errorMessage =
@@ -84,7 +89,7 @@ export async function loadConfig(
 
   const configParams: ConfigParameters = {
     sessionId: taskId,
-    model: DEFAULT_PAPERT_MODEL,
+    model: resolvedModel,
     embeddingModel: DEFAULT_PAPERT_EMBEDDING_MODEL,
     sandbox: undefined, // Sandbox might not be relevant for a server-side agent
     targetDir: workspaceDir, // Or a specific directory the agent operates on
@@ -205,7 +210,10 @@ export function loadEnvironment(): void {
 
   const envFilePath = findEnvFile(process.cwd());
   if (envFilePath) {
-    dotenv.config({ path: envFilePath, override: true });
+    const hasRemoteToken =
+      typeof process.env['PAPERT_REMOTE_SERVER_TOKEN'] === 'string' &&
+      process.env['PAPERT_REMOTE_SERVER_TOKEN']!.trim().length > 0;
+    dotenv.config({ path: envFilePath, override: !hasRemoteToken });
   }
 }
 

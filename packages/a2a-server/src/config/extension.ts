@@ -75,6 +75,9 @@ function loadExtensionsFromDir(dir: string): GeminiCLIExtension[] {
   const extensions: GeminiCLIExtension[] = [];
   for (const subdir of fs.readdirSync(extensionsDir)) {
     const extensionDir = path.join(extensionsDir, subdir);
+    if (!fs.statSync(extensionDir).isDirectory()) {
+      continue;
+    }
 
     const extension = loadExtension(extensionDir);
     if (extension != null) {
@@ -85,13 +88,6 @@ function loadExtensionsFromDir(dir: string): GeminiCLIExtension[] {
 }
 
 function loadExtension(extensionDir: string): PapertCLIExtension | null {
-  if (!fs.statSync(extensionDir).isDirectory()) {
-    logger.error(
-      `Warning: unexpected file ${extensionDir} in extensions directory.`,
-    );
-    return null;
-  }
-
   const configFilePath = EXTENSION_CONFIG_FILENAMES.map((name) =>
     path.join(extensionDir, name),
   ).find((candidate) => fs.existsSync(candidate));

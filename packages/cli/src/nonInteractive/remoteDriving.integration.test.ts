@@ -92,4 +92,37 @@ describe('stream-json remote driving init', () => {
 
     expect(config.refreshAuth).toHaveBeenCalledWith(AuthType.USE_OPENAI);
   }, 15_000);
+
+  it(
+    'uses existing remote session credentials when provided (skips session creation)',
+    async () => {
+      process.env['PAPERT_REMOTE_URL'] = 'http://remote.example:41242';
+      process.env['PAPERT_REMOTE_SESSION_ID'] = 'sid-existing';
+      process.env['PAPERT_REMOTE_SESSION_TOKEN'] = 'sess-token-existing';
+
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockImplementation(async () => {
+          throw new Error('fetch should not be called');
+        });
+
+      const config = makeFakeConfig();
+      const { Session } = await import('./session.js');
+      const manager = new Session(config as any);
+      await (manager as any).ensureConfigInitialized();
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+
+      expect((config as any)._creds).toEqual({
+        apiKey: 'sess-token-existing',
+        baseUrl: 'http://remote.example:41242',
+        extraHeaders: {
+          'x-papert-session-id': 'sid-existing',
+        },
+      });
+
+      expect(config.refreshAuth).toHaveBeenCalledWith(AuthType.USE_OPENAI);
+    },
+    15_000,
+  );
 });

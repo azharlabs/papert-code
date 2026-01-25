@@ -101,9 +101,21 @@ export class Session {
       // This is intentionally localized to stream-json + remote-control to keep the
       // change minimal.
       const maybeRemoteUrl = process.env['PAPERT_REMOTE_URL'];
+      const existingSessionId = process.env['PAPERT_REMOTE_SESSION_ID'];
+      const existingSessionToken = process.env['PAPERT_REMOTE_SESSION_TOKEN'];
       const maybeRemoteToken = process.env['PAPERT_REMOTE_TOKEN'];
 
-      if (maybeRemoteUrl && maybeRemoteToken) {
+      if (maybeRemoteUrl && existingSessionId && existingSessionToken) {
+        this.config.updateCredentials({
+          apiKey: existingSessionToken,
+          baseUrl: maybeRemoteUrl,
+          extraHeaders: {
+            'x-papert-session-id': existingSessionId,
+          },
+        });
+
+        await this.config.refreshAuth(AuthType.USE_OPENAI);
+      } else if (maybeRemoteUrl && maybeRemoteToken) {
         const control = await createRemoteControlService({
           baseUrl: maybeRemoteUrl,
           serverToken: maybeRemoteToken,

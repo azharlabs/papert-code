@@ -31,6 +31,7 @@ import { GitService } from '@papert-code/papert-code-core';
 import { RemoteSessionStore, type RemoteAuthConfig } from './remoteAuth.js';
 import { createRemoteAuthMiddleware, createRemoteRouter } from './remoteRoutes.js';
 import { apiReference } from '@scalar/express-api-reference';
+import { getWebUiHtml } from './webUi.js';
 
 type CommandResponse = {
   name: string;
@@ -167,6 +168,7 @@ export async function createApp() {
     };
 
     const remoteSessions = new RemoteSessionStore(remoteAuth);
+    const webUiEnabled = process.env['PAPERT_WEB_UI_ENABLED'] === '1';
 
     let git: GitService | undefined;
     if (config.getCheckpointingEnabled()) {
@@ -329,6 +331,16 @@ export async function createApp() {
           content: openApiSpec,
         }),
       );
+    }
+
+    if (webUiEnabled) {
+      expressApp.get('/', (_req, res) => {
+        res
+          .status(200)
+          .setHeader('content-type', 'text/html; charset=utf-8')
+          .setHeader('cache-control', 'no-store');
+        res.send(getWebUiHtml());
+      });
     }
 
     // Remote auth/lock enforcement for all non-control-plane requests.

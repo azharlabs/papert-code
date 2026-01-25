@@ -87,6 +87,7 @@ export function createRemoteAuthMiddleware(options: {
 
     // Read env at request time so tests/boot-time config changes are respected.
     const docsEnabled = process.env['PAPERT_REMOTE_DOCS_ENABLED'] === '1';
+    const webUiEnabled = process.env['PAPERT_WEB_UI_ENABLED'] === '1';
 
     // NOTE: this middleware is mounted on '/', so req.path can be affected by
     // how Express routed the request. Prefer req.originalUrl for allowlisting.
@@ -105,6 +106,7 @@ export function createRemoteAuthMiddleware(options: {
       req.method === 'GET' &&
       (urlPath === '/api/v1/health' ||
         urlPath === '/.well-known/agent-card.json' ||
+        (webUiEnabled && (urlPath === '/' || urlPath === '/web')) ||
         (docsEnabled &&
           (urlPath === '/openapi.json' ||
             urlPath === '/docs' ||
