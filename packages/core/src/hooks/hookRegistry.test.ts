@@ -116,7 +116,7 @@ describe('HookRegistry', () => {
         ],
       };
 
-      vi.mocked(mockConfig.getHooks).mockReturnValue(
+      vi.mocked(mockConfig.getProjectHooks).mockReturnValue(
         mockHooksConfig as unknown as {
           [K in HookEventName]?: HookDefinition[];
         },
@@ -147,7 +147,7 @@ describe('HookRegistry', () => {
       };
 
       // Update mock to return the hooks configuration
-      vi.mocked(mockConfig.getHooks).mockReturnValue(
+      vi.mocked(mockConfig.getProjectHooks).mockReturnValue(
         mockHooksConfig as unknown as {
           [K in HookEventName]?: HookDefinition[];
         },
@@ -179,12 +179,13 @@ describe('HookRegistry', () => {
         ],
       };
 
-      // Update mock to return the hooks configuration
-      vi.mocked(mockConfig.getHooks).mockReturnValue(
-        mockHooksConfig as unknown as {
-          [K in HookEventName]?: HookDefinition[];
+      // Update mock to return extension hooks configuration
+      vi.mocked(mockConfig.getExtensions).mockReturnValue([
+        {
+          isActive: true,
+          hooks: mockHooksConfig,
         },
-      );
+      ] as unknown as []);
 
       await hookRegistry.initialize();
 
@@ -210,7 +211,7 @@ describe('HookRegistry', () => {
       };
 
       // Update mock to return invalid configuration
-      vi.mocked(mockConfig.getHooks).mockReturnValue(
+      vi.mocked(mockConfig.getProjectHooks).mockReturnValue(
         invalidHooksConfig as unknown as {
           [K in HookEventName]?: HookDefinition[];
         },
@@ -648,7 +649,7 @@ describe('HookRegistry', () => {
       );
       // 2nd warning: validateHookConfig logs invalid type
       expect(mockDebugLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid hook BeforeTool from project type'),
+        expect.stringContaining('Invalid hook BeforeTool from user type'),
       );
       // 3rd warning: processHookDefinition logs the failed hookConfig
       expect(mockDebugLogger.warn).toHaveBeenCalledWith(

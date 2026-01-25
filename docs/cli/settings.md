@@ -12,6 +12,15 @@ Workspace settings override user settings.
 
 ---
 
+## Hooks vs plugins
+
+Papert Code supports two customization systems:
+
+- **Hooks**: External scripts executed at lifecycle events. Best for validation,
+  logging, or policy enforcement. See [Hooks](./hooks.md).
+- **Plugins**: JavaScript modules loaded in-process. Best for richer
+  integrations and event handling. Details below.
+
 ## Plugins
 
 Papert Code includes a plugin system that lets you run JavaScript at specific lifecycle events (hooks). Plugins can be loaded from:

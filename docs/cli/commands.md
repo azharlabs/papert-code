@@ -55,6 +55,19 @@ Slash commands provide meta-level control over the CLI itself.
 - **`/help`** (or **`/?`**)
   - **Description:** Display help information about the Papert Code, including available commands and their usage.
 
+- **`/hooks`**
+  - **Description:** Manage hooks that run at lifecycle events.
+  - **Sub-commands:**
+    - **`list`** (alias: `panel`, `show`):
+      - **Description:** Display all registered hooks with their status.
+    - **`enable`**:
+      - **Description:** Enable a hook by name.
+      - **Usage:** `/hooks enable <hook-name>`
+    - **`disable`**:
+      - **Description:** Disable a hook by name.
+      - **Usage:** `/hooks disable <hook-name>`
+  - **Note:** Hooks must be enabled in settings (`tools.enableHooks`) to run.
+
 - **`/mcp`**
   - **Description:** List configured Model Context Protocol (MCP) servers, their connection status, server details, and available tools.
   - **Sub-commands:**

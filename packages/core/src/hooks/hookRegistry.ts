@@ -139,8 +139,14 @@ please review the project settings (.papert/settings.json) and remove them.`;
     // Get hooks from the main config (this comes from the merged settings)
     const configHooks = this.config.getHooks();
     if (configHooks) {
+      this.processHooksConfiguration(configHooks, ConfigSource.User);
+    }
+
+    // Get hooks from project hooks.json (project-level only)
+    const projectHooks = this.config.getProjectHooks();
+    if (projectHooks) {
       if (this.config.isTrustedFolder()) {
-        this.processHooksConfiguration(configHooks, ConfigSource.Project);
+        this.processHooksConfiguration(projectHooks, ConfigSource.Project);
       } else {
         debugLogger.warn(
           'Project hooks disabled because the folder is not trusted.',
@@ -170,6 +176,9 @@ please review the project settings (.papert/settings.json) and remove them.`;
     source: ConfigSource,
   ): void {
     for (const [eventName, definitions] of Object.entries(hooksConfig)) {
+      if (eventName === 'disabled' || eventName === 'enabled') {
+        continue;
+      }
       if (!this.isValidEventName(eventName)) {
         debugLogger.warn(`Invalid hook event name: ${eventName}`);
         continue;
