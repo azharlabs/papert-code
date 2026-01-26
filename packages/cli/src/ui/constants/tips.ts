@@ -10,4 +10,5 @@ export const INFORMATIVE_TIPS = [
   'Resume a saved conversation with /chat resume <tag>...',
   'Delete a conversation checkpoint with /chat delete <tag>...',
   'Share your conversation to a file with /chat share <file>...',
+  'Share your session publicly with /share...',
 ];

@@ -145,6 +145,21 @@ Settings are organized into categories. All settings should be placed within the
   - **Description:** Enable collection of usage statistics.
   - **Default:** `true`
 
+#### `share`
+
+- **`share.mode`** (string):
+  - **Description:** Controls whether sessions can be shared publicly.
+  - **Default:** `"manual"`
+  - **Values:** `"manual"`, `"disabled"`
+
+- **`share.baseUrl`** (string):
+  - **Description:** Base URL of the share service (for `/share` and `/unshare`).
+  - **Default:** `undefined`
+
+- **`share.token`** (string):
+  - **Description:** Optional bearer token for the share service.
+  - **Default:** `undefined`
+
 #### `model`
 
 - **`model.name`** (string):
@@ -506,6 +521,19 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
 3.  If still not found, it looks for `~/.env` (in the user's home directory).
 
 **Environment Variable Exclusion:** Some environment variables (like `DEBUG` and `DEBUG_MODE`) are automatically excluded from project `.env` files by default to prevent interference with the CLI behavior. Variables from `.papert/.env` files are never excluded. You can customize this behavior using the `advanced.excludedEnvVars` setting in your `settings.json` file.
+
+- **`PAPERT_SHARE_URL`**:
+  - Base URL for the share service used by `/share` and `/unshare` (client-side).
+  - Alternative to `share.baseUrl` in `settings.json`.
+- **`PAPERT_SHARE_TOKEN`**:
+  - Optional bearer token for the share service (client-side).
+  - Alternative to `share.token` in `settings.json`.
+- **`PAPERT_SHARE_PUBLIC_URL_BASE`**:
+  - Server-side base URL used to construct public share links (daemon).
+  - Example: `https://share.example.com`.
+- **`PAPERT_SHARE_DIR`**:
+  - Server-side storage directory for share records (daemon).
+  - Defaults to `~/.papert/shares`.
 
 - **`OPENAI_API_KEY`**:
   - One of several available [authentication methods](./authentication.md).

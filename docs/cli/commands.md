@@ -35,6 +35,18 @@ Slash commands provide meta-level control over the CLI itself.
 - **`/copy`**
   - **Description:** Copies the last output produced by Papert Code to your clipboard, for easy sharing or reuse.
 
+- **`/share`**
+  - **Description:** Create a public share link for the current session and copy it to the clipboard.
+  - **Usage:** `/share`
+  - **Notes:**
+    - Requires the share service to be configured (`share.baseUrl` or `PAPERT_SHARE_URL`).
+    - If sharing is disabled (`share.mode: "disabled"`), the command will error.
+
+- **`/unshare`**
+  - **Description:** Remove the public share link for the current session.
+  - **Usage:** `/unshare`
+  - **Notes:** This removes the server-side share record and clears the local share metadata.
+
 - **`/directory`** (or **`/dir`**)
   - **Description:** Manage workspace directories for multi-directory support.
   - **Sub-commands:**

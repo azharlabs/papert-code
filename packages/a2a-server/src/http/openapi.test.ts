@@ -5,10 +5,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import request from 'supertest';
 import type express from 'express';
 
 import { createApp } from './app.js';
+import { requestApp } from './test-utils.js';
 
 describe('OpenAPI docs', () => {
   let app: express.Express;
@@ -36,7 +36,7 @@ describe('OpenAPI docs', () => {
   });
 
   it('GET /openapi.json returns an OpenAPI document', async () => {
-    const res = await request(app).get('/openapi.json');
+    const res = await requestApp(app, { method: 'GET', path: '/openapi.json' });
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
       openapi: expect.any(String),
@@ -46,22 +46,23 @@ describe('OpenAPI docs', () => {
       },
       paths: expect.any(Object),
     });
-    expect(res.body.paths['/api/v1/health']).toBeTruthy();
+    expect((res.body as { paths?: Record<string, unknown> }).paths?.['/api/v1/health']).toBeTruthy();
   });
 
   it('GET /docs returns HTML', async () => {
-    const res = await request(app).get('/docs');
+    const res = await requestApp(app, { method: 'GET', path: '/docs' });
     expect(res.status).toBe(200);
-    expect(res.headers['content-type']).toContain('text/html');
+    const contentType = res.headers['content-type'];
+    expect(typeof contentType === 'string' ? contentType : contentType?.[0]).toContain('text/html');
   });
 
   it('GET /openapi.json does not require auth headers when remote docs are enabled', async () => {
-    const res = await request(app).get('/openapi.json');
+    const res = await requestApp(app, { method: 'GET', path: '/openapi.json' });
     expect(res.status).toBe(200);
   });
 
   it('GET /docs does not require auth headers when remote docs are enabled', async () => {
-    const res = await request(app).get('/docs');
+    const res = await requestApp(app, { method: 'GET', path: '/docs' });
     expect(res.status).toBe(200);
   });
 });

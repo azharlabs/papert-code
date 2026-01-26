@@ -5,10 +5,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import request from 'supertest';
 import type express from 'express';
 
 import { createApp } from './app.js';
+import { requestApp } from './test-utils.js';
 
 describe('OpenAPI docs (disabled)', () => {
   let app: express.Express;
@@ -31,12 +31,12 @@ describe('OpenAPI docs (disabled)', () => {
   });
 
   it('GET /openapi.json returns 401 (remote auth enabled, docs not allowlisted)', async () => {
-    const res = await request(app).get('/openapi.json');
+    const res = await requestApp(app, { method: 'GET', path: '/openapi.json' });
     expect(res.status).toBe(401);
   });
 
   it('GET /docs returns 401 (remote auth enabled, docs not allowlisted)', async () => {
-    const res = await request(app).get('/docs');
+    const res = await requestApp(app, { method: 'GET', path: '/docs' });
     expect(res.status).toBe(401);
   });
 });

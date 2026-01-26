@@ -610,8 +610,6 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
       result._[0] === 'extensions' ||
       result._[0] === 'skills' ||
       result._[0] === 'hooks' ||
-      result._[0] === 'server' ||
-      result._[0] === 'connect' ||
       result._[0] === 'web' ||
       result._[0] === 'attach')
   ) {

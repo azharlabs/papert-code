@@ -582,6 +582,24 @@ export default {
   'No conversation found to share.': 'No conversation found to share.',
   'Share the current conversation to a markdown or json file. Usage: /chat share <file>':
     'Share the current conversation to a markdown or json file. Usage: /chat share <file>',
+  'Share the current session via a public link.':
+    'Share the current session via a public link.',
+  'Remove the public share link for the current session.':
+    'Remove the public share link for the current session.',
+  'Sharing is disabled by settings.': 'Sharing is disabled by settings.',
+  'Share base URL is not configured. Set share.baseUrl or PAPERT_SHARE_URL.':
+    'Share base URL is not configured. Set share.baseUrl or PAPERT_SHARE_URL.',
+  'Session already shared: {{url}}': 'Session already shared: {{url}}',
+  'Session shared: {{url}}': 'Session shared: {{url}}',
+  'Share link copied to clipboard.': 'Share link copied to clipboard.',
+  'Failed to copy share link: {{error}}':
+    'Failed to copy share link: {{error}}',
+  'Failed to share session: {{error}}': 'Failed to share session: {{error}}',
+  'No share link found for this session.':
+    'No share link found for this session.',
+  'Session unshared.': 'Session unshared.',
+  'Failed to unshare session: {{error}}':
+    'Failed to unshare session: {{error}}',
 
   // ============================================================================
   // Commands - Summary

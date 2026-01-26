@@ -113,6 +113,7 @@ export interface SettingsSchema {
 
 export type MemoryImportFormat = 'tree' | 'flat';
 export type DnsResolutionOrder = 'ipv4first' | 'verbatim';
+export type ShareMode = 'manual' | 'disabled';
 
 /**
  * The canonical schema for all settings.
@@ -503,6 +504,49 @@ const SETTINGS_SCHEMA = {
         requiresRestart: true,
         default: true,
         description: 'Enable collection of usage statistics',
+        showInDialog: false,
+      },
+    },
+  },
+
+  share: {
+    type: 'object',
+    label: 'Share',
+    category: 'Privacy',
+    requiresRestart: false,
+    default: {},
+    description: 'Public session sharing configuration.',
+    showInDialog: false,
+    properties: {
+      mode: {
+        type: 'enum',
+        label: 'Share Mode',
+        category: 'Privacy',
+        requiresRestart: false,
+        default: 'manual' as ShareMode,
+        description: 'Control whether sessions can be shared publicly.',
+        showInDialog: false,
+        options: [
+          { value: 'manual', label: 'Manual' },
+          { value: 'disabled', label: 'Disabled' },
+        ],
+      },
+      baseUrl: {
+        type: 'string',
+        label: 'Share Service Base URL',
+        category: 'Privacy',
+        requiresRestart: false,
+        default: undefined as string | undefined,
+        description: 'Base URL of the share service (e.g. https://share.example.com).',
+        showInDialog: false,
+      },
+      token: {
+        type: 'string',
+        label: 'Share Service Token',
+        category: 'Privacy',
+        requiresRestart: false,
+        default: undefined as string | undefined,
+        description: 'Optional bearer token for the share service.',
         showInDialog: false,
       },
     },

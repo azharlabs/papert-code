@@ -5,6 +5,7 @@
  */
 
 import express from 'express';
+import path from 'node:path';
 
 import type { AgentCard, Message } from '@a2a-js/sdk';
 import type { TaskStore } from '@a2a-js/sdk/server';
@@ -30,8 +31,11 @@ import type { Command, CommandArgument } from '../commands/types.js';
 import { GitService } from '@papert-code/papert-code-core';
 import { RemoteSessionStore, type RemoteAuthConfig } from './remoteAuth.js';
 import { createRemoteAuthMiddleware, createRemoteRouter } from './remoteRoutes.js';
+import { createShareRouter } from './shareRoutes.js';
 import { apiReference } from '@scalar/express-api-reference';
 import { getWebUiHtml } from './webUi.js';
+import { ShareStore } from './shareStore.js';
+import { Storage } from '@papert-code/papert-code-core';
 
 type CommandResponse = {
   name: string;
@@ -169,6 +173,10 @@ export async function createApp() {
 
     const remoteSessions = new RemoteSessionStore(remoteAuth);
     const webUiEnabled = process.env['PAPERT_WEB_UI_ENABLED'] === '1';
+    const shareDir =
+      process.env['PAPERT_SHARE_DIR'] ??
+      path.join(Storage.getGlobalPapertDir(), 'shares');
+    const shareStore = new ShareStore(shareDir);
 
     let git: GitService | undefined;
     if (config.getCheckpointingEnabled()) {
@@ -342,6 +350,14 @@ export async function createApp() {
         res.send(getWebUiHtml());
       });
     }
+
+    expressApp.use(
+      createShareRouter({
+        store: shareStore,
+        token: process.env['PAPERT_SHARE_TOKEN'],
+        publicBaseUrl: process.env['PAPERT_SHARE_PUBLIC_URL_BASE'],
+      }),
+    );
 
     // Remote auth/lock enforcement for all non-control-plane requests.
     expressApp.use(
