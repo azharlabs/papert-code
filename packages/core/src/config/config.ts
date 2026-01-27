@@ -117,6 +117,7 @@ import { PolicyEngine } from '../policy/policy-engine.js';
 import type { PolicyEngineConfig } from '../policy/types.js';
 import { MessageBus } from '../confirmation-bus/message-bus.js';
 import { ModelRouterService } from '../routing/modelRouterService.js';
+import type { FormatterSettings } from '../format/index.js';
 
 // Re-export types
 export type { AnyToolInvocation, FileFilteringOptions, MCPOAuthConfig };
@@ -369,6 +370,7 @@ export interface ConfigParameters {
   sdkMode?: boolean;
   sessionSubagents?: SubagentConfig[];
   modelConfigServiceConfig?: ModelConfigServiceConfig;
+  formatter?: FormatterSettings;
   enableHooks?: boolean;
   hooks?: { [K in HookEventName]?: HookDefinition[] } & { disabled?: string[] };
   projectHooks?: { [K in HookEventName]?: HookDefinition[] } & {
@@ -532,6 +534,7 @@ export class Config {
   private readonly useModelRouter: boolean;
   private contextManager?: ContextManager;
   private sessionSummaryHandlersRegistered = false;
+  private readonly formatterSettings: FormatterSettings;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId ?? randomUUID();
@@ -653,6 +656,12 @@ export class Config {
     this.enableToolOutputTruncation = params.enableToolOutputTruncation ?? true;
     this.enableHooks = params.enableHooks ?? false;
     this.lspSettings = params.lsp;
+    this.formatterSettings = {
+      enabled: params.formatter?.enabled ?? true,
+      formatAfterWrite: params.formatter?.formatAfterWrite ?? true,
+      formatAfterApply: params.formatter?.formatAfterApply ?? true,
+      formatters: params.formatter?.formatters ?? {},
+    };
     this.enablePlugins = params.enablePlugins ?? false;
     this.plugins = params.plugins ?? [];
     this.enableNpmPlugins = params.enableNpmPlugins ?? false;
@@ -1385,6 +1394,10 @@ export class Config {
 
   getChatCompression(): ChatCompressionSettings | undefined {
     return this.chatCompression;
+  }
+
+  getFormatterSettings(): FormatterSettings {
+    return this.formatterSettings;
   }
 
   isInteractive(): boolean {

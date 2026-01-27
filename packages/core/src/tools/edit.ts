@@ -28,6 +28,7 @@ import { FileOperationEvent } from '../telemetry/types.js';
 import { FileOperation } from '../telemetry/metrics.js';
 import { getSpecificMimeType } from '../utils/fileUtils.js';
 import { getLanguageFromFilePath } from '../utils/language-detection.js';
+import { formatFileAfterApply } from '../format/index.js';
 import type {
   ModifiableDeclarativeTool,
   ModifyContext,
@@ -376,6 +377,16 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
         .getFileSystemService()
         .writeTextFile(this.params.file_path, editData.newContent);
 
+      let finalContent = editData.newContent;
+      const formatResult = await formatFileAfterApply(
+        this.config,
+        this.params.file_path,
+        finalContent,
+      );
+      if (formatResult.changed && formatResult.formattedContent) {
+        finalContent = formatResult.formattedContent;
+      }
+
       const fileName = path.basename(this.params.file_path);
       const originallyProposedContent =
         this.params.ai_proposed_content || editData.newContent;
@@ -383,13 +394,13 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
         fileName,
         editData.currentContent ?? '',
         originallyProposedContent,
-        editData.newContent,
+        finalContent,
       );
 
       const fileDiff = Diff.createPatch(
         fileName,
         editData.currentContent ?? '', // Should not be null here if not isNewFile
-        editData.newContent,
+        finalContent,
         'Current',
         'Proposed',
         DEFAULT_DIFF_OPTIONS,
@@ -398,7 +409,7 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
         fileDiff,
         fileName,
         originalContent: editData.currentContent,
-        newContent: editData.newContent,
+        newContent: finalContent,
         diffStat,
       };
 
@@ -417,7 +428,7 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
         new FileOperationEvent(
           EditTool.Name,
           operation,
-          editData.newContent.split('\n').length,
+          finalContent.split('\n').length,
           mimetype,
           extension,
           programmingLanguage,
@@ -432,7 +443,7 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
 
       const snippetResult = extractEditSnippet(
         editData.currentContent,
-        editData.newContent,
+        finalContent,
       );
       if (snippetResult) {
         const snippetText = `Showing lines ${snippetResult.startLine}-${snippetResult.endLine} of ${snippetResult.totalLines} from the edited file:\n\n---\n\n${snippetResult.content}`;

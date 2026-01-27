@@ -2413,6 +2413,66 @@ describe('loadCliConfig chatCompression', () => {
   });
 });
 
+describe('loadCliConfig formatter', () => {
+  const originalArgv = process.argv;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.mocked(os.homedir).mockReturnValue('/mock/home/user');
+    vi.stubEnv('GEMINI_API_KEY', 'test-api-key');
+  });
+
+  afterEach(() => {
+    process.argv = originalArgv;
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it('should pass formatter settings to the core config', async () => {
+    process.argv = ['node', 'script.js'];
+    const argv = await parseArguments({} as Settings);
+    const settings: Settings = {
+      tools: {
+        formatter: {
+          enabled: false,
+          formatAfterWrite: false,
+          formatAfterApply: true,
+          formatters: {
+            prettier: {
+              disabled: true,
+              command: ['prettier', '--write', '$FILE'],
+              extensions: ['.ts', '.tsx'],
+              environment: { NODE_ENV: 'test' },
+            },
+          },
+        },
+      },
+    };
+    const config = await loadCliConfig(
+      settings,
+      [],
+      new ExtensionEnablementManager(
+        ExtensionStorage.getUserExtensionsDir(),
+        argv.extensions,
+      ),
+      argv,
+    );
+    expect(config.getFormatterSettings()).toEqual({
+      enabled: false,
+      formatAfterWrite: false,
+      formatAfterApply: true,
+      formatters: {
+        prettier: {
+          disabled: true,
+          command: ['prettier', '--write', '$FILE'],
+          extensions: ['.ts', '.tsx'],
+          environment: { NODE_ENV: 'test' },
+        },
+      },
+    });
+  });
+});
+
 describe('loadCliConfig useRipgrep', () => {
   const originalArgv = process.argv;
 

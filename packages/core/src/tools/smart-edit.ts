@@ -33,6 +33,7 @@ import { IdeClient } from '../ide/ide-client.js';
 import { FixLLMEditWithInstruction } from '../utils/llm-edit-fixer.js';
 import { applyReplacement } from './edit.js';
 import { safeLiteralReplace } from '../utils/textUtils.js';
+import { formatFileAfterApply } from '../format/index.js';
 
 interface ReplacementContext {
   params: EditToolParams;
@@ -697,6 +698,15 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
         .getFileSystemService()
         .writeTextFile(this.params.file_path, finalContent);
 
+      const formatResult = await formatFileAfterApply(
+        this.config,
+        this.params.file_path,
+        finalContent,
+      );
+      if (formatResult.changed && formatResult.formattedContent) {
+        finalContent = formatResult.formattedContent;
+      }
+
       let displayResult: ToolResultDisplay;
       if (editData.isNewFile) {
         displayResult = `Created ${shortenPath(makeRelative(this.params.file_path, this.config.getTargetDir()))}`;
@@ -707,7 +717,7 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
         const fileDiff = Diff.createPatch(
           fileName,
           editData.currentContent ?? '', // Should not be null here if not isNewFile
-          editData.newContent,
+          finalContent,
           'Current',
           'Proposed',
           DEFAULT_DIFF_OPTIONS,
@@ -718,13 +728,13 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
           fileName,
           editData.currentContent ?? '',
           originallyProposedContent,
-          this.params.new_string,
+          finalContent,
         );
         displayResult = {
           fileDiff,
           fileName,
           originalContent: editData.currentContent,
-          newContent: editData.newContent,
+          newContent: finalContent,
           diffStat,
         };
       }

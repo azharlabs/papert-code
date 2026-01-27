@@ -38,6 +38,7 @@ import { FileOperationEvent } from '../telemetry/types.js';
 import { FileOperation } from '../telemetry/metrics.js';
 import { getSpecificMimeType } from '../utils/fileUtils.js';
 import { getLanguageFromFilePath } from '../utils/language-detection.js';
+import { formatFileAfterWrite } from '../format/index.js';
 
 /**
  * Parameters for the WriteFile tool
@@ -239,6 +240,16 @@ class WriteFileToolInvocation extends BaseToolInvocation<
         .getFileSystemService()
         .writeTextFile(file_path, fileContent);
 
+      let finalContent = fileContent;
+      const formatResult = await formatFileAfterWrite(
+        this.config,
+        file_path,
+        finalContent,
+      );
+      if (formatResult.changed && formatResult.formattedContent) {
+        finalContent = formatResult.formattedContent;
+      }
+
       // Generate diff for display result
       const fileName = path.basename(file_path);
       // If there was a readError, originalContent in correctedContentResult is '',
@@ -251,7 +262,7 @@ class WriteFileToolInvocation extends BaseToolInvocation<
       const fileDiff = Diff.createPatch(
         fileName,
         currentContentForDiff,
-        fileContent,
+        finalContent,
         'Original',
         'Written',
         DEFAULT_DIFF_OPTIONS,
@@ -262,7 +273,7 @@ class WriteFileToolInvocation extends BaseToolInvocation<
         fileName,
         currentContentForDiff,
         originallyProposedContent,
-        content,
+        finalContent,
       );
 
       const llmSuccessMessageParts = [
@@ -287,7 +298,7 @@ class WriteFileToolInvocation extends BaseToolInvocation<
         new FileOperationEvent(
           WriteFileTool.Name,
           operation,
-          fileContent.split('\n').length,
+          finalContent.split('\n').length,
           mimetype,
           extension,
           programmingLanguage,
@@ -298,7 +309,7 @@ class WriteFileToolInvocation extends BaseToolInvocation<
         fileDiff,
         fileName,
         originalContent: correctedContentResult.originalContent,
-        newContent: correctedContentResult.correctedContent,
+        newContent: finalContent,
         diffStat,
       };
 

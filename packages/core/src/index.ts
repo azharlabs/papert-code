@@ -14,6 +14,7 @@ export * from './confirmation-bus/types.js';
 export * from './confirmation-bus/message-bus.js';
 export * from './hooks/index.js';
 export * from './hooks/types.js';
+export * from './format/index.js';
 
 // Export plugins
 export * from './plugins/types.js';

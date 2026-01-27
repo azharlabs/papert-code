@@ -893,6 +893,61 @@ const SETTINGS_SCHEMA = {
           },
         },
       },
+      formatter: {
+        type: 'object',
+        label: 'Formatter',
+        category: 'Tools',
+        requiresRestart: false,
+        default: {},
+        description: 'Auto-format settings for files written by tools.',
+        showInDialog: false,
+        properties: {
+          enabled: {
+            type: 'boolean',
+            label: 'Enable Auto Format',
+            category: 'Tools',
+            requiresRestart: false,
+            default: true,
+            description: 'Enable automatic formatting after file changes.',
+            showInDialog: false,
+          },
+          formatAfterWrite: {
+            type: 'boolean',
+            label: 'Format After Write',
+            category: 'Tools',
+            requiresRestart: false,
+            default: true,
+            description: 'Run formatters after write-file operations.',
+            showInDialog: false,
+          },
+          formatAfterApply: {
+            type: 'boolean',
+            label: 'Format After Apply',
+            category: 'Tools',
+            requiresRestart: false,
+            default: true,
+            description: 'Run formatters after edit or apply operations.',
+            showInDialog: false,
+          },
+          formatters: {
+            type: 'object',
+            label: 'Formatter Overrides',
+            category: 'Tools',
+            requiresRestart: false,
+            default: {} as Record<string, unknown>,
+            description:
+              'Overrides for built-in formatters or custom formatter definitions.',
+            showInDialog: false,
+            mergeStrategy: MergeStrategy.SHALLOW_MERGE,
+            additionalProperties: {
+              type: 'object',
+              description: 'Formatter override configuration.',
+              ref: 'FormatterConfig',
+              mergeStrategy: MergeStrategy.SHALLOW_MERGE,
+            },
+          },
+        },
+      },
       autoAccept: {
         type: 'boolean',
         label: 'Auto Accept',
@@ -1598,6 +1653,33 @@ export const SETTINGS_SCHEMA_DEFINITIONS: Record<
   SandboxSetting: {
     description: 'Sandbox execution environment (boolean or path string).',
     anyOf: [{ type: 'boolean' }, { type: 'string' }],
+  },
+  FormatterConfig: {
+    type: 'object',
+    description:
+      'Formatter override configuration (command, extensions, environment, disabled).',
+    additionalProperties: false,
+    properties: {
+      disabled: {
+        type: 'boolean',
+        description: 'Disable this formatter.',
+      },
+      command: {
+        type: 'array',
+        description: 'Command to run for formatting.',
+        items: { type: 'string' },
+      },
+      environment: {
+        type: 'object',
+        description: 'Environment variables to set when running the formatter.',
+        additionalProperties: { type: 'string' },
+      },
+      extensions: {
+        type: 'array',
+        description: 'File extensions handled by this formatter.',
+        items: { type: 'string' },
+      },
+    },
   },
   MCPServerConfig: {
     type: 'object',

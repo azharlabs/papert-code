@@ -23,6 +23,8 @@ import {
   InputFormat,
   OutputFormat,
   SessionService,
+  type FormatterConfig,
+  type FormatterSettings,
   type ResumedSessionData,
   type FileFilteringOptions,
   type MCPServerConfig,
@@ -1124,6 +1126,7 @@ export async function loadCliConfig(
     output: {
       format: outputSettingsFormat,
     },
+    formatter: mapFormatterSettings(settings.tools?.formatter),
     enableHooks: settings.tools?.enableHooks ?? false,
     lsp: settings.tools?.lsp,
     hooks: settings.hooks || {},
@@ -1160,6 +1163,24 @@ function allowedMcpServers(
     mcpServers = {};
   }
   return mcpServers;
+}
+
+function mapFormatterSettings(formatter: unknown): FormatterSettings | undefined {
+  if (!formatter || typeof formatter !== 'object') {
+    return undefined;
+  }
+  const typedFormatter = formatter as {
+    enabled?: boolean;
+    formatAfterWrite?: boolean;
+    formatAfterApply?: boolean;
+    formatters?: Record<string, FormatterConfig>;
+  };
+  return {
+    enabled: typedFormatter.enabled,
+    formatAfterWrite: typedFormatter.formatAfterWrite,
+    formatAfterApply: typedFormatter.formatAfterApply,
+    formatters: typedFormatter.formatters,
+  };
 }
 
 function mergeMcpServers(
