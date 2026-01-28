@@ -22,6 +22,10 @@ import { parse } from 'shell-quote';
 import { ToolErrorType } from './tool-error.js';
 import { safeJsonStringify } from '../utils/safeJsonStringify.js';
 import type { EventEmitter } from 'node:events';
+import {
+  discoverLocalCustomTools,
+  LocalCustomTool,
+} from './custom-tools.js';
 
 type ToolParams = Record<string, unknown>;
 
@@ -206,7 +210,11 @@ export class ToolRegistry {
 
   private removeDiscoveredTools(): void {
     for (const tool of this.tools.values()) {
-      if (tool instanceof DiscoveredTool || tool instanceof DiscoveredMCPTool) {
+      if (
+        tool instanceof DiscoveredTool ||
+        tool instanceof DiscoveredMCPTool ||
+        tool instanceof LocalCustomTool
+      ) {
         this.tools.delete(tool.name);
       }
     }
@@ -235,6 +243,8 @@ export class ToolRegistry {
 
     this.config.getPromptRegistry().clear();
 
+    await this.discoverLocalCustomTools();
+
     await this.discoverAndRegisterToolsFromCommand();
 
     // discover tools using MCP servers, if configured
@@ -251,6 +261,8 @@ export class ToolRegistry {
     this.removeDiscoveredTools();
 
     this.config.getPromptRegistry().clear();
+
+    await this.discoverLocalCustomTools();
 
     // discover tools using MCP servers, if configured
     await this.mcpClientManager.discoverAllMcpTools(this.config);
@@ -276,6 +288,8 @@ export class ToolRegistry {
     }
 
     this.config.getPromptRegistry().removePromptsByServer(serverName);
+
+    await this.discoverLocalCustomTools();
 
     const mcpServers = this.config.getMcpServers() ?? {};
     const serverConfig = mcpServers[serverName];
@@ -409,6 +423,20 @@ export class ToolRegistry {
     } catch (e) {
       console.error(`Tool discovery command "${discoveryCmd}" failed:`, e);
       throw e;
+    }
+  }
+
+  private async discoverLocalCustomTools(): Promise<void> {
+    const specs = await discoverLocalCustomTools(this.config);
+    for (const spec of specs) {
+      this.registerTool(
+        new LocalCustomTool(
+          this.config,
+          spec.name,
+          spec.definition,
+          spec.sourcePath,
+        ),
+      );
     }
   }
 

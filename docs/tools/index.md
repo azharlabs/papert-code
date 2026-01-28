@@ -50,6 +50,7 @@ Papert Code's built-in tools can be broadly categorized as follows:
 - **[Multi-File Read Tool](./multi-file.md) (`read_many_files`):** A specialized tool for reading content from multiple files or directories, often used by the `@` command.
 - **[Memory Tool](./memory.md) (`save_memory`):** For saving and recalling information across sessions.
 - **[Todo Write Tool](./todo-write.md) (`todo_write`):** For creating and managing structured task lists during coding sessions.
+- **[Custom Tools](./custom-tools.md):** Load simple local tools from `.papert/tools` without an MCP server.
 
 Additionally, these tools incorporate:
 

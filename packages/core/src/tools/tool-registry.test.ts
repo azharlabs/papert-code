@@ -15,7 +15,11 @@ import type { FunctionDeclaration, CallableTool } from '@google/genai';
 import { mcpToTool } from '@google/genai';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { MockTool } from '../test-utils/mock-tool.js';
+import { Storage } from '../config/storage.js';
 
 import { McpClientManager } from './mcp-client-manager.js';
 import { ToolErrorType } from './tool-error.js';
@@ -427,6 +431,136 @@ describe('ToolRegistry', () => {
       const invocation = tool.build(params);
       const description = invocation.getDescription();
       expect(description).toBe(JSON.stringify(params));
+    });
+  });
+
+  describe('local custom tools', () => {
+    it('loads tools from .papert/tools and .papert/tool with proper naming', async () => {
+      const projectRoot = await fsPromises.mkdtemp(
+        path.join(os.tmpdir(), 'papert-custom-tools-'),
+      );
+      const toolsDir = path.join(projectRoot, '.papert', 'tools');
+      const toolDir = path.join(projectRoot, '.papert', 'tool');
+      await fsPromises.mkdir(toolsDir, { recursive: true });
+      await fsPromises.mkdir(toolDir, { recursive: true });
+
+      await fsPromises.writeFile(
+        path.join(toolsDir, 'hello.mjs'),
+        [
+          'export default {',
+          "  description: 'hello tool',",
+          '  args: {',
+          "    type: 'object',",
+          "    properties: { name: { type: 'string' } },",
+          "    required: ['name'],",
+          '  },',
+          '  execute: ({ name }) => `hello ${name}`',
+          '};',
+        ].join('\n'),
+      );
+
+      await fsPromises.writeFile(
+        path.join(toolDir, 'math.mjs'),
+        [
+          'export const add = {',
+          "  description: 'add numbers',",
+          '  args: {',
+          "    type: 'object',",
+          "    properties: { a: { type: 'number' }, b: { type: 'number' } },",
+          "    required: ['a', 'b'],",
+          '  },',
+          '  execute: ({ a, b }) => a + b,',
+          '};',
+          'export const multiply = {',
+          "  description: 'multiply numbers',",
+          '  args: {',
+          "    type: 'object',",
+          "    properties: { a: { type: 'number' }, b: { type: 'number' } },",
+          "    required: ['a', 'b'],",
+          '  },',
+          '  execute: ({ a, b }) => a * b,',
+          '};',
+        ].join('\n'),
+      );
+
+      const customConfig = new Config({
+        ...baseConfigParams,
+        cwd: projectRoot,
+        targetDir: projectRoot,
+        sessionId: 'custom-tools-session',
+      });
+      vi.spyOn(customConfig, 'getPromptRegistry').mockReturnValue({
+        clear: vi.fn(),
+        removePromptsByServer: vi.fn(),
+      } as any);
+      const registry = new ToolRegistry(customConfig);
+
+      await registry.discoverAllTools();
+
+      expect(registry.getTool('hello')).toBeDefined();
+      expect(registry.getTool('math_add')).toBeDefined();
+      expect(registry.getTool('math_multiply')).toBeDefined();
+
+      const addInvocation = registry.getTool('math_add')!.build({ a: 2, b: 3 });
+      const result = await addInvocation.execute(new AbortController().signal);
+      expect(result.returnDisplay).toBe('5');
+    });
+
+    it('does not load project tools from untrusted folders but keeps global tools', async () => {
+      const projectRoot = await fsPromises.mkdtemp(
+        path.join(os.tmpdir(), 'papert-custom-tools-untrusted-'),
+      );
+      const projectToolsDir = path.join(projectRoot, '.papert', 'tools');
+      await fsPromises.mkdir(projectToolsDir, { recursive: true });
+      await fsPromises.writeFile(
+        path.join(projectToolsDir, 'project.mjs'),
+        [
+          'export default {',
+          "  description: 'project tool',",
+          '  args: { type: "object", properties: {} },',
+          "  execute: () => 'project'",
+          '};',
+        ].join('\n'),
+      );
+
+      const globalRoot = await fsPromises.mkdtemp(
+        path.join(os.tmpdir(), 'papert-custom-tools-global-'),
+      );
+      const globalToolsDir = path.join(globalRoot, 'tools');
+      await fsPromises.mkdir(globalToolsDir, { recursive: true });
+      await fsPromises.writeFile(
+        path.join(globalToolsDir, 'global.mjs'),
+        [
+          'export default {',
+          "  description: 'global tool',",
+          '  args: { type: "object", properties: {} },',
+          "  execute: () => 'global'",
+          '};',
+        ].join('\n'),
+      );
+
+      const storageSpy = vi
+        .spyOn(Storage, 'getGlobalPapertDir')
+        .mockReturnValue(globalRoot);
+
+      const untrustedConfig = new Config({
+        ...baseConfigParams,
+        cwd: projectRoot,
+        targetDir: projectRoot,
+        trustedFolder: false,
+      });
+      vi.spyOn(untrustedConfig, 'getPromptRegistry').mockReturnValue({
+        clear: vi.fn(),
+        removePromptsByServer: vi.fn(),
+      } as any);
+      const registry = new ToolRegistry(untrustedConfig);
+
+      await registry.discoverAllTools();
+
+      expect(registry.getTool('project')).toBeUndefined();
+      expect(registry.getTool('global')).toBeDefined();
+
+      storageSpy.mockRestore();
     });
   });
 });
