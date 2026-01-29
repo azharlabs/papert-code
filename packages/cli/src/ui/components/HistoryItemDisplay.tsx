@@ -32,6 +32,7 @@ import { getMCPServerStatus } from '@papert-code/papert-code-core';
 import { ToolsList } from './views/ToolsList.js';
 import { McpStatus } from './views/McpStatus.js';
 import { HooksList } from './views/HooksList.js';
+import { ScheduleList } from './views/ScheduleList.js';
 import { ChatList } from './views/ChatList.js';
 
 interface HistoryItemDisplayProps {
@@ -143,6 +144,9 @@ const HistoryItemDisplayComponent: React.FC<HistoryItemDisplayProps> = ({
       )}
       {itemForDisplay.type === 'hooks_list' && (
         <HooksList hooks={itemForDisplay.hooks} />
+      )}
+      {itemForDisplay.type === 'schedule_list' && (
+        <ScheduleList cwd={itemForDisplay.cwd} jobs={itemForDisplay.jobs} />
       )}
       {itemForDisplay.type === 'chat_list' && (
         <ChatList chats={itemForDisplay.chats} />

@@ -7,6 +7,7 @@
 import type {
   CompressionStatus,
   MCPServerConfig,
+  ScheduledJob,
   ThoughtSummary,
   ToolCallConfirmationDetails,
   ToolConfirmationOutcome,
@@ -263,6 +264,12 @@ export type HistoryItemHooksList = HistoryItemBase & {
   }>;
 };
 
+export type HistoryItemScheduleList = HistoryItemBase & {
+  type: 'schedule_list';
+  cwd: string;
+  jobs: ScheduledJob<unknown>[];
+};
+
 // Using Omit<HistoryItem, 'id'> seems to have some issues with typescript's
 // type inference e.g. historyItem.type === 'tool_group' isn't auto-inferring that
 // 'tools' in historyItem.
@@ -291,7 +298,8 @@ export type HistoryItemWithoutId =
   | HistoryItemToolsList
   | HistoryItemMcpStatus
   | HistoryItemChatList
-  | HistoryItemHooksList;
+  | HistoryItemHooksList
+  | HistoryItemScheduleList;
 
 export type HistoryItem = HistoryItemWithoutId & { id: number };
 
@@ -317,6 +325,7 @@ export enum MessageType {
   MCP_STATUS = 'mcp_status',
   CHAT_LIST = 'chat_list',
   HOOKS_LIST = 'hooks_list',
+  SCHEDULE_LIST = 'schedule_list',
 }
 
 // Simplified message structure for internal feedback

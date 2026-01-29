@@ -16,6 +16,7 @@
  * Controllers:
  * - SystemController: initialize, interrupt, set_model, supported_commands
  * - PermissionController: can_use_tool, set_permission_mode
+ * - SchedulerController: scheduler_* requests
  * - MCPController: mcp_message, mcp_server_status
  * - HookController: hook_callback
  *
@@ -27,6 +28,7 @@ import type { IControlContext } from './ControlContext.js';
 import type { IPendingRequestRegistry } from './controllers/baseController.js';
 import { SystemController } from './controllers/systemController.js';
 import { PermissionController } from './controllers/permissionController.js';
+import { SchedulerController } from './controllers/schedulerController.js';
 // import { MCPController } from './controllers/mcpController.js';
 // import { HookController } from './controllers/hookController.js';
 import type {
@@ -65,6 +67,7 @@ export class ControlDispatcher implements IPendingRequestRegistry {
   // Make controllers publicly accessible
   readonly systemController: SystemController;
   readonly permissionController: PermissionController;
+  readonly schedulerController: SchedulerController;
   // readonly mcpController: MCPController;
   // readonly hookController: HookController;
 
@@ -87,6 +90,11 @@ export class ControlDispatcher implements IPendingRequestRegistry {
       context,
       this,
       'PermissionController',
+    );
+    this.schedulerController = new SchedulerController(
+      context,
+      this,
+      'SchedulerController',
     );
     // this.mcpController = new MCPController(context, this, 'MCPController');
     // this.hookController = new HookController(context, this, 'HookController');
@@ -231,6 +239,7 @@ export class ControlDispatcher implements IPendingRequestRegistry {
     // Cleanup controllers (MCP controller will close all clients)
     this.systemController.cleanup();
     this.permissionController.cleanup();
+    this.schedulerController.cleanup();
     // this.mcpController.cleanup();
     // this.hookController.cleanup();
   }
@@ -305,6 +314,17 @@ export class ControlDispatcher implements IPendingRequestRegistry {
       case 'can_use_tool':
       case 'set_permission_mode':
         return this.permissionController;
+
+      case 'scheduler_list':
+      case 'scheduler_status':
+      case 'scheduler_add':
+      case 'scheduler_update':
+      case 'scheduler_remove':
+      case 'scheduler_run':
+      case 'scheduler_runs':
+      case 'scheduler_start':
+      case 'scheduler_stop':
+        return this.schedulerController;
 
       // case 'mcp_message':
       // case 'mcp_server_status':

@@ -73,6 +73,50 @@ The daemon enforces a **lease** on remote sessions.
 
 This means the TTL is effectively the maximum idle time allowed between client requests.
 
+## Scheduler control (remote protocol)
+
+The control protocol also supports scheduler requests for non-TTY clients. Useful subtypes:
+
+- `scheduler_list`, `scheduler_status`
+- `scheduler_add`, `scheduler_update`, `scheduler_remove`
+- `scheduler_run`, `scheduler_runs`
+- `scheduler_start`, `scheduler_stop`
+
+Each request can include an optional `cwd` to target a specific project store.
+
+See `packages/sdk-typescript/src/types/protocol.ts` for the request schema.
+
+### Control-plane sample client
+
+This example sends a scheduler request over the control protocol using the SDK transport.
+
+```ts
+import { createClient } from '@papert-code/sdk-typescript';
+
+async function run() {
+  const client = await createClient({
+    url: 'http://HOST:41242',
+    token: process.env.PAPERT_REMOTE_SERVER_TOKEN,
+  });
+
+  // List scheduled jobs
+  const list = await client.control({
+    subtype: 'scheduler_list',
+    cwd: '/path/to/project',
+    include_disabled: true,
+  });
+
+  console.log(list);
+
+  await client.close();
+}
+
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+```
+
 ## Limitations
 
 Current limitations (as of this implementation):

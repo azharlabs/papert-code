@@ -342,6 +342,62 @@ export interface CLIControlSupportedCommandsRequest {
   subtype: 'supported_commands';
 }
 
+export interface CLIControlSchedulerListRequest {
+  subtype: 'scheduler_list';
+  cwd?: string;
+  include_disabled?: boolean;
+}
+
+export interface CLIControlSchedulerStatusRequest {
+  subtype: 'scheduler_status';
+  cwd?: string;
+}
+
+export interface CLIControlSchedulerAddRequest {
+  subtype: 'scheduler_add';
+  cwd?: string;
+  job: Record<string, unknown>;
+}
+
+export interface CLIControlSchedulerUpdateRequest {
+  subtype: 'scheduler_update';
+  cwd?: string;
+  id: string;
+  patch: Record<string, unknown>;
+}
+
+export interface CLIControlSchedulerRemoveRequest {
+  subtype: 'scheduler_remove';
+  cwd?: string;
+  id: string;
+}
+
+export interface CLIControlSchedulerRunRequest {
+  subtype: 'scheduler_run';
+  cwd?: string;
+  id: string;
+  mode?: 'due' | 'force';
+}
+
+export interface CLIControlSchedulerRunsRequest {
+  subtype: 'scheduler_runs';
+  cwd?: string;
+  id: string;
+  limit?: number;
+}
+
+export interface CLIControlSchedulerStartRequest {
+  subtype: 'scheduler_start';
+  cwd?: string;
+  max_concurrent?: number;
+  queue_policy?: 'queue' | 'skip';
+}
+
+export interface CLIControlSchedulerStopRequest {
+  subtype: 'scheduler_stop';
+  cwd?: string;
+}
+
 export type ControlRequestPayload =
   | CLIControlInterruptRequest
   | CLIControlPermissionRequest
@@ -351,7 +407,16 @@ export type ControlRequestPayload =
   | CLIControlMcpMessageRequest
   | CLIControlSetModelRequest
   | CLIControlMcpStatusRequest
-  | CLIControlSupportedCommandsRequest;
+  | CLIControlSupportedCommandsRequest
+  | CLIControlSchedulerListRequest
+  | CLIControlSchedulerStatusRequest
+  | CLIControlSchedulerAddRequest
+  | CLIControlSchedulerUpdateRequest
+  | CLIControlSchedulerRemoveRequest
+  | CLIControlSchedulerRunRequest
+  | CLIControlSchedulerRunsRequest
+  | CLIControlSchedulerStartRequest
+  | CLIControlSchedulerStopRequest;
 
 export interface CLIControlRequest {
   type: 'control_request';

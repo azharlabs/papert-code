@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { Cron } from 'croner';
 import type { Schedule, ScheduledJob } from './types.js';
 
 export function computeNextRunAtMs(
@@ -17,6 +18,17 @@ export function computeNextRunAtMs(
       return undefined;
     }
     return schedule.atMs;
+  }
+
+  if (schedule.kind === 'cron') {
+    const expr = schedule.expr.trim();
+    if (!expr) return undefined;
+    const cron = new Cron(expr, {
+      timezone: schedule.tz?.trim() || undefined,
+      catch: false,
+    });
+    const next = cron.nextRun(new Date(nowMs));
+    return next ? next.getTime() : undefined;
   }
 
   const everyMs = Math.max(1, Math.floor(schedule.everyMs));

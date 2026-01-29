@@ -16,6 +16,8 @@ export type SchedulerServiceDepsInternal<Payload = unknown> = Omit<
 > & {
   nowMs: () => number;
   schedulerEnabled: boolean;
+  maxConcurrentRuns: number;
+  queuePolicy: 'queue' | 'skip';
 };
 
 export type SchedulerServiceState<Payload = unknown> = {
@@ -23,6 +25,7 @@ export type SchedulerServiceState<Payload = unknown> = {
   store: SchedulerStoreFile<Payload> | null;
   timer: NodeJS.Timeout | null;
   running: boolean;
+  activeRuns: number;
   op: Promise<unknown>;
   warnedDisabled: boolean;
   lastLoadedMtimeMs?: number;
@@ -36,10 +39,13 @@ export function createSchedulerServiceState<Payload>(
       ...deps,
       nowMs: deps.nowMs ?? (() => Date.now()),
       schedulerEnabled: deps.schedulerEnabled !== false,
+      maxConcurrentRuns: Math.max(1, deps.maxConcurrentRuns ?? 1),
+      queuePolicy: deps.queuePolicy ?? 'queue',
     },
     store: null,
     timer: null,
     running: false,
+    activeRuns: 0,
     op: Promise.resolve(),
     warnedDisabled: false,
     lastLoadedMtimeMs: undefined,

@@ -608,17 +608,26 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
 
   // Handle case where subcommands are executed - they should exit the process
   // and not return to main CLI logic.
-  if (
-    result._.length > 0 &&
-    (result._[0] === 'mcp' ||
-      result._[0] === 'extensions' ||
-      result._[0] === 'skills' ||
-      result._[0] === 'hooks' ||
-      result._[0] === 'web' ||
-      result._[0] === 'attach' ||
-      result._[0] === 'schedule')
-  ) {
-    process.exit(0);
+  if (result._.length > 0) {
+    const cmd = result._[0];
+    const scheduleSub = result._[1];
+    const scheduleAction = result._[2];
+    const isLongRunningSchedule =
+      cmd === 'schedule' &&
+      (scheduleSub === 'start' ||
+        (scheduleSub === 'webhook' && scheduleAction === 'start'));
+
+    if (
+      cmd === 'mcp' ||
+      cmd === 'extensions' ||
+      cmd === 'skills' ||
+      cmd === 'hooks' ||
+      cmd === 'web' ||
+      cmd === 'attach' ||
+      (cmd === 'schedule' && !isLongRunningSchedule)
+    ) {
+      process.exit(0);
+    }
   }
 
   // Normalize query args: handle both quoted "@path file" and unquoted @path file

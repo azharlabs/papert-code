@@ -8,8 +8,8 @@ Papert Code supports several built-in commands to help you manage your session, 
 ## Terminal commands (`papert <command>`)
 
 - **`papert schedule`**
-  - **Description:** Manage scheduled Papert prompts (recurring or one-shot).
-  - **Usage:** `papert schedule <add|list|start|run|remove|enable|disable>`
+  - **Description:** Manage scheduled Papert prompts, cron jobs, heartbeats, and webhooks.
+  - **Usage:** `papert schedule <add|heartbeat|update|list|status|start|run|runs|remove|enable|disable|guide|webhook>`
   - **Docs:** See [Scheduler](./scheduler.md) for full usage and examples.
 
 ## Slash commands (`/`)
@@ -137,12 +137,13 @@ Slash commands provide meta-level control over the CLI itself.
   - **Description:** Display detailed statistics for the current Papert Code session, including token usage, cached token savings (when available), and session duration. Note: Cached token information is only displayed when cached tokens are being used, which occurs with API key authentication but not with OAuth authentication at this time.
 
 - **`/schedule`**
-  - **Description:** Manage scheduled Papert prompts (recurring or one-shot).
+  - **Description:** Manage scheduled Papert prompts, cron jobs, heartbeats, and run history.
   - **Usage:** `/schedule` or `/schedule help`
   - **Examples:**
-    - `/schedule list`
+    - `/schedule panel`
     - `/schedule add --name "Daily summary" --every 24h --prompt "Summarize open PRs."`
-    - `/schedule start`
+    - `/schedule heartbeat --name "Ping" --text "Check in" --every 15m`
+    - `/schedule start --max-concurrent 2 --queue-policy skip`
 
 - [**`/theme`**](./themes.md)
   - **Description:** Open a dialog that lets you change the visual theme of Papert Code.

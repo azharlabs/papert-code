@@ -115,3 +115,20 @@ export interface HookServiceAPI {
   // For now, hook functionality is handled only via control requests
   registerHookCallback(callback: unknown): void;
 }
+
+/**
+ * Scheduler Service API
+ *
+ * Provides scheduler operations for control plane consumers.
+ */
+export interface SchedulerServiceAPI {
+  list(cwd?: string, includeDisabled?: boolean): Promise<unknown>;
+  status(cwd?: string): Promise<unknown>;
+  add(cwd: string | undefined, job: unknown): Promise<unknown>;
+  update(cwd: string | undefined, id: string, patch: unknown): Promise<unknown>;
+  remove(cwd: string | undefined, id: string): Promise<unknown>;
+  run(cwd: string | undefined, id: string, mode?: 'due' | 'force'): Promise<unknown>;
+  runs(cwd: string | undefined, id: string, limit?: number): Promise<unknown>;
+  start(cwd?: string, maxConcurrent?: number, queuePolicy?: 'queue' | 'skip'): Promise<unknown>;
+  stop(cwd?: string): Promise<unknown>;
+}

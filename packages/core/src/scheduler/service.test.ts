@@ -9,6 +9,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { TaskScheduler } from './service.js';
+import { readRunLogEntries } from './run-log.js';
 import type { SchedulerLogger } from './types.js';
 
 const logger: SchedulerLogger = {
@@ -119,5 +120,48 @@ describe('TaskScheduler', () => {
     const runResult = await scheduler.run(job.id, 'due');
     expect(runResult.ran).toBe(false);
     expect(runJob).not.toHaveBeenCalled();
+  });
+
+  it('supports cron schedules', async () => {
+    const nowRef = { current: Date.UTC(2026, 0, 1, 0, 0, 0) };
+    const scheduler = new TaskScheduler({
+      storePath: await createStorePath(),
+      log: logger,
+      nowMs: () => nowRef.current,
+      runJob: vi.fn().mockResolvedValue({ status: 'ok' as const }),
+    });
+
+    const job = await scheduler.add({
+      name: 'cron-job',
+      schedule: { kind: 'cron', expr: '*/5 * * * *', tz: 'UTC' },
+      payload: { kind: 'noop' },
+    });
+
+    expect(typeof job.state.nextRunAtMs).toBe('number');
+  });
+
+  it('records run history entries', async () => {
+    const nowRef = { current: 1000 };
+    const storePath = await createStorePath();
+    const scheduler = new TaskScheduler({
+      storePath,
+      log: logger,
+      nowMs: () => nowRef.current,
+      runJob: vi.fn().mockResolvedValue({ status: 'ok' as const, summary: 'ok' }),
+    });
+
+    const job = await scheduler.add({
+      name: 'history',
+      schedule: { kind: 'every', everyMs: 1000, anchorMs: 0 },
+      payload: { kind: 'noop' },
+    });
+
+    nowRef.current = 2000;
+    await scheduler.run(job.id, 'due');
+
+    const entries = await readRunLogEntries(storePath, job.id, { limit: 1 });
+    expect(entries.length).toBe(1);
+    expect(entries[0]?.jobId).toBe(job.id);
+    expect(entries[0]?.status).toBe('ok');
   });
 });

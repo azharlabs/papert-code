@@ -31,6 +31,7 @@ import type { ControlDispatcher } from './ControlDispatcher.js';
 import type {
   PermissionServiceAPI,
   SystemServiceAPI,
+  SchedulerServiceAPI,
   // McpServiceAPI,
   // HookServiceAPI,
 } from './types/serviceAPIs.js';
@@ -165,6 +166,53 @@ export class ControlService {
   //   // HookController has no public methods yet - controller access reserved for future use
   //   return {};
   // }
+
+  /**
+   * Scheduler Domain API
+   *
+   * Handles scheduler control requests (list, add, run, etc.).
+   */
+  get scheduler(): SchedulerServiceAPI {
+    const controller = this.dispatcher.schedulerController;
+    return {
+      list: async (cwd, includeDisabled) =>
+        controller.sendControlRequest({
+          subtype: 'scheduler_list',
+          cwd,
+          include_disabled: includeDisabled,
+        }),
+      status: async (cwd) =>
+        controller.sendControlRequest({ subtype: 'scheduler_status', cwd }),
+      add: async (cwd, job) =>
+        controller.sendControlRequest({
+          subtype: 'scheduler_add',
+          cwd,
+          job: job as Record<string, unknown>,
+        }),
+      update: async (cwd, id, patch) =>
+        controller.sendControlRequest({
+          subtype: 'scheduler_update',
+          cwd,
+          id,
+          patch: patch as Record<string, unknown>,
+        }),
+      remove: async (cwd, id) =>
+        controller.sendControlRequest({ subtype: 'scheduler_remove', cwd, id }),
+      run: async (cwd, id, mode) =>
+        controller.sendControlRequest({ subtype: 'scheduler_run', cwd, id, mode }),
+      runs: async (cwd, id, limit) =>
+        controller.sendControlRequest({ subtype: 'scheduler_runs', cwd, id, limit }),
+      start: async (cwd, maxConcurrent, queuePolicy) =>
+        controller.sendControlRequest({
+          subtype: 'scheduler_start',
+          cwd,
+          max_concurrent: maxConcurrent,
+          queue_policy: queuePolicy,
+        }),
+      stop: async (cwd) =>
+        controller.sendControlRequest({ subtype: 'scheduler_stop', cwd }),
+    };
+  }
 
   /**
    * Cleanup all controllers

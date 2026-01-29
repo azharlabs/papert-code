@@ -967,9 +967,20 @@ export const AppContainer = (props: AppContainerProps) => {
     };
     appEvents.on(AppEvent.LogError, logErrorHandler);
 
+    const notifyHandler = (payload: { content: string; type?: 'info' | 'warn' | 'error' }) => {
+      if (!payload?.content) return;
+      handleNewMessage({
+        type: payload.type ?? 'info',
+        content: payload.content,
+        count: 1,
+      });
+    };
+    appEvents.on(AppEvent.NotifyMessage, notifyHandler);
+
     return () => {
       appEvents.off(AppEvent.OpenDebugConsole, openDebugConsole);
       appEvents.off(AppEvent.LogError, logErrorHandler);
+      appEvents.off(AppEvent.NotifyMessage, notifyHandler);
     };
   }, [handleNewMessage]);
 

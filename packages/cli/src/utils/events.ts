@@ -11,6 +11,7 @@ export enum AppEvent {
   LogError = 'log-error',
   OauthDisplayMessage = 'oauth-display-message',
   SubmitPrompt = 'submit-prompt',
+  NotifyMessage = 'notify-message',
 }
 
 export const appEvents = new EventEmitter();

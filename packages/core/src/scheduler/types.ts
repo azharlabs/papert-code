@@ -14,12 +14,18 @@ export type ScheduleEvery = {
   anchorMs?: number;
 };
 
+export type ScheduleCron = {
+  kind: 'cron';
+  expr: string;
+  tz?: string;
+};
+
 export type ScheduleAt = {
   kind: 'at';
   atMs: number;
 };
 
-export type Schedule = ScheduleEvery | ScheduleAt;
+export type Schedule = ScheduleEvery | ScheduleAt | ScheduleCron;
 
 export type ScheduledJobState = {
   nextRunAtMs?: number;
@@ -30,16 +36,33 @@ export type ScheduledJobState = {
   runningAtMs?: number;
 };
 
+export type SchedulerIsolation = {
+  postToMainPrefix?: string;
+  postToMainMode?: 'summary' | 'full';
+  postToMainMaxChars?: number;
+};
+
+export type SchedulerDeliveryTarget =
+  | { kind: 'none' }
+  | { kind: 'slack_webhook'; url: string }
+  | { kind: 'discord_webhook'; url: string }
+  | { kind: 'telegram_bot'; token: string; chatId: string };
+
 export type ScheduledJob<Payload = unknown> = {
   id: string;
   name: string;
   description?: string;
   enabled: boolean;
   deleteAfterRun?: boolean;
+  noOverlap?: boolean;
   createdAtMs: number;
   updatedAtMs: number;
   schedule: Schedule;
   payload: Payload;
+  sessionTarget?: 'main' | 'isolated';
+  wakeMode?: 'now' | 'next-heartbeat';
+  isolation?: SchedulerIsolation;
+  delivery?: SchedulerDeliveryTarget;
   state: ScheduledJobState;
 };
 
@@ -48,8 +71,13 @@ export type ScheduledJobCreate<Payload = unknown> = {
   description?: string;
   enabled?: boolean;
   deleteAfterRun?: boolean;
+  noOverlap?: boolean;
   schedule: Schedule;
   payload: Payload;
+  sessionTarget?: 'main' | 'isolated';
+  wakeMode?: 'now' | 'next-heartbeat';
+  isolation?: SchedulerIsolation;
+  delivery?: SchedulerDeliveryTarget;
   state?: ScheduledJobState;
 };
 
@@ -58,8 +86,13 @@ export type ScheduledJobPatch<Payload = unknown> = {
   description?: string;
   enabled?: boolean;
   deleteAfterRun?: boolean;
+  noOverlap?: boolean;
   schedule?: Schedule;
   payload?: Payload;
+  sessionTarget?: 'main' | 'isolated';
+  wakeMode?: 'now' | 'next-heartbeat';
+  isolation?: SchedulerIsolation;
+  delivery?: SchedulerDeliveryTarget;
   state?: ScheduledJobState;
 };
 
@@ -85,6 +118,7 @@ export type SchedulerRunResult = {
   status: 'ok' | 'error' | 'skipped';
   summary?: string;
   error?: string;
+  outputText?: string;
 };
 
 export type SchedulerStatusSummary = {
@@ -92,6 +126,7 @@ export type SchedulerStatusSummary = {
   storePath: string;
   jobs: number;
   nextWakeAtMs: number | null;
+  running: number;
 };
 
 export type SchedulerServiceDeps<Payload = unknown> = {
@@ -99,6 +134,8 @@ export type SchedulerServiceDeps<Payload = unknown> = {
   log: SchedulerLogger;
   storePath: string;
   schedulerEnabled?: boolean;
+  maxConcurrentRuns?: number;
+  queuePolicy?: 'queue' | 'skip';
   runJob: (job: ScheduledJob<Payload>) => Promise<SchedulerRunResult>;
   onEvent?: (evt: SchedulerEvent) => void;
 };

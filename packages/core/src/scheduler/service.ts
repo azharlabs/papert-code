@@ -13,7 +13,7 @@ import type { SchedulerServiceDeps } from './types.js';
 import { createSchedulerServiceState } from './state.js';
 import type { SchedulerServiceState } from './state.js';
 import { locked } from './locked.js';
-import { ensureLoaded, persist, warnIfDisabled } from './store-ops.js';
+import { ensureLoaded, persist, refreshFromDisk, warnIfDisabled } from './store-ops.js';
 import {
   applyJobPatch,
   computeJobNextRunAtMs,
@@ -61,6 +61,7 @@ export class TaskScheduler<Payload = unknown> {
   async status(): Promise<SchedulerStatusSummary> {
     return await locked(this.state, async () => {
       await ensureLoaded(this.state);
+      await refreshFromDisk(this.state);
       return {
         enabled: this.state.deps.schedulerEnabled,
         storePath: this.state.deps.storePath,
@@ -68,6 +69,7 @@ export class TaskScheduler<Payload = unknown> {
         nextWakeAtMs: this.state.deps.schedulerEnabled
           ? nextWakeAtMs(this.state) ?? null
           : null,
+        running: this.state.activeRuns,
       };
     });
   }
@@ -75,6 +77,7 @@ export class TaskScheduler<Payload = unknown> {
   async list(opts?: { includeDisabled?: boolean }) {
     return await locked(this.state, async () => {
       await ensureLoaded(this.state);
+      await refreshFromDisk(this.state);
       const includeDisabled = opts?.includeDisabled === true;
       const jobs = (this.state.store?.jobs ?? []).filter(
         (j) => includeDisabled || j.enabled,

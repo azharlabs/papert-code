@@ -9,3 +9,4 @@ export * from './schedule.js';
 export * from './service.js';
 export { loadSchedulerStore, saveSchedulerStore } from './store.js';
 export * from './paths.js';
+export * from './run-log.js';

@@ -11,6 +11,7 @@ import { isScheduleDue } from './schedule.js';
 import { locked } from './locked.js';
 import { ensureLoaded, persist, refreshFromDisk } from './store-ops.js';
 import { emit } from './events.js';
+import { appendRunLogEntry } from './run-log.js';
 
 const MAX_TIMEOUT_MS = 2 ** 31 - 1;
 
@@ -57,6 +58,27 @@ export async function runDueJobs<Payload>(
     return isScheduleDue(j, now);
   });
   for (const job of due) {
+    if (job.noOverlap && typeof job.state.runningAtMs === 'number') {
+      continue;
+    }
+    if (state.activeRuns >= state.deps.maxConcurrentRuns) {
+      if (state.deps.queuePolicy === 'skip') {
+        job.state.lastStatus = 'skipped';
+        job.state.lastError = 'concurrency limit reached';
+        job.state.lastRunAtMs = now;
+        job.state.lastDurationMs = 0;
+        job.state.nextRunAtMs = computeJobNextRunAtMs(job, now);
+        await appendRunLogEntry(state.deps.storePath, {
+          jobId: job.id,
+          runAtMs: now,
+          status: 'skipped',
+          durationMs: 0,
+          error: 'concurrency limit reached',
+          nextRunAtMs: job.state.nextRunAtMs,
+        });
+      }
+      break;
+    }
     await executeJob(state, job, now, { forced: false });
   }
 }
@@ -68,6 +90,7 @@ export async function executeJob<Payload>(
   opts: { forced: boolean },
 ): Promise<void> {
   const startedAt = state.deps.nowMs();
+  state.activeRuns += 1;
   job.state.runningAtMs = startedAt;
   job.state.lastError = undefined;
   emit(state, { jobId: job.id, action: 'started', runAtMs: startedAt });
@@ -111,6 +134,16 @@ export async function executeJob<Payload>(
       nextRunAtMs: job.state.nextRunAtMs,
     });
 
+    await appendRunLogEntry(state.deps.storePath, {
+      jobId: job.id,
+      runAtMs: startedAt,
+      status,
+      durationMs: job.state.lastDurationMs,
+      error: err,
+      summary,
+      nextRunAtMs: job.state.nextRunAtMs,
+    });
+
     if (shouldDelete && state.store) {
       state.store.jobs = state.store.jobs.filter((j) => j.id !== job.id);
       deleted = true;
@@ -128,6 +161,7 @@ export async function executeJob<Payload>(
     await finish('error', String(err));
   } finally {
     job.updatedAtMs = nowMs;
+    state.activeRuns = Math.max(0, state.activeRuns - 1);
     if (!opts.forced && job.enabled && !deleted) {
       job.state.nextRunAtMs = computeJobNextRunAtMs(job, state.deps.nowMs());
     }

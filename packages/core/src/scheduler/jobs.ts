@@ -76,10 +76,15 @@ export function createJob<Payload>(
     description: input.description?.trim() || undefined,
     enabled: input.enabled !== false,
     deleteAfterRun: input.deleteAfterRun,
+    noOverlap: input.noOverlap,
     createdAtMs: now,
     updatedAtMs: now,
     schedule: input.schedule,
     payload: input.payload,
+    sessionTarget: input.sessionTarget,
+    wakeMode: input.wakeMode,
+    isolation: input.isolation,
+    delivery: input.delivery,
     state: {
       ...input.state,
     },
@@ -98,7 +103,12 @@ export function applyJobPatch<Payload>(
   if (typeof patch.enabled === 'boolean') job.enabled = patch.enabled;
   if (typeof patch.deleteAfterRun === 'boolean')
     job.deleteAfterRun = patch.deleteAfterRun;
+  if (typeof patch.noOverlap === 'boolean') job.noOverlap = patch.noOverlap;
   if (patch.schedule) job.schedule = patch.schedule;
   if (patch.payload) job.payload = patch.payload;
+  if (patch.sessionTarget) job.sessionTarget = patch.sessionTarget;
+  if (patch.wakeMode) job.wakeMode = patch.wakeMode;
+  if (patch.isolation) job.isolation = patch.isolation;
+  if (patch.delivery) job.delivery = patch.delivery;
   if (patch.state) job.state = { ...job.state, ...patch.state };
 }
