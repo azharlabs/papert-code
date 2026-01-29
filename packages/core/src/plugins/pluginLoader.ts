@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { glob } from 'glob';
@@ -13,20 +14,19 @@ export interface PluginDiscoveryOptions {
   globalPluginsDir: string;
 }
 
-const DEFAULT_PLUGIN_GLOBS = [
-  '*.{js,ts,mjs,cjs}',
-  'plugin/*.{js,ts,mjs,cjs}',
-  'plugins/*.{js,ts,mjs,cjs}',
-];
+const DEFAULT_PLUGIN_GLOBS = ['*.{js,ts,mjs,cjs}'];
 
 export async function discoverLocalPluginSpecifiers(
   opts: PluginDiscoveryOptions,
 ): Promise<string[]> {
-  const projectMatches = await glob(DEFAULT_PLUGIN_GLOBS, {
-    cwd: opts.projectRoot,
-    absolute: true,
-    nodir: true,
-  });
+  const projectPluginsDir = path.join(opts.projectRoot, '.papert', 'plugins');
+  const projectMatches = fs.existsSync(projectPluginsDir)
+    ? await glob(DEFAULT_PLUGIN_GLOBS, {
+        cwd: projectPluginsDir,
+        absolute: true,
+        nodir: true,
+      })
+    : [];
 
   const globalMatches = await glob(DEFAULT_PLUGIN_GLOBS, {
     cwd: opts.globalPluginsDir,

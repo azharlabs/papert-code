@@ -520,6 +520,7 @@ export class Config {
   private readonly plugins: string[];
   private readonly enableNpmPlugins: boolean;
   private readonly autoInstallNpmPlugins: boolean;
+  private pluginSessionStarted: boolean = false;
   private readonly hooks:
     | ({ [K in HookEventName]?: HookDefinition[] } & { disabled?: string[] })
     | undefined;
@@ -745,6 +746,8 @@ export class Config {
     this.registerSessionSummaryHandlers();
 
     logStartSession(this, new StartSessionEvent(this));
+    const sessionStartSource = this.sessionData ? 'resume' : 'startup';
+    await this.emitPluginSessionStart(sessionStartSource);
   }
 
   getContentGenerator(): ContentGenerator {
@@ -839,6 +842,7 @@ export class Config {
     this.sessionId = sessionId ?? randomUUID();
     this.sessionData = undefined;
     this.chatRecordingService = new ChatRecordingService(this);
+    this.pluginSessionStarted = false;
     if (this.initialized) {
       logStartSession(this, new StartSessionEvent(this));
     }
@@ -852,6 +856,7 @@ export class Config {
     this.sessionId = sessionData.conversation.sessionId;
     this.sessionData = sessionData;
     this.chatRecordingService = new ChatRecordingService(this);
+    this.pluginSessionStarted = false;
     if (this.initialized) {
       logStartSession(this, new StartSessionEvent(this));
     }
@@ -1493,6 +1498,51 @@ export class Config {
 
   getPluginSystem(): import('../plugins/pluginSystem.js').PluginSystem | undefined {
     return this.pluginSystem;
+  }
+
+  async emitPluginSessionStart(source: string): Promise<void> {
+    if (!this.enablePlugins || this.pluginSessionStarted) {
+      return;
+    }
+    const pluginSystem = this.getPluginSystem?.();
+    if (!pluginSystem) {
+      return;
+    }
+    try {
+      await pluginSystem.getEventBus().emit(
+        'session.start',
+        {
+          sessionId: this.sessionId,
+          source,
+        },
+        { config: pluginSystem.config },
+      );
+      this.pluginSessionStarted = true;
+    } catch {
+      // ignore plugin errors
+    }
+  }
+
+  async emitPluginSessionEnd(reason: string): Promise<void> {
+    if (!this.enablePlugins) {
+      return;
+    }
+    const pluginSystem = this.getPluginSystem?.();
+    if (!pluginSystem) {
+      return;
+    }
+    try {
+      await pluginSystem.getEventBus().emit(
+        'session.end',
+        {
+          sessionId: this.sessionId,
+          reason,
+        },
+        { config: pluginSystem.config },
+      );
+    } catch {
+      // ignore plugin errors
+    }
   }
 
   getHooks():

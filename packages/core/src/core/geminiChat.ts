@@ -265,6 +265,23 @@ export class GeminiChat {
 
     // Add user content to history ONCE before any attempts.
     this.history.push(userContent);
+    const pluginSystem = this.config.getPluginSystem?.();
+    if (pluginSystem) {
+      try {
+        await pluginSystem.getEventBus().emit(
+          'message.updated',
+          {
+            sessionId: this.config.getSessionId(),
+            role: 'user',
+            content: userContent,
+            parts: userContent.parts ?? [],
+          },
+          { config: pluginSystem.config },
+        );
+      } catch {
+        // ignore plugin errors
+      }
+    }
     const requestContents = this.getHistory(true);
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -288,6 +305,7 @@ export class GeminiChat {
               requestContents,
               params,
               prompt_id,
+              userContent,
             );
 
             for await (const chunk of stream) {
@@ -350,6 +368,7 @@ export class GeminiChat {
     requestContents: Content[],
     params: SendMessageParameters,
     prompt_id: string,
+    userContent: Content,
   ): Promise<AsyncGenerator<GenerateContentResponse>> {
     let lastModelToUse = model;
     let lastConfig: GenerateContentConfig = {
@@ -358,7 +377,7 @@ export class GeminiChat {
     };
     let lastContentsToUse: Content[] = requestContents;
 
-    const apiCall = () => {
+    const apiCall = async () => {
       const modelToUse = this.config.isInFallbackMode()
         ? this.config.getActiveModel()
         : getEffectiveModel(this.config.isInFallbackMode(), model);
@@ -384,6 +403,89 @@ export class GeminiChat {
         ...params.config,
       };
       let contentsToUse = requestContents;
+
+      const pluginSystem = this.config.getPluginSystem?.();
+      if (pluginSystem) {
+        const paramsOutput = {
+          temperature: config.temperature,
+          topP: config.topP,
+          topK: config.topK,
+          options: {},
+        };
+        try {
+          await pluginSystem.getEventBus().emit(
+            'chat.params',
+            {
+              sessionId: this.config.getSessionId(),
+              model: modelToUse,
+              message: userContent,
+              output: paramsOutput,
+            },
+            { config: pluginSystem.config },
+          );
+        } catch {
+          // ignore plugin errors
+        }
+
+        if (paramsOutput.temperature !== undefined) {
+          config.temperature = paramsOutput.temperature;
+        }
+        if (paramsOutput.topP !== undefined) {
+          config.topP = paramsOutput.topP;
+        }
+        if (paramsOutput.topK !== undefined) {
+          config.topK = paramsOutput.topK;
+        }
+        if (paramsOutput.options && Object.keys(paramsOutput.options).length > 0) {
+          Object.assign(config, paramsOutput.options);
+        }
+
+        const currentHeaders =
+          this.config.getContentGeneratorConfig()?.extraHeaders ?? {};
+        const headersOutput = {
+          headers: { ...currentHeaders },
+        };
+        try {
+          await pluginSystem.getEventBus().emit(
+            'chat.headers',
+            {
+              sessionId: this.config.getSessionId(),
+              model: modelToUse,
+              output: headersOutput,
+            },
+            { config: pluginSystem.config },
+          );
+        } catch {
+          // ignore plugin errors
+        }
+
+        const mergedHeaders = {
+          ...currentHeaders,
+          ...headersOutput.headers,
+        };
+        this.config.updateCredentials({ extraHeaders: mergedHeaders });
+        const contentConfig = this.config.getContentGeneratorConfig();
+        if (contentConfig) {
+          contentConfig.extraHeaders = mergedHeaders;
+        }
+
+        try {
+          await pluginSystem.getEventBus().emit(
+            'model.before',
+            {
+              sessionId: this.config.getSessionId(),
+              request: {
+                model: modelToUse,
+                config,
+                contents: contentsToUse,
+              },
+            },
+            { config: pluginSystem.config },
+          );
+        } catch {
+          // ignore plugin errors
+        }
+      }
 
       const hooksEnabled = this.config.getEnableHooks();
       const messageBus = this.config.getMessageBus();
@@ -608,6 +710,7 @@ export class GeminiChat {
     streamResponse: AsyncGenerator<GenerateContentResponse>,
     originalRequest: GenerateContentParameters,
   ): AsyncGenerator<GenerateContentResponse> {
+    const pluginSystem = this.config.getPluginSystem?.();
     // Collect ALL parts from the model response (including thoughts for recording)
     const allModelParts: Part[] = [];
     // Non-thought parts for history (what we send back to the API)
@@ -679,8 +782,38 @@ export class GeminiChat {
           originalRequest,
           chunk,
         );
+        if (pluginSystem) {
+          try {
+            await pluginSystem.getEventBus().emit(
+              'model.after',
+              {
+                sessionId: this.config.getSessionId(),
+                request: originalRequest,
+                response: hookResult.response,
+              },
+              { config: pluginSystem.config },
+            );
+          } catch {
+            // ignore plugin errors
+          }
+        }
         yield hookResult.response;
       } else {
+        if (pluginSystem) {
+          try {
+            await pluginSystem.getEventBus().emit(
+              'model.after',
+              {
+                sessionId: this.config.getSessionId(),
+                request: originalRequest,
+                response: chunk,
+              },
+              { config: pluginSystem.config },
+            );
+          } catch {
+            // ignore plugin errors
+          }
+        }
         yield chunk;
       }
     }
@@ -771,7 +904,27 @@ export class GeminiChat {
     }
 
     // Add to history (without thoughts, for API calls)
-    this.history.push({ role: 'model', parts: consolidatedHistoryParts });
+    const modelContent: Content = {
+      role: 'model',
+      parts: consolidatedHistoryParts,
+    };
+    this.history.push(modelContent);
+    if (pluginSystem) {
+      try {
+        await pluginSystem.getEventBus().emit(
+          'message.updated',
+          {
+            sessionId: this.config.getSessionId(),
+            role: 'model',
+            content: modelContent,
+            parts: consolidatedHistoryParts,
+          },
+          { config: pluginSystem.config },
+        );
+      } catch {
+        // ignore plugin errors
+      }
+    }
   }
 }
 

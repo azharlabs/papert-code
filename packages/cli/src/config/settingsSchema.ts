@@ -137,6 +137,49 @@ const SETTINGS_SCHEMA = {
       ref: 'MCPServerConfig',
     },
   },
+  enablePlugins: {
+    type: 'boolean',
+    label: 'Enable Plugins',
+    category: 'Advanced',
+    requiresRestart: true,
+    default: false,
+    description:
+      'Enable the plugin system. Plugins run in-process and can access files, network, and credentials.',
+    showInDialog: false,
+  },
+  plugins: {
+    type: 'array',
+    label: 'Plugins',
+    category: 'Advanced',
+    requiresRestart: true,
+    default: [] as string[],
+    description:
+      'List of plugin specifiers (file paths or npm package names).',
+    showInDialog: false,
+    mergeStrategy: MergeStrategy.UNION,
+    items: {
+      type: 'string',
+      description: 'Plugin specifier (absolute path, relative path, or npm package).',
+    },
+  },
+  enableNpmPlugins: {
+    type: 'boolean',
+    label: 'Enable npm Plugins',
+    category: 'Advanced',
+    requiresRestart: true,
+    default: false,
+    description: 'Allow loading plugins from npm packages.',
+    showInDialog: false,
+  },
+  autoInstallNpmPlugins: {
+    type: 'boolean',
+    label: 'Auto-install npm Plugins',
+    category: 'Advanced',
+    requiresRestart: true,
+    default: false,
+    description: 'Automatically install missing npm plugins when enabled.',
+    showInDialog: false,
+  },
 
   general: {
     type: 'object',

@@ -243,11 +243,40 @@ export class LspManager {
       const p = params as { uri?: string; diagnostics?: unknown };
       if (!p?.uri) return;
       this.diagnosticsByUri.set(p.uri, p.diagnostics ?? []);
+      const pluginSystem = this.config.getPluginSystem?.();
+      if (pluginSystem) {
+        pluginSystem
+          .getEventBus()
+          .emit(
+            'lsp.client.diagnostics',
+            {
+              serverName,
+              uri: p.uri,
+              diagnostics: p.diagnostics ?? [],
+            },
+            { config: pluginSystem.config },
+          )
+          .catch(() => {
+            // ignore plugin errors
+          });
+      }
     });
 
     await client.initialize(signal);
 
     this.clientsByServer.set(serverName, client);
+    const pluginSystem = this.config.getPluginSystem?.();
+    if (pluginSystem) {
+      try {
+        await pluginSystem.getEventBus().emit(
+          'lsp.updated',
+          { serverName, status: 'connected' },
+          { config: pluginSystem.config },
+        );
+      } catch {
+        // ignore plugin errors
+      }
+    }
     return { client, serverName };
   }
 
@@ -326,6 +355,21 @@ export class LspManager {
   }
 
   dispose(): void {
+    const pluginSystem = this.config.getPluginSystem?.();
+    if (pluginSystem) {
+      for (const serverName of this.clientsByServer.keys()) {
+        pluginSystem
+          .getEventBus()
+          .emit(
+            'lsp.updated',
+            { serverName, status: 'disposed' },
+            { config: pluginSystem.config },
+          )
+          .catch(() => {
+            // ignore plugin errors
+          });
+      }
+    }
     for (const client of this.clientsByServer.values()) {
       client.dispose();
     }

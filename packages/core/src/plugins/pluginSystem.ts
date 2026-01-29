@@ -6,6 +6,7 @@
 
 import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { PluginEventBus } from './pluginEventBus.js';
 import type { Config } from '../config/config.js';
 import type { PluginContext, PluginDefinition, PluginModule } from './types.js';
@@ -65,9 +66,32 @@ export class PluginSystem {
     });
 
     const npmSpecifiers: string[] = [];
+    const configuredFileSpecifiers: string[] = [];
+
+    for (const raw of this.getPlugins()) {
+      if (raw.startsWith('file:')) {
+        configuredFileSpecifiers.push(raw);
+        continue;
+      }
+
+      if (raw.startsWith('.') || raw.startsWith('/')) {
+        const resolved = raw.startsWith('/')
+          ? raw
+          : path.resolve(projectRoot, raw);
+        configuredFileSpecifiers.push(pathToFileURL(resolved).toString());
+        continue;
+      }
+    }
 
     if (this.getEnableNpmPlugins()) {
       for (const raw of this.getPlugins()) {
+        if (
+          raw.startsWith('file:') ||
+          raw.startsWith('.') ||
+          raw.startsWith('/')
+        ) {
+          continue;
+        }
         const spec = parseNpmPluginSpec(raw);
         try {
           const resolved = resolveNpmPluginSpecifier(spec.packageName, {
@@ -96,14 +120,26 @@ export class PluginSystem {
       }
     }
 
-    const specifiers = [...fileSpecifiers, ...npmSpecifiers];
+    const specifiers = [
+      ...fileSpecifiers,
+      ...configuredFileSpecifiers,
+      ...npmSpecifiers,
+    ];
+    const uniqueSpecifiers = [...new Set(specifiers)];
 
-    for (const specifier of specifiers) {
+    for (const specifier of uniqueSpecifiers) {
       const mod = (await import(specifier)) as PluginModule;
       const init = mod.default ?? mod.plugin;
       if (!init) continue;
 
-      const def = (await init(ctx)) as PluginDefinition;
+      let def: PluginDefinition | null = null;
+      if (typeof init === 'function') {
+        def = (await init(ctx)) as PluginDefinition;
+      } else if (typeof init === 'object') {
+        def = init as PluginDefinition;
+      }
+
+      if (!def) continue;
       this.registerPlugin(def, specifier);
     }
   }

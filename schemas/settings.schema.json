@@ -26,6 +26,55 @@
         ]
       }
     },
+    "enablePlugins": {
+      "type": "boolean",
+      "title": "Enable Plugins",
+      "description": "Enable the plugin system. Plugins run in-process and can access files, network, and credentials.",
+      "default": false,
+      "x-papert": {
+        "category": "Advanced",
+        "requiresRestart": true,
+        "showInDialog": false
+      }
+    },
+    "plugins": {
+      "type": "array",
+      "title": "Plugins",
+      "description": "List of plugin specifiers (file paths or npm package names).",
+      "default": [],
+      "x-papert": {
+        "category": "Advanced",
+        "requiresRestart": true,
+        "showInDialog": false,
+        "mergeStrategy": "union"
+      },
+      "items": {
+        "type": "string",
+        "description": "Plugin specifier (absolute path, relative path, or npm package)."
+      }
+    },
+    "enableNpmPlugins": {
+      "type": "boolean",
+      "title": "Enable npm Plugins",
+      "description": "Allow loading plugins from npm packages.",
+      "default": false,
+      "x-papert": {
+        "category": "Advanced",
+        "requiresRestart": true,
+        "showInDialog": false
+      }
+    },
+    "autoInstallNpmPlugins": {
+      "type": "boolean",
+      "title": "Auto-install npm Plugins",
+      "description": "Automatically install missing npm plugins when enabled.",
+      "default": false,
+      "x-papert": {
+        "category": "Advanced",
+        "requiresRestart": true,
+        "showInDialog": false
+      }
+    },
     "general": {
       "type": "object",
       "title": "General",

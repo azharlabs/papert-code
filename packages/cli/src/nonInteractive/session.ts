@@ -401,6 +401,21 @@ export class Session {
     const hookMessageBus = this.config.getMessageBus();
     if (hooksEnabled && hookMessageBus && this.sessionHooksFired) {
       await fireSessionEndHook(hookMessageBus, SessionEndReason.Exit);
+      const pluginSystem = this.config.getPluginSystem?.();
+      if (pluginSystem) {
+        try {
+          await pluginSystem.getEventBus().emit(
+            'session.end',
+            {
+              sessionId: this.config.getSessionId(),
+              reason: SessionEndReason.Exit,
+            },
+            { config: pluginSystem.config },
+          );
+        } catch {
+          // ignore plugin errors
+        }
+      }
     }
 
     this.dispatcher?.shutdown();

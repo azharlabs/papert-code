@@ -101,7 +101,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       vimCommand,
       terminalSetupCommand,
       ...(this.config?.getEnableHooks?.() ? [hooksCommand] : []),
-      ...(this.config?.getEnablePlugins?.() ? [pluginsCommand] : []),
+      pluginsCommand,
     ];
 
     return allDefinitions.filter((cmd): cmd is SlashCommand => cmd !== null);

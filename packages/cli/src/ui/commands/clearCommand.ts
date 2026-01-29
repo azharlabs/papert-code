@@ -30,6 +30,7 @@ export const clearCommand: SlashCommand = {
       if (config.getEnableHooks?.() && messageBus) {
         await fireSessionEndHook(messageBus, SessionEndReason.Clear);
       }
+      await config.emitPluginSessionEnd(SessionEndReason.Clear);
 
       const newSessionId = config.startNewSession();
 
@@ -55,6 +56,7 @@ export const clearCommand: SlashCommand = {
       if (config.getEnableHooks?.() && messageBus) {
         await fireSessionStartHook(messageBus, SessionStartSource.Clear);
       }
+      await config.emitPluginSessionStart(SessionStartSource.Clear);
     } else {
       context.ui.setDebugMessage(t('Starting a new session and clearing.'));
     }

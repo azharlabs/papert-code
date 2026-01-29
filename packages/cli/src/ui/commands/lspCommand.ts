@@ -18,7 +18,7 @@ const statusCommand: SlashCommand = {
     return t('Show LSP server status.');
   },
   kind: CommandKind.BUILT_IN,
-  action: async (context: CommandContext): Promise<void> => {
+  action: async (context: CommandContext, _args: string): Promise<void> => {
     const { config } = context.services;
     if (!config) {
       context.ui.addItem(

@@ -4,7 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import type { Content, Part } from '@google/genai';
 import type { Config } from '../config/config.js';
+import type {
+  ToolCallConfirmationDetails,
+  ToolConfirmationOutcome,
+  ToolConfirmationPayload,
+} from '../tools/tools.js';
 
 export type PluginEventName =
   | 'tool.execute.before'
@@ -12,7 +18,14 @@ export type PluginEventName =
   | 'session.start'
   | 'session.end'
   | 'model.before'
-  | 'model.after';
+  | 'model.after'
+  | 'message.updated'
+  | 'permission.asked'
+  | 'permission.replied'
+  | 'lsp.updated'
+  | 'lsp.client.diagnostics'
+  | 'chat.params'
+  | 'chat.headers';
 
 export interface PluginContext {
   config: Config;
@@ -32,15 +45,72 @@ export interface ToolExecuteAfterPayload {
 
 export interface SessionPayload {
   sessionId: string;
+  source?: string;
+  reason?: string;
 }
 
 export interface ModelBeforePayload {
+  sessionId: string;
   request: unknown;
 }
 
 export interface ModelAfterPayload {
+  sessionId: string;
   request: unknown;
   response: unknown;
+}
+
+export interface MessageUpdatedPayload {
+  sessionId: string;
+  role: 'user' | 'model' | 'system';
+  content: Content;
+  parts: Part[];
+}
+
+export interface PermissionAskedPayload {
+  sessionId: string;
+  toolName: string;
+  callId: string;
+  confirmation: ToolCallConfirmationDetails;
+}
+
+export interface PermissionRepliedPayload {
+  sessionId: string;
+  toolName: string;
+  callId: string;
+  outcome: ToolConfirmationOutcome;
+  payload?: ToolConfirmationPayload;
+}
+
+export interface LspUpdatedPayload {
+  serverName: string;
+  status: 'connected' | 'disposed' | 'error';
+}
+
+export interface LspDiagnosticsPayload {
+  serverName: string;
+  uri: string;
+  diagnostics: unknown;
+}
+
+export interface ChatParamsPayload {
+  sessionId: string;
+  model: string;
+  message: Content;
+  output: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    options: Record<string, unknown>;
+  };
+}
+
+export interface ChatHeadersPayload {
+  sessionId: string;
+  model: string;
+  output: {
+    headers: Record<string, string>;
+  };
 }
 
 export type PluginEventPayloadMap = {
@@ -50,6 +120,13 @@ export type PluginEventPayloadMap = {
   'session.end': SessionPayload;
   'model.before': ModelBeforePayload;
   'model.after': ModelAfterPayload;
+  'message.updated': MessageUpdatedPayload;
+  'permission.asked': PermissionAskedPayload;
+  'permission.replied': PermissionRepliedPayload;
+  'lsp.updated': LspUpdatedPayload;
+  'lsp.client.diagnostics': LspDiagnosticsPayload;
+  'chat.params': ChatParamsPayload;
+  'chat.headers': ChatHeadersPayload;
 };
 
 export type PluginHandler<E extends PluginEventName> = (

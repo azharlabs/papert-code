@@ -128,12 +128,227 @@ export default function pluginFactory() {
 
 ### Supported hook events
 
-Papert Code currently supports (at least) these events:
+Papert Code supports the following plugin events:
 
-- `tool.execute.before`
-- `tool.execute.after`
+#### Tool
 
-Both hooks receive a payload that describes the tool execution.
+- `tool.execute.before` — before a tool runs
+- `tool.execute.after` — after a tool finishes (success or error)
+
+#### Session
+
+- `session.start` — session created or restarted
+- `session.end` — session ended
+
+#### Model
+
+- `model.before` — before a model request is sent
+- `model.after` — after a model chunk is received
+
+#### Chat
+
+- `chat.params` — mutate model sampling params before a request
+- `chat.headers` — mutate request headers (OpenAI-compatible providers only)
+
+#### Messages
+
+- `message.updated` — when a user or model message is added to history
+
+#### Permissions
+
+- `permission.asked` — when a tool requests confirmation
+- `permission.replied` — when a tool confirmation decision is made
+
+#### LSP
+
+- `lsp.updated` — when an LSP client connects or is disposed
+- `lsp.client.diagnostics` — when diagnostics are published
+
+### Why these hooks help
+
+Richer plugin hooks unlock more advanced behaviors than simple tool wrappers:
+
+- Fine-grained lifecycle access: react to session start/end, model calls, message updates, permissions, and LSP changes.
+- Policy & governance: enforce allow/deny rules and audit approvals via `permission.*` events.
+- Telemetry & analytics: instrument `model.*`, `message.updated`, and `lsp.*` for metrics and tracing.
+- Dynamic model control: tune sampling per message with `chat.params`.
+- Request customization: add provider headers (routing, org IDs, etc.) with `chat.headers` for OpenAI-compatible providers.
+- IDE/LSP awareness: build status UIs, diagnostics alerts, or auto-fix flows based on LSP events.
+
+> Note: `chat.headers` mutates `extraHeaders` in the content generator config. For Gemini/Vertex clients, headers are set when the client is created; header mutations are primarily intended for OpenAI-compatible providers.
+
+### Event payloads
+
+All handlers receive a single payload object. Some events provide an `output` object that you can mutate.
+
+#### `tool.execute.before`
+
+```ts
+{
+  toolName: string;
+  args: unknown;
+}
+```
+
+#### `tool.execute.after`
+
+```ts
+{
+  toolName: string;
+  args: unknown;
+  result: unknown;
+  error?: string;
+}
+```
+
+#### `session.start`
+
+```ts
+{
+  sessionId: string;
+  source?: string;
+}
+```
+
+#### `session.end`
+
+```ts
+{
+  sessionId: string;
+  reason?: string;
+}
+```
+
+#### `model.before`
+
+```ts
+{
+  sessionId: string;
+  request: unknown; // GenerateContentParameters shape
+}
+```
+
+#### `model.after`
+
+```ts
+{
+  sessionId: string;
+  request: unknown;  // original request
+  response: unknown; // GenerateContentResponse chunk
+}
+```
+
+#### `chat.params`
+
+```ts
+{
+  sessionId: string;
+  model: string;
+  message: unknown; // Content
+  output: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    options: Record<string, unknown>;
+  };
+}
+```
+
+Mutate `output` to change sampling parameters:
+
+```js
+export default function plugin() {
+  return {
+    name: 'custom-sampling',
+    hooks: {
+      'chat.params': ({ output }) => {
+        output.temperature = 0.2;
+        output.options.maxOutputTokens = 1024;
+      }
+    }
+  };
+}
+```
+
+#### `chat.headers`
+
+```ts
+{
+  sessionId: string;
+  model: string;
+  output: {
+    headers: Record<string, string>;
+  };
+}
+```
+
+```js
+export default function plugin() {
+  return {
+    name: 'extra-headers',
+    hooks: {
+      'chat.headers': ({ output }) => {
+        output.headers['x-example'] = '1';
+      }
+    }
+  };
+}
+```
+
+#### `message.updated`
+
+```ts
+{
+  sessionId: string;
+  role: 'user' | 'model' | 'system';
+  content: unknown; // Content
+  parts: unknown[]; // Part[]
+}
+```
+
+#### `permission.asked`
+
+```ts
+{
+  sessionId: string;
+  toolName: string;
+  callId: string;
+  confirmation: unknown; // ToolCallConfirmationDetails
+}
+```
+
+#### `permission.replied`
+
+```ts
+{
+  sessionId: string;
+  toolName: string;
+  callId: string;
+  outcome: string;
+  payload?: unknown;
+}
+```
+
+#### `lsp.updated`
+
+```ts
+{
+  serverName: string;
+  status: 'connected' | 'disposed' | 'error';
+}
+```
+
+#### `lsp.client.diagnostics`
+
+```ts
+{
+  serverName: string;
+  uri: string;
+  diagnostics: unknown;
+}
+```
+
+Both hooks receive a payload that describes the LSP server or diagnostics update.
 
 ### Complete examples
 

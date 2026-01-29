@@ -24,6 +24,7 @@ import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
 import { AuthType } from './contentGenerator.js';
 import { type RetryOptions } from '../utils/retry.js';
 import { uiTelemetryService } from '../telemetry/uiTelemetry.js';
+import { PluginEventBus } from '../plugins/pluginEventBus.js';
 
 // Mock fs module to prevent actual file system operations during tests
 const mockFileSystem = new Map<string, string>();
@@ -731,6 +732,86 @@ describe('GeminiChat', () => {
       expect(uiTelemetryService.setLastPromptTokenCount).toHaveBeenCalledTimes(
         1,
       );
+    });
+
+    it('allows plugins to mutate chat params and headers', async () => {
+      const response = (async function* () {
+        yield {
+          candidates: [
+            {
+              content: {
+                parts: [{ text: 'response' }],
+                role: 'model',
+              },
+              finishReason: 'STOP',
+              index: 0,
+              safetyRatings: [],
+            },
+          ],
+          text: () => 'response',
+          usageMetadata: {
+            promptTokenCount: 42,
+            candidatesTokenCount: 15,
+            totalTokenCount: 57,
+          },
+        } as unknown as GenerateContentResponse;
+      })();
+      vi.mocked(mockContentGenerator.generateContentStream).mockResolvedValue(
+        response,
+      );
+
+      const eventBus = new PluginEventBus();
+      eventBus.on('chat.params', ({ output }) => {
+        output.temperature = 0.25;
+        output.topP = 0.8;
+        output.topK = 12;
+        output.options['maxOutputTokens'] = 128;
+      });
+      eventBus.on('chat.headers', ({ output }) => {
+        output.headers['x-test-header'] = 'enabled';
+      });
+
+      mockConfig.getPluginSystem = vi.fn().mockReturnValue({
+        getEventBus: () => eventBus,
+        config: mockConfig,
+      });
+      mockConfig.updateCredentials = vi.fn();
+      mockConfig.getContentGeneratorConfig = vi.fn().mockReturnValue({
+        authType: 'oauth-personal',
+        model: 'test-model',
+        extraHeaders: {},
+      });
+
+      const stream = await chat.sendMessageStream(
+        'test-model',
+        { message: 'hello' },
+        'prompt-id-1',
+      );
+      for await (const _ of stream) {
+        // consume stream
+      }
+
+      expect(mockContentGenerator.generateContentStream).toHaveBeenCalledWith(
+        {
+          model: 'test-model',
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: 'hello' }],
+            },
+          ],
+          config: expect.objectContaining({
+            temperature: 0.25,
+            topP: 0.8,
+            topK: 12,
+            maxOutputTokens: 128,
+          }),
+        },
+        'prompt-id-1',
+      );
+      expect(mockConfig.updateCredentials).toHaveBeenCalledWith({
+        extraHeaders: { 'x-test-header': 'enabled' },
+      });
     });
   });
 

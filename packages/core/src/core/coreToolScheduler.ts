@@ -870,6 +870,24 @@ export class CoreToolScheduler {
               await fireToolNotificationHook(messageBus, confirmationDetails);
             }
 
+            const pluginSystem = this.config.getPluginSystem?.();
+            if (pluginSystem) {
+              try {
+                await pluginSystem.getEventBus().emit(
+                  'permission.asked',
+                  {
+                    sessionId: this.config.getSessionId(),
+                    toolName: reqInfo.name,
+                    callId: reqInfo.callId,
+                    confirmation: confirmationDetails,
+                  },
+                  { config: pluginSystem.config },
+                );
+              } catch {
+                // ignore plugin errors
+              }
+            }
+
             // Allow IDE to resolve confirmation
             if (
               confirmationDetails.type === 'edit' &&
@@ -964,6 +982,25 @@ export class CoreToolScheduler {
     }
 
     this.setToolCallOutcome(callId, outcome);
+
+    const pluginSystem = this.config.getPluginSystem?.();
+    if (pluginSystem && toolCall) {
+      try {
+        await pluginSystem.getEventBus().emit(
+          'permission.replied',
+          {
+            sessionId: this.config.getSessionId(),
+            toolName: toolCall.request.name,
+            callId,
+            outcome,
+            payload,
+          },
+          { config: pluginSystem.config },
+        );
+      } catch {
+        // ignore plugin errors
+      }
+    }
 
     if (outcome === ToolConfirmationOutcome.Cancel || signal.aborted) {
       // Use custom cancel message from payload if provided, otherwise use default
