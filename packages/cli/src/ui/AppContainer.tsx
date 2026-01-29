@@ -973,6 +973,17 @@ export const AppContainer = (props: AppContainerProps) => {
     };
   }, [handleNewMessage]);
 
+  useEffect(() => {
+    const handler = (payload: { content: string }) => {
+      if (!payload?.content) return;
+      void submitQuery(payload.content);
+    };
+    appEvents.on(AppEvent.SubmitPrompt, handler);
+    return () => {
+      appEvents.off(AppEvent.SubmitPrompt, handler);
+    };
+  }, [submitQuery]);
+
   const handleEscapePromptChange = useCallback((showPrompt: boolean) => {
     setShowEscapePrompt(showPrompt);
   }, []);

@@ -36,6 +36,7 @@ import { restoreCommand } from '../ui/commands/restoreCommand.js';
 import { settingsCommand } from '../ui/commands/settingsCommand.js';
 import { statsCommand } from '../ui/commands/statsCommand.js';
 import { summaryCommand } from '../ui/commands/summaryCommand.js';
+import { scheduleCommand } from '../ui/commands/scheduleCommand.js';
 import { terminalSetupCommand } from '../ui/commands/terminalSetupCommand.js';
 import { themeCommand } from '../ui/commands/themeCommand.js';
 import { toolsCommand } from '../ui/commands/toolsCommand.js';
@@ -91,6 +92,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       summaryCommand,
       shareCommand,
       unshareCommand,
+      scheduleCommand,
       themeCommand,
       toolsCommand,
       settingsCommand,

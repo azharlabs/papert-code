@@ -90,6 +90,7 @@ export * from './services/sessionSummaryService.js';
 export * from './services/sessionSummaryUtils.js';
 export * from './services/sessionService.js';
 export * from './services/fileSystemService.js';
+export * from './scheduler/index.js';
 export {
   ModelConfigService,
   type ModelConfigKey as ModelConfigServiceKey,

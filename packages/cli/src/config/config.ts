@@ -39,6 +39,7 @@ import { serverCommand } from '../commands/server.js';
 import { connectCommand } from '../commands/connect.js';
 import { webCommand } from '../commands/web.js';
 import { attachCommand } from '../commands/attach.js';
+import { scheduleCommand } from '../commands/schedule.js';
 import { loadProjectHooksFromHooksJson } from './projectHooks.js';
 import type { Settings } from './settings.js';
 import yargs, { type Argv } from 'yargs';
@@ -590,6 +591,7 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
   yargsInstance.command(connectCommand);
   yargsInstance.command(webCommand);
   yargsInstance.command(attachCommand);
+  yargsInstance.command(scheduleCommand);
 
   yargsInstance
     .version(await getVersion()) // This will enable the --version flag based on package.json
@@ -613,7 +615,8 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
       result._[0] === 'skills' ||
       result._[0] === 'hooks' ||
       result._[0] === 'web' ||
-      result._[0] === 'attach')
+      result._[0] === 'attach' ||
+      result._[0] === 'schedule')
   ) {
     process.exit(0);
   }

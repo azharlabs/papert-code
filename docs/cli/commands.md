@@ -5,6 +5,13 @@ Papert Code supports several built-in commands to help you manage your session, 
 - **Interactive commands** are prefixed with a forward slash (`/`), an at symbol (`@`), or an exclamation mark (`!`).
 - **Terminal commands** are invoked as `papert <command>` (for example, `papert server` and `papert connect`). See [Remote Driving](./remote-driving.md).
 
+## Terminal commands (`papert <command>`)
+
+- **`papert schedule`**
+  - **Description:** Manage scheduled Papert prompts (recurring or one-shot).
+  - **Usage:** `papert schedule <add|list|start|run|remove|enable|disable>`
+  - **Docs:** See [Scheduler](./scheduler.md) for full usage and examples.
+
 ## Slash commands (`/`)
 
 Slash commands provide meta-level control over the CLI itself.
@@ -128,6 +135,14 @@ Slash commands provide meta-level control over the CLI itself.
 
 - **`/stats`**
   - **Description:** Display detailed statistics for the current Papert Code session, including token usage, cached token savings (when available), and session duration. Note: Cached token information is only displayed when cached tokens are being used, which occurs with API key authentication but not with OAuth authentication at this time.
+
+- **`/schedule`**
+  - **Description:** Manage scheduled Papert prompts (recurring or one-shot).
+  - **Usage:** `/schedule` or `/schedule help`
+  - **Examples:**
+    - `/schedule list`
+    - `/schedule add --name "Daily summary" --every 24h --prompt "Summarize open PRs."`
+    - `/schedule start`
 
 - [**`/theme`**](./themes.md)
   - **Description:** Open a dialog that lets you change the visual theme of Papert Code.
