@@ -5,7 +5,19 @@
  */
 
 import type { CommandModule } from 'yargs';
-import { spawn } from 'node:child_process';
+import { spawn as childProcessSpawn } from 'node:child_process';
+
+let spawnImpl: typeof childProcessSpawn = childProcessSpawn;
+
+export const __setSpawnForAttach = (spawn: typeof childProcessSpawn): void => {
+  spawnImpl = spawn;
+};
+
+export const __resetSpawnForAttach = (): void => {
+  spawnImpl = childProcessSpawn;
+};
+
+export const __testSpawn = (): typeof childProcessSpawn => spawnImpl;
 
 export const attachCommand: CommandModule = {
   command: 'attach <url>',
@@ -33,7 +45,7 @@ export const attachCommand: CommandModule = {
     const sessionId = String(argv['session-id']);
     const sessionToken = String(argv['session-token']);
 
-    const child = spawn(
+    const child = __testSpawn()(
       process.execPath,
       [
         // run the current CLI entrypoint

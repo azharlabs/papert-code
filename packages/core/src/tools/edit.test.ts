@@ -81,6 +81,7 @@ describe('EditTool', () => {
       getToolCallCommand: () => undefined,
       getMcpServerCommand: () => undefined,
       getMcpServers: () => undefined,
+      getFormatterSettings: () => ({ enabled: false }),
       getUserAgent: () => 'test-agent',
       getUserMemory: () => '',
       setUserMemory: vi.fn(),

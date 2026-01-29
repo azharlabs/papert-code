@@ -31,6 +31,20 @@ describe('CommandRegistry', () => {
       ExtensionsCommand: mockExtensionsCommand,
       ListExtensionsCommand: mockListExtensionsCommand,
     }));
+    vi.doMock('./restore.js', () => ({
+      RestoreCommand: class RestoreCommand {
+        name = 'restore';
+        description = 'Restore command (mock).';
+        execute = vi.fn();
+      },
+    }));
+    vi.doMock('./init.js', () => ({
+      InitCommand: class InitCommand {
+        name = 'init';
+        description = 'Init command (mock).';
+        execute = vi.fn();
+      },
+    }));
   });
 
   it('should register ExtensionsCommand on initialization', async () => {
