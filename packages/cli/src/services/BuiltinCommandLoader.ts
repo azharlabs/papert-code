@@ -29,6 +29,7 @@ import { languageCommand } from '../ui/commands/languageCommand.js';
 import { mcpCommand } from '../ui/commands/mcpCommand.js';
 import { memoryCommand } from '../ui/commands/memoryCommand.js';
 import { modelCommand } from '../ui/commands/modelCommand.js';
+import { lspCommand } from '../ui/commands/lspCommand.js';
 import { permissionsCommand } from '../ui/commands/permissionsCommand.js';
 import { resumeCommand } from '../ui/commands/resumeCommand.js';
 import { quitCommand, quitConfirmCommand } from '../ui/commands/quitCommand.js';
@@ -80,6 +81,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       await ideCommand(),
       initCommand,
       languageCommand,
+      lspCommand,
       mcpCommand,
       memoryCommand,
       modelCommand,

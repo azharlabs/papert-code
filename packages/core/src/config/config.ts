@@ -60,6 +60,7 @@ import { ToolRegistry } from '../tools/tool-registry.js';
 import { WebFetchTool } from '../tools/web-fetch.js';
 import { WebSearchTool } from '../tools/web-search/index.js';
 import { WriteFileTool } from '../tools/write-file.js';
+import { LspManager } from '../lsp/lspManager.js';
 
 // Other modules
 import { ideContextStore } from '../ide/ideContext.js';
@@ -514,6 +515,7 @@ export class Config {
   private readonly enableToolOutputTruncation: boolean;
   private readonly enableHooks: boolean;
   private readonly lspSettings: import('../lsp/lspManager.js').LspSettings | undefined;
+  private lspManager?: LspManager;
   private readonly enablePlugins: boolean;
   private readonly plugins: string[];
   private readonly enableNpmPlugins: boolean;
@@ -1464,6 +1466,13 @@ export class Config {
 
   getLspSettings(): import('../lsp/lspManager.js').LspSettings {
     return this.lspSettings ?? { enabled: false };
+  }
+
+  getLspManager(): LspManager {
+    if (!this.lspManager) {
+      this.lspManager = new LspManager(this);
+    }
+    return this.lspManager;
   }
 
   getEnablePlugins(): boolean {

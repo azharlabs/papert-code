@@ -34,6 +34,7 @@ import { McpStatus } from './views/McpStatus.js';
 import { HooksList } from './views/HooksList.js';
 import { ScheduleList } from './views/ScheduleList.js';
 import { ChatList } from './views/ChatList.js';
+import { LspStatus } from './views/LspStatus.js';
 
 interface HistoryItemDisplayProps {
   item: HistoryItem;
@@ -141,6 +142,9 @@ const HistoryItemDisplayComponent: React.FC<HistoryItemDisplayProps> = ({
       )}
       {itemForDisplay.type === 'mcp_status' && (
         <McpStatus {...itemForDisplay} serverStatus={getMCPServerStatus} />
+      )}
+      {itemForDisplay.type === 'lsp_status' && (
+        <LspStatus {...itemForDisplay} />
       )}
       {itemForDisplay.type === 'hooks_list' && (
         <HooksList hooks={itemForDisplay.hooks} />

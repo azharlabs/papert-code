@@ -12,16 +12,45 @@ The `lsp` tool integrates with **Language Server Protocol (LSP)** servers to pro
 
 ---
 
+## Overview
+
+Papert Code can:
+
+- Use manually configured LSP servers
+- Auto-detect built-in LSP servers based on file types
+- Auto-install some servers when missing
+- Show LSP status via `/lsp status`
+
+Auto-install runs only when an LSP request is executed (hover, diagnostics, etc.), not when you just open a file or run `/lsp status`.
+
+---
+
 ## Quick start
 
-1. Add an LSP server configuration to your settings file:
+1. Enable LSP in your settings file:
 
 - Project settings: `.papert/settings.json` (recommended)
 - User settings: `~/.papert/settings.json`
 
-2. Ensure the LSP server executable is installed and available in your environment.
+2. (Optional) Add custom LSP server configs if you want to override built-ins.
 
 3. Ask Papert Code to use the `lsp` tool (e.g. “use lsp hover on …”).
+
+```jsonc
+{
+  "tools": {
+    "lsp": {
+      "enabled": true,
+      "autoDetect": true,
+      "autoInstall": true
+    }
+  }
+}
+```
+
+When enabled, Papert Code can auto-detect supported LSP servers by file type and (optionally) auto-install them on first use.
+
+> Auto-install can be disabled via `tools.lsp.autoInstall = false` or by setting `PAPERT_DISABLE_LSP_DOWNLOAD=true`.
 
 ---
 
@@ -38,7 +67,7 @@ Papert Code looks for settings in:
 
 ## Recommended servers + installation
 
-This section lists recommended LSP servers for common languages and how to install them.
+This section lists recommended LSP servers for common languages and how to install them if you want to manage servers manually.
 
 > Papert Code starts LSP servers as external processes. The `command[0]` executable must be available in the environment where Papert Code runs (and **inside the sandbox**, if sandboxing is enabled).
 
@@ -131,6 +160,8 @@ pyright-langserver --version
   "tools": {
     "lsp": {
       "enabled": true,
+      "autoDetect": true,
+      "autoInstall": true,
       "servers": {
         "tsserver": {
           "disabled": false,
@@ -154,6 +185,10 @@ pyright-langserver --version
 
 - `tools.lsp.enabled` (boolean)
   - Enables/disables the `lsp` tool globally.
+- `tools.lsp.autoDetect` (boolean)
+  - Automatically enable built-in LSP servers based on file extensions.
+- `tools.lsp.autoInstall` (boolean)
+  - Automatically install supported LSP servers if missing.
 - `tools.lsp.servers` (object map)
   - A map of server profiles. The key is an arbitrary name (e.g. `tsserver`, `pyright`).
 
@@ -165,8 +200,7 @@ Each server profile supports:
   - The command + args to start the LSP server in **stdio** mode.
 - `extensions` (string[], required)
   - File extensions that should use this server.
-  - Use **no dot** (recommended): `["ts", "tsx"]`.
-  - If you already have dots in your config (e.g. `[".ts", ".tsx"]`), remove them.
+  - Dots are optional: `["ts", "tsx"]` and `[".ts", ".tsx"]` both work.
 - `env` (record<string,string>, optional)
   - Extra environment variables for the LSP server process.
 - `initialization` (object, optional)
@@ -180,10 +214,87 @@ Each server profile supports:
 When you call the `lsp` tool with a `path`, Papert Code:
 
 1. Extracts the file extension from `path`.
-2. Finds the first configured server whose `extensions` contains that extension.
-3. Starts (or reuses) that server process.
+2. Checks configured servers for a matching extension.
+3. If auto-detection is enabled, checks built-in servers by extension.
+4. Starts (or reuses) that server process.
 
 If no server matches the extension, the tool will fail with an error indicating no server is configured for that file type.
+
+---
+
+## Built-in auto-detected servers
+
+Papert Code includes a built-in catalog of LSP servers that are auto-detected by file extension when `tools.lsp.autoDetect` is enabled.
+
+| LSP Server         | Extensions                                         | Auto-install |
+| ------------------ | -------------------------------------------------- | ------------ |
+| astro              | .astro                                             | npm          |
+| bash               | .sh, .bash, .zsh, .ksh                             | npm          |
+| clangd             | .c, .cpp, .cc, .cxx, .c++, .h, .hpp, .hh, .hxx, .h++ | no           |
+| dart               | .dart                                              | no           |
+| deno               | .ts, .tsx, .js, .jsx, .mjs                         | no           |
+| gopls              | .go                                                | no           |
+| php-intelephense   | .php                                               | npm          |
+| prisma             | .prisma                                            | no           |
+| pyright            | .py, .pyi                                          | npm          |
+| ruby-lsp           | .rb, .rake, .gemspec, .ru                          | no           |
+| rust-analyzer      | .rs                                                | no           |
+| svelte             | .svelte                                            | npm          |
+| typescript         | .ts, .tsx, .js, .jsx, .mjs, .cjs, .mts, .cts       | npm          |
+| vue                | .vue                                               | npm          |
+| yaml-ls            | .yaml, .yml                                        | npm          |
+
+> Auto-install uses npm for supported servers. If npm is unavailable or auto-install is disabled, Papert Code will fall back to requiring a manually installed server on your PATH.
+
+---
+
+## Auto-install behavior
+
+Auto-install runs only when all of the following are true:
+
+- `tools.lsp.autoInstall` is true
+- The workspace is trusted
+- You are not running in a restrictive sandbox
+- `PAPERT_DISABLE_LSP_DOWNLOAD` is not set to `true`
+- `npm` is available on PATH (for npm-backed servers)
+
+Auto-install is triggered by LSP usage (hover, diagnostics, definition, etc.), not by `/lsp status`.
+
+### Where auto-installed servers go
+
+Papert Code installs npm-backed LSP servers under:
+
+```
+~/.papert/lsp/npm
+```
+
+The corresponding binaries are resolved from:
+
+```
+~/.papert/lsp/npm/node_modules/.bin
+```
+
+---
+
+## Status UI
+
+Use `/lsp status` to view:
+
+- Whether LSP is enabled
+- Auto-detect and auto-install flags
+- Each configured and built-in server
+- Current state: connected, ready, missing, or disabled
+
+---
+
+## Precedence rules
+
+When a configured server and a built-in server match the same extension:
+
+- Configured servers win.
+- Built-ins are only used when no matching configured server exists.
+
+This means a manually configured server will not auto-install unless you install it yourself.
 
 ---
 
@@ -412,6 +523,7 @@ Returns the most recently received diagnostics for a file.
 
 - Verify the `command[0]` executable exists on your `PATH`.
 - If you run Papert Code in a sandbox, the executable must exist **inside** the sandbox.
+- If you configured a server manually, that config takes precedence over built-ins.
 
 ### Diagnostics are empty
 
@@ -442,3 +554,48 @@ Known limitations include:
 - `didOpen` currently sends **empty text** (some servers may behave poorly).
 - Diagnostics are **push-based** only.
 - LSP process lifecycle is minimal (shutdown/exit handling may be improved).
+
+---
+
+## Status UI
+
+Use `/lsp status` to view the detected servers, their status, and whether auto-install is available.
+
+---
+
+## FAQ
+
+### "Why does `/lsp status` show 'Missing' even though auto-install is on?"
+
+Auto-install only runs when an LSP request is executed for a matching file type. `/lsp status` does not trigger installs.
+
+### "Why is my configured server still missing?"
+
+Configured servers do not auto-install. If you configure a server manually, you must ensure its executable exists on PATH.
+
+### "How do I force auto-install for TypeScript?"
+
+Either:
+
+- Use the built-in server and remove/disable your custom `tsserver` config, then run an LSP command on a `.ts` file, or
+- Install it manually via `npm install -g typescript typescript-language-server`.
+
+### "What if I want to disable auto-install entirely?"
+
+Set:
+
+```jsonc
+{
+  "tools": {
+    "lsp": {
+      "autoInstall": false
+    }
+  }
+}
+```
+
+Or set environment variable:
+
+```
+PAPERT_DISABLE_LSP_DOWNLOAD=true
+```

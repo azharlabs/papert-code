@@ -252,6 +252,24 @@ export type HistoryItemMcpStatus = HistoryItemBase & {
   showTips: boolean;
 };
 
+export type HistoryItemLspStatus = HistoryItemBase & {
+  type: 'lsp_status';
+  enabled: boolean;
+  autoDetect: boolean;
+  autoInstall: boolean;
+  servers: Array<{
+    id: string;
+    label: string;
+    source: 'configured' | 'builtin';
+    status: 'connected' | 'idle' | 'missing' | 'disabled';
+    extensions: string[];
+    command?: string[];
+    autoInstall: boolean;
+    installable: boolean;
+    installHint?: string;
+  }>;
+};
+
 export type HistoryItemHooksList = HistoryItemBase & {
   type: 'hooks_list';
   hooks: Array<{
@@ -297,6 +315,7 @@ export type HistoryItemWithoutId =
   | HistoryItemSkillsList
   | HistoryItemToolsList
   | HistoryItemMcpStatus
+  | HistoryItemLspStatus
   | HistoryItemChatList
   | HistoryItemHooksList
   | HistoryItemScheduleList;
@@ -323,6 +342,7 @@ export enum MessageType {
   SKILLS_LIST = 'skills_list',
   TOOLS_LIST = 'tools_list',
   MCP_STATUS = 'mcp_status',
+  LSP_STATUS = 'lsp_status',
   CHAT_LIST = 'chat_list',
   HOOKS_LIST = 'hooks_list',
   SCHEDULE_LIST = 'schedule_list',

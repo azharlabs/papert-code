@@ -14,6 +14,7 @@ export const GOOGLE_ACCOUNTS_FILENAME = 'google_accounts.json';
 export const OAUTH_FILE = 'oauth_creds.json';
 const TMP_DIR_NAME = 'tmp';
 const BIN_DIR_NAME = 'bin';
+const LSP_DIR_NAME = 'lsp';
 const PROJECT_DIR_NAME = 'projects';
 
 export class Storage {
@@ -65,6 +66,10 @@ export class Storage {
 
   static getGlobalBinDir(): string {
     return path.join(Storage.getGlobalPapertDir(), BIN_DIR_NAME);
+  }
+
+  static getGlobalLspDir(): string {
+    return path.join(Storage.getGlobalPapertDir(), LSP_DIR_NAME);
   }
 
   getPapertDir(): string {

@@ -42,7 +42,7 @@ class LspToolInvocation extends BaseToolInvocation<LspToolParams, ToolResult> {
 
   constructor(private readonly config: Config, params: LspToolParams) {
     super(params);
-    this.manager = new LspManager(config);
+    this.manager = config.getLspManager();
   }
 
   getDescription(): string {

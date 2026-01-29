@@ -1092,6 +1092,8 @@ const SETTINGS_SCHEMA = {
         requiresRestart: true,
         default: {
           enabled: false,
+          autoDetect: true,
+          autoInstall: true,
           servers: {},
         },
         description:
@@ -1106,6 +1108,26 @@ const SETTINGS_SCHEMA = {
             default: false,
             description: 'Enable LSP integration.',
             showInDialog: true,
+          },
+          autoDetect: {
+            type: 'boolean',
+            label: 'Auto-detect LSPs',
+            category: 'Tools',
+            requiresRestart: true,
+            default: true,
+            description:
+              'Automatically detect built-in LSP servers based on file types.',
+            showInDialog: false,
+          },
+          autoInstall: {
+            type: 'boolean',
+            label: 'Auto-install LSPs',
+            category: 'Tools',
+            requiresRestart: true,
+            default: true,
+            description:
+              'Automatically download or install supported LSP servers when missing.',
+            showInDialog: false,
           },
           servers: {
             type: 'object',
@@ -1147,7 +1169,7 @@ const SETTINGS_SCHEMA = {
                   requiresRestart: true,
                   default: [] as string[],
                   description:
-                    'File extensions handled by this server (e.g. [".ts", ".tsx"]).',
+                    'File extensions handled by this server (e.g. [".ts", ".tsx"] or ["ts", "tsx"]).',
                   showInDialog: false,
                   items: { type: 'string' },
                 },
