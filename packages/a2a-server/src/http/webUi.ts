@@ -1049,6 +1049,15 @@ export function getWebUiHtml(): string {
         activeView: 'chat',
       };
 
+      function normalizeState() {
+        state.sessions = Array.isArray(state.sessions) ? state.sessions : [];
+        state.shareHistory = Array.isArray(state.shareHistory) ? state.shareHistory : [];
+        state.schedules = Array.isArray(state.schedules) ? state.schedules : [];
+        state.activeView = state.activeView || 'chat';
+      }
+
+      normalizeState();
+
       const catalog = {
         commands: [
           { name: 'papert server', detail: 'Start local server for remote driving', tag: 'terminal' },
