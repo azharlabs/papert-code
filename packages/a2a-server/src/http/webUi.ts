@@ -1458,10 +1458,10 @@ export function getWebUiHtml(): string {
           if (chunk.done) break;
           buffer += decoder.decode(chunk.value, { stream: true });
           let idx;
-          while ((idx = buffer.indexOf('\n\n')) >= 0) {
+          while ((idx = buffer.indexOf('\\n\\n')) >= 0) {
             const block = buffer.slice(0, idx);
             buffer = buffer.slice(idx + 2);
-            const lines = block.split('\n');
+            const lines = block.split('\\n');
             for (const line of lines) {
               if (!line.startsWith('data: ')) continue;
               const payload = line.slice(6);
