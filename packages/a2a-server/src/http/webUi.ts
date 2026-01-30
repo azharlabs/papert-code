@@ -1092,9 +1092,9 @@ export function getWebUiHtml(): string {
           { name: 'skill-installer', detail: 'Install curated skills', tag: 'system' },
         ],
         mcps: [
-          { name: 'filesystem-mcp', detail: 'stdio · Connected', tag: 'connected' },
-          { name: 'docs-mcp', detail: 'http · Pending', tag: 'pending' },
-          { name: 'scheduler-mcp', detail: 'stdio · Connected', tag: 'connected' },
+          { name: 'filesystem-mcp', detail: 'stdio - Connected', tag: 'connected' },
+          { name: 'docs-mcp', detail: 'http - Pending', tag: 'pending' },
+          { name: 'scheduler-mcp', detail: 'stdio - Connected', tag: 'connected' },
         ],
         customTools: [
           { name: 'mcp__filesystem.list', detail: 'List workspace files', tag: 'custom' },
@@ -1333,7 +1333,7 @@ export function getWebUiHtml(): string {
           el.className = 'data-item';
           el.innerHTML =
             '<div class="name">' + task.name + '</div>' +
-            '<div class="meta">' + task.when + ' · ' + task.target + '</div>' +
+            '<div class="meta">' + task.when + ' - ' + task.target + '</div>' +
             '<div class="tag ' + tagClass(task.status) + '">' + task.status + '</div>';
           scheduleList.appendChild(el);
         });
@@ -1707,7 +1707,7 @@ export function getWebUiHtml(): string {
         state.schedules.unshift({
           id: 'schedule-' + Date.now(),
           name,
-          when: type + ' · ' + when,
+          when: type + ' - ' + when,
           target,
           notes,
           status: 'enabled',
