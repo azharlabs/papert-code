@@ -4,15 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export function getWebUiHtml(): string {
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Papert Code Web</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
+const WEB_UI_STYLES = `
       @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
       :root {
@@ -729,303 +721,9 @@ export function getWebUiHtml(): string {
           flex-wrap: wrap;
         }
       }
-    </style>
-  </head>
-  <body>
-    <div class="app">
-      <header class="menu-bar">
-        <div class="menu-left">
-          <div class="window-controls">
-            <span class="close"></span>
-            <span class="min"></span>
-            <span class="max"></span>
-          </div>
-          <div class="brand">
-            Papert Code
-            <span class="pill">Web</span>
-          </div>
-          <nav class="menu-group">
-            <button class="menu-item active" data-view="chat">Workspace</button>
-            <button class="menu-item" data-view="cli">CLI</button>
-            <button class="menu-item" data-view="tools">Tools</button>
-            <button class="menu-item" data-view="agents">Agents</button>
-            <button class="menu-item" data-view="skills">Skills</button>
-            <button class="menu-item" data-view="mcps">MCPs</button>
-            <button class="menu-item" data-view="custom-tools">Custom Tools</button>
-            <button class="menu-item" data-view="plugins">Plugins</button>
-            <button class="menu-item" data-view="hooks">Hooks</button>
-            <button class="menu-item" data-view="scheduler">Schedule</button>
-          </nav>
-        </div>
-        <div class="menu-right">
-          <div class="menu-shortcuts">
-            <button class="chip" data-modal="commands">Commands</button>
-            <button class="chip" data-modal="tools">Tools</button>
-            <button class="chip" data-modal="agents">Agents</button>
-          </div>
-          <div class="menu-hint">Cmd/Ctrl + K</div>
-        </div>
-      </header>
+`
 
-      <div class="workspace">
-        <aside class="sidebar">
-          <div class="card">
-            <div class="card-title">Connection</div>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Server token (optional)</div>
-            <input id="serverToken" type="password" placeholder="Token for remote session" />
-            <div class="status-row" style="margin-top:10px;">
-              <span class="pulse off" id="statusPulse"></span>
-              <span id="statusText">Disconnected</span>
-            </div>
-            <div class="action-row" style="margin-top:12px;">
-              <button id="connectBtn">New session</button>
-              <button id="disconnectBtn" class="secondary">Release</button>
-            </div>
-          </div>
-
-          <div class="section">
-            <div class="section-header">
-              <span>Sessions</span>
-              <button id="refreshSessions" class="ghost">Refresh</button>
-            </div>
-            <div id="sessionList" class="list"></div>
-          </div>
-
-          <div class="section">
-            <div class="section-header">
-              <span>Chats</span>
-              <button id="newChatBtn" class="ghost">New</button>
-            </div>
-            <div id="chatList" class="list"></div>
-          </div>
-        </aside>
-
-        <main class="main">
-          <div class="view-header">
-            <div>
-              <div class="title" id="activeSessionTitle">No session</div>
-              <div class="subtitle" id="activeSessionMeta">Connect to start chatting</div>
-            </div>
-            <div class="action-row">
-              <button id="shareBtn" class="secondary">Share</button>
-              <button id="newChatTopBtn">New chat</button>
-              <button id="clearChatBtn" class="ghost">Clear</button>
-            </div>
-          </div>
-
-          <div class="views">
-            <section class="view active" id="view-chat">
-              <div class="view-grid">
-                <div class="chat-window">
-                  <div id="messages" class="messages"></div>
-                  <div class="composer">
-                    <label style="font-size:12px;color:var(--muted);">Prompt</label>
-                    <textarea id="promptInput" placeholder="Ask Papert Code... (Cmd/Ctrl + Enter to send)"></textarea>
-                    <div class="action-row">
-                      <label class="toggle">
-                        <input id="autoExecToggle" type="checkbox" />
-                        Auto-execute tools
-                      </label>
-                      <button id="sendBtn">Send</button>
-                    </div>
-                  </div>
-                </div>
-                <aside class="dock">
-                  <div class="panel">
-                    <h3>Activity</h3>
-                    <div id="activityFeed" class="activity"></div>
-                  </div>
-                  <div class="panel">
-                    <h3>Shortcuts</h3>
-                    <div class="shortcut-grid">
-                      <button class="shortcut-btn" data-modal="commands">All Commands <span>Slash, terminal, tips</span></button>
-                      <button class="shortcut-btn" data-modal="tools">Tools Overview <span>Run, read, write, web</span></button>
-                      <button class="shortcut-btn" data-modal="agents">Agents List <span>Available roles</span></button>
-                    </div>
-                  </div>
-                  <div class="panel">
-                    <h3>Tips</h3>
-                    <div class="activity-item">Cmd/Ctrl + K to open the command palette.</div>
-                    <div class="activity-item">Use the menu bar to switch between MCPs, tools, and scheduling.</div>
-                  </div>
-                  <div class="panel">
-                    <h3>Share</h3>
-                    <div class="share-card">
-                      <input id="shareToken" placeholder="Share token (optional)" />
-                      <button id="shareNowBtn">Create share link</button>
-                      <div id="shareResult" class="share-link">No share link yet.</div>
-                    </div>
-                  </div>
-                </aside>
-              </div>
-            </section>
-
-            <section class="view" id="view-cli">
-              <div class="page-grid">
-                <div class="page-card">
-                  <h3>CLI Commands</h3>
-                  <input id="cliSearch" placeholder="Filter commands" />
-                  <div id="cliList" class="data-list"></div>
-                </div>
-                <div class="page-card">
-                  <h3>Quick Notes</h3>
-                  <div class="activity-item">Slash commands control the CLI UI and settings.</div>
-                  <div class="activity-item">Terminal commands are invoked as papert &lt;command&gt;.</div>
-                  <div class="activity-item">Use @ to load files and ! to run shell commands.</div>
-                </div>
-              </div>
-            </section>
-
-            <section class="view" id="view-tools">
-              <div class="page-grid">
-                <div class="page-card">
-                  <h3>Tools</h3>
-                  <div id="toolsList" class="data-list"></div>
-                </div>
-                <div class="page-card">
-                  <h3>Tool Policies</h3>
-                  <div class="activity-item">Sensitive tools require confirmation before running.</div>
-                  <div class="activity-item">Auto-execute can be toggled per session.</div>
-                </div>
-              </div>
-            </section>
-
-            <section class="view" id="view-agents">
-              <div class="page-grid">
-                <div class="page-card">
-                  <h3>Agents</h3>
-                  <div id="agentsList" class="data-list"></div>
-                </div>
-                <div class="page-card">
-                  <h3>Assignments</h3>
-                  <div class="activity-item">Route tasks to specialist agents when needed.</div>
-                  <div class="activity-item">Use agents to compare solutions quickly.</div>
-                </div>
-              </div>
-            </section>
-
-            <section class="view" id="view-skills">
-              <div class="page-grid">
-                <div class="page-card">
-                  <h3>Skills</h3>
-                  <div id="skillsList" class="data-list"></div>
-                </div>
-                <div class="page-card">
-                  <h3>Guidance</h3>
-                  <div class="activity-item">Skills provide structured workflows and templates.</div>
-                  <div class="activity-item">Install curated skills to expand capabilities.</div>
-                </div>
-              </div>
-            </section>
-
-            <section class="view" id="view-mcps">
-              <div class="page-grid">
-                <div class="page-card">
-                  <h3>MCP Servers</h3>
-                  <div id="mcpsList" class="data-list"></div>
-                </div>
-                <div class="page-card">
-                  <h3>Management</h3>
-                  <div class="activity-item">Configure MCPs to add external tools and prompts.</div>
-                  <div class="activity-item">Status updates refresh with each session.</div>
-                </div>
-              </div>
-            </section>
-
-            <section class="view" id="view-custom-tools">
-              <div class="page-grid">
-                <div class="page-card">
-                  <h3>Custom Tools</h3>
-                  <div id="customToolsList" class="data-list"></div>
-                </div>
-                <div class="page-card">
-                  <h3>Registry</h3>
-                  <div class="activity-item">Custom tools can be sourced from local scripts.</div>
-                  <div class="activity-item">Pair with MCPs for shared usage.</div>
-                </div>
-              </div>
-            </section>
-
-            <section class="view" id="view-plugins">
-              <div class="page-grid">
-                <div class="page-card">
-                  <h3>Plugins</h3>
-                  <div id="pluginsList" class="data-list"></div>
-                </div>
-                <div class="page-card">
-                  <h3>Deployment</h3>
-                  <div class="activity-item">Plugins are loaded at session start.</div>
-                  <div class="activity-item">Restart a session to apply changes.</div>
-                </div>
-              </div>
-            </section>
-
-            <section class="view" id="view-hooks">
-              <div class="page-grid">
-                <div class="page-card">
-                  <h3>Hooks</h3>
-                  <div id="hooksList" class="data-list"></div>
-                </div>
-                <div class="page-card">
-                  <h3>Automation</h3>
-                  <div class="activity-item">Hooks validate actions before execution.</div>
-                  <div class="activity-item">Use hooks to enforce safety policies.</div>
-                </div>
-              </div>
-            </section>
-
-            <section class="view" id="view-scheduler">
-              <div class="page-grid">
-                <div class="page-card">
-                  <h3>Schedule Tasks</h3>
-                  <form id="scheduleForm" class="form-grid">
-                    <input id="scheduleName" placeholder="Task name" required />
-                    <select id="scheduleType">
-                      <option value="interval">Interval</option>
-                      <option value="cron">Cron</option>
-                      <option value="event">Event</option>
-                    </select>
-                    <input id="scheduleWhen" placeholder="Every 30m / 0 9 * * 1-5 / webhook" required />
-                    <input id="scheduleTarget" placeholder="Target (tool, agent, MCP)" required />
-                    <textarea id="scheduleNotes" placeholder="Notes"></textarea>
-                    <button type="submit">Add schedule</button>
-                  </form>
-                </div>
-                <div class="page-card">
-                  <h3>Upcoming</h3>
-                  <div id="scheduleList" class="data-list"></div>
-                </div>
-              </div>
-            </section>
-          </div>
-        </main>
-      </div>
-    </div>
-
-    <div class="info-modal" id="infoModal">
-      <div class="info-card">
-        <div class="info-header">
-          <div class="info-title" id="infoTitle">Details</div>
-          <button class="ghost" id="infoClose">Close</button>
-        </div>
-        <input id="infoSearch" placeholder="Search list" />
-        <div id="infoList" class="data-list"></div>
-      </div>
-    </div>
-
-    <div class="command-palette" id="commandPalette">
-      <div class="palette-card">
-        <h4>Quick Actions</h4>
-        <div class="palette-actions">
-          <button data-action="new-session">New session</button>
-          <button data-action="new-chat">New chat</button>
-          <button data-action="share">Share current chat</button>
-          <button data-action="clear">Clear chat view</button>
-        </div>
-      </div>
-    </div>
-
-    <script>
+const WEB_UI_SCRIPT = `
       const storage = {
         load() {
           try {
@@ -1788,6 +1486,337 @@ export function getWebUiHtml(): string {
       }
 
       render();
+`
+
+const WEB_UI_MENU_BAR = `
+      <header class="menu-bar">
+        <div class="menu-left">
+          <div class="window-controls">
+            <span class="close"></span>
+            <span class="min"></span>
+            <span class="max"></span>
+          </div>
+          <div class="brand">
+            Papert Code
+            <span class="pill">Web</span>
+          </div>
+          <nav class="menu-group">
+            <button class="menu-item active" data-view="chat">Workspace</button>
+            <button class="menu-item" data-view="cli">CLI</button>
+            <button class="menu-item" data-view="tools">Tools</button>
+            <button class="menu-item" data-view="agents">Agents</button>
+            <button class="menu-item" data-view="skills">Skills</button>
+            <button class="menu-item" data-view="mcps">MCPs</button>
+            <button class="menu-item" data-view="custom-tools">Custom Tools</button>
+            <button class="menu-item" data-view="plugins">Plugins</button>
+            <button class="menu-item" data-view="hooks">Hooks</button>
+            <button class="menu-item" data-view="scheduler">Schedule</button>
+          </nav>
+        </div>
+        <div class="menu-right">
+          <div class="menu-shortcuts">
+            <button class="chip" data-modal="commands">Commands</button>
+            <button class="chip" data-modal="tools">Tools</button>
+            <button class="chip" data-modal="agents">Agents</button>
+          </div>
+          <div class="menu-hint">Cmd/Ctrl + K</div>
+        </div>
+      </header>
+`
+
+const WEB_UI_SIDEBAR = `
+        <aside class="sidebar">
+          <div class="card">
+            <div class="card-title">Connection</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Server token (optional)</div>
+            <input id="serverToken" type="password" placeholder="Token for remote session" />
+            <div class="status-row" style="margin-top:10px;">
+              <span class="pulse off" id="statusPulse"></span>
+              <span id="statusText">Disconnected</span>
+            </div>
+            <div class="action-row" style="margin-top:12px;">
+              <button id="connectBtn">New session</button>
+              <button id="disconnectBtn" class="secondary">Release</button>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-header">
+              <span>Sessions</span>
+              <button id="refreshSessions" class="ghost">Refresh</button>
+            </div>
+            <div id="sessionList" class="list"></div>
+          </div>
+
+          <div class="section">
+            <div class="section-header">
+              <span>Chats</span>
+              <button id="newChatBtn" class="ghost">New</button>
+            </div>
+            <div id="chatList" class="list"></div>
+          </div>
+        </aside>
+`
+
+const WEB_UI_MAIN = `
+
+        <main class="main">
+          <div class="view-header">
+            <div>
+              <div class="title" id="activeSessionTitle">No session</div>
+              <div class="subtitle" id="activeSessionMeta">Connect to start chatting</div>
+            </div>
+            <div class="action-row">
+              <button id="shareBtn" class="secondary">Share</button>
+              <button id="newChatTopBtn">New chat</button>
+              <button id="clearChatBtn" class="ghost">Clear</button>
+            </div>
+          </div>
+
+          <div class="views">
+            <section class="view active" id="view-chat">
+              <div class="view-grid">
+                <div class="chat-window">
+                  <div id="messages" class="messages"></div>
+                  <div class="composer">
+                    <label style="font-size:12px;color:var(--muted);">Prompt</label>
+                    <textarea id="promptInput" placeholder="Ask Papert Code... (Cmd/Ctrl + Enter to send)"></textarea>
+                    <div class="action-row">
+                      <label class="toggle">
+                        <input id="autoExecToggle" type="checkbox" />
+                        Auto-execute tools
+                      </label>
+                      <button id="sendBtn">Send</button>
+                    </div>
+                  </div>
+                </div>
+                <aside class="dock">
+                  <div class="panel">
+                    <h3>Activity</h3>
+                    <div id="activityFeed" class="activity"></div>
+                  </div>
+                  <div class="panel">
+                    <h3>Shortcuts</h3>
+                    <div class="shortcut-grid">
+                      <button class="shortcut-btn" data-modal="commands">All Commands <span>Slash, terminal, tips</span></button>
+                      <button class="shortcut-btn" data-modal="tools">Tools Overview <span>Run, read, write, web</span></button>
+                      <button class="shortcut-btn" data-modal="agents">Agents List <span>Available roles</span></button>
+                    </div>
+                  </div>
+                  <div class="panel">
+                    <h3>Tips</h3>
+                    <div class="activity-item">Cmd/Ctrl + K to open the command palette.</div>
+                    <div class="activity-item">Use the menu bar to switch between MCPs, tools, and scheduling.</div>
+                  </div>
+                  <div class="panel">
+                    <h3>Share</h3>
+                    <div class="share-card">
+                      <input id="shareToken" placeholder="Share token (optional)" />
+                      <button id="shareNowBtn">Create share link</button>
+                      <div id="shareResult" class="share-link">No share link yet.</div>
+                    </div>
+                  </div>
+                </aside>
+              </div>
+            </section>
+
+            <section class="view" id="view-cli">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>CLI Commands</h3>
+                  <input id="cliSearch" placeholder="Filter commands" />
+                  <div id="cliList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Quick Notes</h3>
+                  <div class="activity-item">Slash commands control the CLI UI and settings.</div>
+                  <div class="activity-item">Terminal commands are invoked as papert &lt;command&gt;.</div>
+                  <div class="activity-item">Use @ to load files and ! to run shell commands.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-tools">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Tools</h3>
+                  <div id="toolsList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Tool Policies</h3>
+                  <div class="activity-item">Sensitive tools require confirmation before running.</div>
+                  <div class="activity-item">Auto-execute can be toggled per session.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-agents">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Agents</h3>
+                  <div id="agentsList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Assignments</h3>
+                  <div class="activity-item">Route tasks to specialist agents when needed.</div>
+                  <div class="activity-item">Use agents to compare solutions quickly.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-skills">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Skills</h3>
+                  <div id="skillsList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Guidance</h3>
+                  <div class="activity-item">Skills provide structured workflows and templates.</div>
+                  <div class="activity-item">Install curated skills to expand capabilities.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-mcps">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>MCP Servers</h3>
+                  <div id="mcpsList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Management</h3>
+                  <div class="activity-item">Configure MCPs to add external tools and prompts.</div>
+                  <div class="activity-item">Status updates refresh with each session.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-custom-tools">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Custom Tools</h3>
+                  <div id="customToolsList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Registry</h3>
+                  <div class="activity-item">Custom tools can be sourced from local scripts.</div>
+                  <div class="activity-item">Pair with MCPs for shared usage.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-plugins">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Plugins</h3>
+                  <div id="pluginsList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Deployment</h3>
+                  <div class="activity-item">Plugins are loaded at session start.</div>
+                  <div class="activity-item">Restart a session to apply changes.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-hooks">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Hooks</h3>
+                  <div id="hooksList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Automation</h3>
+                  <div class="activity-item">Hooks validate actions before execution.</div>
+                  <div class="activity-item">Use hooks to enforce safety policies.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-scheduler">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Schedule Tasks</h3>
+                  <form id="scheduleForm" class="form-grid">
+                    <input id="scheduleName" placeholder="Task name" required />
+                    <select id="scheduleType">
+                      <option value="interval">Interval</option>
+                      <option value="cron">Cron</option>
+                      <option value="event">Event</option>
+                    </select>
+                    <input id="scheduleWhen" placeholder="Every 30m / 0 9 * * 1-5 / webhook" required />
+                    <input id="scheduleTarget" placeholder="Target (tool, agent, MCP)" required />
+                    <textarea id="scheduleNotes" placeholder="Notes"></textarea>
+                    <button type="submit">Add schedule</button>
+                  </form>
+                </div>
+                <div class="page-card">
+                  <h3>Upcoming</h3>
+                  <div id="scheduleList" class="data-list"></div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </main>
+`
+
+const WEB_UI_INFO_MODAL = `
+
+    <div class="info-modal" id="infoModal">
+      <div class="info-card">
+        <div class="info-header">
+          <div class="info-title" id="infoTitle">Details</div>
+          <button class="ghost" id="infoClose">Close</button>
+        </div>
+`
+
+const WEB_UI_COMMAND_PALETTE = `
+
+    <div class="command-palette" id="commandPalette">
+      <div class="palette-card">
+        <h4>Quick Actions</h4>
+        <div class="palette-actions">
+          <button data-action="new-session">New session</button>
+          <button data-action="new-chat">New chat</button>
+          <button data-action="share">Share current chat</button>
+          <button data-action="clear">Clear chat view</button>
+        </div>
+`
+
+
+export function getWebUiHtml(): string {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Papert Code Web</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+${WEB_UI_STYLES}
+    </style>
+  </head>
+  <body>
+    <div class="app">
+${WEB_UI_MENU_BAR}
+
+      <div class="workspace">
+${WEB_UI_SIDEBAR}
+${WEB_UI_MAIN}
+      </div>
+    </div>
+${WEB_UI_INFO_MODAL}
+        <input id="infoSearch" placeholder="Search list" />
+        <div id="infoList" class="data-list"></div>
+      </div>
+    </div>
+${WEB_UI_COMMAND_PALETTE}
+      </div>
+    </div>
+
+    <script>
+${WEB_UI_SCRIPT}
     </script>
   </body>
 </html>`;
