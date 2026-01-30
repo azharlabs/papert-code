@@ -18,18 +18,19 @@ export function getWebUiHtml(): string {
       :root {
         color-scheme: light dark;
         --bg: #0b0f14;
-        --bg-elev: #101823;
-        --bg-soft: #0f1521;
-        --panel: #151d2b;
-        --panel-2: #131a28;
-        --stroke: #1f2a3b;
-        --stroke-soft: #233044;
+        --bg-elev: #0f1724;
+        --bg-soft: #141c2b;
+        --panel: #161f2f;
+        --panel-2: #121a28;
+        --stroke: #223149;
+        --stroke-soft: #2a3a52;
         --text: #e7edf7;
         --muted: #9fb0c2;
-        --accent: #42c3aa;
+        --accent: #3cd6b4;
         --accent-2: #f1b95a;
+        --accent-3: #7aa2ff;
         --danger: #ff6b6b;
-        --shadow: rgba(10, 16, 26, 0.35);
+        --shadow: rgba(7, 10, 16, 0.5);
       }
 
       * {
@@ -40,23 +41,60 @@ export function getWebUiHtml(): string {
         margin: 0;
         font-family: 'Space Grotesk', sans-serif;
         font-size: 14px;
-        background: radial-gradient(circle at top, #152033, #0b0f14 55%);
+        background: radial-gradient(circle at top, #1a263a, #0b0f14 60%);
         color: var(--text);
       }
 
       .app {
-        display: grid;
-        grid-template-columns: 260px minmax(0, 1fr) 320px;
         min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr;
       }
 
-      aside, main {
-        padding: 20px;
+      .menu-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--stroke);
+        background: linear-gradient(90deg, #0f1624, #111b2b);
+        position: sticky;
+        top: 0;
+        z-index: 5;
       }
 
-      .sidebar {
-        background: linear-gradient(180deg, #0d1420, #0a0f18);
-        border-right: 1px solid var(--stroke);
+      .menu-left {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+
+      .window-controls {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .window-controls span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        background: #445068;
+      }
+
+      .window-controls .close {
+        background: #ff7b7b;
+      }
+
+      .window-controls .min {
+        background: #ffd66b;
+      }
+
+      .window-controls .max {
+        background: #76e7b7;
       }
 
       .brand {
@@ -66,7 +104,6 @@ export function getWebUiHtml(): string {
         font-weight: 700;
         font-size: 18px;
         letter-spacing: 0.4px;
-        margin-bottom: 18px;
       }
 
       .pill {
@@ -75,9 +112,91 @@ export function getWebUiHtml(): string {
         gap: 6px;
         padding: 4px 10px;
         border-radius: 999px;
-        font-size: 12px;
-        background: rgba(66, 195, 170, 0.12);
+        font-size: 11px;
+        background: rgba(60, 214, 180, 0.12);
         color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .menu-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .menu-item {
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--muted);
+        padding: 6px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font: inherit;
+        transition: all 0.2s ease;
+      }
+
+      .menu-item:hover {
+        color: var(--text);
+        border-color: var(--stroke-soft);
+        background: rgba(16, 25, 39, 0.7);
+      }
+
+      .menu-item.active {
+        color: var(--text);
+        border-color: var(--accent);
+        background: rgba(60, 214, 180, 0.12);
+      }
+
+      .menu-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .menu-shortcuts {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .menu-hint {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .chip {
+        border-radius: 999px;
+        border: 1px solid var(--stroke-soft);
+        background: #101826;
+        color: var(--text);
+        padding: 6px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .chip:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 16px var(--shadow);
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        min-height: 0;
+      }
+
+      aside, main {
+        padding: 20px;
+      }
+
+      .sidebar {
+        background: linear-gradient(180deg, #0d1420, #0a0f18);
+        border-right: 1px solid var(--stroke);
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
       }
 
       .card {
@@ -88,19 +207,28 @@ export function getWebUiHtml(): string {
         box-shadow: 0 10px 24px var(--shadow);
       }
 
+      .card-title {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        margin-bottom: 10px;
+      }
+
       .section {
-        margin-top: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
 
       .section-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 10px;
-        font-size: 13px;
+        font-size: 12px;
         color: var(--muted);
         text-transform: uppercase;
-        letter-spacing: 0.2em;
+        letter-spacing: 0.18em;
       }
 
       .list {
@@ -125,7 +253,7 @@ export function getWebUiHtml(): string {
 
       .list-item.active {
         border-color: var(--accent);
-        box-shadow: 0 0 0 1px rgba(66, 195, 170, 0.2);
+        box-shadow: 0 0 0 1px rgba(60, 214, 180, 0.2);
       }
 
       .list-item .title {
@@ -141,26 +269,27 @@ export function getWebUiHtml(): string {
       .main {
         display: grid;
         grid-template-rows: auto 1fr;
-        gap: 18px;
+        gap: 16px;
         background: linear-gradient(180deg, rgba(16, 22, 34, 0.9), rgba(12, 16, 22, 0.95));
-        min-height: 100vh;
-        height: 100vh;
+        min-height: 0;
+        height: 100%;
         overflow: hidden;
       }
 
-      .topbar {
+      .view-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        flex-wrap: wrap;
       }
 
-      .topbar .title {
+      .view-header .title {
         font-size: 22px;
         font-weight: 700;
       }
 
-      .topbar .subtitle {
+      .view-header .subtitle {
         font-size: 13px;
         color: var(--muted);
       }
@@ -169,6 +298,7 @@ export function getWebUiHtml(): string {
         display: flex;
         gap: 10px;
         align-items: center;
+        flex-wrap: wrap;
       }
 
       button {
@@ -204,7 +334,7 @@ export function getWebUiHtml(): string {
         box-shadow: 0 8px 16px var(--shadow);
       }
 
-      input, textarea {
+      input, textarea, select {
         font: inherit;
         width: 100%;
         padding: 8px 10px;
@@ -217,6 +347,27 @@ export function getWebUiHtml(): string {
       textarea {
         min-height: 80px;
         resize: vertical;
+      }
+
+      .views {
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .view {
+        display: none;
+        height: 100%;
+      }
+
+      .view.active {
+        display: block;
+      }
+
+      .view-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 16px;
+        height: 100%;
       }
 
       .chat-window {
@@ -245,7 +396,7 @@ export function getWebUiHtml(): string {
       }
 
       .msg.user {
-        border-color: rgba(66, 195, 170, 0.6);
+        border-color: rgba(60, 214, 180, 0.6);
         background: rgba(20, 40, 48, 0.8);
       }
 
@@ -298,13 +449,11 @@ export function getWebUiHtml(): string {
         color: var(--muted);
       }
 
-      .rightbar {
-        background: linear-gradient(180deg, #0e1420, #0b0f14);
-        border-left: 1px solid var(--stroke);
+      .dock {
         display: flex;
         flex-direction: column;
         gap: 14px;
-        min-height: 100vh;
+        min-height: 0;
       }
 
       .panel {
@@ -312,13 +461,12 @@ export function getWebUiHtml(): string {
         border: 1px solid var(--stroke);
         border-radius: 14px;
         padding: 14px;
-        margin-bottom: 14px;
       }
 
       .panel h3 {
         margin: 0 0 10px 0;
-        font-size: 14px;
-        letter-spacing: 0.06em;
+        font-size: 12px;
+        letter-spacing: 0.18em;
         text-transform: uppercase;
         color: var(--muted);
       }
@@ -327,7 +475,7 @@ export function getWebUiHtml(): string {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        max-height: 300px;
+        max-height: 220px;
         overflow-y: auto;
       }
 
@@ -371,7 +519,7 @@ export function getWebUiHtml(): string {
         height: 8px;
         border-radius: 50%;
         background: var(--accent);
-        box-shadow: 0 0 0 0 rgba(66, 195, 170, 0.6);
+        box-shadow: 0 0 0 0 rgba(60, 214, 180, 0.6);
         animation: pulse 2s infinite;
       }
 
@@ -381,9 +529,98 @@ export function getWebUiHtml(): string {
       }
 
       @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(66, 195, 170, 0.5); }
-        70% { box-shadow: 0 0 0 8px rgba(66, 195, 170, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(66, 195, 170, 0); }
+        0% { box-shadow: 0 0 0 0 rgba(60, 214, 180, 0.5); }
+        70% { box-shadow: 0 0 0 8px rgba(60, 214, 180, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(60, 214, 180, 0); }
+      }
+
+      .shortcut-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .shortcut-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: #141e2d;
+        border: 1px solid var(--stroke-soft);
+        border-radius: 10px;
+        padding: 8px 10px;
+        color: var(--text);
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .shortcut-btn span {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .page-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        height: 100%;
+        overflow-y: auto;
+        padding-bottom: 16px;
+      }
+
+      .page-card {
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: 16px;
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+        min-height: 220px;
+      }
+
+      .page-card h3 {
+        margin: 0;
+        font-size: 14px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .data-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .data-item {
+        border-radius: 12px;
+        border: 1px solid var(--stroke-soft);
+        background: #101826;
+        padding: 10px 12px;
+        display: grid;
+        gap: 6px;
+      }
+
+      .data-item .name {
+        font-weight: 600;
+      }
+
+      .tag {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--accent-3);
+      }
+
+      .tag.success {
+        color: var(--accent);
+      }
+
+      .tag.warn {
+        color: var(--accent-2);
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 10px;
       }
 
       .command-palette {
@@ -428,24 +665,67 @@ export function getWebUiHtml(): string {
         color: var(--text);
       }
 
-      @media (max-width: 1100px) {
-        .app {
-          grid-template-columns: 220px minmax(0, 1fr);
+      .info-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(4, 6, 10, 0.75);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 30;
+      }
+
+      .info-modal.active {
+        display: flex;
+      }
+
+      .info-card {
+        width: min(680px, 92vw);
+        background: #101826;
+        border: 1px solid #223047;
+        border-radius: 18px;
+        padding: 18px;
+        display: grid;
+        gap: 12px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+      }
+
+      .info-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .info-title {
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      @media (max-width: 1200px) {
+        .view-grid {
+          grid-template-columns: 1fr;
         }
-        .rightbar {
-          display: none;
+        .dock {
+          order: -1;
         }
       }
 
-      @media (max-width: 820px) {
-        .app {
+      @media (max-width: 980px) {
+        .workspace {
           grid-template-columns: 1fr;
         }
         .sidebar {
           border-right: none;
           border-bottom: 1px solid var(--stroke);
         }
-        .action-row {
+      }
+
+      @media (max-width: 720px) {
+        .menu-group {
+          display: none;
+        }
+        .menu-right {
           flex-wrap: wrap;
         }
       }
@@ -453,89 +733,284 @@ export function getWebUiHtml(): string {
   </head>
   <body>
     <div class="app">
-      <aside class="sidebar">
-        <div class="brand">
-          Papert Code Web
-          <span class="pill">A2A</span>
-        </div>
-        <div class="card">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Server token (optional)</div>
-          <input id="serverToken" type="password" placeholder="Token for remote session" />
-          <div class="status-row" style="margin-top:10px;">
-            <span class="pulse off" id="statusPulse"></span>
-            <span id="statusText">Disconnected</span>
+      <header class="menu-bar">
+        <div class="menu-left">
+          <div class="window-controls">
+            <span class="close"></span>
+            <span class="min"></span>
+            <span class="max"></span>
           </div>
-          <div class="action-row" style="margin-top:12px;">
-            <button id="connectBtn">New session</button>
-            <button id="disconnectBtn" class="secondary">Release</button>
+          <div class="brand">
+            Papert Code
+            <span class="pill">Web</span>
           </div>
+          <nav class="menu-group">
+            <button class="menu-item active" data-view="chat">Workspace</button>
+            <button class="menu-item" data-view="cli">CLI</button>
+            <button class="menu-item" data-view="tools">Tools</button>
+            <button class="menu-item" data-view="agents">Agents</button>
+            <button class="menu-item" data-view="skills">Skills</button>
+            <button class="menu-item" data-view="mcps">MCPs</button>
+            <button class="menu-item" data-view="custom-tools">Custom Tools</button>
+            <button class="menu-item" data-view="plugins">Plugins</button>
+            <button class="menu-item" data-view="hooks">Hooks</button>
+            <button class="menu-item" data-view="scheduler">Schedule</button>
+          </nav>
         </div>
+        <div class="menu-right">
+          <div class="menu-shortcuts">
+            <button class="chip" data-modal="commands">Commands</button>
+            <button class="chip" data-modal="tools">Tools</button>
+            <button class="chip" data-modal="agents">Agents</button>
+          </div>
+          <div class="menu-hint">Cmd/Ctrl + K</div>
+        </div>
+      </header>
 
-        <div class="section">
-          <div class="section-header">
-            <span>Sessions</span>
-            <button id="refreshSessions" class="ghost">Refresh</button>
-          </div>
-          <div id="sessionList" class="list"></div>
-        </div>
-
-        <div class="section">
-          <div class="section-header">
-            <span>Chats</span>
-            <button id="newChatBtn" class="ghost">New</button>
-          </div>
-          <div id="chatList" class="list"></div>
-        </div>
-      </aside>
-
-      <main class="main">
-        <div class="topbar">
-          <div>
-            <div class="title" id="activeSessionTitle">No session</div>
-            <div class="subtitle" id="activeSessionMeta">Connect to start chatting</div>
-          </div>
-          <div class="action-row">
-            <button id="shareBtn" class="secondary">Share</button>
-            <button id="newChatTopBtn">New chat</button>
-            <button id="clearChatBtn" class="ghost">Clear</button>
-          </div>
-        </div>
-
-        <div class="chat-window">
-          <div id="messages" class="messages"></div>
-          <div class="composer">
-            <label style="font-size:12px;color:var(--muted);">Prompt</label>
-            <textarea id="promptInput" placeholder="Ask Papert Code... (Cmd/Ctrl + Enter to send)"></textarea>
-            <div class="action-row">
-              <label class="toggle">
-                <input id="autoExecToggle" type="checkbox" />
-                Auto-execute tools
-              </label>
-              <button id="sendBtn">Send</button>
+      <div class="workspace">
+        <aside class="sidebar">
+          <div class="card">
+            <div class="card-title">Connection</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Server token (optional)</div>
+            <input id="serverToken" type="password" placeholder="Token for remote session" />
+            <div class="status-row" style="margin-top:10px;">
+              <span class="pulse off" id="statusPulse"></span>
+              <span id="statusText">Disconnected</span>
+            </div>
+            <div class="action-row" style="margin-top:12px;">
+              <button id="connectBtn">New session</button>
+              <button id="disconnectBtn" class="secondary">Release</button>
             </div>
           </div>
-        </div>
-      </main>
 
-      <aside class="rightbar">
-        <div class="panel">
-          <h3>Activity</h3>
-          <div id="activityFeed" class="activity"></div>
-        </div>
-        <div class="panel">
-          <h3>Share</h3>
-          <div class="share-card">
-            <input id="shareToken" placeholder="Share token (optional)" />
-            <button id="shareNowBtn">Create share link</button>
-            <div id="shareResult" class="share-link">No share link yet.</div>
+          <div class="section">
+            <div class="section-header">
+              <span>Sessions</span>
+              <button id="refreshSessions" class="ghost">Refresh</button>
+            </div>
+            <div id="sessionList" class="list"></div>
           </div>
+
+          <div class="section">
+            <div class="section-header">
+              <span>Chats</span>
+              <button id="newChatBtn" class="ghost">New</button>
+            </div>
+            <div id="chatList" class="list"></div>
+          </div>
+        </aside>
+
+        <main class="main">
+          <div class="view-header">
+            <div>
+              <div class="title" id="activeSessionTitle">No session</div>
+              <div class="subtitle" id="activeSessionMeta">Connect to start chatting</div>
+            </div>
+            <div class="action-row">
+              <button id="shareBtn" class="secondary">Share</button>
+              <button id="newChatTopBtn">New chat</button>
+              <button id="clearChatBtn" class="ghost">Clear</button>
+            </div>
+          </div>
+
+          <div class="views">
+            <section class="view active" id="view-chat">
+              <div class="view-grid">
+                <div class="chat-window">
+                  <div id="messages" class="messages"></div>
+                  <div class="composer">
+                    <label style="font-size:12px;color:var(--muted);">Prompt</label>
+                    <textarea id="promptInput" placeholder="Ask Papert Code... (Cmd/Ctrl + Enter to send)"></textarea>
+                    <div class="action-row">
+                      <label class="toggle">
+                        <input id="autoExecToggle" type="checkbox" />
+                        Auto-execute tools
+                      </label>
+                      <button id="sendBtn">Send</button>
+                    </div>
+                  </div>
+                </div>
+                <aside class="dock">
+                  <div class="panel">
+                    <h3>Activity</h3>
+                    <div id="activityFeed" class="activity"></div>
+                  </div>
+                  <div class="panel">
+                    <h3>Shortcuts</h3>
+                    <div class="shortcut-grid">
+                      <button class="shortcut-btn" data-modal="commands">All Commands <span>Slash, terminal, tips</span></button>
+                      <button class="shortcut-btn" data-modal="tools">Tools Overview <span>Run, read, write, web</span></button>
+                      <button class="shortcut-btn" data-modal="agents">Agents List <span>Available roles</span></button>
+                    </div>
+                  </div>
+                  <div class="panel">
+                    <h3>Tips</h3>
+                    <div class="activity-item">Cmd/Ctrl + K to open the command palette.</div>
+                    <div class="activity-item">Use the menu bar to switch between MCPs, tools, and scheduling.</div>
+                  </div>
+                  <div class="panel">
+                    <h3>Share</h3>
+                    <div class="share-card">
+                      <input id="shareToken" placeholder="Share token (optional)" />
+                      <button id="shareNowBtn">Create share link</button>
+                      <div id="shareResult" class="share-link">No share link yet.</div>
+                    </div>
+                  </div>
+                </aside>
+              </div>
+            </section>
+
+            <section class="view" id="view-cli">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>CLI Commands</h3>
+                  <input id="cliSearch" placeholder="Filter commands" />
+                  <div id="cliList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Quick Notes</h3>
+                  <div class="activity-item">Slash commands control the CLI UI and settings.</div>
+                  <div class="activity-item">Terminal commands are invoked as papert &lt;command&gt;.</div>
+                  <div class="activity-item">Use @ to load files and ! to run shell commands.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-tools">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Tools</h3>
+                  <div id="toolsList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Tool Policies</h3>
+                  <div class="activity-item">Sensitive tools require confirmation before running.</div>
+                  <div class="activity-item">Auto-execute can be toggled per session.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-agents">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Agents</h3>
+                  <div id="agentsList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Assignments</h3>
+                  <div class="activity-item">Route tasks to specialist agents when needed.</div>
+                  <div class="activity-item">Use agents to compare solutions quickly.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-skills">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Skills</h3>
+                  <div id="skillsList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Guidance</h3>
+                  <div class="activity-item">Skills provide structured workflows and templates.</div>
+                  <div class="activity-item">Install curated skills to expand capabilities.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-mcps">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>MCP Servers</h3>
+                  <div id="mcpsList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Management</h3>
+                  <div class="activity-item">Configure MCPs to add external tools and prompts.</div>
+                  <div class="activity-item">Status updates refresh with each session.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-custom-tools">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Custom Tools</h3>
+                  <div id="customToolsList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Registry</h3>
+                  <div class="activity-item">Custom tools can be sourced from local scripts.</div>
+                  <div class="activity-item">Pair with MCPs for shared usage.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-plugins">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Plugins</h3>
+                  <div id="pluginsList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Deployment</h3>
+                  <div class="activity-item">Plugins are loaded at session start.</div>
+                  <div class="activity-item">Restart a session to apply changes.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-hooks">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Hooks</h3>
+                  <div id="hooksList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>Automation</h3>
+                  <div class="activity-item">Hooks validate actions before execution.</div>
+                  <div class="activity-item">Use hooks to enforce safety policies.</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-scheduler">
+              <div class="page-grid">
+                <div class="page-card">
+                  <h3>Schedule Tasks</h3>
+                  <form id="scheduleForm" class="form-grid">
+                    <input id="scheduleName" placeholder="Task name" required />
+                    <select id="scheduleType">
+                      <option value="interval">Interval</option>
+                      <option value="cron">Cron</option>
+                      <option value="event">Event</option>
+                    </select>
+                    <input id="scheduleWhen" placeholder="Every 30m / 0 9 * * 1-5 / webhook" required />
+                    <input id="scheduleTarget" placeholder="Target (tool, agent, MCP)" required />
+                    <textarea id="scheduleNotes" placeholder="Notes"></textarea>
+                    <button type="submit">Add schedule</button>
+                  </form>
+                </div>
+                <div class="page-card">
+                  <h3>Upcoming</h3>
+                  <div id="scheduleList" class="data-list"></div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="info-modal" id="infoModal">
+      <div class="info-card">
+        <div class="info-header">
+          <div class="info-title" id="infoTitle">Details</div>
+          <button class="ghost" id="infoClose">Close</button>
         </div>
-        <div class="panel">
-          <h3>Tips</h3>
-          <div class="activity-item">Cmd/Ctrl + K to open command palette.</div>
-          <div class="activity-item">Use the Sessions list to keep multiple workspaces open.</div>
-        </div>
-      </aside>
+        <input id="infoSearch" placeholder="Search list" />
+        <div id="infoList" class="data-list"></div>
+      </div>
     </div>
 
     <div class="command-palette" id="commandPalette">
@@ -570,6 +1045,72 @@ export function getWebUiHtml(): string {
         activeSessionId: '',
         activeChatId: '',
         shareHistory: [],
+        schedules: [],
+        activeView: 'chat',
+      };
+
+      const catalog = {
+        commands: [
+          { name: 'papert server', detail: 'Start local server for remote driving', tag: 'terminal' },
+          { name: 'papert connect', detail: 'Connect to a remote session', tag: 'terminal' },
+          { name: 'papert mcp add', detail: 'Register an MCP server', tag: 'terminal' },
+          { name: '/help', detail: 'Show available commands', tag: 'slash' },
+          { name: '/tools', detail: 'Show tool list and status', tag: 'slash' },
+          { name: '/agents', detail: 'Manage subagents', tag: 'slash' },
+          { name: '/mcp', detail: 'List/configure MCP servers', tag: 'slash' },
+          { name: '/skills', detail: 'List available skills', tag: 'slash' },
+          { name: '/plugins', detail: 'List extensions and plugins', tag: 'slash' },
+          { name: '/hooks', detail: 'Show hooks configuration', tag: 'slash' },
+          { name: '/schedule', detail: 'Manage scheduled tasks', tag: 'slash' },
+          { name: '/settings', detail: 'Edit configuration', tag: 'slash' },
+          { name: '/theme', detail: 'Switch theme', tag: 'slash' },
+          { name: '/memory', detail: 'Show or refresh memory', tag: 'slash' },
+          { name: '/summary', detail: 'Summarize current session', tag: 'slash' },
+          { name: '/share', detail: 'Create a share link', tag: 'slash' },
+          { name: '/restore', detail: 'Restore a checkpoint', tag: 'slash' },
+          { name: '/stats', detail: 'Show usage stats', tag: 'slash' },
+          { name: '@{path}', detail: 'Read file or directory into context', tag: 'at' },
+          { name: '!<cmd>', detail: 'Run a shell command', tag: 'bang' },
+        ],
+        tools: [
+          { name: 'read_file', detail: 'Read a single file', tag: 'core' },
+          { name: 'read_many_files', detail: 'Read many files or directories', tag: 'core' },
+          { name: 'write_file', detail: 'Write or overwrite files', tag: 'core' },
+          { name: 'edit', detail: 'Patch files safely', tag: 'core' },
+          { name: 'run_shell_command', detail: 'Execute shell commands with approval', tag: 'core' },
+          { name: 'web_fetch', detail: 'Fetch and summarize URLs', tag: 'network' },
+          { name: 'web_search', detail: 'Search the web', tag: 'network' },
+        ],
+        agents: [
+          { name: 'planner', detail: 'Break down complex tasks', tag: 'agent' },
+          { name: 'builder', detail: 'Implement code changes', tag: 'agent' },
+          { name: 'reviewer', detail: 'Review for risks and regressions', tag: 'agent' },
+          { name: 'research', detail: 'Gather external context', tag: 'agent' },
+        ],
+        skills: [
+          { name: 'skill-creator', detail: 'Create structured skills', tag: 'system' },
+          { name: 'skill-installer', detail: 'Install curated skills', tag: 'system' },
+        ],
+        mcps: [
+          { name: 'filesystem-mcp', detail: 'stdio · Connected', tag: 'connected' },
+          { name: 'docs-mcp', detail: 'http · Pending', tag: 'pending' },
+          { name: 'scheduler-mcp', detail: 'stdio · Connected', tag: 'connected' },
+        ],
+        customTools: [
+          { name: 'mcp__filesystem.list', detail: 'List workspace files', tag: 'custom' },
+          { name: 'mcp__docs.search', detail: 'Search internal docs', tag: 'custom' },
+          { name: 'mcp__scheduler.trigger', detail: 'Trigger scheduled task', tag: 'custom' },
+        ],
+        plugins: [
+          { name: 'context', detail: 'Adds project context prompts', tag: 'enabled' },
+          { name: 'custom-commands', detail: 'Provides extra slash commands', tag: 'enabled' },
+          { name: 'exclude-tools', detail: 'Restricts tools by policy', tag: 'disabled' },
+        ],
+        hooks: [
+          { name: 'pre-run', detail: 'Validates shell commands', tag: 'enabled' },
+          { name: 'post-run', detail: 'Collects run metadata', tag: 'enabled' },
+          { name: 'pre-write', detail: 'Checks write operations', tag: 'enabled' },
+        ],
       };
 
       const serverTokenInput = document.getElementById('serverToken');
@@ -595,6 +1136,22 @@ export function getWebUiHtml(): string {
       const shareTokenInput = document.getElementById('shareToken');
       const shareResult = document.getElementById('shareResult');
       const commandPalette = document.getElementById('commandPalette');
+      const cliSearch = document.getElementById('cliSearch');
+      const cliList = document.getElementById('cliList');
+      const toolsList = document.getElementById('toolsList');
+      const agentsList = document.getElementById('agentsList');
+      const skillsList = document.getElementById('skillsList');
+      const mcpsList = document.getElementById('mcpsList');
+      const customToolsList = document.getElementById('customToolsList');
+      const pluginsList = document.getElementById('pluginsList');
+      const hooksList = document.getElementById('hooksList');
+      const scheduleForm = document.getElementById('scheduleForm');
+      const scheduleList = document.getElementById('scheduleList');
+      const infoModal = document.getElementById('infoModal');
+      const infoTitle = document.getElementById('infoTitle');
+      const infoList = document.getElementById('infoList');
+      const infoSearch = document.getElementById('infoSearch');
+      const infoClose = document.getElementById('infoClose');
 
       function saveState() {
         storage.save(state);
@@ -644,6 +1201,25 @@ export function getWebUiHtml(): string {
           messages: [],
           activity: [],
         };
+      }
+
+      function renderList(target, items) {
+        target.innerHTML = '';
+        items.forEach((item) => {
+          const el = document.createElement('div');
+          el.className = 'data-item';
+          el.innerHTML =
+            '<div class="name">' + item.name + '</div>' +
+            '<div class="meta">' + item.detail + '</div>' +
+            '<div class="tag ' + tagClass(item.tag) + '">' + item.tag + '</div>';
+          target.appendChild(el);
+        });
+      }
+
+      function tagClass(tag) {
+        if (tag === 'connected' || tag === 'enabled' || tag === 'core') return 'success';
+        if (tag === 'pending' || tag === 'network') return 'warn';
+        return '';
       }
 
       function renderSessions() {
@@ -716,8 +1292,60 @@ export function getWebUiHtml(): string {
           activeSessionMeta.textContent = 'Connect to start chatting.';
           return;
         }
+        if (state.activeView !== 'chat') {
+          activeSessionTitle.textContent = 'Control Center';
+          activeSessionMeta.textContent = 'Manage tools, agents, and integrations.';
+          return;
+        }
         activeSessionTitle.textContent = session.label;
         activeSessionMeta.textContent = session.workspaceRoot || 'Workspace pending';
+      }
+
+      function renderCatalogs() {
+        renderList(toolsList, catalog.tools);
+        renderList(agentsList, catalog.agents);
+        renderList(skillsList, catalog.skills);
+        renderList(mcpsList, catalog.mcps);
+        renderList(customToolsList, catalog.customTools);
+        renderList(pluginsList, catalog.plugins);
+        renderList(hooksList, catalog.hooks);
+      }
+
+      function renderCommands(filterText) {
+        const query = (filterText || '').toLowerCase();
+        const items = catalog.commands.filter((cmd) =>
+          cmd.name.toLowerCase().includes(query) || cmd.detail.toLowerCase().includes(query)
+        );
+        renderList(cliList, items);
+      }
+
+      function renderSchedules() {
+        scheduleList.innerHTML = '';
+        if (!state.schedules.length) {
+          const empty = document.createElement('div');
+          empty.className = 'activity-item';
+          empty.textContent = 'No schedules yet. Create your first task.';
+          scheduleList.appendChild(empty);
+          return;
+        }
+        state.schedules.forEach((task) => {
+          const el = document.createElement('div');
+          el.className = 'data-item';
+          el.innerHTML =
+            '<div class="name">' + task.name + '</div>' +
+            '<div class="meta">' + task.when + ' · ' + task.target + '</div>' +
+            '<div class="tag ' + tagClass(task.status) + '">' + task.status + '</div>';
+          scheduleList.appendChild(el);
+        });
+      }
+
+      function renderViews() {
+        document.querySelectorAll('.view').forEach((view) => {
+          view.classList.toggle('active', view.id === 'view-' + state.activeView);
+        });
+        document.querySelectorAll('.menu-item').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.view === state.activeView);
+        });
       }
 
       function render() {
@@ -726,6 +1354,10 @@ export function getWebUiHtml(): string {
         renderMessages();
         renderActivity();
         renderHeader();
+        renderCatalogs();
+        renderCommands(cliSearch.value);
+        renderSchedules();
+        renderViews();
         const session = currentSession();
         const connected = !!session;
         setStatus(connected ? 'Connected' : 'Disconnected', connected);
@@ -826,10 +1458,10 @@ export function getWebUiHtml(): string {
           if (chunk.done) break;
           buffer += decoder.decode(chunk.value, { stream: true });
           let idx;
-          while ((idx = buffer.indexOf('\\n\\n')) >= 0) {
+          while ((idx = buffer.indexOf('\n\n')) >= 0) {
             const block = buffer.slice(0, idx);
             buffer = buffer.slice(idx + 2);
-            const lines = block.split('\\n');
+            const lines = block.split('\n');
             for (const line of lines) {
               if (!line.startsWith('data: ')) continue;
               const payload = line.slice(6);
@@ -1002,6 +1634,32 @@ export function getWebUiHtml(): string {
         commandPalette.classList.toggle('active', open);
       }
 
+      function openInfoModal(type) {
+        const items = catalog[type] || [];
+        infoTitle.textContent = type === 'commands'
+          ? 'CLI Commands'
+          : type.charAt(0).toUpperCase() + type.slice(1);
+        infoSearch.value = '';
+        infoModal.dataset.type = type;
+        infoModal.classList.add('active');
+        renderInfoList();
+      }
+
+      function renderInfoList() {
+        const type = infoModal.dataset.type || 'commands';
+        const query = (infoSearch.value || '').toLowerCase();
+        const items = (catalog[type] || []).filter((item) =>
+          item.name.toLowerCase().includes(query) || item.detail.toLowerCase().includes(query)
+        );
+        renderList(infoList, items);
+      }
+
+      function setActiveView(view) {
+        state.activeView = view;
+        render();
+        saveState();
+      }
+
       connectBtn.addEventListener('click', () => {
         createSession().catch((err) => setStatus(err.message, false));
       });
@@ -1034,6 +1692,46 @@ export function getWebUiHtml(): string {
 
       serverTokenInput.addEventListener('input', () => updateConnectState());
 
+      cliSearch.addEventListener('input', () => {
+        renderCommands(cliSearch.value);
+      });
+
+      scheduleForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const name = document.getElementById('scheduleName').value.trim();
+        const type = document.getElementById('scheduleType').value;
+        const when = document.getElementById('scheduleWhen').value.trim();
+        const target = document.getElementById('scheduleTarget').value.trim();
+        const notes = document.getElementById('scheduleNotes').value.trim();
+        if (!name || !when || !target) return;
+        state.schedules.unshift({
+          id: 'schedule-' + Date.now(),
+          name,
+          when: type + ' · ' + when,
+          target,
+          notes,
+          status: 'enabled',
+        });
+        scheduleForm.reset();
+        renderSchedules();
+        saveState();
+      });
+
+      document.querySelectorAll('.menu-item').forEach((btn) => {
+        btn.addEventListener('click', () => setActiveView(btn.dataset.view));
+      });
+
+      document.querySelectorAll('[data-modal]').forEach((btn) => {
+        btn.addEventListener('click', () => openInfoModal(btn.dataset.modal));
+      });
+
+      infoClose.addEventListener('click', () => infoModal.classList.remove('active'));
+      infoModal.addEventListener('click', (event) => {
+        if (event.target === infoModal) infoModal.classList.remove('active');
+      });
+
+      infoSearch.addEventListener('input', renderInfoList);
+
       commandPalette.addEventListener('click', (event) => {
         if (event.target === commandPalette) {
           toggleCommandPalette(false);
@@ -1058,6 +1756,7 @@ export function getWebUiHtml(): string {
         }
         if (event.key === 'Escape') {
           toggleCommandPalette(false);
+          infoModal.classList.remove('active');
         }
       });
 
