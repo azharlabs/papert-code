@@ -861,15 +861,34 @@ const WEB_UI_STYLES = `
         .dock {
           order: -1;
         }
+        .activity-panel {
+          right: 16px;
+          bottom: 76px;
+        }
+        .activity-fab {
+          right: 16px;
+          bottom: 16px;
+        }
       }
 
       @media (max-width: 980px) {
         .workspace {
           grid-template-columns: 1fr;
+          grid-template-rows: auto minmax(0, 1fr);
         }
         .sidebar {
           border-right: none;
           border-bottom: 1px solid var(--stroke);
+          max-height: 220px;
+          overflow-y: auto;
+        }
+        .page-grid {
+          grid-template-columns: 1fr;
+        }
+        .menu-group {
+          overflow-x: auto;
+          max-width: 60vw;
+          padding-bottom: 4px;
         }
       }
 
@@ -879,6 +898,93 @@ const WEB_UI_STYLES = `
         }
         .menu-right {
           flex-wrap: wrap;
+        }
+        .menu-bar {
+          padding: 10px 14px;
+        }
+        aside, main {
+          padding: 14px;
+        }
+        .composer {
+          padding: 10px;
+        }
+        .activity-panel {
+          width: min(92vw, 360px);
+        }
+        .view-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .menu-bar {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+        .menu-right {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .menu-shortcuts {
+          flex-wrap: wrap;
+        }
+        .chip {
+          padding: 6px 10px;
+        }
+        .sidebar {
+          padding: 12px;
+        }
+        .workspace {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto minmax(0, 1fr);
+        }
+        .sidebar {
+          position: sticky;
+          top: 0;
+          z-index: 3;
+          max-height: 180px;
+          overflow-y: auto;
+        }
+        .view-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        .chat-window {
+          grid-template-rows: minmax(0, 1fr) auto;
+        }
+        .composer {
+          padding: 8px;
+        }
+        .composer textarea {
+          min-height: 60px;
+        }
+        .card {
+          padding: 12px;
+        }
+        .messages {
+          padding: 12px;
+        }
+        .composer textarea {
+          min-height: 70px;
+        }
+        .action-row {
+          gap: 8px;
+        }
+        button {
+          padding: 8px 10px;
+        }
+        .activity-panel {
+          right: 12px;
+          bottom: 72px;
+        }
+        .activity-fab {
+          width: 48px;
+          height: 48px;
+          right: 12px;
+          bottom: 12px;
         }
       }
 `
