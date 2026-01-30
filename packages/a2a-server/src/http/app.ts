@@ -6,6 +6,8 @@
 
 import express from 'express';
 import path from 'node:path';
+import * as fs from 'node:fs/promises';
+import * as fsSync from 'node:fs';
 
 import type { AgentCard, Message } from '@a2a-js/sdk';
 import type { TaskStore } from '@a2a-js/sdk/server';
@@ -205,6 +207,81 @@ export async function createApp() {
 
     const context = { config, git, agentExecutor };
 
+    const storage = new Storage(workspaceRoot);
+    const papertDir = storage.getPapertDir();
+    const settingsPath = storage.getWorkspaceSettingsPath();
+    const schedulePath = path.join(papertDir, 'schedule', 'jobs.json');
+
+    const normalizeName = (value: string) =>
+      value.trim().replace(/[^a-zA-Z0-9._-]/g, '-');
+
+    const resolveWithinPapert = (relativePath: string) => {
+      const base = path.resolve(papertDir) + path.sep;
+      const resolved = path.resolve(papertDir, relativePath);
+      if (!resolved.startsWith(base)) {
+        throw new Error('Invalid path');
+      }
+      return resolved;
+    };
+
+    const readText = async (filePath: string) => {
+      return fs.readFile(filePath, 'utf8');
+    };
+
+    const readJson = async <T>(filePath: string, fallback: T): Promise<T> => {
+      try {
+        const raw = await fs.readFile(filePath, 'utf8');
+        return JSON.parse(raw) as T;
+      } catch {
+        return fallback;
+      }
+    };
+
+    const writeJson = async (filePath: string, data: unknown) => {
+      await fs.mkdir(path.dirname(filePath), { recursive: true });
+      await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+    };
+
+    const readDescription = async (filePath: string) => {
+      try {
+        const raw = await fs.readFile(filePath, 'utf8');
+        const lines = raw.split('\n');
+        const line = lines.find((value) => value.trim().length > 0) ?? '';
+        return line.replace(/^[#/*\\s-]+/, '').trim();
+      } catch {
+        return '';
+      }
+    };
+
+    const formatEveryMs = (ms: number) => {
+      if (!Number.isFinite(ms)) return '';
+      if (ms % 86_400_000 === 0) return `${ms / 86_400_000}d`;
+      if (ms % 3_600_000 === 0) return `${ms / 3_600_000}h`;
+      if (ms % 60_000 === 0) return `${ms / 60_000}m`;
+      if (ms % 1_000 === 0) return `${ms / 1_000}s`;
+      return `${ms}ms`;
+    };
+
+    const listFiles = async (dirPath: string, ext: string) => {
+      try {
+        const entries = await fs.readdir(dirPath, { withFileTypes: true });
+        return entries
+          .filter((entry) => entry.isFile() && entry.name.endsWith(ext))
+          .map((entry) => entry.name);
+      } catch {
+        return [];
+      }
+    };
+
+    const listDirs = async (dirPath: string) => {
+      try {
+        const entries = await fs.readdir(dirPath, { withFileTypes: true });
+        return entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+      } catch {
+        return [];
+      }
+    };
+
     const requestHandler = new DefaultRequestHandler(
       coderAgentCard,
       taskStoreForHandler,
@@ -370,7 +447,593 @@ export async function createApp() {
 
     const appBuilder = new A2AExpressApp(requestHandler);
     expressApp = appBuilder.setupRoutes(expressApp, '');
-    expressApp.use(express.json());
+    expressApp.use(express.json({ limit: '2mb' }));
+
+    expressApp.get('/api/v1/webui/catalog', async (_req, res) => {
+      try {
+        const agentsDir = resolveWithinPapert('agents');
+        const skillsDir = resolveWithinPapert('skills');
+        const toolsDir = resolveWithinPapert('tools');
+        const customToolsDir = resolveWithinPapert('custom-tools');
+        const pluginsDir = resolveWithinPapert('plugins');
+
+        const agentFiles = await listFiles(agentsDir, '.md');
+        const agents = await Promise.all(
+          agentFiles.map(async (file) => ({
+            id: path.basename(file, '.md'),
+            name: path.basename(file, '.md'),
+            detail:
+              (await readDescription(path.join(agentsDir, file))) ||
+              'No description yet.',
+            tag: 'agent',
+          })),
+        );
+
+        const skillDirs = await listDirs(skillsDir);
+        const skills = await Promise.all(
+          skillDirs.map(async (dir) => ({
+            id: dir,
+            name: dir,
+            detail:
+              (await readDescription(path.join(skillsDir, dir, 'SKILL.md'))) ||
+              'No description yet.',
+            tag: 'skill',
+          })),
+        );
+
+        const toolFiles = await listFiles(toolsDir, '.mjs');
+        const tools = await Promise.all(
+          toolFiles.map(async (file) => ({
+            id: path.basename(file, '.mjs'),
+            name: path.basename(file, '.mjs'),
+            detail:
+              (await readDescription(path.join(toolsDir, file))) ||
+              'No description yet.',
+            tag: 'tool',
+          })),
+        );
+
+        const customToolFiles = await listFiles(customToolsDir, '.mjs');
+        const customTools = await Promise.all(
+          customToolFiles.map(async (file) => ({
+            id: path.basename(file, '.mjs'),
+            name: path.basename(file, '.mjs'),
+            detail:
+              (await readDescription(path.join(customToolsDir, file))) ||
+              'No description yet.',
+            tag: 'custom',
+          })),
+        );
+
+        const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+        const mcpServers = (settings['mcpServers'] || {}) as Record<string, unknown>;
+        const mcps = Object.entries(mcpServers).map(([name, config]) => {
+          const cfg = config as Record<string, unknown>;
+          const detail =
+            (Array.isArray(cfg['command']) ? cfg['command'].join(' ') : cfg['command']) ||
+            cfg['url'] ||
+            cfg['httpUrl'] ||
+            'configured';
+          return { id: name, name, detail: String(detail), tag: 'mcp', config };
+        });
+
+        const pluginFiles = await listFiles(pluginsDir, '.mjs');
+        const pluginPaths = (settings['plugins'] as string[] | undefined) ?? [];
+        const plugins = pluginFiles.map((file) => {
+          const fullPath = path.join(pluginsDir, file);
+          const enabled = pluginPaths.includes(fullPath);
+          return {
+            id: path.basename(file, '.mjs'),
+            name: path.basename(file, '.mjs'),
+            detail: enabled ? 'Enabled' : 'Disabled',
+            tag: enabled ? 'enabled' : 'disabled',
+          };
+        });
+
+        const hooksConfig = (settings['hooks'] || {}) as Record<string, unknown>;
+        const hooks: { id: string; name: string; detail: string; tag: string; group: unknown }[] = [];
+        Object.entries(hooksConfig).forEach(([section, value]) => {
+          const groups = Array.isArray(value) ? value : [];
+          groups.forEach((group, index) => {
+            const matcher = (group as { matcher?: string }).matcher ?? '.*';
+            hooks.push({
+              id: `${section}:${index}`,
+              name: `${section} #${index + 1}`,
+              detail: `matcher: ${matcher}`,
+              tag: 'hook',
+              group,
+            });
+          });
+        });
+
+        const scheduleStore = await readJson(
+          schedulePath,
+          { version: 1, jobs: [] as Record<string, unknown>[] },
+        );
+        const jobs = Array.isArray(scheduleStore.jobs) ? scheduleStore.jobs : [];
+        const schedules = jobs.map((job) => {
+          const schedule = job['schedule'] as Record<string, unknown> | undefined;
+          let when = '';
+          if (schedule?.['kind'] === 'every') {
+            when = formatEveryMs(Number(schedule['everyMs']));
+          } else if (schedule?.['kind'] === 'cron') {
+            when = String(schedule['expr'] || '');
+          } else if (schedule?.['kind'] === 'at') {
+            when = new Date(Number(schedule['atMs'] || 0)).toISOString();
+          }
+          const payload = (job['payload'] || {}) as Record<string, unknown>;
+          const targetType = String(payload['targetType'] || '');
+          const targetName = String(payload['targetName'] || '');
+          const targetValue = targetType && targetName ? `${targetType}:${targetName}` : '';
+          const detail = `${when} - ${targetName || 'target'}`;
+          return {
+            id: job['id'],
+            name: job['name'],
+            detail,
+            status: job['enabled'] === false ? 'disabled' : 'enabled',
+            schedule,
+            payload,
+            when,
+            targetValue,
+          };
+        });
+
+        const targets = {
+          tools: tools.map((tool) => tool.name),
+          agents: agents.map((agent) => agent.name),
+          mcps: mcps.map((mcp) => mcp.name),
+        };
+
+        return res.status(200).json({
+          agents,
+          skills,
+          tools,
+          customTools,
+          plugins,
+          hooks,
+          mcps,
+          schedules,
+          targets,
+        });
+      } catch (error) {
+        logger.error('[WebUI] Failed to build catalog', error);
+        return res.status(500).json({ error: 'Failed to load catalog' });
+      }
+    });
+
+    expressApp.get('/api/v1/webui/content/:type/:id', async (req, res) => {
+      try {
+        const type = req.params.type;
+        const id = req.params.id;
+        if (type === 'agents') {
+          const filePath = resolveWithinPapert(path.join('agents', `${id}.md`));
+          return res.status(200).json({ content: await readText(filePath) });
+        }
+        if (type === 'skills') {
+          const filePath = resolveWithinPapert(path.join('skills', id, 'SKILL.md'));
+          return res.status(200).json({ content: await readText(filePath) });
+        }
+        if (type === 'tools') {
+          const filePath = resolveWithinPapert(path.join('tools', `${id}.mjs`));
+          return res.status(200).json({ content: await readText(filePath) });
+        }
+        if (type === 'custom-tools') {
+          const filePath = resolveWithinPapert(path.join('custom-tools', `${id}.mjs`));
+          return res.status(200).json({ content: await readText(filePath) });
+        }
+        if (type === 'plugins') {
+          const filePath = resolveWithinPapert(path.join('plugins', `${id}.mjs`));
+          return res.status(200).json({ content: await readText(filePath) });
+        }
+        if (type === 'mcps') {
+          const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+          const mcpServers = (settings['mcpServers'] || {}) as Record<string, unknown>;
+          const config = mcpServers[id] ?? {};
+          return res.status(200).json({ content: JSON.stringify(config, null, 2) });
+        }
+        if (type === 'hooks') {
+          const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+          const hooks = (settings['hooks'] || {}) as Record<string, unknown>;
+          const [section, rawIndex] = id.split(':');
+          const index = Number(rawIndex);
+          const groups = Array.isArray(hooks[section]) ? (hooks[section] as unknown[]) : [];
+          const group = groups[index] ?? {};
+          return res.status(200).json({ content: JSON.stringify(group, null, 2) });
+        }
+        return res.status(400).json({ error: 'Unsupported content type' });
+      } catch (error) {
+        logger.error('[WebUI] Failed to load content', error);
+        return res.status(500).json({ error: 'Failed to load content' });
+      }
+    });
+
+    const writeFileForType = async (type: string, id: string, name: string, content: string) => {
+      const safeName = normalizeName(name || id);
+      const hasRename = id && safeName && id !== safeName;
+      if (type === 'agents') {
+        const dir = resolveWithinPapert('agents');
+        await fs.mkdir(dir, { recursive: true });
+        const filePath = path.join(dir, `${safeName}.md`);
+        await fs.writeFile(filePath, content, 'utf8');
+        if (hasRename) {
+          const oldPath = path.join(dir, `${id}.md`);
+          if (fsSync.existsSync(oldPath)) await fs.unlink(oldPath);
+        }
+        return;
+      }
+      if (type === 'skills') {
+        const dir = resolveWithinPapert(path.join('skills', safeName));
+        await fs.mkdir(dir, { recursive: true });
+        const filePath = path.join(dir, 'SKILL.md');
+        await fs.writeFile(filePath, content, 'utf8');
+        if (hasRename) {
+          const oldDir = resolveWithinPapert(path.join('skills', id));
+          if (fsSync.existsSync(oldDir)) await fs.rm(oldDir, { recursive: true, force: true });
+        }
+        return;
+      }
+      if (type === 'tools') {
+        const dir = resolveWithinPapert('tools');
+        await fs.mkdir(dir, { recursive: true });
+        const filePath = path.join(dir, `${safeName}.mjs`);
+        await fs.writeFile(filePath, content, 'utf8');
+        if (hasRename) {
+          const oldPath = path.join(dir, `${id}.mjs`);
+          if (fsSync.existsSync(oldPath)) await fs.unlink(oldPath);
+        }
+        return;
+      }
+      if (type === 'custom-tools') {
+        const dir = resolveWithinPapert('custom-tools');
+        await fs.mkdir(dir, { recursive: true });
+        const filePath = path.join(dir, `${safeName}.mjs`);
+        await fs.writeFile(filePath, content, 'utf8');
+        if (hasRename) {
+          const oldPath = path.join(dir, `${id}.mjs`);
+          if (fsSync.existsSync(oldPath)) await fs.unlink(oldPath);
+        }
+        return;
+      }
+      if (type === 'plugins') {
+        const dir = resolveWithinPapert('plugins');
+        await fs.mkdir(dir, { recursive: true });
+        const filePath = path.join(dir, `${safeName}.mjs`);
+        await fs.writeFile(filePath, content, 'utf8');
+        const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+        const plugins = new Set((settings['plugins'] as string[] | undefined) ?? []);
+        if (hasRename) {
+          const oldPath = path.join(dir, `${id}.mjs`);
+          plugins.delete(oldPath);
+        }
+        plugins.add(filePath);
+        settings['plugins'] = Array.from(plugins);
+        await writeJson(settingsPath, settings);
+        return;
+      }
+      throw new Error('Unsupported type');
+    };
+
+    expressApp.post('/api/v1/webui/agents', async (req, res) => {
+      try {
+        await writeFileForType('agents', '', req.body.name, req.body.content ?? '');
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to save agent', error);
+        return res.status(500).json({ error: 'Failed to save agent' });
+      }
+    });
+
+    expressApp.put('/api/v1/webui/agents/:id', async (req, res) => {
+      try {
+        await writeFileForType('agents', req.params.id, req.body.name ?? req.params.id, req.body.content ?? '');
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to update agent', error);
+        return res.status(500).json({ error: 'Failed to update agent' });
+      }
+    });
+
+    expressApp.delete('/api/v1/webui/agents/:id', async (req, res) => {
+      try {
+        const filePath = resolveWithinPapert(path.join('agents', `${req.params.id}.md`));
+        if (fsSync.existsSync(filePath)) await fs.unlink(filePath);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to delete agent', error);
+        return res.status(500).json({ error: 'Failed to delete agent' });
+      }
+    });
+
+    expressApp.post('/api/v1/webui/skills', async (req, res) => {
+      try {
+        await writeFileForType('skills', '', req.body.name, req.body.content ?? '');
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to save skill', error);
+        return res.status(500).json({ error: 'Failed to save skill' });
+      }
+    });
+
+    expressApp.put('/api/v1/webui/skills/:id', async (req, res) => {
+      try {
+        await writeFileForType('skills', req.params.id, req.body.name ?? req.params.id, req.body.content ?? '');
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to update skill', error);
+        return res.status(500).json({ error: 'Failed to update skill' });
+      }
+    });
+
+    expressApp.delete('/api/v1/webui/skills/:id', async (req, res) => {
+      try {
+        const dirPath = resolveWithinPapert(path.join('skills', req.params.id));
+        if (fsSync.existsSync(dirPath)) await fs.rm(dirPath, { recursive: true, force: true });
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to delete skill', error);
+        return res.status(500).json({ error: 'Failed to delete skill' });
+      }
+    });
+
+    expressApp.post('/api/v1/webui/tools', async (req, res) => {
+      try {
+        await writeFileForType('tools', '', req.body.name, req.body.content ?? '');
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to save tool', error);
+        return res.status(500).json({ error: 'Failed to save tool' });
+      }
+    });
+
+    expressApp.put('/api/v1/webui/tools/:id', async (req, res) => {
+      try {
+        await writeFileForType('tools', req.params.id, req.body.name ?? req.params.id, req.body.content ?? '');
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to update tool', error);
+        return res.status(500).json({ error: 'Failed to update tool' });
+      }
+    });
+
+    expressApp.delete('/api/v1/webui/tools/:id', async (req, res) => {
+      try {
+        const filePath = resolveWithinPapert(path.join('tools', `${req.params.id}.mjs`));
+        if (fsSync.existsSync(filePath)) await fs.unlink(filePath);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to delete tool', error);
+        return res.status(500).json({ error: 'Failed to delete tool' });
+      }
+    });
+
+    expressApp.post('/api/v1/webui/custom-tools', async (req, res) => {
+      try {
+        await writeFileForType('custom-tools', '', req.body.name, req.body.content ?? '');
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to save custom tool', error);
+        return res.status(500).json({ error: 'Failed to save custom tool' });
+      }
+    });
+
+    expressApp.put('/api/v1/webui/custom-tools/:id', async (req, res) => {
+      try {
+        await writeFileForType('custom-tools', req.params.id, req.body.name ?? req.params.id, req.body.content ?? '');
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to update custom tool', error);
+        return res.status(500).json({ error: 'Failed to update custom tool' });
+      }
+    });
+
+    expressApp.delete('/api/v1/webui/custom-tools/:id', async (req, res) => {
+      try {
+        const filePath = resolveWithinPapert(path.join('custom-tools', `${req.params.id}.mjs`));
+        if (fsSync.existsSync(filePath)) await fs.unlink(filePath);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to delete custom tool', error);
+        return res.status(500).json({ error: 'Failed to delete custom tool' });
+      }
+    });
+
+    expressApp.post('/api/v1/webui/plugins', async (req, res) => {
+      try {
+        await writeFileForType('plugins', '', req.body.name, req.body.content ?? '');
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to save plugin', error);
+        return res.status(500).json({ error: 'Failed to save plugin' });
+      }
+    });
+
+    expressApp.put('/api/v1/webui/plugins/:id', async (req, res) => {
+      try {
+        await writeFileForType('plugins', req.params.id, req.body.name ?? req.params.id, req.body.content ?? '');
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to update plugin', error);
+        return res.status(500).json({ error: 'Failed to update plugin' });
+      }
+    });
+
+    expressApp.delete('/api/v1/webui/plugins/:id', async (req, res) => {
+      try {
+        const filePath = resolveWithinPapert(path.join('plugins', `${req.params.id}.mjs`));
+        if (fsSync.existsSync(filePath)) await fs.unlink(filePath);
+        const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+        const plugins = (settings['plugins'] as string[] | undefined) ?? [];
+        settings['plugins'] = plugins.filter((entry) => entry !== filePath);
+        await writeJson(settingsPath, settings);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to delete plugin', error);
+        return res.status(500).json({ error: 'Failed to delete plugin' });
+      }
+    });
+
+    expressApp.post('/api/v1/webui/mcps', async (req, res) => {
+      try {
+        const name = normalizeName(req.body.name ?? '');
+        const config = req.body.config ?? {};
+        const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+        settings['mcpServers'] = { ...(settings['mcpServers'] as Record<string, unknown> | undefined), [name]: config };
+        await writeJson(settingsPath, settings);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to save MCP', error);
+        return res.status(500).json({ error: 'Failed to save MCP' });
+      }
+    });
+
+    expressApp.put('/api/v1/webui/mcps/:id', async (req, res) => {
+      try {
+        const name = normalizeName(req.body.name ?? req.params.id);
+        const config = req.body.config ?? {};
+        const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+        const mcpServers = { ...(settings['mcpServers'] as Record<string, unknown> | undefined) };
+        delete mcpServers[req.params.id];
+        mcpServers[name] = config;
+        settings['mcpServers'] = mcpServers;
+        await writeJson(settingsPath, settings);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to update MCP', error);
+        return res.status(500).json({ error: 'Failed to update MCP' });
+      }
+    });
+
+    expressApp.delete('/api/v1/webui/mcps/:id', async (req, res) => {
+      try {
+        const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+        const mcpServers = { ...(settings['mcpServers'] as Record<string, unknown> | undefined) };
+        delete mcpServers[req.params.id];
+        settings['mcpServers'] = mcpServers;
+        await writeJson(settingsPath, settings);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to delete MCP', error);
+        return res.status(500).json({ error: 'Failed to delete MCP' });
+      }
+    });
+
+    expressApp.post('/api/v1/webui/hooks', async (req, res) => {
+      try {
+        const section = req.body.section;
+        const group = req.body.group;
+        const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+        const hooks = { ...(settings['hooks'] as Record<string, unknown> | undefined) };
+        const groups = Array.isArray(hooks[section]) ? [...(hooks[section] as unknown[])] : [];
+        groups.push(group);
+        hooks[section] = groups;
+        settings['hooks'] = hooks;
+        await writeJson(settingsPath, settings);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to save hook', error);
+        return res.status(500).json({ error: 'Failed to save hook' });
+      }
+    });
+
+    expressApp.put('/api/v1/webui/hooks/:section/:index', async (req, res) => {
+      try {
+        const section = req.params.section;
+        const index = Number(req.params.index);
+        const group = req.body.group;
+        const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+        const hooks = { ...(settings['hooks'] as Record<string, unknown> | undefined) };
+        const groups = Array.isArray(hooks[section]) ? [...(hooks[section] as unknown[])] : [];
+        groups[index] = group;
+        hooks[section] = groups;
+        settings['hooks'] = hooks;
+        await writeJson(settingsPath, settings);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to update hook', error);
+        return res.status(500).json({ error: 'Failed to update hook' });
+      }
+    });
+
+    expressApp.delete('/api/v1/webui/hooks/:section/:index', async (req, res) => {
+      try {
+        const section = req.params.section;
+        const index = Number(req.params.index);
+        const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+        const hooks = { ...(settings['hooks'] as Record<string, unknown> | undefined) };
+        const groups = Array.isArray(hooks[section]) ? [...(hooks[section] as unknown[])] : [];
+        groups.splice(index, 1);
+        hooks[section] = groups;
+        settings['hooks'] = hooks;
+        await writeJson(settingsPath, settings);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to delete hook', error);
+        return res.status(500).json({ error: 'Failed to delete hook' });
+      }
+    });
+
+    const readScheduleStore = async () =>
+      readJson(schedulePath, { version: 1, jobs: [] as Record<string, unknown>[] });
+
+    expressApp.post('/api/v1/webui/schedules', async (req, res) => {
+      try {
+        const store = await readScheduleStore();
+        const now = Date.now();
+        const job = {
+          id: uuidv4(),
+          name: req.body.name,
+          description: req.body.description,
+          enabled: true,
+          createdAtMs: now,
+          updatedAtMs: now,
+          schedule: req.body.schedule,
+          payload: req.body.payload ?? {},
+          state: {},
+        };
+        store.jobs = [...(store.jobs as Record<string, unknown>[]), job];
+        await writeJson(schedulePath, store);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to add schedule', error);
+        return res.status(500).json({ error: 'Failed to add schedule' });
+      }
+    });
+
+    expressApp.put('/api/v1/webui/schedules/:id', async (req, res) => {
+      try {
+        const store = await readScheduleStore();
+        const jobs = (store.jobs as Record<string, unknown>[]) ?? [];
+        const idx = jobs.findIndex((job) => job['id'] === req.params.id);
+        if (idx === -1) return res.status(404).json({ error: 'Not found' });
+        const updated = {
+          ...jobs[idx],
+          name: req.body.name ?? jobs[idx]['name'],
+          schedule: req.body.schedule ?? jobs[idx]['schedule'],
+          payload: req.body.payload ?? jobs[idx]['payload'],
+          updatedAtMs: Date.now(),
+        };
+        jobs[idx] = updated;
+        store.jobs = jobs;
+        await writeJson(schedulePath, store);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to update schedule', error);
+        return res.status(500).json({ error: 'Failed to update schedule' });
+      }
+    });
+
+    expressApp.delete('/api/v1/webui/schedules/:id', async (req, res) => {
+      try {
+        const store = await readScheduleStore();
+        const jobs = (store.jobs as Record<string, unknown>[]) ?? [];
+        store.jobs = jobs.filter((job) => job['id'] !== req.params.id);
+        await writeJson(schedulePath, store);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to delete schedule', error);
+        return res.status(500).json({ error: 'Failed to delete schedule' });
+      }
+    });
 
     expressApp.post('/tasks', async (req, res) => {
       try {
