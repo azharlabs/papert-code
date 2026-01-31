@@ -45,16 +45,17 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.4"
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "diff": "8.0.3"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
-    "@typescript-eslint/eslint-plugin": "^7.13.0",
-    "@typescript-eslint/parser": "^7.13.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
     "@vitest/coverage-v8": "^4.0.16",
     "dts-bundle-generator": "^9.5.1",
     "esbuild": "^0.25.12",
-    "eslint": "^8.57.0",
+    "eslint": "^9.39.2",
     "typescript": "^5.4.5",
     "vitest": "^4.0.16",
     "zod": "^3.23.8"

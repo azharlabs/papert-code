@@ -1,6 +1,6 @@
 {
   "name": "@papert-code/papert-code",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Papert Code",
   "repository": {
     "type": "git",
@@ -38,14 +38,14 @@
   "dependencies": {
     "@google/genai": "1.30.0",
     "@iarna/toml": "^2.2.5",
-    "@papert-code/papert-code-core": "file:../core",
     "@modelcontextprotocol/sdk": "^1.23.0",
+    "@papert-code/papert-code-core": "file:../core",
     "@types/update-notifier": "^6.0.8",
     "ansi-regex": "^6.2.2",
     "clipboardy": "^5.0.0",
     "command-exists": "^1.2.9",
     "comment-json": "^4.2.5",
-    "diff": "^7.0.0",
+    "diff": "^8.0.3",
     "dotenv": "^17.1.0",
     "extract-zip": "^2.0.1",
     "fzf": "^0.5.2",
@@ -79,6 +79,7 @@
   "devDependencies": {
     "@babel/runtime": "^7.27.6",
     "@google/gemini-cli-test-utils": "file:../test-utils",
+    "@papert-code/papert-code-test-utils": "file:../test-utils",
     "@testing-library/react": "^16.3.0",
     "@types/archiver": "^6.0.3",
     "@types/command-exists": "^1.2.3",
@@ -97,8 +98,7 @@
     "pretty-format": "^30.0.2",
     "react-dom": "^19.1.0",
     "typescript": "^5.3.3",
-    "vitest": "^3.1.1",
-    "@papert-code/papert-code-test-utils": "file:../test-utils"
+    "vitest": "^3.1.1"
   },
   "engines": {
     "node": ">=20"
