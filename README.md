@@ -99,6 +99,18 @@ Keyboard shortcuts: `Ctrl+C` cancels the current turn, `Ctrl+D` exits on an empt
   - `.papert/agents/` for specialized subagents
   - MCP servers for external toolchains and data sources
 
+## Governance and platform upgrades
+
+Recent improvements add safety, admin policy gating, and structured registries that make Papert Code more robust in enterprise and headless scenarios.
+
+- Safety preflight checks with policy-driven checker rules.
+- Admin-controls polling to dynamically enable or disable MCP, extensions, and skills.
+- Core skills system for consistent headless usage and skill discovery.
+- Model registry with capability metadata per auth type.
+- Deferred CLI command execution so admin policy applies before commands run.
+
+Details: `docs/features/safety-admin-core-cli.md`
+
 ## Project settings and ignore files
 
 Papert Code looks for `.papert/settings.json` in your project or `~/.papert/settings.json` for user defaults. Example:
