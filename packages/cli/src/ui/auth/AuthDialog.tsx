@@ -113,6 +113,14 @@ export function AuthDialog(): React.JSX.Element {
           );
           return;
         }
+        if (!session.provider?.baseUrl) {
+          setErrorMessage(
+            t(
+              'Admin-managed login requires a provider Base URL (set Base URL in the admin controls).',
+            ),
+          );
+          return;
+        }
         applyAdminSessionToEnv(session);
         const adminModel =
           session.provider.model || session.provider.models?.[0];

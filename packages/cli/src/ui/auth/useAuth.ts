@@ -181,6 +181,12 @@ export const useAuthCommand = (
           });
           await performAuth(authType, scope, credentials);
         }
+        if (!credentials) {
+          setPendingAuthType(authType);
+          setAuthError(null);
+          setIsAuthDialogOpen(false);
+          setIsAuthenticating(true);
+        }
         return;
       }
 
