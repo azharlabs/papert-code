@@ -118,6 +118,10 @@ export class Storage {
     return path.join(this.getPapertDir(), 'commands');
   }
 
+  getProjectSkillsDir(): string {
+    return path.join(this.getPapertDir(), 'skills');
+  }
+
   getProjectTempCheckpointsDir(): string {
     return path.join(this.getProjectTempDir(), 'checkpoints');
   }

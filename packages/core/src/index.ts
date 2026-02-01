@@ -43,6 +43,8 @@ export * from './code_assist/oauth2.js';
 export * from './papert/papertOAuth2.js';
 export * from './code_assist/server.js';
 export * from './code_assist/types.js';
+export * from './skills/skillManager.js';
+export * from './skills/skillLoader.js';
 
 // Export utilities
 export * from './utils/paths.js';

@@ -121,6 +121,7 @@ import type { FetchAdminControlsResponse } from '../code_assist/types.js';
 import { CheckerRunner } from '../safety/checker-runner.js';
 import { CheckerRegistry } from '../safety/registry.js';
 import { ContextBuilder } from '../safety/context-builder.js';
+import { SkillManager } from '../skills/skillManager.js';
 import { MessageBus } from '../confirmation-bus/message-bus.js';
 import { ModelRouterService } from '../routing/modelRouterService.js';
 import type { FormatterSettings } from '../format/index.js';
@@ -540,6 +541,7 @@ export class Config {
   private readonly safetyCheckerRules: SafetyCheckerRule[];
   private readonly safetyCheckerRunner?: CheckerRunner;
   private remoteAdminSettings?: FetchAdminControlsResponse;
+  private skillManager?: SkillManager;
   private readonly messageBus: MessageBus;
   private hookSystem?: HookSystem;
   private pluginSystem?: import('../plugins/pluginSystem.js').PluginSystem;
@@ -749,6 +751,9 @@ export class Config {
     }
     this.promptRegistry = new PromptRegistry();
     this.subagentManager = new SubagentManager(this);
+    this.skillManager = new SkillManager();
+    await this.skillManager.discoverSkills(this.storage);
+    this.skillManager.setAdminSettings(this.isAdminSkillsEnabled());
 
     // Load session subagents if they were provided before initialization
     if (this.sessionSubagents.length > 0) {
@@ -1529,6 +1534,10 @@ export class Config {
     return this.pluginSystem;
   }
 
+  getSkillManager(): SkillManager | undefined {
+    return this.skillManager;
+  }
+
   async emitPluginSessionStart(source: string): Promise<void> {
     if (!this.enablePlugins || this.pluginSessionStarted) {
       return;
@@ -1604,6 +1613,9 @@ export class Config {
 
   setRemoteAdminSettings(settings: FetchAdminControlsResponse): void {
     this.remoteAdminSettings = settings;
+    if (this.skillManager) {
+      this.skillManager.setAdminSettings(this.isAdminSkillsEnabled());
+    }
   }
 
   getSafetyCheckerRules(): SafetyCheckerRule[] {
