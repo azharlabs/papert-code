@@ -7,10 +7,10 @@
 import * as Diff from 'diff';
 import type { DiffStat } from './tools.js';
 
-export const DEFAULT_DIFF_OPTIONS: Diff.PatchOptions = {
+export const DEFAULT_DIFF_OPTIONS = {
   context: 3,
   ignoreWhitespace: true,
-};
+} satisfies Diff.CreatePatchOptionsNonabortable;
 
 export function getDiffStat(
   fileName: string,
@@ -18,13 +18,13 @@ export function getDiffStat(
   aiStr: string,
   userStr: string,
 ): DiffStat {
-  const getStats = (patch: Diff.ParsedDiff) => {
+  const getStats = (patch: Diff.StructuredPatch) => {
     let addedLines = 0;
     let removedLines = 0;
     let addedChars = 0;
     let removedChars = 0;
 
-    patch.hunks.forEach((hunk: Diff.Hunk) => {
+    patch.hunks.forEach((hunk: Diff.StructuredPatchHunk) => {
       hunk.lines.forEach((line: string) => {
         if (line.startsWith('+')) {
           addedLines++;

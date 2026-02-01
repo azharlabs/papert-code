@@ -115,6 +115,7 @@
   "dependencies": {
     "@cfworker/json-schema": "^4.1.1",
     "@testing-library/dom": "^10.4.1",
+    "pptxgenjs": "^4.0.1",
     "simple-git": "^3.28.0"
   },
   "optionalDependencies": {

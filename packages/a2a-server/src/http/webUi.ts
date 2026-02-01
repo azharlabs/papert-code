@@ -1028,6 +1028,7 @@ const WEB_UI_SCRIPT = `
       normalizeState();
 
       const serverTokenStorageKey = 'papert.web.serverToken';
+      const autoConnectStorageKey = 'papert.web.autoConnect';
 
       function loadServerToken() {
         try {
@@ -1040,6 +1041,23 @@ const WEB_UI_SCRIPT = `
       function saveServerToken(value) {
         try {
           localStorage.setItem(serverTokenStorageKey, value);
+        } catch {
+          // ignore storage errors
+        }
+      }
+
+      function loadAutoConnect() {
+        try {
+          const value = localStorage.getItem(autoConnectStorageKey);
+          return value === null ? true : value === 'true';
+        } catch {
+          return true;
+        }
+      }
+
+      function saveAutoConnect(value) {
+        try {
+          localStorage.setItem(autoConnectStorageKey, value ? 'true' : 'false');
         } catch {
           // ignore storage errors
         }
@@ -1658,6 +1676,7 @@ const WEB_UI_SCRIPT = `
           createdAt: Date.now(),
           chats: [createChat()],
         };
+        saveAutoConnect(true);
         state.sessions = [session];
         state.activeSessionId = session.id;
         state.activeChatId = session.chats[0].id;
@@ -1688,6 +1707,7 @@ const WEB_UI_SCRIPT = `
           createdAt: Date.now(),
           chats: [createChat()],
         };
+        saveAutoConnect(true);
         state.sessions = [session];
         state.activeSessionId = session.id;
         state.activeChatId = session.chats[0].id;
@@ -1710,6 +1730,7 @@ const WEB_UI_SCRIPT = `
           headers,
         });
         if (res.ok) {
+          saveAutoConnect(false);
           state.sessions = state.sessions.filter((s) => s.id !== session.id);
           state.activeSessionId = state.sessions.length ? state.sessions[0].id : '';
           state.activeChatId = currentSession() && currentSession().chats[0].id || '';
@@ -2285,9 +2306,11 @@ const WEB_UI_SCRIPT = `
       }
 
       if (!currentSession() && storedToken) {
-        createSessionWithToken(storedToken).catch(() => {
-          setStatus('Enter server token to connect.', false);
-        });
+        if (loadAutoConnect()) {
+          createSessionWithToken(storedToken).catch(() => {
+            setStatus('Enter server token to connect.', false);
+          });
+        }
       }
 
       render();
