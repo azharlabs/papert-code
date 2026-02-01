@@ -188,6 +188,10 @@ function resolveUserControls(userId: string) {
   if (!user) return null;
   const group = user.groupId ? repo.getGroup(user.groupId) : null;
   if (user.selfManaged) {
+    const provider = {
+      ...(group?.provider ?? {}),
+      ...(user.provider ?? {}),
+    };
     const quota = computeQuotaStatus(repo, user, group);
     return {
       controls: {
@@ -199,7 +203,7 @@ function resolveUserControls(userId: string) {
       },
       user,
       group,
-      provider: user.provider,
+      provider,
       quota: {
         ...quota,
         exceeded: false,
