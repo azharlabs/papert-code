@@ -108,8 +108,11 @@ Recent improvements add safety, admin policy gating, and structured registries t
 - Core skills system for consistent headless usage and skill discovery.
 - Model registry with capability metadata per auth type.
 - Deferred CLI command execution so admin policy applies before commands run.
+- Optional admin control site for centralized policy management.
 
 Details: `docs/features/safety-admin-core-cli.md`
+Admin site: `docs/features/admin-controls-site.md`
+CLI env: `PAPERT_ADMIN_URL`, `PAPERT_ADMIN_EMAIL`, `PAPERT_ADMIN_PASSWORD`, `PAPERT_ADMIN_TOKEN`
 
 ## Project settings and ignore files
 

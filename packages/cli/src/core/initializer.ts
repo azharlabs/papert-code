@@ -48,7 +48,11 @@ export async function initializeApp(
 
   if (!authError) {
     const server = getCodeAssistServer(config);
-    if (server) {
+    const hasAdminOverride = Boolean(
+      process.env['PAPERT_ADMIN_CONTROLS_URL'] ||
+        process.env['PAPERT_ADMIN_URL'],
+    );
+    if (server || hasAdminOverride) {
       const adminSettings = await fetchAdminControls(
         server,
         config.getRemoteAdminSettings(),

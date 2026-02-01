@@ -142,6 +142,15 @@ Key locations:
 3. A polling loop refreshes admin controls every 5 minutes.
 4. Core config getters enforce gating (returning empty lists or disabling features).
 
+### Admin control site integration
+
+Papert Code can also source admin settings from the local admin control site. When `PAPERT_ADMIN_URL` and login credentials are provided, the CLI fetches user configuration and admin controls directly from the site, then applies gating in the same way as server-delivered admin settings.
+
+Required environment variables for CLI integration:
+
+- `PAPERT_ADMIN_URL`
+- `PAPERT_ADMIN_EMAIL` / `PAPERT_ADMIN_PASSWORD` (or `PAPERT_ADMIN_TOKEN`)
+
 ### Gated features
 
 - MCP servers: `getMcpServers()` and `getMcpServerCommand()` return undefined if MCP is disabled.

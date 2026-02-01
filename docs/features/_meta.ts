@@ -5,5 +5,6 @@ export default {
   headless: 'Headless Mode',
   'welcome-back': 'Welcome Back',
   'token-caching': 'Token Caching',
+  'admin-controls-site': 'Admin Control Site',
   'safety-admin-core-cli': 'Safety, Admin Controls, and Core/CLI Enhancements',
 };
