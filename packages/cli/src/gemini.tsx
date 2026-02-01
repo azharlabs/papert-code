@@ -229,7 +229,7 @@ export async function main() {
     adminSession = await resolveAdminSession();
     if (adminSession) {
       applyAdminSessionToEnv(adminSession);
-      applyAdminProviderToArgv(argv as Record<string, unknown>, adminSession);
+      applyAdminProviderToArgv(argv as unknown as Record<string, unknown>, adminSession);
     }
   } catch (err) {
     if (err instanceof AdminQuotaError) {

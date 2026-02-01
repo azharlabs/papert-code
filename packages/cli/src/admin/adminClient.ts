@@ -1,8 +1,14 @@
 import { computeUsageFromMetrics } from '../utils/nonInteractiveHelpers.js';
-import { uiTelemetryService, AuthType, type SessionMetrics } from '@papert-code/papert-code-core';
+import {
+  uiTelemetryService,
+  AuthType,
+  Storage,
+  type SessionMetrics,
+} from '@papert-code/papert-code-core';
 import type { Config } from '@papert-code/papert-code-core';
 import path from 'node:path';
 import fs from 'node:fs/promises';
+import prompts from 'prompts';
 
 export interface AdminSession {
   baseUrl: string;
@@ -14,6 +20,7 @@ export interface AdminSession {
     apiKey?: string;
     baseUrl?: string;
     model?: string;
+    models?: string[];
   };
   controls: Record<string, unknown>;
   quota?: Record<string, unknown>;
@@ -51,6 +58,65 @@ function getAdminEnv(): {
   };
 }
 
+function getAdminTokenPath(): string {
+  return path.join(Storage.getGlobalPapertDir(), 'admin-token.json');
+}
+
+async function loadCachedToken(
+  baseUrl: string,
+): Promise<{ token: string; email?: string } | null> {
+  try {
+    const raw = await fs.readFile(getAdminTokenPath(), 'utf-8');
+    const parsed = JSON.parse(raw) as {
+      token?: string;
+      email?: string;
+      baseUrl?: string;
+    };
+    if (!parsed.token || !parsed.baseUrl) return null;
+    if (parsed.baseUrl !== baseUrl) return null;
+    return { token: parsed.token, email: parsed.email };
+  } catch {
+    return null;
+  }
+}
+
+async function saveCachedToken(
+  baseUrl: string,
+  token: string,
+  email?: string,
+): Promise<void> {
+  const payload = { baseUrl, token, email, savedAt: new Date().toISOString() };
+  await fs.mkdir(path.dirname(getAdminTokenPath()), { recursive: true });
+  await fs.writeFile(getAdminTokenPath(), JSON.stringify(payload, null, 2));
+}
+
+async function promptForLogin(): Promise<{ email: string; password: string } | null> {
+  if (!process.stdin.isTTY) return null;
+  const response = await prompts(
+    [
+      {
+        type: 'text',
+        name: 'email',
+        message: 'Admin email',
+        validate: (value: string) =>
+          value.includes('@') ? true : 'Enter a valid email',
+      },
+      {
+        type: 'password',
+        name: 'password',
+        message: 'Admin password',
+      },
+    ],
+    {
+      onCancel: () => true,
+    },
+  );
+  if (!response.email || !response.password) {
+    return null;
+  }
+  return { email: response.email as string, password: response.password as string };
+}
+
 async function requestJson<T>(
   baseUrl: string,
   path: string,
@@ -75,13 +141,33 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
   let authToken = token;
   let loginResponse: any;
 
-  if (!authToken && email && password) {
+  if (!authToken) {
+    const cached = await loadCachedToken(baseUrl);
+    if (cached?.token) {
+      authToken = cached.token;
+    }
+  }
+
+  let loginEmail = email;
+  let loginPassword = password;
+  if (!authToken && (!loginEmail || !loginPassword)) {
+    const prompted = await promptForLogin();
+    if (prompted) {
+      loginEmail = prompted.email;
+      loginPassword = prompted.password;
+    }
+  }
+
+  if (!authToken && loginEmail && loginPassword) {
     loginResponse = await requestJson<any>(baseUrl, '/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: loginEmail, password: loginPassword }),
     });
     authToken = loginResponse.token;
+    if (authToken) {
+      await saveCachedToken(baseUrl, authToken, loginEmail);
+    }
   }
 
   if (!authToken) {
@@ -95,17 +181,29 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
       },
     });
     const user = configResponse.user ?? loginResponse?.user;
+    const provider =
+      configResponse.provider ??
+      loginResponse?.provider ??
+      loginResponse?.user?.provider ??
+      {};
     return {
       baseUrl,
       token: authToken,
       userId: user?.id || email || 'unknown-user',
       email: user?.email || email || 'unknown',
       selfManaged: Boolean(user?.selfManaged),
-      provider: configResponse.provider ?? loginResponse?.provider ?? {},
+      provider,
       controls: configResponse.controls ?? loginResponse?.controls ?? {},
       quota: configResponse.quota ?? loginResponse?.quota,
     };
   } catch (err) {
+    if ((err as { status?: number }).status === 401) {
+      try {
+        await fs.unlink(getAdminTokenPath());
+      } catch {
+        // ignore cache delete failures
+      }
+    }
     const payload = (err as { payload?: any }).payload;
     if (payload?.error === 'quota_exceeded') {
       throw new AdminQuotaError(payload.message || 'Token quota exceeded', {
@@ -122,6 +220,15 @@ export function applyAdminSessionToEnv(session: AdminSession): void {
   process.env['PAPERT_ADMIN_TOKEN'] = session.token;
   process.env['PAPERT_ADMIN_USER_ID'] = session.userId;
   process.env['PAPERT_ADMIN_URL'] = session.baseUrl;
+  const models =
+    session.provider?.models && session.provider.models.length > 0
+      ? session.provider.models
+      : session.provider?.model
+        ? [session.provider.model]
+        : null;
+  if (models) {
+    process.env['PAPERT_ADMIN_MODELS'] = JSON.stringify(models);
+  }
 }
 
 export function applyAdminProviderToArgv(
@@ -131,15 +238,17 @@ export function applyAdminProviderToArgv(
   if (session.selfManaged) {
     return;
   }
-  argv.authType = AuthType.USE_OPENAI;
+  argv['authType'] = AuthType.USE_OPENAI;
   if (session.provider?.apiKey) {
-    argv.openaiApiKey = session.provider.apiKey;
+    argv['openaiApiKey'] = session.provider.apiKey;
   }
   if (session.provider?.baseUrl) {
-    argv.openaiBaseUrl = session.provider.baseUrl;
+    argv['openaiBaseUrl'] = session.provider.baseUrl;
   }
-  if (session.provider?.model) {
-    argv.model = session.provider.model;
+  const defaultModel =
+    session.provider?.model || session.provider?.models?.[0];
+  if (defaultModel) {
+    argv['model'] = defaultModel;
   }
 }
 
@@ -149,7 +258,13 @@ export async function reportAdminUsage(
 ): Promise<void> {
   const metrics = uiTelemetryService.getMetrics();
   const usage = computeUsageFromMetrics(metrics as SessionMetrics);
-  if (!usage?.totalTokens) return;
+  const totalTokens =
+    usage?.total_tokens ??
+    (typeof usage?.input_tokens === 'number' &&
+    typeof usage?.output_tokens === 'number'
+      ? usage.input_tokens + usage.output_tokens
+      : undefined);
+  if (!totalTokens) return;
 
   await requestJson(session.baseUrl, '/api/v1/user/usage', {
     method: 'POST',
@@ -159,9 +274,9 @@ export async function reportAdminUsage(
     },
     body: JSON.stringify({
       sessionId: config.getSessionId(),
-      totalTokens: usage.totalTokens,
-      promptTokens: usage.promptTokens,
-      completionTokens: usage.completionTokens,
+      totalTokens,
+      promptTokens: usage.input_tokens,
+      completionTokens: usage.output_tokens,
       model: config.getModel(),
       baseUrl: config.getContentGeneratorConfig().baseUrl,
     }),

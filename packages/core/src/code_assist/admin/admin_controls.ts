@@ -18,7 +18,7 @@ let pollingInterval: NodeJS.Timeout | undefined;
 let currentSettings: FetchAdminControlsResponse | undefined;
 
 function resolveAdminControlsUrl(base: string, userId: string): string {
-  const trimmed = base.replace(/\\/$/, '');
+  const trimmed = base.replace(/\/$/, '');
   if (trimmed.endsWith('/admin-controls')) {
     return `${trimmed}?userId=${encodeURIComponent(userId)}`;
   }

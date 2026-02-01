@@ -168,13 +168,12 @@ export const useAuthCommand = (
         return;
       }
 
-      setPendingAuthType(authType);
-      setAuthError(null);
-      setIsAuthDialogOpen(false);
-      setIsAuthenticating(true);
-
       if (authType === AuthType.USE_OPENAI) {
         if (credentials) {
+          setPendingAuthType(undefined);
+          setAuthError(null);
+          setIsAuthDialogOpen(false);
+          setIsAuthenticating(true);
           config.updateCredentials({
             apiKey: credentials.apiKey,
             baseUrl: credentials.baseUrl,
@@ -185,6 +184,10 @@ export const useAuthCommand = (
         return;
       }
 
+      setPendingAuthType(authType);
+      setAuthError(null);
+      setIsAuthDialogOpen(false);
+      setIsAuthenticating(true);
       await performAuth(authType, scope);
     },
     [config, performAuth],

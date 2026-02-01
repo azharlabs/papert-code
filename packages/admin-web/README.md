@@ -27,6 +27,8 @@ The UI defaults to `http://localhost:4173` and proxies `/api` requests to the AP
 - `PAPERT_ADMIN_ENC_KEY`: 32-byte encryption key for storing provider API keys.
 - `PAPERT_ADMIN_BOOTSTRAP_EMAIL` / `PAPERT_ADMIN_BOOTSTRAP_PASSWORD`: create the first admin user if no users exist.
 
+See `.env.example` for a full starter configuration. Copy it to `.env` and restart the server to bootstrap an admin.
+
 If `PAPERT_ADMIN_ALLOWLIST` is empty, admin endpoints are open (use only for local demos).
 
 Bootstrap the first admin user:

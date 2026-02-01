@@ -757,8 +757,11 @@ export default {
   'Get started': 'Get started',
   'How would you like to authenticate for this project?':
     'How would you like to authenticate for this project?',
+  'Admin-managed login (Papert Admin)':
+    'Admin-managed login (Papert Admin)',
   'OpenAI API key is required to use OpenAI authentication.':
     'OpenAI API key is required to use OpenAI authentication.',
+  'OpenAI-compatible model': 'OpenAI-compatible model',
   'You must select an auth method to proceed. Press Ctrl+C again to exit.':
     'You must select an auth method to proceed. Press Ctrl+C again to exit.',
   '(Use Enter to Set Auth)': '(Use Enter to Set Auth)',
@@ -795,6 +798,12 @@ export default {
     'Waiting for auth... (Press ESC or CTRL+C to cancel)',
   'Failed to authenticate. Message: {{message}}':
     'Failed to authenticate. Message: {{message}}',
+  'Set PAPERT_ADMIN_URL to use admin-managed authentication.':
+    'Set PAPERT_ADMIN_URL to use admin-managed authentication.',
+  'Admin login required. Provide credentials to continue.':
+    'Admin login required. Provide credentials to continue.',
+  'Admin-managed login requires a provider API key.':
+    'Admin-managed login requires a provider API key.',
   'Authenticated successfully with {{authType}} credentials.':
     'Authenticated successfully with {{authType}} credentials.',
   'Invalid PAPERT_DEFAULT_AUTH_TYPE value: "{{value}}". Valid values are: {{validValues}}':

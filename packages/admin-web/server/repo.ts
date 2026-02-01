@@ -7,6 +7,7 @@ export interface ProviderConfig {
   apiKey?: string;
   baseUrl?: string;
   model?: string;
+  models?: string[];
 }
 
 export interface GroupRecord {

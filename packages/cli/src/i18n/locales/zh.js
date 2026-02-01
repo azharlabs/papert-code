@@ -696,8 +696,11 @@ export default {
   'Get started': '开始使用',
   'How would you like to authenticate for this project?':
     '您希望如何为此项目进行身份验证？',
+  'Admin-managed login (Papert Admin)':
+    '管理员托管登录（Papert 管理台）',
   'OpenAI API key is required to use OpenAI authentication.':
     '使用 OpenAI 认证需要 OpenAI API 密钥',
+  'OpenAI-compatible model': '兼容 OpenAI 的模型',
   'You must select an auth method to proceed. Press Ctrl+C again to exit.':
     '您必须选择认证方法才能继续。再次按 Ctrl+C 退出',
   '(Use Enter to Set Auth)': '（使用 Enter 设置认证）',
@@ -729,6 +732,12 @@ export default {
   'Waiting for auth... (Press ESC or CTRL+C to cancel)':
     '正在等待认证...（按 ESC 或 CTRL+C 取消）',
   'Failed to authenticate. Message: {{message}}': '认证失败。消息：{{message}}',
+  'Set PAPERT_ADMIN_URL to use admin-managed authentication.':
+    '请设置 PAPERT_ADMIN_URL 以使用管理员托管认证。',
+  'Admin login required. Provide credentials to continue.':
+    '需要管理员登录。请提供凭据以继续。',
+  'Admin-managed login requires a provider API key.':
+    '管理员托管登录需要提供 API 密钥。',
   'Authenticated successfully with {{authType}} credentials.':
     '使用 {{authType}} 凭据成功认证。',
   'Invalid PAPERT_DEFAULT_AUTH_TYPE value: "{{value}}". Valid values are: {{validValues}}':

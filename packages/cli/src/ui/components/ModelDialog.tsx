@@ -15,12 +15,14 @@ import {
   DEFAULT_GEMINI_FLASH_MODEL,
   DEFAULT_GEMINI_MODEL_AUTO,
   DEFAULT_GEMINI_FLASH_LITE_MODEL,
+  AuthType,
 } from '@papert-code/papert-code-core';
 import { useKeypress } from '../hooks/useKeypress.js';
 import { theme } from '../semantic-colors.js';
 import { DescriptiveRadioButtonSelect } from './shared/DescriptiveRadioButtonSelect.js';
 import { ConfigContext } from '../contexts/ConfigContext.js';
 import { t } from '../../i18n/index.js';
+import { getAvailableModelsForAuthType } from '../models/availableModels.js';
 
 interface ModelDialogProps {
   onClose: () => void;
@@ -29,6 +31,10 @@ interface ModelDialogProps {
 export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
   const config = useContext(ConfigContext);
   const [view, setView] = useState<'main' | 'manual'>('main');
+
+  const contentGeneratorConfig = config?.getContentGeneratorConfig();
+  const authType = contentGeneratorConfig?.authType;
+  const isOpenAI = authType === AuthType.USE_OPENAI;
 
   const preferredModel = config?.getModel() || DEFAULT_GEMINI_MODEL_AUTO;
   const manualModelSelected = useMemo(() => {
@@ -79,6 +85,18 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
     return list;
   }, [manualModelSelected, t]);
 
+  const openAIOptions = useMemo(() => {
+    if (!authType) {
+      return [];
+    }
+    return getAvailableModelsForAuthType(authType).map((model) => ({
+      value: model.id,
+      title: model.label,
+      description: model.description || t('OpenAI-compatible model'),
+      key: model.id,
+    }));
+  }, [authType, t]);
+
   const manualOptions = useMemo(
     () => [
       {
@@ -109,7 +127,11 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
     [],
   );
 
-  const options = view === 'main' ? mainOptions : manualOptions;
+  const options = isOpenAI
+    ? openAIOptions
+    : view === 'main'
+      ? mainOptions
+      : manualOptions;
 
   // Calculate the initial index based on the preferred model.
   const initialIndex = useMemo(() => {
@@ -117,17 +139,17 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
     if (idx !== -1) {
       return idx;
     }
-    if (view === 'main') {
+    if (view === 'main' && !isOpenAI) {
       const manualIdx = options.findIndex((o) => o.value === 'Manual');
       return manualIdx !== -1 ? manualIdx : 0;
     }
     return 0;
-  }, [preferredModel, options, view]);
+  }, [preferredModel, options, view, isOpenAI]);
 
   // Handle selection internally (Autonomous Dialog).
   const handleSelect = useCallback(
     (model: string) => {
-      if (model === 'Manual') {
+      if (!isOpenAI && model === 'Manual') {
         setView('manual');
         return;
       }
@@ -139,7 +161,7 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
       }
       onClose();
     },
-    [config, onClose],
+    [config, onClose, isOpenAI],
   );
 
   return (

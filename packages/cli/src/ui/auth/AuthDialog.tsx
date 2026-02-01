@@ -16,6 +16,11 @@ import { useUIState } from '../contexts/UIStateContext.js';
 import { useUIActions } from '../contexts/UIActionsContext.js';
 import { useSettings } from '../contexts/SettingsContext.js';
 import { t } from '../../i18n/index.js';
+import {
+  AdminQuotaError,
+  applyAdminSessionToEnv,
+  resolveAdminSession,
+} from '../../admin/adminClient.js';
 
 function parseDefaultAuthType(
   defaultAuthType: string | undefined,
@@ -35,11 +40,21 @@ export function AuthDialog(): React.JSX.Element {
   const settings = useSettings();
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const hasAdminUrl = Boolean(process.env['PAPERT_ADMIN_URL']);
   const items = [
+    ...(hasAdminUrl
+      ? [
+        {
+          key: 'admin-managed',
+          label: t('Admin-managed login (Papert Admin)'),
+          value: { authType: AuthType.USE_OPENAI, source: 'admin' as const },
+        },
+      ]
+      : []),
     {
       key: AuthType.USE_OPENAI,
       label: t('Custom models (OpenAI compatible APIs)'),
-      value: AuthType.USE_OPENAI,
+      value: { authType: AuthType.USE_OPENAI, source: 'openai' as const },
     },
   ];
 
@@ -48,12 +63,12 @@ export function AuthDialog(): React.JSX.Element {
     items.findIndex((item) => {
       // Priority 1: pendingAuthType
       if (pendingAuthType) {
-        return item.value === pendingAuthType;
+        return item.value.authType === pendingAuthType;
       }
 
       // Priority 2: settings.merged.security?.auth?.selectedType
       if (settings.merged.security?.auth?.selectedType) {
-        return item.value === settings.merged.security?.auth?.selectedType;
+        return item.value.authType === settings.merged.security?.auth?.selectedType;
       }
 
       // Priority 3: PAPERT_DEFAULT_AUTH_TYPE env var
@@ -61,17 +76,66 @@ export function AuthDialog(): React.JSX.Element {
         process.env['PAPERT_DEFAULT_AUTH_TYPE'],
       );
       if (defaultAuthType) {
-        return item.value === defaultAuthType;
+        return item.value.authType === defaultAuthType;
       }
 
-      // Priority 4: default to OpenAI
-      return item.value === AuthType.USE_OPENAI;
+      // Priority 4: default to admin when available, otherwise OpenAI
+      if (hasAdminUrl) {
+        return item.value.source === 'admin';
+      }
+      return item.value.authType === AuthType.USE_OPENAI;
     }),
   );
 
-  const handleAuthSelect = async (authMethod: AuthType) => {
+  const handleAuthSelect = async (selection: {
+    authType: AuthType;
+    source: 'admin' | 'openai';
+  }) => {
     setErrorMessage(null);
-    await onAuthSelect(authMethod, SettingScope.User);
+    if (selection.source === 'admin') {
+      if (!process.env['PAPERT_ADMIN_URL']) {
+        setErrorMessage(
+          t('Set PAPERT_ADMIN_URL to use admin-managed authentication.'),
+        );
+        return;
+      }
+      try {
+        const session = await resolveAdminSession();
+        if (!session) {
+          setErrorMessage(
+            t('Admin login required. Provide credentials to continue.'),
+          );
+          return;
+        }
+        if (!session.provider?.apiKey) {
+          setErrorMessage(
+            t('Admin-managed login requires a provider API key.'),
+          );
+          return;
+        }
+        applyAdminSessionToEnv(session);
+        const adminModel =
+          session.provider.model || session.provider.models?.[0];
+        await onAuthSelect(selection.authType, SettingScope.User, {
+          apiKey: session.provider.apiKey,
+          baseUrl: session.provider.baseUrl,
+          model: adminModel,
+        });
+        return;
+      } catch (err) {
+        if (err instanceof AdminQuotaError) {
+          setErrorMessage(err.message);
+          return;
+        }
+        setErrorMessage(
+          t('Failed to authenticate. Message: {{message}}', {
+            message: err instanceof Error ? err.message : String(err),
+          }),
+        );
+        return;
+      }
+    }
+    await onAuthSelect(selection.authType, SettingScope.User);
   };
 
   useKeypress(

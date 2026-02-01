@@ -83,6 +83,21 @@ export function getOpenAIAvailableModelFromEnv(): AvailableModel | null {
   return id ? { id, label: id } : null;
 }
 
+function getAdminManagedModels(): AvailableModel[] | null {
+  const raw = process.env['PAPERT_ADMIN_MODELS'];
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as string[];
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    return parsed
+      .map((id) => id.trim())
+      .filter(Boolean)
+      .map((id) => ({ id, label: id }));
+  } catch {
+    return null;
+  }
+}
+
 export function getAvailableModelsForAuthType(
   authType: AuthType,
 ): AvailableModel[] {
@@ -90,6 +105,10 @@ export function getAvailableModelsForAuthType(
     case AuthType.PAPERT_OAUTH:
       return AVAILABLE_MODELS_PAPERT;
     case AuthType.USE_OPENAI: {
+      const adminModels = getAdminManagedModels();
+      if (adminModels) {
+        return adminModels;
+      }
       const openAIModel = getOpenAIAvailableModelFromEnv();
       const registryModels = modelRegistry
         .getModelsForAuthType(AuthType.USE_OPENAI)

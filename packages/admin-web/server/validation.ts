@@ -28,6 +28,7 @@ export const ProviderConfigSchema = z
     apiKey: z.string().optional(),
     baseUrl: z.string().optional(),
     model: z.string().optional(),
+    models: z.array(z.string().min(1)).optional(),
   })
   .strict();
 

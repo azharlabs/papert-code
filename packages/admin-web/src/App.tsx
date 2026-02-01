@@ -209,6 +209,10 @@ export function App() {
 
   const handleCreateUser = async () => {
     if (!token || !userDraft || !newUserPassword) return;
+    if (newUserPassword.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -236,6 +240,10 @@ export function App() {
 
   const handleSaveUser = async () => {
     if (!token || !userDraft) return;
+    if (newUserPassword && newUserPassword.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -502,8 +510,12 @@ export function App() {
               type="password"
               value={newUserPassword}
               onChange={(e) => setNewUserPassword(e.target.value)}
+              minLength={8}
               placeholder={userDraft?.id ? 'Leave blank to keep current' : 'Set initial password'}
             />
+            {newUserPassword && newUserPassword.length < 8 && (
+              <span className="hint error">Password must be at least 8 characters.</span>
+            )}
           </label>
           {userDraft && (
             <>
@@ -568,7 +580,11 @@ export function App() {
                 </button>
               </>
             ) : (
-              <button className="primary" onClick={handleCreateUser}>
+              <button
+                className="primary"
+                onClick={handleCreateUser}
+                disabled={!newUserPassword || newUserPassword.length < 8}
+              >
                 Create user
               </button>
             )}
@@ -729,11 +745,12 @@ function PolicyEditor({ controls, onChange }: PolicyEditorProps) {
 }
 
 interface ProviderEditorProps {
-  provider: { apiKey?: string; baseUrl?: string; model?: string };
-  onChange: (next: { apiKey?: string; baseUrl?: string; model?: string }) => void;
+  provider: { apiKey?: string; baseUrl?: string; model?: string; models?: string[] };
+  onChange: (next: { apiKey?: string; baseUrl?: string; model?: string; models?: string[] }) => void;
 }
 
 function ProviderEditor({ provider, onChange }: ProviderEditorProps) {
+  const modelsValue = (provider.models || []).join(', ');
   return (
     <div className="policy">
       <label className="field">
@@ -755,6 +772,21 @@ function ProviderEditor({ provider, onChange }: ProviderEditorProps) {
         <input
           value={provider.model ?? ''}
           onChange={(e) => onChange({ ...provider, model: e.target.value })}
+        />
+      </label>
+      <label className="field">
+        <span>Available models (comma-separated)</span>
+        <input
+          value={modelsValue}
+          onChange={(e) =>
+            onChange({
+              ...provider,
+              models: e.target.value
+                .split(',')
+                .map((value) => value.trim())
+                .filter(Boolean),
+            })
+          }
         />
       </label>
     </div>
