@@ -13,6 +13,8 @@ import type {
   LongRunningOperationResponse,
   OnboardUserRequest,
   SetCodeAssistGlobalUserSettingRequest,
+  FetchAdminControlsRequest,
+  FetchAdminControlsResponse,
   ClientMetadata,
   RetrieveUserQuotaRequest,
   RetrieveUserQuotaResponse,
@@ -177,6 +179,15 @@ export class CodeAssistServer implements ContentGenerator {
         throw e;
       }
     }
+  }
+
+  async fetchAdminControls(
+    req: FetchAdminControlsRequest,
+  ): Promise<FetchAdminControlsResponse> {
+    return this.requestPost<FetchAdminControlsResponse>(
+      'fetchAdminControls',
+      req,
+    );
   }
 
   async getCodeAssistGlobalUserSetting(): Promise<CodeAssistGlobalUserSettingResponse> {

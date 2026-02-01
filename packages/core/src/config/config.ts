@@ -117,6 +117,7 @@ import { HookSystem } from '../hooks/index.js';
 import { PolicyEngine } from '../policy/policy-engine.js';
 import type { PolicyEngineConfig } from '../policy/types.js';
 import type { SafetyCheckerRule } from '../policy/types.js';
+import type { FetchAdminControlsResponse } from '../code_assist/types.js';
 import { CheckerRunner } from '../safety/checker-runner.js';
 import { CheckerRegistry } from '../safety/registry.js';
 import { ContextBuilder } from '../safety/context-builder.js';
@@ -388,6 +389,7 @@ export interface ConfigParameters {
   policyEngineConfig?: PolicyEngineConfig;
   safetyCheckersPath?: string;
   safetyCheckTimeoutMs?: number;
+  remoteAdminSettings?: FetchAdminControlsResponse;
   useModelRouter?: boolean;
 }
 
@@ -537,6 +539,7 @@ export class Config {
   private readonly policyEngine: PolicyEngine;
   private readonly safetyCheckerRules: SafetyCheckerRule[];
   private readonly safetyCheckerRunner?: CheckerRunner;
+  private remoteAdminSettings?: FetchAdminControlsResponse;
   private readonly messageBus: MessageBus;
   private hookSystem?: HookSystem;
   private pluginSystem?: import('../plugins/pluginSystem.js').PluginSystem;
@@ -688,6 +691,7 @@ export class Config {
       allowHooks: this.enableHooks,
     });
     this.messageBus = new MessageBus(this.policyEngine, this.debugMode);
+    this.remoteAdminSettings = params.remoteAdminSettings;
     this.safetyCheckerRules = (
       params.policyEngineConfig?.checkers ?? []
     ).slice();
@@ -1058,11 +1062,11 @@ export class Config {
   }
 
   getMcpServerCommand(): string | undefined {
-    return this.mcpServerCommand;
+    return this.isAdminMcpEnabled() ? this.mcpServerCommand : undefined;
   }
 
   getMcpServers(): Record<string, MCPServerConfig> | undefined {
-    return this.mcpServers;
+    return this.isAdminMcpEnabled() ? this.mcpServers : undefined;
   }
 
   addMcpServers(servers: Record<string, MCPServerConfig>): void {
@@ -1329,11 +1333,11 @@ export class Config {
   }
 
   getExtensions(): GeminiCLIExtension[] {
-    return this._extensions;
+    return this.isAdminExtensionsEnabled() ? this._extensions : [];
   }
 
   getSkills(): GeminiCLISkill[] {
-    return this._skills;
+    return this.isAdminSkillsEnabled() ? this._skills : [];
   }
 
   getBlockedMcpServers(): Array<{ name: string; extensionName: string }> {
@@ -1506,7 +1510,7 @@ export class Config {
   }
 
   getEnablePlugins(): boolean {
-    return this.enablePlugins;
+    return this.isAdminExtensionsEnabled() ? this.enablePlugins : false;
   }
 
   getPlugins(): string[] {
@@ -1514,7 +1518,7 @@ export class Config {
   }
 
   getEnableNpmPlugins(): boolean {
-    return this.enableNpmPlugins;
+    return this.isAdminExtensionsEnabled() ? this.enableNpmPlugins : false;
   }
 
   getAutoInstallNpmPlugins(): boolean {
@@ -1594,12 +1598,38 @@ export class Config {
     return this.policyEngine;
   }
 
+  getRemoteAdminSettings(): FetchAdminControlsResponse | undefined {
+    return this.remoteAdminSettings;
+  }
+
+  setRemoteAdminSettings(settings: FetchAdminControlsResponse): void {
+    this.remoteAdminSettings = settings;
+  }
+
   getSafetyCheckerRules(): SafetyCheckerRule[] {
     return this.safetyCheckerRules;
   }
 
   getSafetyCheckerRunner(): CheckerRunner | undefined {
     return this.safetyCheckerRunner;
+  }
+
+  private isAdminMcpEnabled(): boolean {
+    return this.remoteAdminSettings?.mcpSetting?.mcpEnabled ?? true;
+  }
+
+  private isAdminExtensionsEnabled(): boolean {
+    return (
+      this.remoteAdminSettings?.cliFeatureSetting?.extensionsSetting
+        ?.extensionsEnabled ?? true
+    );
+  }
+
+  private isAdminSkillsEnabled(): boolean {
+    return (
+      this.remoteAdminSettings?.cliFeatureSetting?.unmanagedCapabilitiesEnabled ??
+      true
+    );
   }
 
   getTruncateToolOutputThreshold(): number {

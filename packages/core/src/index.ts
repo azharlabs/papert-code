@@ -38,6 +38,7 @@ export * from './core/nonInteractiveToolExecutor.js';
 export * from './fallback/types.js';
 
 export * from './code_assist/codeAssist.js';
+export * from './code_assist/admin/admin_controls.js';
 export * from './code_assist/oauth2.js';
 export * from './papert/papertOAuth2.js';
 export * from './code_assist/server.js';

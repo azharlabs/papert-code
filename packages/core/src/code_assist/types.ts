@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { z } from 'zod';
+
 export interface ClientMetadata {
   ideType?: ClientMetadataIdeType;
   ideVersion?: string;
@@ -277,3 +279,32 @@ export interface ConversationInteraction {
   language?: string;
   isAgentic?: boolean;
 }
+
+export interface FetchAdminControlsRequest {
+  project: string;
+}
+
+export type FetchAdminControlsResponse = z.infer<
+  typeof FetchAdminControlsResponseSchema
+>;
+
+const ExtensionsSettingSchema = z.object({
+  extensionsEnabled: z.boolean().optional(),
+});
+
+const CliFeatureSettingSchema = z.object({
+  extensionsSetting: ExtensionsSettingSchema.optional(),
+  unmanagedCapabilitiesEnabled: z.boolean().optional(),
+});
+
+const McpSettingSchema = z.object({
+  mcpEnabled: z.boolean().optional(),
+  overrideMcpConfigJson: z.string().optional(),
+});
+
+export const FetchAdminControlsResponseSchema = z.object({
+  secureModeEnabled: z.boolean().optional(),
+  strictModeDisabled: z.boolean().optional(),
+  mcpSetting: McpSettingSchema.optional(),
+  cliFeatureSetting: CliFeatureSettingSchema.optional(),
+});

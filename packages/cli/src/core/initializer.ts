@@ -9,6 +9,8 @@ import {
   IdeConnectionEvent,
   IdeConnectionType,
   logIdeConnection,
+  fetchAdminControls,
+  getCodeAssistServer,
   type Config,
 } from '@papert-code/papert-code-core';
 import { type LoadedSettings, SettingScope } from '../config/settings.js';
@@ -43,6 +45,23 @@ export async function initializeApp(
 
   const authType = settings.merged.security?.auth?.selectedType;
   const authError = await performInitialAuth(config, authType);
+
+  if (!authError) {
+    const server = getCodeAssistServer(config);
+    if (server) {
+      const adminSettings = await fetchAdminControls(
+        server,
+        config.getRemoteAdminSettings(),
+        true,
+        (settings) => {
+          config.setRemoteAdminSettings(settings);
+        },
+      );
+      if (adminSettings && Object.keys(adminSettings).length > 0) {
+        config.setRemoteAdminSettings(adminSettings);
+      }
+    }
+  }
 
   // Fallback to user select when initial authentication fails
   if (authError) {
