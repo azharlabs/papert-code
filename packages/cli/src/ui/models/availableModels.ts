@@ -4,7 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AuthType, DEFAULT_PAPERT_MODEL } from '@papert-code/papert-code-core';
+import {
+  AuthType,
+  DEFAULT_PAPERT_MODEL,
+  DEFAULT_MODEL_PROVIDERS,
+  DEFAULT_PAPERT_VISION_MODEL,
+  ModelRegistry,
+} from '@papert-code/papert-code-core';
 import { t } from '../../i18n/index.js';
 
 export type AvailableModel = {
@@ -14,30 +20,47 @@ export type AvailableModel = {
   isVision?: boolean;
 };
 
-export const MAINLINE_VLM = 'vision-model';
+export const MAINLINE_VLM = DEFAULT_PAPERT_VISION_MODEL;
 export const MAINLINE_CODER = DEFAULT_PAPERT_MODEL;
 
-export const AVAILABLE_MODELS_PAPERT: AvailableModel[] = [
-  {
-    id: MAINLINE_CODER,
-    label: MAINLINE_CODER,
-    get description() {
-      return t(
-        'The latest Papert Coder model from Alibaba Cloud ModelStudio (version: papert3-coder-plus-2025-09-23)',
-      );
-    },
-  },
-  {
-    id: MAINLINE_VLM,
-    label: MAINLINE_VLM,
-    get description() {
-      return t(
-        'The latest Papert Vision model from Alibaba Cloud ModelStudio (version: papert3-vl-plus-2025-09-23)',
-      );
-    },
-    isVision: true,
-  },
-];
+const modelRegistry = new ModelRegistry(DEFAULT_MODEL_PROVIDERS);
+
+function toAvailableModel(model: {
+  id: string;
+  label: string;
+  description?: string;
+  isVision?: boolean;
+}): AvailableModel {
+  let description = model.description;
+  if (model.id === MAINLINE_CODER) {
+    description = t(
+      'The latest Papert Coder model from Alibaba Cloud ModelStudio (version: papert3-coder-plus-2025-09-23)',
+    );
+  }
+  if (model.id === MAINLINE_VLM) {
+    description = t(
+      'The latest Papert Vision model from Alibaba Cloud ModelStudio (version: papert3-vl-plus-2025-09-23)',
+    );
+  }
+  return {
+    id: model.id,
+    label: model.label,
+    description,
+    isVision: model.isVision,
+  };
+}
+
+export const AVAILABLE_MODELS_PAPERT: AvailableModel[] =
+  modelRegistry
+    .getModelsForAuthType(AuthType.PAPERT_OAUTH)
+    .map((model) =>
+      toAvailableModel({
+        id: model.id,
+        label: model.label,
+        description: model.description,
+        isVision: model.isVision,
+      }),
+    );
 
 /**
  * Get available Papert models filtered by vision model preview setting
@@ -68,7 +91,17 @@ export function getAvailableModelsForAuthType(
       return AVAILABLE_MODELS_PAPERT;
     case AuthType.USE_OPENAI: {
       const openAIModel = getOpenAIAvailableModelFromEnv();
-      return openAIModel ? [openAIModel] : [];
+      const registryModels = modelRegistry
+        .getModelsForAuthType(AuthType.USE_OPENAI)
+        .map((model) =>
+          toAvailableModel({
+            id: model.id,
+            label: model.label,
+            description: model.description,
+            isVision: model.isVision,
+          }),
+        );
+      return openAIModel ? [openAIModel] : registryModels;
     }
     default:
       // For other auth types, return empty array for now

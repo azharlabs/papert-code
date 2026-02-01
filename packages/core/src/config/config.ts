@@ -122,6 +122,9 @@ import { CheckerRunner } from '../safety/checker-runner.js';
 import { CheckerRegistry } from '../safety/registry.js';
 import { ContextBuilder } from '../safety/context-builder.js';
 import { SkillManager } from '../skills/skillManager.js';
+import { ModelRegistry } from '../models/modelRegistry.js';
+import { DEFAULT_MODEL_PROVIDERS } from '../models/defaultModels.js';
+import type { ModelProvidersConfig } from '../models/types.js';
 import { MessageBus } from '../confirmation-bus/message-bus.js';
 import { ModelRouterService } from '../routing/modelRouterService.js';
 import type { FormatterSettings } from '../format/index.js';
@@ -391,6 +394,7 @@ export interface ConfigParameters {
   safetyCheckersPath?: string;
   safetyCheckTimeoutMs?: number;
   remoteAdminSettings?: FetchAdminControlsResponse;
+  modelProviders?: ModelProvidersConfig;
   useModelRouter?: boolean;
 }
 
@@ -542,6 +546,7 @@ export class Config {
   private readonly safetyCheckerRunner?: CheckerRunner;
   private remoteAdminSettings?: FetchAdminControlsResponse;
   private skillManager?: SkillManager;
+  private modelRegistry: ModelRegistry;
   private readonly messageBus: MessageBus;
   private hookSystem?: HookSystem;
   private pluginSystem?: import('../plugins/pluginSystem.js').PluginSystem;
@@ -715,6 +720,9 @@ export class Config {
     this.useModelRouter = params.useModelRouter ?? true;
     this.extensionManagement = params.extensionManagement ?? true;
     this.storage = new Storage(this.targetDir);
+    this.modelRegistry = new ModelRegistry(
+      params.modelProviders ?? DEFAULT_MODEL_PROVIDERS,
+    );
     this.vlmSwitchMode = params.vlmSwitchMode;
     this.inputFormat = params.inputFormat ?? InputFormat.TEXT;
     this.fileExclusions = new FileExclusions(this);
@@ -1536,6 +1544,10 @@ export class Config {
 
   getSkillManager(): SkillManager | undefined {
     return this.skillManager;
+  }
+
+  getModelRegistry(): ModelRegistry {
+    return this.modelRegistry;
   }
 
   async emitPluginSessionStart(source: string): Promise<void> {

@@ -45,6 +45,15 @@ export * from './code_assist/server.js';
 export * from './code_assist/types.js';
 export * from './skills/skillManager.js';
 export * from './skills/skillLoader.js';
+export * from './models/modelRegistry.js';
+export * from './models/defaultModels.js';
+export type {
+  ModelCapabilities,
+  ModelProvidersConfig,
+  AvailableModel as RegistryAvailableModel,
+  ModelConfig as ModelRegistryConfig,
+  ResolvedModelConfig as RegistryResolvedModelConfig,
+} from './models/types.js';
 
 // Export utilities
 export * from './utils/paths.js';
