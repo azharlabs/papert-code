@@ -63,6 +63,7 @@ import { getUserStartupWarnings } from './utils/userStartupWarnings.js';
 import { computeWindowTitle } from './utils/windowTitle.js';
 import { validateNonInteractiveAuth } from './validateNonInterActiveAuth.js';
 import { showResumeSessionPicker } from './ui/components/ResumeSessionPicker.js';
+import { hasDeferredCommand, runDeferredCommand } from './deferred.js';
 
 export function validateDnsResolutionOrder(
   order: string | undefined,
@@ -408,6 +409,14 @@ export async function main() {
     let initializationResult: InitializationResult | undefined;
     if (inputFormat !== InputFormat.STREAM_JSON) {
       initializationResult = await initializeApp(config, settings);
+    }
+
+    if (hasDeferredCommand()) {
+      if (!initializationResult) {
+        initializationResult = await initializeApp(config, settings);
+      }
+      await runDeferredCommand(config);
+      return;
     }
 
     if (

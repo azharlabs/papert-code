@@ -14,21 +14,22 @@ import { enableCommand } from './skills/enable.js';
 import { linkCommand } from './skills/link.js';
 import { newCommand } from './skills/new.js';
 import { validateCommand } from './skills/validate.js';
+import { defer } from '../deferred.js';
 
 export const skillsCommand: CommandModule = {
   command: 'skills <command>',
   describe: 'Manage Papert Code skills.',
   builder: (yargs) =>
     yargs
-      .command(installCommand)
-      .command(uninstallCommand)
-      .command(listCommand)
-      .command(updateCommand)
-      .command(disableCommand)
-      .command(enableCommand)
-      .command(linkCommand)
-      .command(newCommand)
-      .command(validateCommand)
+      .command(defer(installCommand, 'skills'))
+      .command(defer(uninstallCommand, 'skills'))
+      .command(defer(listCommand, 'skills'))
+      .command(defer(updateCommand, 'skills'))
+      .command(defer(disableCommand, 'skills'))
+      .command(defer(enableCommand, 'skills'))
+      .command(defer(linkCommand, 'skills'))
+      .command(defer(newCommand, 'skills'))
+      .command(defer(validateCommand, 'skills'))
       .demandCommand(),
   handler: () => { },
 };

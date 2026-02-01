@@ -62,6 +62,7 @@ import { loadSandboxConfig } from './sandboxConfig.js';
 import { appEvents } from '../utils/events.js';
 import { mcpCommand } from '../commands/mcp.js';
 import { getDefaultMcpServers } from './defaultMcpServers.js';
+import { hasDeferredCommand } from '../deferred.js';
 
 import { isWorkspaceTrusted } from './trustedFolders.js';
 import type { ExtensionEnablementManager } from './extensions/extensionEnablement.js';
@@ -616,6 +617,10 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
       cmd === 'schedule' &&
       (scheduleSub === 'start' ||
         (scheduleSub === 'webhook' && scheduleAction === 'start'));
+
+    if (hasDeferredCommand()) {
+      return result as unknown as CliArgs;
+    }
 
     if (
       cmd === 'mcp' ||
