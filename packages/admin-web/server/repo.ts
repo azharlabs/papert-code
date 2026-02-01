@@ -119,6 +119,13 @@ export class AdminRepo {
     return rows.map((row) => this.mapGroup(row));
   }
 
+  getGroupByName(name: string): GroupRecord | null {
+    const row = this.db
+      .prepare(`SELECT * FROM groups WHERE name = ? LIMIT 1`)
+      .get(name);
+    return row ? this.mapGroup(row) : null;
+  }
+
   getGroup(id: string): GroupRecord | null {
     const row = this.db.prepare(`SELECT * FROM groups WHERE id = ?`).get(id);
     return row ? this.mapGroup(row) : null;

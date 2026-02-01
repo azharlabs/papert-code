@@ -48,6 +48,24 @@ if (!process.env['PAPERT_ADMIN_ENC_KEY']) {
   );
 }
 
+const DEFAULT_GROUP_NAME = 'Default';
+
+function ensureDefaultGroup(): { id: string } | null {
+  const existing = repo.getGroupByName(DEFAULT_GROUP_NAME);
+  if (existing) return existing;
+  const groups = repo.listGroups();
+  if (groups.length > 0) {
+    return null;
+  }
+  return repo.createGroup({
+    name: DEFAULT_GROUP_NAME,
+    controls: {},
+    provider: {},
+    quotaMonthly: null,
+    quotaDaily: null,
+  });
+}
+
 async function ensureBootstrapAdmin(): Promise<void> {
   const bootstrapEmail = process.env['PAPERT_ADMIN_BOOTSTRAP_EMAIL'];
   const bootstrapPassword = process.env['PAPERT_ADMIN_BOOTSTRAP_PASSWORD'];
@@ -56,18 +74,29 @@ async function ensureBootstrapAdmin(): Promise<void> {
   const existing = repo.listUsers();
   if (existing.length > 0) return;
 
+  const defaultGroup = ensureDefaultGroup();
   const passwordHash = await hashPassword(bootstrapPassword);
   repo.createUser({
     email: bootstrapEmail,
     passwordHash,
     role: 'admin',
-    groupId: null,
+    groupId: defaultGroup?.id ?? null,
     selfManaged: false,
     provider: {},
     controls: {},
     active: true,
   });
   console.log('[admin-web] Bootstrapped admin user.');
+}
+
+function ensureDefaultGroupAssignment(): void {
+  const defaultGroup = repo.getGroupByName(DEFAULT_GROUP_NAME);
+  if (!defaultGroup) return;
+  const users = repo.listUsers();
+  if (users.length !== 1) return;
+  const user = users[0];
+  if (user.role !== 'admin' || user.groupId) return;
+  repo.updateUser(user.id, { groupId: defaultGroup.id });
 }
 
 function readAdminHeader(req: express.Request): string | undefined {
@@ -494,6 +523,8 @@ app.get('/api/v1/admin/sessions/:id', requireAuth, requireAllowlist, requireAdmi
 
 ensureBootstrapAdmin()
   .then(() => {
+    ensureDefaultGroup();
+    ensureDefaultGroupAssignment();
     app.listen(env.port, () => {
       console.log(`[admin-web] Admin server listening on :${env.port}`);
     });
