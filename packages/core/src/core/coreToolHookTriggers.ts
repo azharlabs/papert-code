@@ -28,6 +28,10 @@ import type { ShellExecutionConfig } from '../index.js';
 import type { AnyToolInvocation } from '../tools/tools.js';
 import { ShellToolInvocation } from '../tools/shell.js';
 import type { PluginSystem } from '../plugins/pluginSystem.js';
+import type { Config } from '../config/config.js';
+import { SafetyCheckDecision } from '../safety/protocol.js';
+import { stableStringify } from '../policy/stable-stringify.js';
+import type { SafetyCheckerRule } from '../policy/types.js';
 
 /**
  * Serializable representation of tool confirmation details for hooks.
@@ -272,6 +276,7 @@ export async function executeToolWithHooks(
   shellExecutionConfig?: ShellExecutionConfig,
   setPidCallback?: (pid: number) => void,
   pluginSystem?: PluginSystem,
+  config?: Config,
 ): Promise<ToolResult> {
   const toolInput = (invocation.params || {}) as Record<string, unknown>;
   let inputWasModified = false;
@@ -341,6 +346,15 @@ export async function executeToolWithHooks(
         }
       }
     }
+  }
+
+  const safetyResult = await runSafetyChecks(
+    config,
+    toolName,
+    (invocation.params ?? {}) as Record<string, unknown>,
+  );
+  if (safetyResult) {
+    return safetyResult;
   }
 
   if (pluginSystem) {
@@ -470,4 +484,99 @@ export async function executeToolWithHooks(
   }
 
   return toolResult;
+}
+
+async function runSafetyChecks(
+  config: Config | undefined,
+  toolName: string,
+  toolArgs: Record<string, unknown>,
+): Promise<ToolResult | null> {
+  if (!config) return null;
+
+  const runner = config.getSafetyCheckerRunner();
+  const rules = config.getSafetyCheckerRules();
+  if (!runner || rules.length === 0) return null;
+
+  const argsString = rules.some((rule) => rule.argsPattern)
+    ? stableStringify(toolArgs)
+    : undefined;
+  const approvalMode = config.getApprovalMode();
+
+  for (const rule of rules) {
+    if (!safetyRuleMatches(rule, toolName, argsString, approvalMode)) {
+      continue;
+    }
+
+    const toolCall = { name: toolName, args: toolArgs };
+    const result = await runner.runChecker(toolCall, rule.checker);
+
+    if (result.decision === SafetyCheckDecision.ALLOW) {
+      continue;
+    }
+
+    const reason =
+      result.reason ??
+      `Safety checker "${rule.checker.name}" blocked execution.`;
+
+    if (
+      result.decision === SafetyCheckDecision.ASK_USER &&
+      !config.isInteractive()
+    ) {
+      return {
+        llmContent: `Safety check requires user confirmation, but this session is non-interactive: ${reason}`,
+        returnDisplay: `Safety check requires user confirmation, but this session is non-interactive: ${reason}`,
+        error: {
+          type: ToolErrorType.EXECUTION_DENIED,
+          message: reason,
+        },
+      };
+    }
+
+    return {
+      llmContent:
+        result.decision === SafetyCheckDecision.ASK_USER
+          ? `Safety check requires user confirmation: ${reason}`
+          : `Tool execution blocked by safety checker: ${reason}`,
+      returnDisplay:
+        result.decision === SafetyCheckDecision.ASK_USER
+          ? `Safety check requires user confirmation: ${reason}`
+          : `Tool execution blocked by safety checker: ${reason}`,
+      error: {
+        type: ToolErrorType.EXECUTION_DENIED,
+        message: reason,
+      },
+    };
+  }
+
+  return null;
+}
+
+function safetyRuleMatches(
+  rule: SafetyCheckerRule,
+  toolName: string,
+  argsString: string | undefined,
+  approvalMode: string,
+): boolean {
+  if (rule.modes && rule.modes.length > 0) {
+    if (!rule.modes.includes(approvalMode as (typeof rule.modes)[number])) {
+      return false;
+    }
+  }
+
+  if (rule.toolName) {
+    if (rule.toolName.endsWith('__*')) {
+      const prefix = rule.toolName.slice(0, -3);
+      if (!toolName.startsWith(`${prefix}__`)) {
+        return false;
+      }
+    } else if (rule.toolName !== toolName) {
+      return false;
+    }
+  }
+
+  if (rule.argsPattern && argsString) {
+    return rule.argsPattern.test(argsString);
+  }
+
+  return !rule.argsPattern;
 }

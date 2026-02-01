@@ -74,13 +74,14 @@ export function createPolicyEngineConfig(
   defaultPoliciesDir?: string,
 ): PolicyEngineConfig {
   const policyDirs = getPolicyDirectories(defaultPoliciesDir);
-  const { rules: tomlRules } = loadPoliciesFromToml(
+  const { rules: tomlRules, checkers: tomlCheckers } = loadPoliciesFromToml(
     approvalMode,
     policyDirs,
     (dir) => getPolicyTier(dir, defaultPoliciesDir),
   );
 
   const rules: PolicyRule[] = [...tomlRules];
+  const checkers = [...tomlCheckers];
 
   if (settings.mcp?.excluded) {
     for (const serverName of settings.mcp.excluded) {
@@ -128,6 +129,7 @@ export function createPolicyEngineConfig(
 
   return {
     rules,
+    checkers,
     defaultDecision: PolicyDecision.ASK_USER,
   };
 }

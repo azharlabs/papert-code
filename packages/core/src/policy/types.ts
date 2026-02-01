@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import type { SafetyCheckInput } from '../safety/protocol.js';
+
 export enum PolicyDecision {
   ALLOW = 'allow',
   DENY = 'deny',
@@ -40,6 +42,42 @@ export enum ApprovalMode {
   DEFAULT = 'default',
   AUTO_EDIT = 'autoEdit',
   YOLO = 'yolo',
+  PLAN = 'plan',
+}
+
+export interface AllowedPathConfig {
+  included_args?: string[];
+  excluded_args?: string[];
+}
+
+export interface ExternalCheckerConfig {
+  type: 'external';
+  name: string;
+  config?: unknown;
+  required_context?: Array<keyof SafetyCheckInput['context']>;
+}
+
+export enum InProcessCheckerType {
+  ALLOWED_PATH = 'allowed-path',
+}
+
+export interface InProcessCheckerConfig {
+  type: 'in-process';
+  name: InProcessCheckerType;
+  config?: AllowedPathConfig;
+  required_context?: Array<keyof SafetyCheckInput['context']>;
+}
+
+export type SafetyCheckerConfig =
+  | ExternalCheckerConfig
+  | InProcessCheckerConfig;
+
+export interface SafetyCheckerRule {
+  toolName?: string;
+  argsPattern?: RegExp;
+  priority?: number;
+  checker: SafetyCheckerConfig;
+  modes?: ApprovalMode[];
 }
 
 export interface PolicyRule {
@@ -56,6 +94,7 @@ export interface HookExecutionContext {
 
 export interface PolicyEngineConfig {
   rules?: PolicyRule[];
+  checkers?: SafetyCheckerRule[];
   defaultDecision?: PolicyDecision;
   nonInteractive?: boolean;
   allowHooks?: boolean;

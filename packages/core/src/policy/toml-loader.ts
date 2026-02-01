@@ -4,7 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { type ApprovalMode, type PolicyRule, PolicyDecision } from './types.js';
+import {
+  type ApprovalMode,
+  type PolicyRule,
+  PolicyDecision,
+  type SafetyCheckerRule,
+  InProcessCheckerType,
+  type SafetyCheckerConfig,
+} from './types.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import toml from '@iarna/toml';
@@ -19,6 +26,7 @@ export interface PolicyFileError {
 
 export interface PolicyLoadResult {
   rules: PolicyRule[];
+  checkers: SafetyCheckerRule[];
   errors: PolicyFileError[];
 }
 
@@ -34,6 +42,7 @@ export function loadPoliciesFromToml(
   getPolicyTier: (dir: string) => number,
 ): PolicyLoadResult {
   const rules: PolicyRule[] = [];
+  const checkers: SafetyCheckerRule[] = [];
   const errors: PolicyFileError[] = [];
 
   for (const dir of policyDirs) {
@@ -65,6 +74,9 @@ export function loadPoliciesFromToml(
 
       const rawRules = Array.isArray((parsed as any).rule)
         ? (parsed as any).rule
+        : [];
+      const rawCheckers = Array.isArray((parsed as any).safety_checker)
+        ? (parsed as any).safety_checker
         : [];
 
       for (const rawRule of rawRules) {
@@ -110,11 +122,72 @@ export function loadPoliciesFromToml(
           });
         }
       }
+
+      for (const rawChecker of rawCheckers) {
+        try {
+          const toolNames = Array.isArray(rawChecker.toolName)
+            ? rawChecker.toolName
+            : rawChecker.toolName
+              ? [rawChecker.toolName]
+              : [undefined];
+
+          const checkerConfig = rawChecker.checker as SafetyCheckerConfig;
+          if (!checkerConfig || typeof checkerConfig !== 'object') {
+            throw new Error('Missing checker configuration');
+          }
+
+          if (
+            checkerConfig.type === 'in-process' &&
+            checkerConfig.name &&
+            !Object.values(InProcessCheckerType).includes(
+              checkerConfig.name as InProcessCheckerType,
+            )
+          ) {
+            throw new Error(
+              `Invalid in-process checker name "${checkerConfig.name}"`,
+            );
+          }
+
+          for (const toolName of toolNames) {
+            const priority = tier + (Number(rawChecker.priority) || 0) / 1000;
+
+            if (
+              rawChecker.modes &&
+              Array.isArray(rawChecker.modes) &&
+              !rawChecker.modes.includes(String(approvalMode))
+            ) {
+              continue;
+            }
+
+            let argsPattern: RegExp | undefined;
+            if (rawChecker.argsPattern) {
+              argsPattern = new RegExp(String(rawChecker.argsPattern));
+            }
+
+            checkers.push({
+              toolName,
+              argsPattern,
+              priority,
+              checker: checkerConfig,
+              modes: rawChecker.modes as ApprovalMode[] | undefined,
+            });
+          }
+        } catch (error) {
+          errors.push({
+            filePath,
+            fileName,
+            tier: tierName,
+            errorType: 'checker_validation',
+            message: (error as Error).message,
+          });
+        }
+      }
     }
   }
 
   // Sort descending by priority
   rules.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+  checkers.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
 
-  return { rules, errors };
+  return { rules, checkers, errors };
 }

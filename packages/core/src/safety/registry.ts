@@ -1,0 +1,72 @@
+/**
+ * @license
+ * * Copyright 2026 Papert-code
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import * as path from 'node:path';
+import * as fs from 'node:fs';
+import { type InProcessChecker, AllowedPathChecker } from './built-in.js';
+import { InProcessCheckerType } from '../policy/types.js';
+
+export class CheckerRegistry {
+  private static readonly BUILT_IN_EXTERNAL_CHECKERS = new Map<string, string>(
+    [],
+  );
+
+  private static readonly BUILT_IN_IN_PROCESS_CHECKERS = new Map<
+    string,
+    InProcessChecker
+  >([[InProcessCheckerType.ALLOWED_PATH, new AllowedPathChecker()]]);
+
+  private static readonly VALID_NAME_PATTERN = /^[a-z0-9-]+$/;
+
+  constructor(private readonly checkersPath: string) {}
+
+  resolveExternal(name: string): string {
+    if (!CheckerRegistry.isValidCheckerName(name)) {
+      throw new Error(
+        `Invalid checker name "${name}". Checker names must contain only lowercase letters, numbers, and hyphens.`,
+      );
+    }
+
+    const builtInPath = CheckerRegistry.BUILT_IN_EXTERNAL_CHECKERS.get(name);
+    if (builtInPath) {
+      const fullPath = path.join(this.checkersPath, builtInPath);
+      if (!fs.existsSync(fullPath)) {
+        throw new Error(`Built-in checker "${name}" not found at ${fullPath}`);
+      }
+      return fullPath;
+    }
+
+    throw new Error(`Unknown external checker "${name}".`);
+  }
+
+  resolveInProcess(name: string): InProcessChecker {
+    if (!CheckerRegistry.isValidCheckerName(name)) {
+      throw new Error(`Invalid checker name "${name}".`);
+    }
+
+    const checker = CheckerRegistry.BUILT_IN_IN_PROCESS_CHECKERS.get(name);
+    if (checker) {
+      return checker;
+    }
+
+    throw new Error(
+      `Unknown in-process checker "${name}". Available: ${Array.from(
+        CheckerRegistry.BUILT_IN_IN_PROCESS_CHECKERS.keys(),
+      ).join(', ')}`,
+    );
+  }
+
+  private static isValidCheckerName(name: string): boolean {
+    return this.VALID_NAME_PATTERN.test(name) && !name.includes('..');
+  }
+
+  static getBuiltInCheckers(): string[] {
+    return [
+      ...Array.from(this.BUILT_IN_EXTERNAL_CHECKERS.keys()),
+      ...Array.from(this.BUILT_IN_IN_PROCESS_CHECKERS.keys()),
+    ];
+  }
+}

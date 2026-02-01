@@ -1165,6 +1165,7 @@ export class CoreToolScheduler {
             shellExecutionConfig,
             setPidCallback,
             this.config.getPluginSystem(),
+            this.config,
           );
           if (signal.aborted) {
             this.setStatusInternal(

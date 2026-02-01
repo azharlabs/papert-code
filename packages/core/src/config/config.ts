@@ -116,6 +116,10 @@ import type { HookDefinition, HookEventName } from '../hooks/types.js';
 import { HookSystem } from '../hooks/index.js';
 import { PolicyEngine } from '../policy/policy-engine.js';
 import type { PolicyEngineConfig } from '../policy/types.js';
+import type { SafetyCheckerRule } from '../policy/types.js';
+import { CheckerRunner } from '../safety/checker-runner.js';
+import { CheckerRegistry } from '../safety/registry.js';
+import { ContextBuilder } from '../safety/context-builder.js';
 import { MessageBus } from '../confirmation-bus/message-bus.js';
 import { ModelRouterService } from '../routing/modelRouterService.js';
 import type { FormatterSettings } from '../format/index.js';
@@ -382,6 +386,8 @@ export interface ConfigParameters {
   enableNpmPlugins?: boolean;
   autoInstallNpmPlugins?: boolean;
   policyEngineConfig?: PolicyEngineConfig;
+  safetyCheckersPath?: string;
+  safetyCheckTimeoutMs?: number;
   useModelRouter?: boolean;
 }
 
@@ -529,6 +535,8 @@ export class Config {
     | undefined;
   private readonly disabledHooks: string[];
   private readonly policyEngine: PolicyEngine;
+  private readonly safetyCheckerRules: SafetyCheckerRule[];
+  private readonly safetyCheckerRunner?: CheckerRunner;
   private readonly messageBus: MessageBus;
   private hookSystem?: HookSystem;
   private pluginSystem?: import('../plugins/pluginSystem.js').PluginSystem;
@@ -680,6 +688,23 @@ export class Config {
       allowHooks: this.enableHooks,
     });
     this.messageBus = new MessageBus(this.policyEngine, this.debugMode);
+    this.safetyCheckerRules = (
+      params.policyEngineConfig?.checkers ?? []
+    ).slice();
+    if (this.safetyCheckerRules.length > 0) {
+      this.safetyCheckerRules.sort(
+        (a, b) => (b.priority ?? 0) - (a.priority ?? 0),
+      );
+      const checkersPath = params.safetyCheckersPath ?? this.targetDir;
+      this.safetyCheckerRunner = new CheckerRunner(
+        new ContextBuilder(this),
+        new CheckerRegistry(checkersPath),
+        {
+          checkersPath,
+          timeout: params.safetyCheckTimeoutMs,
+        },
+      );
+    }
     this.useSmartEdit = params.useSmartEdit ?? false;
     this.useModelRouter = params.useModelRouter ?? true;
     this.extensionManagement = params.extensionManagement ?? true;
@@ -1567,6 +1592,14 @@ export class Config {
 
   getPolicyEngine(): PolicyEngine {
     return this.policyEngine;
+  }
+
+  getSafetyCheckerRules(): SafetyCheckerRule[] {
+    return this.safetyCheckerRules;
+  }
+
+  getSafetyCheckerRunner(): CheckerRunner | undefined {
+    return this.safetyCheckerRunner;
   }
 
   getTruncateToolOutputThreshold(): number {
