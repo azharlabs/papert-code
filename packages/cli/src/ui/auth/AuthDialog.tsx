@@ -124,11 +124,17 @@ export function AuthDialog(): React.JSX.Element {
         applyAdminSessionToEnv(session);
         const adminModel =
           session.provider.model || session.provider.models?.[0];
-        await onAuthSelect(selection.authType, SettingScope.User, {
-          apiKey: session.provider.apiKey,
-          baseUrl: session.provider.baseUrl,
-          model: adminModel,
-        });
+        await onAuthSelect(
+          selection.authType,
+          SettingScope.User,
+          {
+            apiKey: session.provider.apiKey,
+            baseUrl: session.provider.baseUrl,
+            model: adminModel,
+          },
+          'Papert Admin credentials',
+          true,
+        );
         return;
       } catch (err) {
         if (err instanceof AdminQuotaError) {

@@ -27,6 +27,8 @@ export interface DialogCloseOptions {
     authType: AuthType | undefined,
     scope: SettingScope,
     credentials?: OpenAICredentials,
+    authLabel?: string,
+    isAdminManaged?: boolean,
   ) => Promise<void>;
   pendingAuthType: AuthType | undefined;
 

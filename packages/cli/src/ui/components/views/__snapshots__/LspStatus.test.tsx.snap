@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LspStatus > renders auto-install disabled banner 1`] = `
+"LSP status
+Auto-detect: on · Auto-install: off
+
+🟢 TypeScript/JavaScript (built-in) - Connected
+Extensions: .ts, .tsx
+
+🔴 Pyright (built-in) - Missing
+Extensions: .py
+Auto-install available on first use.
+"
+`;
+
+exports[`LspStatus > renders connected and missing servers 1`] = `
+"LSP status
+Auto-detect: on · Auto-install: on
+
+🟢 TypeScript/JavaScript (built-in) - Connected
+Extensions: .ts, .tsx
+
+🔴 Pyright (built-in) - Missing
+Extensions: .py
+Auto-install available on first use.
+"
+`;
+
+exports[`LspStatus > renders disabled state 1`] = `"LSP is disabled. Enable it in settings to auto-detect servers."`;

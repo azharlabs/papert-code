@@ -66,7 +66,6 @@ import { showResumeSessionPicker } from './ui/components/ResumeSessionPicker.js'
 import { hasDeferredCommand, runDeferredCommand } from './deferred.js';
 import {
   AdminQuotaError,
-  applyAdminProviderToArgv,
   applyAdminSessionToEnv,
   reportAdminUsage,
   requestQuotaIncrease,
@@ -229,7 +228,6 @@ export async function main() {
     adminSession = await resolveAdminSession();
     if (adminSession) {
       applyAdminSessionToEnv(adminSession);
-      applyAdminProviderToArgv(argv as unknown as Record<string, unknown>, adminSession);
     }
   } catch (err) {
     if (err instanceof AdminQuotaError) {

@@ -85,13 +85,16 @@ export const useAuthCommand = (
       authType: AuthType,
       scope: SettingScope,
       credentials?: OpenAICredentials,
+      authLabel?: string,
+      isAdminManaged = false,
     ) => {
       try {
         settings.setValue(scope, 'security.auth.selectedType', authType);
-
-        // Only update credentials if not switching to PAPERT_OAUTH,
-        // so that OpenAI credentials are preserved when switching to PAPERT_OAUTH.
-        if (authType !== AuthType.PAPERT_OAUTH && credentials) {
+        if (
+          authType !== AuthType.PAPERT_OAUTH &&
+          credentials &&
+          !isAdminManaged
+        ) {
           if (credentials?.apiKey != null) {
             settings.setValue(
               scope,
@@ -115,23 +118,19 @@ export const useAuthCommand = (
         handleAuthFailure(error);
         return;
       }
-
       setAuthError(null);
       setAuthState(AuthState.Authenticated);
       setPendingAuthType(undefined);
       setIsAuthDialogOpen(false);
       setIsAuthenticating(false);
-
-      // Log authentication success
       const authEvent = new AuthEvent(authType, 'manual', 'success');
       logAuth(config, authEvent);
-
-      // Show success message
+      const label = authLabel ?? 'OpenAI credentials';
       addItem(
         {
           type: MessageType.INFO,
-          text: t('Authenticated successfully with {{authType}} credentials.', {
-            authType,
+          text: t('Authenticated successfully with {{authLabel}}.', {
+            authLabel: label,
           }),
         },
         Date.now(),
@@ -145,10 +144,18 @@ export const useAuthCommand = (
       authType: AuthType,
       scope: SettingScope,
       credentials?: OpenAICredentials,
+      authLabel?: string,
+      isAdminManaged = false,
     ) => {
       try {
         await config.refreshAuth(authType);
-        handleAuthSuccess(authType, scope, credentials);
+        handleAuthSuccess(
+          authType,
+          scope,
+          credentials,
+          authLabel,
+          isAdminManaged,
+        );
       } catch (e) {
         handleAuthFailure(e);
       }
@@ -161,13 +168,15 @@ export const useAuthCommand = (
       authType: AuthType | undefined,
       scope: SettingScope,
       credentials?: OpenAICredentials,
+      authLabel?: string,
+      isAdminManaged = false,
     ) => {
+      const label = authLabel ?? 'OpenAI credentials';
       if (!authType) {
         setIsAuthDialogOpen(false);
         setAuthError(null);
         return;
       }
-
       if (authType === AuthType.USE_OPENAI) {
         if (credentials) {
           setPendingAuthType(undefined);
@@ -179,7 +188,23 @@ export const useAuthCommand = (
             baseUrl: credentials.baseUrl,
             model: credentials.model,
           });
-          await performAuth(authType, scope, credentials);
+          const savedUserCredentials = isAdminManaged
+            ? {
+                apiKey: settings.merged.security?.auth?.apiKey,
+                baseUrl: settings.merged.security?.auth?.baseUrl,
+                model: settings.merged.model?.name,
+              }
+            : undefined;
+          await performAuth(
+            authType,
+            scope,
+            credentials,
+            label,
+            isAdminManaged,
+          );
+          if (isAdminManaged && savedUserCredentials) {
+            config.updateCredentials(savedUserCredentials);
+          }
         }
         if (!credentials) {
           setPendingAuthType(authType);
@@ -189,14 +214,13 @@ export const useAuthCommand = (
         }
         return;
       }
-
       setPendingAuthType(authType);
       setAuthError(null);
       setIsAuthDialogOpen(false);
       setIsAuthenticating(true);
-      await performAuth(authType, scope);
+      await performAuth(authType, scope, undefined, label, isAdminManaged);
     },
-    [config, performAuth],
+    [config, performAuth, settings],
   );
 
   const openAuthDialog = useCallback(() => {

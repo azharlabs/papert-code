@@ -33,6 +33,8 @@ export interface UIActions {
     authType: AuthType | undefined,
     scope: SettingScope,
     credentials?: OpenAICredentials,
+    authLabel?: string,
+    isAdminManaged?: boolean,
   ) => Promise<void>;
   setAuthState: (state: AuthState) => void;
   onAuthError: (error: string) => void;
