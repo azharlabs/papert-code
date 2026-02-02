@@ -1429,8 +1429,7 @@ function ProviderEditor({ provider, onChange }: ProviderEditorProps) {
               ...provider,
               models: e.target.value
                 .split(',')
-                .map((value) => value.trim())
-                .filter(Boolean),
+                .map((value) => value.trim()),
             })
           }
         />
