@@ -40,6 +40,15 @@ function emptyControls(): AdminControls {
   };
 }
 
+const maskToken = (value: string) => {
+  if (!value) return 'No session token';
+  if (value.length <= 20) return value;
+  return `${value.slice(0, 8)}…${value.slice(-6)}`;
+};
+
+const formatTimestamp = (value?: string) =>
+  value ? new Date(value).toLocaleString() : '—';
+
 export function App() {
   const [token, setToken] = useState(
     () => localStorage.getItem('papert_admin_token') || '',
@@ -64,7 +73,16 @@ export function App() {
   const [groupDraft, setGroupDraft] = useState<GroupRecord | null>(null);
   const [userDraft, setUserDraft] = useState<UserRecord | null>(null);
   const [newUserPassword, setNewUserPassword] = useState('');
-  const [newGroupName, setNewGroupName] = useState('');
+  const [activeSection, setActiveSection] = useState<
+    | 'overview'
+    | 'users'
+    | 'groups'
+    | 'usage'
+    | 'sessions'
+    | 'settings'
+  >('overview');
+  const [userSearch, setUserSearch] = useState('');
+  const [groupSearch, setGroupSearch] = useState('');
 
   const selectedGroup = useMemo(
     () => groups.find((group) => group.id === selectedGroupId) || null,
@@ -74,6 +92,177 @@ export function App() {
     () => users.find((user) => user.id === selectedUserId) || null,
     [users, selectedUserId],
   );
+
+  const activeUsers = useMemo(
+    () => users.filter((user) => user.active).length,
+    [users],
+  );
+
+  const totalTokensReported = useMemo(
+    () =>
+      sessions.reduce((sum, session) => {
+        const tokens = typeof session.usage?.tokensUsed === 'number'
+          ? session.usage.tokensUsed
+          : 0;
+        return sum + tokens;
+      }, 0),
+    [sessions],
+  );
+
+  const lastSyncedSession = useMemo(() => {
+    if (!sessions.length) return null;
+    return [...sessions].sort((a, b) => {
+      const alpha = new Date(b.createdAt).getTime();
+      const beta = new Date(a.createdAt).getTime();
+      return alpha - beta;
+    })[0];
+  }, [sessions]);
+
+  const pendingQuotaCount = useMemo(
+    () => quotaRequests.filter((req) => req.status === 'pending').length,
+    [quotaRequests],
+  );
+
+  const selectedUserSessions = useMemo(
+    () => sessions.filter((session) => session.userId === selectedUserId),
+    [sessions, selectedUserId],
+  );
+
+  const usageSummary = useMemo(() => {
+    return usage.reduce(
+      (summary, record) => {
+        if (record.period === 'daily') {
+          summary.daily += record.tokensUsed;
+        }
+        if (record.period === 'monthly') {
+          summary.monthly += record.tokensUsed;
+        }
+        return summary;
+      },
+      { daily: 0, monthly: 0 },
+    );
+  }, [usage]);
+
+  const sortedUsage = useMemo(
+    () =>
+      [...usage].sort((a, b) =>
+        new Date(b.periodStart).getTime() - new Date(a.periodStart).getTime(),
+      ),
+    [usage],
+  );
+  const stats = [
+    {
+      label: 'Active users',
+      value: activeUsers,
+      note: `${users.length} total`,
+    },
+    {
+      label: 'Sessions synced',
+      value: sessions.length,
+      note: lastSyncedSession
+        ? `Last ${formatTimestamp(lastSyncedSession.createdAt)}`
+        : 'No sessions yet',
+    },
+    {
+      label: 'Tokens reported',
+      value: totalTokensReported,
+      note: 'Sum from session payloads',
+    },
+    {
+      label: 'Quota review queue',
+      value: pendingQuotaCount,
+      note: 'Pending approvals',
+    },
+  ];
+
+  const sortedSessions = useMemo(
+    () =>
+      [...sessions].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
+    [sessions],
+  );
+
+  const navItems = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'users', label: 'Users' },
+    { id: 'groups', label: 'Groups' },
+    { id: 'usage', label: 'Usage' },
+    { id: 'sessions', label: 'Sessions' },
+    { id: 'settings', label: 'Settings' },
+  ] as const;
+
+  const activeLabel =
+    navItems.find((item) => item.id === activeSection)?.label ?? 'Overview';
+
+
+
+  const recentSessions = useMemo(
+    () =>
+      [...sessions]
+        .sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        )
+        .slice(0, 6),
+    [sessions],
+  );
+
+  const filteredUsers = useMemo(() => {
+    const query = userSearch.trim().toLowerCase();
+    if (!query) return users;
+    return users.filter((user) =>
+      user.email.toLowerCase().includes(query) ||
+      (user.groupId ?? '').toLowerCase().includes(query),
+    );
+  }, [users, userSearch]);
+
+  const filteredGroups = useMemo(() => {
+    const query = groupSearch.trim().toLowerCase();
+    if (!query) return groups;
+    return groups.filter((group) => group.name.toLowerCase().includes(query));
+  }, [groups, groupSearch]);
+
+  const createEmptyUser = (): UserRecord => ({
+    id: '',
+    email: '',
+    role: 'user',
+    groupId: null,
+    selfManaged: false,
+    provider: {},
+    controls: emptyControls(),
+    active: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
+  const createEmptyGroup = (): GroupRecord => ({
+    id: '',
+    name: '',
+    controls: emptyControls(),
+    provider: {},
+    quotaMonthly: null,
+    quotaDaily: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
+  const handleNewUser = () => {
+    setUserDraft(createEmptyUser());
+    setSelectedUserId('');
+    setNewUserPassword('');
+  };
+
+  const handleNewGroup = () => {
+    setGroupDraft(createEmptyGroup());
+    setSelectedGroupId('');
+    setNewGroupName('');
+  };
+
+  useEffect(() => {
+    if (!selectedUserId && users.length > 0) {
+      setSelectedUserId(users[0].id);
+    }
+  }, [users, selectedUserId]);
 
   const refreshAll = async () => {
     if (!token) return;
@@ -142,22 +331,33 @@ export function App() {
     setUsers([]);
     setQuotaRequests([]);
     setSessions([]);
+    setSelectedSession(null);
+    setSessionTranscript('');
+    setSelectedGroupId('');
+    setSelectedUserId('');
+    setUsage([]);
+    setGroupDraft(null);
+    setUserDraft(null);
+    setNewUserPassword('');
+    setEmail('');
+    setPassword('');
+    setInfo(null);
+    setError(null);
   };
 
   const handleCreateGroup = async () => {
-    if (!token) return;
+    if (!token || !groupDraft) return;
     setLoading(true);
     setError(null);
     try {
       const group = await createGroup(token, {
-        name: newGroupName,
-        controls: emptyControls(),
-        provider: {},
-        quotaMonthly: null,
-        quotaDaily: null,
+        name: groupDraft.name,
+        controls: groupDraft.controls,
+        provider: groupDraft.provider,
+        quotaMonthly: groupDraft.quotaMonthly ?? null,
+        quotaDaily: groupDraft.quotaDaily ?? null,
       });
       setGroups((prev) => [...prev, group]);
-      setNewGroupName('');
       setSelectedGroupId(group.id);
       setInfo('Group created.');
       setTimeout(() => setInfo(null), 3000);
@@ -328,19 +528,26 @@ export function App() {
     }
   };
 
+  const handleSelectUser = (id: string) => {
+    setSelectedUserId(id);
+    setActiveSection('users');
+  };
+
+  const handleSelectGroup = (id: string) => {
+    setSelectedGroupId(id);
+    setActiveSection('groups');
+  };
+
   if (!token) {
     return (
-      <div className="app">
-        <header className="hero">
-          <div>
-            <p className="eyebrow">Papert Admin Control Plane</p>
-            <h1>Sign in to manage users, quotas, and sessions.</h1>
-            <p className="subtitle">
-              Admin login required. Use the credentials created by your platform team.
-            </p>
-          </div>
-          <div className="panel accent">
-            <h2>Admin login</h2>
+      <div className="auth-shell">
+        <div className="auth-card">
+          <p className="eyebrow">Papert Admin Control Plane</p>
+          <h1>Secure sign-in</h1>
+          <p className="auth-subtitle">
+            Authenticate with the bootstrap admin account to manage policies and usage.
+          </p>
+          <div className="auth-form">
             <label className="field">
               <span>Email</span>
               <input value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -358,312 +565,751 @@ export function App() {
             </button>
             {error && <p className="hint error">{error}</p>}
           </div>
-        </header>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="app">
-      <header className="hero">
-        <div>
-          <p className="eyebrow">Papert Admin Control Plane</p>
-          <h1>Manage permissions, quotas, and sessions.</h1>
-          <p className="subtitle">
-            Configure group policy, assign users, and monitor token usage in one place.
-          </p>
-        </div>
-        <div className="panel accent">
-          <h2>Session</h2>
-          <p className="hint">Token stored locally for this browser.</p>
-          <div className="split">
-            <button className="ghost" onClick={refreshAll}>
-              Refresh
-            </button>
-            <button className="ghost danger" onClick={handleLogout}>
-              Sign out
-            </button>
-          </div>
-          {loading && <span className="badge">Syncing…</span>}
-          {error && <span className="badge error">{error}</span>}
-          {info && <span className="badge info">{info}</span>}
-        </div>
-      </header>
-
-      <main className="grid">
-        <section className="panel">
-          <div className="panel-header">
-            <div>
-              <h2>Groups</h2>
-              <p className="hint">Group policies define permissions and quotas.</p>
-            </div>
-          </div>
-          <div className="list-grid">
-            {groups.map((group) => (
-              <button
-                key={group.id}
-                className={group.id === selectedGroupId ? 'list-item active' : 'list-item'}
-                onClick={() => setSelectedGroupId(group.id)}
-              >
-                <span>{group.name}</span>
-                <small>{group.id}</small>
-              </button>
-            ))}
-          </div>
-          <label className="field">
-            <span>New group name</span>
-            <input value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} />
-          </label>
-          <button className="primary" onClick={handleCreateGroup} disabled={!newGroupName}>
-            Create group
-          </button>
-          {groupDraft && (
-            <>
-              <PolicyEditor controls={groupDraft.controls} onChange={(controls) => setGroupDraft({ ...groupDraft, controls })} />
-              <ProviderEditor provider={groupDraft.provider} onChange={(provider) => setGroupDraft({ ...groupDraft, provider })} />
-              <div className="split">
-                <label className="field">
-                  <span>Monthly quota</span>
-                  <input
-                    type="number"
-                    value={groupDraft.quotaMonthly ?? ''}
-                    onChange={(e) =>
-                      setGroupDraft({
-                        ...groupDraft,
-                        quotaMonthly: e.target.value ? Number(e.target.value) : null,
-                      })
-                    }
-                  />
-                </label>
-                <label className="field">
-                  <span>Daily quota</span>
-                  <input
-                    type="number"
-                    value={groupDraft.quotaDaily ?? ''}
-                    onChange={(e) =>
-                      setGroupDraft({
-                        ...groupDraft,
-                        quotaDaily: e.target.value ? Number(e.target.value) : null,
-                      })
-                    }
-                  />
-                </label>
-              </div>
-              <div className="actions">
-                <button className="ghost danger" onClick={handleDeleteGroup}>
-                  Delete group
-                </button>
-                <button className="primary" onClick={handleSaveGroup}>
-                  Save group
-                </button>
-              </div>
-            </>
-          )}
-        </section>
-
-        <section className="panel">
-          <div className="panel-header">
-            <div>
-              <h2>Users</h2>
-              <p className="hint">Create users and assign groups or overrides.</p>
-            </div>
-          </div>
-          <div className="list-grid">
-            {users.map((user) => (
-              <button
-                key={user.id}
-                className={user.id === selectedUserId ? 'list-item active' : 'list-item'}
-                onClick={() => setSelectedUserId(user.id)}
-              >
-                <span>{user.email}</span>
-                <small>{user.role} • {user.groupId || 'no group'}</small>
-              </button>
-            ))}
-          </div>
-          <label className="field">
-            <span>Email</span>
-            <input
-              value={userDraft?.email ?? ''}
-              onChange={(e) =>
-                setUserDraft((draft) =>
-                  draft
-                    ? { ...draft, email: e.target.value }
-                    : {
-                        id: '',
-                        email: e.target.value,
-                        role: 'user',
-                        groupId: null,
-                        selfManaged: false,
-                        provider: {},
-                        controls: emptyControls(),
-                        active: true,
-                        createdAt: '',
-                        updatedAt: '',
-                      },
-                )
-              }
-            />
-          </label>
-          <label className="field">
-            <span>Password</span>
-            <input
-              type="password"
-              value={newUserPassword}
-              onChange={(e) => setNewUserPassword(e.target.value)}
-              minLength={8}
-              placeholder={userDraft?.id ? 'Leave blank to keep current' : 'Set initial password'}
-            />
-            {newUserPassword && newUserPassword.length < 8 && (
-              <span className="hint error">Password must be at least 8 characters.</span>
-            )}
-          </label>
-          {userDraft && (
-            <>
-              <label className="field">
-                <span>Role</span>
-                <select
-                  value={userDraft.role}
-                  onChange={(e) => setUserDraft({ ...userDraft, role: e.target.value as 'admin' | 'user' })}
-                >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </label>
-              <label className="field">
-                <span>Group</span>
-                <select
-                  value={userDraft.groupId ?? ''}
-                  onChange={(e) => setUserDraft({ ...userDraft, groupId: e.target.value || null })}
-                >
-                  <option value="">No group</option>
-                  {groups.map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <Toggle
-                label="Self-managed provider"
-                description="User provides their own OpenAI-compatible API key. Full access."
-                checked={userDraft.selfManaged}
-                onChange={(value) => setUserDraft({ ...userDraft, selfManaged: value })}
-              />
-              {!userDraft.selfManaged && (
-                <>
-                  <ProviderEditor
-                    provider={userDraft.provider}
-                    onChange={(provider) => setUserDraft({ ...userDraft, provider })}
-                  />
-                  <PolicyEditor
-                    controls={userDraft.controls}
-                    onChange={(controls) => setUserDraft({ ...userDraft, controls })}
-                  />
-                </>
-              )}
-              <Toggle
-                label="Active"
-                description="Disable to prevent login and policy fetch."
-                checked={userDraft.active}
-                onChange={(value) => setUserDraft({ ...userDraft, active: value })}
-              />
-            </>
-          )}
-          <div className="actions">
-            {userDraft?.id ? (
-              <>
-                <button className="ghost danger" onClick={handleDeleteUser}>
-                  Remove user
-                </button>
-                <button className="primary" onClick={handleSaveUser}>
-                  Save user
-                </button>
-              </>
-            ) : (
-              <button
-                className="primary"
-                onClick={handleCreateUser}
-                disabled={!newUserPassword || newUserPassword.length < 8}
-              >
-                Create user
-              </button>
-            )}
-          </div>
-        </section>
-      </main>
-
-      <section className="panel">
-        <div className="panel-header">
+    <div className="app-shell">
+      <aside className="admin-nav">
+        <div className="nav-brand">
+          <div className="logo-badge" />
           <div>
-            <h2>Token usage</h2>
-            <p className="hint">Monitor monthly and daily usage for the selected user.</p>
+            <p className="nav-brand__title">Papert Admin</p>
+            <p className="nav-brand__subtitle">Control plane</p>
           </div>
         </div>
-        {usage.length === 0 ? (
-          <p className="hint">Select a user to view usage.</p>
-        ) : (
-          <div className="list-grid">
-            {usage.map((record) => (
-              <div key={record.id} className="list-item">
-                <strong>{record.period}</strong>
-                <small>{record.periodStart}</small>
-                <span>{record.tokensUsed.toLocaleString()} tokens</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="panel list">
-        <div className="panel-header">
-          <div>
-            <h2>Quota requests</h2>
-            <p className="hint">Approve or reject token quota increase requests.</p>
-          </div>
-        </div>
-        {quotaRequests.length === 0 && <p className="hint">No requests.</p>}
-        {quotaRequests.map((req) => (
-          <div key={req.id} className="list-item">
-            <span>{req.userId}</span>
-            <small>{req.status} • {req.requestedMonthly ?? 'n/a'} tokens</small>
-            <div className="split">
-              <button className="ghost" onClick={() => handleApproveRequest(req.id)}>
-                Approve
-              </button>
-              <button className="ghost danger" onClick={() => handleRejectRequest(req.id)}>
-                Reject
-              </button>
-            </div>
-          </div>
-        ))}
-      </section>
-
-      <section className="panel">
-        <div className="panel-header">
-          <div>
-            <h2>Sessions</h2>
-            <p className="hint">All user sessions uploaded by the CLI.</p>
-          </div>
-        </div>
-        <div className="list-grid">
-          {sessions.map((session) => (
+        <div className="nav-items">
+          {navItems.map((item) => (
             <button
-              key={session.id}
-              className={session.id === selectedSession?.id ? 'list-item active' : 'list-item'}
-              onClick={() => handleLoadSession(session.id)}
+              key={item.id}
+              type="button"
+              className={`nav-item ${activeSection === item.id ? 'active' : ''}`}
+              onClick={() => setActiveSection(item.id)}
             >
-              <span>{session.sessionId}</span>
-              <small>{session.userId} • {session.model ?? 'unknown model'}</small>
+              {item.label}
             </button>
           ))}
         </div>
-        {selectedSession && (
-          <div>
-            <h3>Transcript</h3>
-            <pre>{sessionTranscript || 'No transcript uploaded.'}</pre>
+        <div className="nav-footer">
+          <p className="nav-footer__label">Signed in as</p>
+          <p className="nav-footer__value">{email || 'admin'}</p>
+          <div className="nav-footer__actions">
+            <button className="ghost subtle" onClick={refreshAll} type="button">
+              Refresh
+            </button>
+            <button className="ghost danger" onClick={handleLogout} type="button">
+              Sign out
+            </button>
           </div>
-        )}
-      </section>
+        </div>
+      </aside>
+
+      <main className="content-area">
+        <header className="content-header">
+          <div>
+            <p className="section-label">Papert Code</p>
+            <h1>{activeLabel}</h1>
+            <p className="section-subtitle">
+              Manage policies, sessions, and quotas with the trusted admin tools.
+            </p>
+          </div>
+          <div className="header-actions">
+            <button className="ghost subtle" onClick={refreshAll} type="button">
+              Sync data
+            </button>
+            <button className="ghost danger" onClick={handleLogout} type="button">
+              Sign out
+            </button>
+          </div>
+        </header>
+
+        <section className="session-card">
+          <div>
+            <p className="session-card__title">Admin session</p>
+            <p className="session-card__token">{maskToken(token)}</p>
+            <p className="session-card__meta">Logged in as {email || 'admin'}</p>
+          </div>
+          <div className="session-card__actions">
+            <button className="ghost subtle" onClick={refreshAll} type="button">
+              Refresh
+            </button>
+            <button className="ghost danger" onClick={handleLogout} type="button">
+              Sign out
+            </button>
+          </div>
+          <div className="session-card__badges">
+            {loading && <span className="badge badge-info">Syncing…</span>}
+            {error && <span className="badge badge-error">{error}</span>}
+            {info && <span className="badge badge-success">{info}</span>}
+          </div>
+          {lastSyncedSession && (
+            <p className="session-card__subtitle">
+              Last sync: {formatTimestamp(lastSyncedSession.createdAt)}
+            </p>
+          )}
+        </section>
+
+        <div className="content-body">
+          {activeSection === 'overview' && (
+            <>
+              <section className="stat-grid overview-stats">
+                {stats.map((stat) => (
+                  <article className="stat-card" key={stat.label}>
+                    <p className="stat-card__label">{stat.label}</p>
+                    <p className="stat-card__value">{stat.value.toLocaleString()}</p>
+                    <p className="stat-card__note">{stat.note}</p>
+                  </article>
+                ))}
+              </section>
+              <div className="overview-grid">
+                <article className="panel">
+                  <div className="panel-header">
+                    <div>
+                      <h2>Recent sessions</h2>
+                      <p className="hint">Sessions uploaded to the admin control plane.</p>
+                    </div>
+                  </div>
+                  {recentSessions.length === 0 ? (
+                    <p className="hint">No sessions yet.</p>
+                  ) : (
+                    <div className="session-list overview">
+                      {recentSessions.map((session) => (
+                        <div key={session.id} className="session-row overview">
+                          <div>
+                            <strong>{session.sessionId}</strong>
+                            <p className="hint">
+                              {session.userId} • {session.model ?? 'model unknown'}
+                            </p>
+                          </div>
+                          <div className="session-row__actions">
+                            <p className="hint">{formatTimestamp(session.startedAt)}</p>
+                            <button
+                              className="ghost subtle"
+                              onClick={() => handleLoadSession(session.id)}
+                              type="button"
+                            >
+                              Load
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </article>
+                <article className="panel">
+                  <div className="panel-header">
+                    <div>
+                      <h2>Quota requests</h2>
+                      <p className="hint">Approve pending token increases.</p>
+                    </div>
+                  </div>
+                  {quotaRequests.length === 0 ? (
+                    <p className="hint">No outstanding requests.</p>
+                  ) : (
+                    <div className="quota-list overview">
+                      {quotaRequests.map((req) => (
+                        <div key={req.id} className="quota-card">
+                          <div>
+                            <strong>{req.userId}</strong>
+                            <p className="hint">{req.requestedMonthly ?? '—'} tokens requested</p>
+                          </div>
+                          <div className="chip-row">
+                            <span className={`status-pill ${req.status}`}>{req.status}</span>
+                            <div className="chip-row__actions">
+                              <button
+                                className="ghost subtle"
+                                onClick={() => handleApproveRequest(req.id)}
+                                type="button"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                className="ghost subtle danger"
+                                onClick={() => handleRejectRequest(req.id)}
+                                type="button"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </article>
+                <article className="panel">
+                  <div className="panel-header">
+                    <div>
+                      <h2>Last transcript</h2>
+                      <p className="hint">Review the most recent transcript you opened.</p>
+                    </div>
+                  </div>
+                  {selectedSession ? (
+                    <>
+                      <div className="session-meta">
+                        <div>
+                          <p className="hint">Session</p>
+                          <strong>{selectedSession.sessionId}</strong>
+                        </div>
+                        <div>
+                          <p className="hint">User</p>
+                          <strong>{selectedSession.userId}</strong>
+                        </div>
+                        <div>
+                          <p className="hint">Model</p>
+                          <strong>{selectedSession.model ?? 'unknown model'}</strong>
+                        </div>
+                        <div>
+                          <p className="hint">Uploaded</p>
+                          <strong>{formatTimestamp(selectedSession.createdAt)}</strong>
+                        </div>
+                      </div>
+                      <pre className="transcript">
+                        {sessionTranscript || 'No transcript body provided.'}
+                      </pre>
+                    </>
+                  ) : (
+                    <p className="hint">Load a session to preview the transcript.</p>
+                  )}
+                </article>
+              </div>
+            </>
+          )}
+
+          {activeSection === 'users' && (
+            <section className="panel users-section">
+              <div className="panel-header">
+                <div>
+                  <h2>User directory</h2>
+                  <p className="hint">Browse users and adjust policies.</p>
+                </div>
+                <button className="primary" onClick={handleNewUser} type="button">
+                  + New user
+                </button>
+              </div>
+              <div className="panel-split">
+                <div className="list-card">
+                  <div className="list-filter">
+                    <input
+                      value={userSearch}
+                      onChange={(event) => setUserSearch(event.target.value)}
+                      placeholder="Search by email or group..."
+                    />
+                  </div>
+                  <div className="list-body">
+                    {filteredUsers.length === 0 ? (
+                      <p className="hint">No users match that query.</p>
+                    ) : (
+                      filteredUsers.map((user) => (
+                        <button
+                          key={user.id}
+                          type="button"
+                          className={`list-row ${user.id === selectedUserId ? 'active' : ''}`}
+                          onClick={() => handleSelectUser(user.id)}
+                        >
+                          <div>
+                            <strong>{user.email}</strong>
+                            <p className="hint">
+                              {user.groupId || 'no group'} • {user.role}
+                            </p>
+                          </div>
+                          <div className="list-row__meta">
+                            <span>{user.provider.baseUrl ?? 'admin managed'}</span>
+                            <span className={`status-pill ${user.active ? 'success' : 'muted'}`}>
+                              {user.active ? 'active' : 'disabled'}
+                            </span>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+                <div className="detail-card">
+                  <div className="panel-header">
+                    <div>
+                      <h3>{userDraft ? `${userDraft.email || 'Edit user'}` : 'User details'}</h3>
+                      <p className="hint">Update credentials, provider, and policies.</p>
+                    </div>
+                  </div>
+                  {userDraft ? (
+                    <>
+                      <div className="control-grid">
+                        <label className="field">
+                          <span>Email</span>
+                          <input
+                            value={userDraft.email}
+                            onChange={(e) => setUserDraft({ ...userDraft, email: e.target.value })}
+                          />
+                        </label>
+                        <label className="field">
+                          <span>Password</span>
+                          <input
+                            type="password"
+                            value={newUserPassword}
+                            onChange={(e) => setNewUserPassword(e.target.value)}
+                            placeholder={
+                              userDraft.id ? 'Leave blank to keep current' : 'Set initial password'
+                            }
+                          />
+                          {newUserPassword && newUserPassword.length < 8 && (
+                            <span className="hint error">
+                              Password must be at least 8 characters.
+                            </span>
+                          )}
+                        </label>
+                      </div>
+                      <div className="control-grid">
+                        <label className="field">
+                          <span>Role</span>
+                          <select
+                            value={userDraft.role}
+                            onChange={(e) =>
+                              setUserDraft({ ...userDraft, role: e.target.value as 'admin' | 'user' })
+                            }
+                          >
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </label>
+                        <label className="field">
+                          <span>Group</span>
+                          <select
+                            value={userDraft.groupId ?? ''}
+                            onChange={(e) =>
+                              setUserDraft({ ...userDraft, groupId: e.target.value || null })
+                            }
+                          >
+                            <option value="">No group</option>
+                            {groups.map((group) => (
+                              <option key={group.id} value={group.id}>
+                                {group.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                      <Toggle
+                        label="Self-managed provider"
+                        description="Allow the user to bring their own OpenAI-compatible key."
+                        checked={userDraft.selfManaged}
+                        onChange={(value) => setUserDraft({ ...userDraft, selfManaged: value })}
+                      />
+                      {!userDraft.selfManaged && (
+                        <>
+                          <ProviderEditor
+                            provider={userDraft.provider}
+                            onChange={(provider) => setUserDraft({ ...userDraft, provider })}
+                          />
+                          <PolicyEditor
+                            controls={userDraft.controls}
+                            onChange={(controls) => setUserDraft({ ...userDraft, controls })}
+                          />
+                        </>
+                      )}
+                      <Toggle
+                        label="Active"
+                        description="Disable to block policy fetch and login."
+                        checked={userDraft.active}
+                        onChange={(value) => setUserDraft({ ...userDraft, active: value })}
+                      />
+                      <div className="actions">
+                        {userDraft.id ? (
+                          <>
+                            <button className="ghost danger" onClick={handleDeleteUser}>
+                              Remove user
+                            </button>
+                            <button className="primary" onClick={handleSaveUser}>
+                              Save user
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            className="primary"
+                            onClick={handleCreateUser}
+                            disabled={!newUserPassword || newUserPassword.length < 8}
+                          >
+                            Create user
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="empty-state">
+                      Select a user to edit their policies and usage.
+                    </div>
+                  )}
+                </div>
+              </div>
+              {selectedUser && (
+                <div className="usage-grid">
+                  <div className="usage-summary-row">
+                    <article className="usage-card">
+                      <p>Daily tokens</p>
+                      <strong>{usageSummary.daily.toLocaleString()}</strong>
+                      <span className="hint">Latest daily report</span>
+                    </article>
+                    <article className="usage-card">
+                      <p>Monthly tokens</p>
+                      <strong>{usageSummary.monthly.toLocaleString()}</strong>
+                      <span className="hint">Aggregated this month</span>
+                    </article>
+                    <article className="usage-card">
+                      <p>Sessions</p>
+                      <strong>
+                        {selectedUserSessions.length
+                          ? selectedUserSessions.length.toLocaleString()
+                          : '0'}
+                      </strong>
+                      <span className="hint">Uploaded from CLI</span>
+                    </article>
+                  </div>
+                  <div className="session-table">
+                    <div className="table-head">
+                      <span>Session ID</span>
+                      <span>Model</span>
+                      <span>Started</span>
+                      <span>Tokens</span>
+                      <span>Action</span>
+                    </div>
+                    {selectedUserSessions.length === 0 && (
+                      <p className="hint">No sessions recorded yet for this user.</p>
+                    )}
+                    {selectedUserSessions.map((session) => (
+                      <div key={session.id} className="session-row">
+                        <span>{session.sessionId}</span>
+                        <span>{session.model ?? 'unknown model'}</span>
+                        <span>{formatTimestamp(session.startedAt)}</span>
+                        <span>
+                          {typeof session.usage?.tokensUsed === 'number'
+                            ? session.usage.tokensUsed.toLocaleString()
+                            : '—'}
+                        </span>
+                        <button
+                          className="ghost subtle"
+                          onClick={() => handleLoadSession(session.id)}
+                          type="button"
+                        >
+                          View
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+```
+
+Continue with groups section etc.
+
+          {activeSection === 'groups' && (
+            <section className="panel groups-section">
+              <div className="panel-header">
+                <div>
+                  <h2>Groups directory</h2>
+                  <p className="hint">Manage group policies and quotas.</p>
+                </div>
+                <button className="primary" onClick={handleNewGroup} type="button">
+                  + New group
+                </button>
+              </div>
+              <div className="panel-split">
+                <div className="list-card">
+                  <div className="list-filter">
+                    <input
+                      value={groupSearch}
+                      onChange={(event) => setGroupSearch(event.target.value)}
+                      placeholder="Search groups..."
+                    />
+                  </div>
+                  <div className="list-body">
+                    {filteredGroups.length === 0 ? (
+                      <p className="hint">No groups match that query.</p>
+                    ) : (
+                      filteredGroups.map((group) => (
+                        <button
+                          key={group.id}
+                          type="button"
+                          className={`list-row ${group.id === selectedGroupId ? 'active' : ''}`}
+                          onClick={() => handleSelectGroup(group.id)}
+                        >
+                          <div>
+                            <strong>{group.name}</strong>
+                            <p className="hint">
+                              {group.provider.baseUrl ?? 'admin provider'}
+                            </p>
+                          </div>
+                          <div className="list-row__meta">
+                            <span>
+                              {group.quotaMonthly ? `${group.quotaMonthly} tokens/mo` : 'No quota'}
+                            </span>
+                            <span>
+                              {group.quotaDaily ? `${group.quotaDaily} tokens/day` : '—'}
+                            </span>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+                <div className="detail-card">
+                  <div className="panel-header">
+                    <div>
+                      <h3>{groupDraft ? `${groupDraft.name || 'Edit group'}` : 'Group details'}</h3>
+                      <p className="hint">Adjust policies, providers, and quotas.</p>
+                    </div>
+                  </div>
+                  {groupDraft ? (
+                    <>
+                      <div className="control-grid">
+                        <label className="field">
+                          <span>Name</span>
+                          <input
+                            value={groupDraft.name}
+                            onChange={(event) =>
+                              setGroupDraft({ ...groupDraft, name: event.target.value })
+                            }
+                          />
+                        </label>
+                        <label className="field">
+                          <span>Default model</span>
+                          <input
+                            value={groupDraft.provider.model ?? ''}
+                            onChange={(event) =>
+                              setGroupDraft({
+                                ...groupDraft,
+                                provider: { ...groupDraft.provider, model: event.target.value },
+                              })
+                            }
+                          />
+                        </label>
+                      </div>
+                      <PolicyEditor
+                        controls={groupDraft.controls}
+                        onChange={(controls) => setGroupDraft({ ...groupDraft, controls })}
+                      />
+                      <ProviderEditor
+                        provider={groupDraft.provider}
+                        onChange={(provider) => setGroupDraft({ ...groupDraft, provider })}
+                      />
+                      <div className="control-grid">
+                        <label className="field">
+                          <span>Monthly quota</span>
+                          <input
+                            type="number"
+                            value={groupDraft.quotaMonthly ?? ''}
+                            onChange={(e) =>
+                              setGroupDraft({
+                                ...groupDraft,
+                                quotaMonthly: e.target.value ? Number(e.target.value) : null,
+                              })
+                            }
+                          />
+                        </label>
+                        <label className="field">
+                          <span>Daily quota</span>
+                          <input
+                            type="number"
+                            value={groupDraft.quotaDaily ?? ''}
+                            onChange={(e) =>
+                              setGroupDraft({
+                                ...groupDraft,
+                                quotaDaily: e.target.value ? Number(e.target.value) : null,
+                              })
+                            }
+                          />
+                        </label>
+                      </div>
+                      <div className="actions">
+                        {groupDraft.id ? (
+                          <>
+                            <button className="ghost danger" onClick={handleDeleteGroup}>
+                              Delete group
+                            </button>
+                            <button className="primary" onClick={handleSaveGroup}>
+                              Save group
+                            </button>
+                          </>
+                        ) : (
+                          <button className="primary" onClick={handleCreateGroup}>
+                            Create group
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="empty-state">
+                      Select a group to edit its policies and quotas.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeSection === 'usage' && (
+            <section className="panel usage-section">
+              <div className="panel-header">
+                <div>
+                  <h2>Usage trends</h2>
+                  <p className="hint">Token consumption reported through the admin API.</p>
+                </div>
+              </div>
+              <div className="usage-cards">
+                <article className="usage-card">
+                  <p>Daily tokens</p>
+                  <strong>{usageSummary.daily.toLocaleString()}</strong>
+                  <span className="hint">Latest daily report</span>
+                </article>
+                <article className="usage-card">
+                  <p>Monthly tokens</p>
+                  <strong>{usageSummary.monthly.toLocaleString()}</strong>
+                  <span className="hint">Aggregated this month</span>
+                </article>
+                <article className="usage-card">
+                  <p>Sessions captured</p>
+                  <strong>{sessions.length.toLocaleString()}</strong>
+                  <span className="hint">Uploaded via CLI</span>
+                </article>
+              </div>
+              <div className="usage-history">
+                <div className="table-head">
+                  <span>Period</span>
+                  <span>Start</span>
+                  <span>Tokens</span>
+                </div>
+                {sortedUsage.length === 0 && (
+                  <p className="hint">No usage data yet.</p>
+                )}
+                {sortedUsage.map((record) => (
+                  <div key={`${record.period}-${record.periodStart}`} className="table-row">
+                    <span>{record.period}</span>
+                    <span>{new Date(record.periodStart).toLocaleDateString()}</span>
+                    <span>{record.tokensUsed?.toLocaleString() ?? '0'}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {activeSection === 'sessions' && (
+            <section className="panel sessions-section">
+              <div className="panel-header">
+                <div>
+                  <h2>Sessions</h2>
+                  <p className="hint">Browse and inspect transcripts.</p>
+                </div>
+              </div>
+              <div className="panel-split sessions-grid">
+                <div className="list-card">
+                  <div className="list-body">
+                    {sortedSessions.length === 0 ? (
+                      <p className="hint">No sessions recorded.</p>
+                    ) : (
+                      sortedSessions.map((session) => (
+                        <button
+                          key={session.id}
+                          type="button"
+                          className={`list-row ${selectedSession?.id === session.id ? 'active' : ''}`}
+                          onClick={() => handleLoadSession(session.id)}
+                        >
+                          <div>
+                            <strong>{session.sessionId}</strong>
+                            <p className="hint">
+                              {session.userId} • {session.model ?? 'unknown model'}
+                            </p>
+                          </div>
+                          <div className="list-row__meta">
+                            <span>{formatTimestamp(session.startedAt)}</span>
+                            <span className="hint">
+                              {typeof session.usage?.tokensUsed === 'number'
+                                ? session.usage.tokensUsed.toLocaleString()
+                                : '—'}
+                              {' '}tokens
+                            </span>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+                <div className="detail-card">
+                  <div className="panel-header">
+                    <div>
+                      <h3>Transcript preview</h3>
+                      <p className="hint">Select a session to view the transcript.</p>
+                    </div>
+                  </div>
+                  {selectedSession ? (
+                    <>
+                      <div className="session-meta">
+                        <div>
+                          <p className="hint">Session</p>
+                          <strong>{selectedSession.sessionId}</strong>
+                        </div>
+                        <div>
+                          <p className="hint">User</p>
+                          <strong>{selectedSession.userId}</strong>
+                        </div>
+                        <div>
+                          <p className="hint">Model</p>
+                          <strong>{selectedSession.model ?? 'unknown model'}</strong>
+                        </div>
+                        <div>
+                          <p className="hint">Uploaded</p>
+                          <strong>{formatTimestamp(selectedSession.createdAt)}</strong>
+                        </div>
+                      </div>
+                      <pre className="transcript">
+                        {sessionTranscript || 'No transcript body provided.'}
+                      </pre>
+                    </>
+                  ) : (
+                    <p className="hint">Load a session to view its transcript.</p>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeSection === 'settings' && (
+            <section className="panel settings-section">
+              <div className="panel-header">
+                <div>
+                  <h2>Settings</h2>
+                  <p className="hint">Quick facts and configuration reminders.</p>
+                </div>
+              </div>
+              <div className="settings-grid">
+                <article className="mini-card">
+                  <p className="mini-card__label">Active users</p>
+                  <p className="mini-card__value">{activeUsers}</p>
+                  <p className="mini-card__note">{users.length} total</p>
+                </article>
+                <article className="mini-card">
+                  <p className="mini-card__label">Pending quota requests</p>
+                  <p className="mini-card__value">{pendingQuotaCount}</p>
+                  <p className="mini-card__note">Approve to keep teams moving.</p>
+                </article>
+                <article className="mini-card">
+                  <p className="mini-card__label">Last sync</p>
+                  <p className="mini-card__value">
+                    {lastSyncedSession ? formatTimestamp(lastSyncedSession.createdAt) : 'No data'}
+                  </p>
+                  <p className="mini-card__note">Sessions refreshed after login.</p>
+                </article>
+                <article className="mini-card">
+                  <p className="mini-card__label">Selected group</p>
+                  <p className="mini-card__value">{selectedGroup ? selectedGroup.name : 'None'}</p>
+                  <p className="mini-card__note">Use the Groups tab to adjust policies.</p>
+                </article>
+              </div>
+            </section>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
