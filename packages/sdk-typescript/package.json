@@ -28,8 +28,9 @@
     "lint:fix": "eslint src test --fix",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run clean && npm run build",
-    "prepack": "npm run build"
+    "bundle:cli": "node scripts/bundle-cli.js",
+    "prepublishOnly": "npm run clean && npm run build && npm run bundle:cli",
+    "prepack": "npm run build && npm run bundle:cli"
   },
   "keywords": [
     "papert",

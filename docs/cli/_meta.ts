@@ -3,6 +3,7 @@ export default {
   authentication: 'Authentication',
   'openai-auth': 'OpenAI Authentication',
   commands: 'Commands',
+  'sdk-typescript': 'TypeScript SDK',
   scheduler: 'Scheduler',
   configuration: 'Configuration',
   'configuration-v1': 'Configuration (v1)',

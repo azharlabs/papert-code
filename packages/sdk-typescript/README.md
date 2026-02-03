@@ -19,10 +19,19 @@ npm install @papert-code/sdk-typescript
 
 ## Requirements
 
-- Node.js >= 20.0.0
-- [Papert Code](https://github.com/azharlabs/papert-code) installed and accessible in PATH
+- Node.js >= 18.0.0
+- For most users, no separate CLI install is required because the SDK bundles the Papert Code CLI.
 
 > **Note for nvm users**: If you use nvm to manage Node.js versions, the SDK may not be able to auto-detect the Papert Code executable. You should explicitly set the `pathToPapertExecutable` option to the full path of the `papert` binary.
+
+## Bundled CLI (how the SDK runs Papert)
+
+The SDK ships with a bundled Papert Code CLI under `dist/cli/cli.js`. By default,
+the SDK auto-detects and uses this bundled CLI. You can still override it with:
+
+- `pathToPapertExecutable` in `query()`
+- `cliBinaryPath` in `createPapertAgent()`
+- or the `PAPERT_CODE_CLI_PATH` environment variable
 
 ## Quick Start (streaming)
 
@@ -73,7 +82,7 @@ const { stdout, stderr, exitCode } = await agent.runPrompt(
 ### Run the baked examples (no ts-node needed)
 
 ```bash
-npm run build                         # ensure cli/dist exists
+npm run build && npm run bundle:cli   # ensure dist/cli is bundled into the SDK
 export OPENAI_API_KEY="your_key"
 node packages/sdk-typescript/examples/basic-run.mjs
 node packages/sdk-typescript/examples/custom-endpoint.mjs
@@ -98,7 +107,7 @@ Creates a new query session with the Papert Code.
 | ------------------------ | ---------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cwd`                    | `string`                                       | `process.cwd()`  | The working directory for the query session. Determines the context in which file operations and commands are executed.                                                                                                                                                                                                                                                                                                                                                               |
 | `model`                  | `string`                                       | -                | The AI model to use (e.g., `'papert-max'`, `'papert-plus'`, `'papert-turbo'`). Takes precedence over `OPENAI_MODEL` and `PAPERT_MODEL` environment variables.                                                                                                                                                                                                                                                                                                                                 |
-| `pathToPapertExecutable`   | `string`                                       | Auto-detected    | Path to the Papert Code executable. Supports multiple formats: `'papert'` (native binary from PATH), `'/path/to/papert'` (explicit path), `'/path/to/cli.js'` (Node.js bundle), `'node:/path/to/cli.js'` (force Node.js runtime), `'bun:/path/to/cli.js'` (force Bun runtime). If not provided, auto-detects from: `PAPERT_CODE_CLI_PATH` env var, `~/.volta/bin/papert`, `~/.npm-global/bin/papert`, `/usr/local/bin/papert`, `~/.local/bin/papert`, `~/node_modules/.bin/papert`, `~/.yarn/bin/papert`. |
+| `pathToPapertExecutable`   | `string`                                       | Auto-detected    | Path to the Papert Code executable. Supports multiple formats: `'papert'` (native binary from PATH), `'/path/to/papert'` (explicit path), `'/path/to/cli.js'` (Node.js bundle), `'node:/path/to/cli.js'` (force Node.js runtime), `'bun:/path/to/cli.js'` (force Bun runtime). If not provided, auto-detects from: bundled CLI inside the SDK, `PAPERT_CODE_CLI_PATH` env var, `~/.volta/bin/papert`, `~/.npm-global/bin/papert`, `/usr/local/bin/papert`, `~/.local/bin/papert`, `~/node_modules/.bin/papert`, `~/.yarn/bin/papert`. |
 | `permissionMode`         | `'default' \| 'plan' \| 'auto-edit' \| 'yolo'` | `'default'`      | Permission mode controlling tool execution approval. See [Permission Modes](#permission-modes) for details.                                                                                                                                                                                                                                                                                                                                                                           |
 | `canUseTool`             | `CanUseTool`                                   | -                | Custom permission handler for tool execution approval. Invoked when a tool requires confirmation. Must respond within 30 seconds or the request will be auto-denied. See [Custom Permission Handler](#custom-permission-handler).                                                                                                                                                                                                                                                     |
 | `env`                    | `Record<string, string>`                       | -                | Environment variables to pass to the Papert Code process. Merged with the current process environment.                                                                                                                                                                                                                                                                                                                                                                                  |

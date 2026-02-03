@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import {
   parseExecutableSpec,
   prepareSpawnInfo,
@@ -408,6 +409,24 @@ describe('CLI Path Utilities', () => {
       const result = findNativeCliPath();
 
       expect(result).toContain(voltaBinPath);
+
+      process.env['PAPERT_CODE_CLI_PATH'] = originalEnv;
+    });
+
+    it('should use bundled CLI when available and no env override', () => {
+      const originalEnv = process.env['PAPERT_CODE_CLI_PATH'];
+      delete process.env['PAPERT_CODE_CLI_PATH'];
+
+      const require = createRequire(import.meta.url);
+      const pkgPath = require.resolve('@papert-code/sdk-typescript/package.json');
+      const pkgDir = path.dirname(pkgPath);
+      const bundledCliPath = path.join(pkgDir, 'dist', 'cli', 'cli.js');
+
+      mockFs.existsSync.mockImplementation((p) => p === bundledCliPath);
+
+      const result = findNativeCliPath();
+
+      expect(result).toBe(bundledCliPath);
 
       process.env['PAPERT_CODE_CLI_PATH'] = originalEnv;
     });

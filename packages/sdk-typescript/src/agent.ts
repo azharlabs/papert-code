@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
@@ -41,6 +42,22 @@ export interface PapertAgent {
   ) => Promise<{ stdout: string; stderr: string; exitCode: number | null }>;
 }
 
+function resolveBundledCliBinary(): string | undefined {
+  try {
+    const require = createRequire(import.meta.url);
+    const pkgPath = require.resolve('@papert-code/sdk-typescript/package.json');
+    const pkgDir = path.dirname(pkgPath);
+    const bundledCli = path.join(pkgDir, 'dist', 'cli', 'cli.js');
+    if (existsSync(bundledCli)) {
+      return bundledCli;
+    }
+  } catch {
+    return undefined;
+  }
+
+  return undefined;
+}
+
 function resolveCliBinary(customPath?: string): string {
   if (customPath) return customPath;
 
@@ -65,6 +82,11 @@ function resolveCliBinary(customPath?: string): string {
     const resolved = require.resolve('@papert-code/papert-code');
     return path.resolve(resolved);
   } catch {
+    const bundledCli = resolveBundledCliBinary();
+    if (bundledCli) {
+      return bundledCli;
+    }
+
     // Fallback: use monorepo-relative CLI dist (../../cli/dist/index.js from dist folder)
     const fallback = path.resolve(
       moduleDir,

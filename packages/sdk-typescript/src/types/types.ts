@@ -103,14 +103,15 @@ export interface QueryOptions {
    * - 'tsx:/path/to/index.ts' -> Force tsx runtime
    * - 'deno:/path/to/cli.ts' -> Force Deno runtime
    *
-   * If not provided, the SDK will auto-detect the native binary in this order:
-   * 1. PAPERT_CODE_CLI_PATH environment variable
-   * 2. ~/.volta/bin/papert
-   * 3. ~/.npm-global/bin/papert
-   * 4. /usr/local/bin/papert
-   * 5. ~/.local/bin/papert
-   * 6. ~/node_modules/.bin/papert
-   * 7. ~/.yarn/bin/papert
+   * If not provided, the SDK will auto-detect the CLI in this order:
+   * 1. Bundled CLI inside the SDK package (dist/cli/cli.js)
+   * 2. PAPERT_CODE_CLI_PATH environment variable
+   * 3. ~/.volta/bin/papert
+   * 4. ~/.npm-global/bin/papert
+   * 5. /usr/local/bin/papert
+   * 6. ~/.local/bin/papert
+   * 7. ~/node_modules/.bin/papert
+   * 8. ~/.yarn/bin/papert
    *
    * The .ts files are only supported for debugging purposes.
    *

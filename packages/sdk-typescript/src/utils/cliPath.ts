@@ -8,18 +8,20 @@
  * 4. TypeScript source: 'tsx /path/to/index.ts' (development)
  *
  * Auto-detection locations for native binary:
- * 1. PAPERT_CODE_CLI_PATH environment variable
- * 2. ~/.volta/bin/papert
- * 3. ~/.npm-global/bin/papert
- * 4. /usr/local/bin/papert
- * 5. ~/.local/bin/papert
- * 6. ~/node_modules/.bin/papert
- * 7. ~/.yarn/bin/papert
+ * 1. Bundled CLI inside the SDK package (dist/cli/cli.js)
+ * 2. PAPERT_CODE_CLI_PATH environment variable
+ * 3. ~/.volta/bin/papert
+ * 4. ~/.npm-global/bin/papert
+ * 5. /usr/local/bin/papert
+ * 6. ~/.local/bin/papert
+ * 7. ~/node_modules/.bin/papert
+ * 8. ~/.yarn/bin/papert
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 
 /**
  * Executable types supported by the SDK
@@ -40,6 +42,22 @@ export type SpawnInfo = {
   originalInput: string;
 };
 
+function findBundledCliPath(): string | undefined {
+  try {
+    const require = createRequire(import.meta.url);
+    const pkgPath = require.resolve('@papert-code/sdk-typescript/package.json');
+    const pkgDir = path.dirname(pkgPath);
+    const bundledCliPath = path.join(pkgDir, 'dist', 'cli', 'cli.js');
+    if (fs.existsSync(bundledCliPath)) {
+      return bundledCliPath;
+    }
+  } catch {
+    // Ignore resolution errors and fall back to other detection methods.
+  }
+
+  return undefined;
+}
+
 export function findNativeCliPath(): string {
   const homeDir = process.env['HOME'] || process.env['USERPROFILE'] || '';
 
@@ -47,22 +65,25 @@ export function findNativeCliPath(): string {
     // 1. Environment variable (highest priority)
     process.env['PAPERT_CODE_CLI_PATH'],
 
-    // 2. Volta bin
+    // 2. Bundled CLI inside the SDK package
+    findBundledCliPath(),
+
+    // 3. Volta bin
     path.join(homeDir, '.volta', 'bin', 'papert'),
 
-    // 3. Global npm installations
+    // 4. Global npm installations
     path.join(homeDir, '.npm-global', 'bin', 'papert'),
 
-    // 4. Common Unix binary locations
+    // 5. Common Unix binary locations
     '/usr/local/bin/papert',
 
-    // 5. User local bin
+    // 6. User local bin
     path.join(homeDir, '.local', 'bin', 'papert'),
 
-    // 6. Node modules bin in home directory
+    // 7. Node modules bin in home directory
     path.join(homeDir, 'node_modules', '.bin', 'papert'),
 
-    // 7. Yarn global bin
+    // 8. Yarn global bin
     path.join(homeDir, '.yarn', 'bin', 'papert'),
   ];
 
@@ -79,6 +100,7 @@ export function findNativeCliPath(): string {
     '  1. Install papert globally: npm install -g papert\n' +
     '  2. Or provide explicit executable: query({ pathToPapertExecutable: "/path/to/papert" })\n' +
     '  3. Or set environment variable: PAPERT_CODE_CLI_PATH="/path/to/papert"\n' +
+    '  4. Or ensure the SDK package was published with bundled CLI assets\n' +
     '\n' +
     'For development/testing, you can also use:\n' +
     '  • TypeScript source: query({ pathToPapertExecutable: "/path/to/index.ts" })\n' +
