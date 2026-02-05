@@ -134,6 +134,10 @@ async function requestJson<T>(
   return payload as T;
 }
 
+function isFetchFailure(err: unknown): boolean {
+  return err instanceof TypeError && err.message === 'fetch failed';
+}
+
 export async function resolveAdminSession(): Promise<AdminSession | null> {
   const { baseUrl, email, password, token } = getAdminEnv();
   if (!baseUrl) return null;
@@ -159,14 +163,24 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
   }
 
   if (!authToken && loginEmail && loginPassword) {
-    loginResponse = await requestJson<any>(baseUrl, '/api/v1/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: loginEmail, password: loginPassword }),
-    });
-    authToken = loginResponse.token;
-    if (authToken) {
-      await saveCachedToken(baseUrl, authToken, loginEmail);
+    try {
+      loginResponse = await requestJson<any>(baseUrl, '/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
+      authToken = loginResponse.token;
+      if (authToken) {
+        await saveCachedToken(baseUrl, authToken, loginEmail);
+      }
+    } catch (err) {
+      if (isFetchFailure(err)) {
+        console.warn(
+          `Warning: unable to reach admin server at ${baseUrl}. Continuing without admin session.`,
+        );
+        return null;
+      }
+      throw err;
     }
   }
 
@@ -197,6 +211,12 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
       quota: configResponse.quota ?? loginResponse?.quota,
     };
   } catch (err) {
+    if (isFetchFailure(err)) {
+      console.warn(
+        `Warning: unable to reach admin server at ${baseUrl}. Continuing without admin session.`,
+      );
+      return null;
+    }
     if ((err as { status?: number }).status === 401) {
       try {
         await fs.unlink(getAdminTokenPath());
