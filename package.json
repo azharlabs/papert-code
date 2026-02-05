@@ -1,6 +1,6 @@
 {
   "name": "@papert-code/papert-code",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "engines": {
     "node": ">=20.0.0"
   },
