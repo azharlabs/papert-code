@@ -2,12 +2,11 @@ import asyncio
 import json
 import logging
 import os
-import shutil
-import subprocess
 from typing import Optional, Dict, List, AsyncIterator, Any
 import signal
 
 from .protocol import SDKMessage
+from .cli_path import resolve_spawn_info
 
 logger = logging.getLogger(__name__)
 
@@ -35,14 +34,8 @@ class ProcessTransport:
         """Initializes the subprocess."""
         args = self._build_cli_arguments()
         
-        # Resolve executable path
-        executable = shutil.which(self.path_to_papert_executable)
-        if not executable:
-             # Fallback to direct path or node execution if simple name lookup fails
-             # This is a simplification; a more robust logic like in TS SDK might be needed 
-             executable = self.path_to_papert_executable
-
-        cmd = [executable] + args
+        spawn_info = resolve_spawn_info(self.path_to_papert_executable, env=self.env)
+        cmd = [spawn_info.command] + spawn_info.args + args
         
         logger.debug(f"Spawning CLI: {cmd}")
         

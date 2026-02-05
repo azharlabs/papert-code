@@ -35,6 +35,7 @@ Issues = "https://github.com/azharlabs/papert-code/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/papert_code_sdk"]
+include = ["src/papert_code_sdk/cli/**"]
 
 [tool.pytest.ini_options]
 addopts = "-ra -q"

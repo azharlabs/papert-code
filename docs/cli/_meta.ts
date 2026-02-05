@@ -4,6 +4,7 @@ export default {
   'openai-auth': 'OpenAI Authentication',
   commands: 'Commands',
   'sdk-typescript': 'TypeScript SDK',
+  'sdk-python': 'Python SDK',
   scheduler: 'Scheduler',
   configuration: 'Configuration',
   'configuration-v1': 'Configuration (v1)',
