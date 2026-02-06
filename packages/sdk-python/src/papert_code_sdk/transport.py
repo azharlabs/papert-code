@@ -5,7 +5,8 @@ import os
 from typing import Optional, Dict, List, AsyncIterator, Any
 import signal
 
-from .protocol import SDKMessage
+from .abort import AbortController
+from .errors import AbortError
 from .cli_path import resolve_spawn_info
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,13 @@ class ProcessTransport:
         debug: bool = False,
         model: Optional[str] = None,
         permission_mode: Optional[str] = None,
+        abort_controller: Optional[AbortController] = None,
+        max_session_turns: Optional[int] = None,
+        core_tools: Optional[List[str]] = None,
+        exclude_tools: Optional[List[str]] = None,
+        allowed_tools: Optional[List[str]] = None,
+        auth_type: Optional[str] = None,
+        include_partial_messages: bool = False,
     ):
         self.path_to_papert_executable = path_to_papert_executable or "papert"
         self.cwd = cwd or os.getcwd()
@@ -26,12 +34,22 @@ class ProcessTransport:
         self.debug = debug
         self.model = model
         self.permission_mode = permission_mode
+        self.abort_controller = abort_controller or AbortController()
+        self.max_session_turns = max_session_turns
+        self.core_tools = core_tools or []
+        self.exclude_tools = exclude_tools or []
+        self.allowed_tools = allowed_tools or []
+        self.auth_type = auth_type
+        self.include_partial_messages = include_partial_messages
         
         self.process: Optional[asyncio.subprocess.Process] = None
         self.closed = False
 
     async def initialize(self):
         """Initializes the subprocess."""
+        if self.abort_controller.signal.aborted:
+            raise AbortError("Transport start aborted")
+
         args = self._build_cli_arguments()
         
         spawn_info = resolve_spawn_info(self.path_to_papert_executable, env=self.env)
@@ -68,8 +86,24 @@ class ProcessTransport:
             
         if self.permission_mode:
             args.extend(['--approval-mode', self.permission_mode])
-            
-        # Add other args as needed (max-turns, etc.)
+
+        if self.max_session_turns is not None:
+            args.extend(['--max-session-turns', str(self.max_session_turns)])
+
+        if self.core_tools:
+            args.extend(['--core-tools', ",".join(self.core_tools)])
+
+        if self.exclude_tools:
+            args.extend(['--exclude-tools', ",".join(self.exclude_tools)])
+
+        if self.allowed_tools:
+            args.extend(['--allowed-tools', ",".join(self.allowed_tools)])
+
+        if self.auth_type:
+            args.extend(['--auth-type', self.auth_type])
+
+        if self.include_partial_messages:
+            args.append('--include-partial-messages')
         
         return args
 
@@ -86,6 +120,9 @@ class ProcessTransport:
 
     async def write(self, message: str):
         """Writes a string to the subprocess stdin."""
+        if self.abort_controller.signal.aborted:
+            raise AbortError("Cannot write: operation aborted")
+
         if not self.process or not self.process.stdin:
             raise RuntimeError("Process not initialized or stdin not available")
             
@@ -118,6 +155,13 @@ class ProcessTransport:
 
         # Wait for process to exit to clean up zombies
         await self.process.wait()
+
+        if self.abort_controller.signal.aborted:
+            raise AbortError("CLI process aborted by user")
+
+    def end_input(self):
+        if self.process and self.process.stdin and not self.process.stdin.is_closing():
+            self.process.stdin.write_eof()
 
     async def close(self):
         """Closes the transport and terminates the process."""

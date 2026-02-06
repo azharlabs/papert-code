@@ -5,6 +5,7 @@ export default {
   commands: 'Commands',
   'sdk-typescript': 'TypeScript SDK',
   'sdk-python': 'Python SDK',
+  'sdk-python-multi-agent-skills': 'Python SDK Multi-agent & Skills',
   scheduler: 'Scheduler',
   configuration: 'Configuration',
   'configuration-v1': 'Configuration (v1)',

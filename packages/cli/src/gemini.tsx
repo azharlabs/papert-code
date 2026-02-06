@@ -64,15 +64,6 @@ import { computeWindowTitle } from './utils/windowTitle.js';
 import { validateNonInteractiveAuth } from './validateNonInterActiveAuth.js';
 import { showResumeSessionPicker } from './ui/components/ResumeSessionPicker.js';
 import { hasDeferredCommand, runDeferredCommand } from './deferred.js';
-import {
-  AdminQuotaError,
-  applyAdminSessionToEnv,
-  reportAdminUsage,
-  requestQuotaIncrease,
-  resolveAdminSession,
-  uploadAdminSession,
-  type AdminSession,
-} from './admin/adminClient.js';
 
 export function validateDnsResolutionOrder(
   order: string | undefined,
@@ -222,31 +213,6 @@ export async function main() {
   await cleanupCheckpoints();
 
   let argv = await parseArguments(settings.merged);
-  let adminSession: AdminSession | null = null;
-
-  try {
-    adminSession = await resolveAdminSession();
-    if (adminSession) {
-      applyAdminSessionToEnv(adminSession);
-    }
-  } catch (err) {
-    if (err instanceof AdminQuotaError) {
-      if (err.baseUrl && err.token) {
-        try {
-          await requestQuotaIncrease(
-            err.baseUrl,
-            err.token,
-            'User exceeded token quota during login.',
-          );
-        } catch {
-          // ignore quota request failures
-        }
-      }
-      console.error(err.message);
-      process.exit(1);
-    }
-    throw err;
-  }
 
   const targetCwd = argv.cwd ? path.resolve(argv.cwd) : process.cwd();
 
@@ -385,17 +351,6 @@ export async function main() {
       argv,
       targetCwd,
     );
-
-    if (adminSession) {
-      registerCleanup(async () => {
-        try {
-          await reportAdminUsage(adminSession, config);
-          await uploadAdminSession(adminSession, config);
-        } catch {
-          // ignore admin telemetry failures
-        }
-      });
-    }
 
     if (config.getListExtensions()) {
       console.log('Installed extensions:');

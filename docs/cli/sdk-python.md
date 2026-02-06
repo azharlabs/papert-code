@@ -1,7 +1,8 @@
 # Python SDK
 
-The Papert Code Python SDK runs the CLI as a subprocess and streams messages
-programmatically.
+The Papert Code Python SDK runs the CLI as a subprocess and streams SDK
+messages. It now includes query controls, abort support, permission callback
+timeouts, richer query options, and a lightweight agent wrapper.
 
 ## Install
 
@@ -12,42 +13,10 @@ pip install papert-code-sdk
 ## Requirements
 
 - Python >= 3.8
-- A system `papert` install in PATH (the SDK checks `papert` first)
-- Node.js >= 18 (needed by the CLI runtime)
+- A system `papert` install in `PATH` or explicit `pathToPapertExecutable`
+- Node.js >= 18 for JS bundle execution
 
-If `papert` is not installed, the SDK raises a helpful error. You can still
-override the executable with an explicit path via `pathToPapertExecutable`.
-
-## CLI resolution behavior
-
-By default, the SDK resolves the executable using:
-
-1. `papert` from PATH (via `shutil.which("papert")`)
-
-If you want to override this:
-
-- Pass `pathToPapertExecutable` in `query()`
-- Use a JS bundle (e.g. `/path/to/cli.js`) or a runtime-prefixed path
-  like `node:/path/to/cli.js`
-
-## Using the bundled CLI assets
-
-The SDK package can ship a bundled CLI at `papert_code_sdk/cli/cli.js`.
-If you want to run that bundle explicitly, resolve its path like this:
-
-```python
-import pkgutil
-from pathlib import Path
-
-pkg_path = Path(pkgutil.get_loader("papert_code_sdk").get_filename()).parent
-cli_path = pkg_path / "cli" / "cli.js"
-result = query(
-    prompt="Hello",
-    options={"pathToPapertExecutable": f"node:{cli_path}"},
-)
-```
-
-## Quick start: streaming query
+## Quick Start
 
 ```python
 import asyncio
@@ -66,126 +35,217 @@ async def main():
 asyncio.run(main())
 ```
 
-## Local development install
+## Query Options
 
-From the repo root (`/Users/azhar/code/coding-agent/papert-code`):
+`query(prompt, options=...)` accepts:
 
-```bash
-npm run bundle
-python3 packages/sdk-python/scripts/bundle_cli.py
-python3 -m pip install -e packages/sdk-python
-```
+- `cwd`
+- `model`
+- `permissionMode` / `permission_mode`
+- `pathToPapertExecutable` / `path_to_papert_executable`
+- `env`
+- `debug`
+- `skillsPath` / `skillsPaths` / `skills_path`
+- `canUseTool` / `can_use_tool`
+- `mcpServers` / `mcp_servers`
+- `abortController` / `abort_controller`
+- `maxSessionTurns` / `max_session_turns`
+- `coreTools` / `core_tools`
+- `excludeTools` / `exclude_tools`
+- `allowedTools` / `allowed_tools`
+- `authType` / `auth_type`
+- `includePartialMessages` / `include_partial_messages`
+- `agents`
 
-## Options
+## Query Controls
 
-The `query()` call accepts `options` with these fields:
+The `Query` object returned by `query()` supports:
 
-- `cwd`: working directory for the CLI process (default: current directory)
-- `model`: override the model name
-- `permissionMode`: permission mode (e.g. `default`, `plan`, `auto-edit`, `yolo`)
-- `pathToPapertExecutable`: override the CLI executable path
-- `env`: dict of environment variables to pass to the CLI process
-- `debug`: enable CLI stderr logging (default: False)
-- `skillsPath` or `skillsPaths`: path(s) to skills folders
-- `can_use_tool`: async callback for tool-approval decisions
-- `mcpServers`: MCP server configuration passed at initialization
+- `get_session_id()`
+- `is_closed()`
+- `interrupt()`
+- `set_permission_mode(mode)`
+- `set_model(model)`
+- `supported_commands()`
+- `mcp_server_status()`
+- `end_input()`
+- `close()`
+
+## Multi-agent, Skills, and `.papert` Full Guide
+
+For detailed setup and complete examples (targeting a specific subagent, using
+specific skill directories, runtime `agents` injection, and full `.papert`
+project layout), see:
+
+- [Python SDK Multi-agent & Skills](./sdk-python-multi-agent-skills.md)
 
 Example:
 
 ```python
-result = query(
-    prompt="Summarize TODOs",
-    options={
-        "cwd": "/path/to/repo",
-        "model": "gpt-4o-mini",
-        "permissionMode": "auto-edit",
-        "env": {"OPENAI_API_KEY": "..."},
-    },
-)
+q = query(prompt="hello", options={"permissionMode": "default"})
+session_id = q.get_session_id()
+await q.set_permission_mode("auto-edit")
+await q.set_model("gpt-4o-mini")
+await q.interrupt()
+await q.close()
 ```
 
-## Custom permission handler
+## Abort Support
 
 ```python
 import asyncio
-from papert_code_sdk import query
-
-async def can_use_tool(tool_name, tool_input):
-    if tool_name.startswith("read_"):
-        return {"behavior": "allow", "updatedInput": tool_input}
-    return {"behavior": "deny", "message": "User denied the operation"}
+from papert_code_sdk import AbortController, is_abort_error, query
 
 async def main():
-    result = query(
-        prompt="Create a new file",
-        options={"can_use_tool": can_use_tool},
+    abort_controller = AbortController()
+    q = query(
+        prompt="Long-running task",
+        options={"abortController": abort_controller},
     )
 
-    async for message in result:
-        print(message)
+    async def abort_soon():
+        await asyncio.sleep(3)
+        abort_controller.abort()
+
+    asyncio.create_task(abort_soon())
+
+    try:
+        async for message in q:
+            print(message.type)
+    except Exception as error:
+        if is_abort_error(error):
+            print("Aborted")
+        else:
+            raise
 
 asyncio.run(main())
 ```
 
-## Multi-turn conversation
+## Custom Permission Handler
+
+```python
+from papert_code_sdk import query
+
+async def can_use_tool(tool_name, tool_input, options):
+    if tool_name and tool_name.startswith("read_"):
+        return {"behavior": "allow", "updatedInput": tool_input}
+    return {"behavior": "deny", "message": "User denied the operation"}
+
+q = query(
+    prompt="Create a new file",
+    options={"canUseTool": can_use_tool},
+)
+```
+
+The callback has a 30-second timeout. Timeout or callback error defaults to
+`deny` for safety.
+
+## Multi-turn Conversation
 
 ```python
 import asyncio
 from papert_code_sdk import query, SDKUserMessage
 
-async def messages():
+async def messages(session_id):
     yield SDKUserMessage(
         type="user",
-        session_id="demo-session",
+        session_id=session_id,
         message={"role": "user", "content": "Create hello.txt"},
         parent_tool_use_id=None,
     )
     yield SDKUserMessage(
         type="user",
-        session_id="demo-session",
+        session_id=session_id,
         message={"role": "user", "content": "Read it back"},
         parent_tool_use_id=None,
     )
 
 async def main():
-    result = query(prompt=messages(), options={"permissionMode": "auto-edit"})
+    q = query(prompt="Seed")
+    session_id = q.get_session_id()
+    await q.close()
+
+    result = query(
+        prompt=messages(session_id),
+        options={"permissionMode": "auto-edit"},
+    )
+
     async for message in result:
         print(message)
 
 asyncio.run(main())
 ```
 
-## MCP server integration
+## Agent Wrapper
+
+```python
+from papert_code_sdk import create_papert_agent
+
+agent = create_papert_agent(
+    {"options": {"cwd": "/path/to/repo", "permissionMode": "auto-edit"}}
+)
+
+run = agent.run_prompt("Summarize TODOs")
+```
+
+## High-level Client
+
+For reusable multi-call sessions without manually building `SDKUserMessage`
+streams:
+
+```python
+import asyncio
+from papert_code_sdk import create_client
+
+async def main():
+    client = create_client({"cwd": "/path/to/repo"})
+    session = client.create_session(session_id="my-session")
+
+    await session.send("Create notes.md")
+    await session.send("Read notes.md and summarize")
+
+    await client.close()
+
+asyncio.run(main())
+```
+
+Client APIs:
+
+- `create_client(options=None)`
+- `Client.create_session(session_id=None, options=None)`
+- `Client.get_session(session_id)`
+- `Client.close()`
+- `ClientSession.stream(prompt, options=None)`
+- `ClientSession.send(prompt, options=None)`
+- `ClientSession.close()`
+
+## MCP Server Integration
 
 ```python
 from papert_code_sdk import query
 
-async def main():
-    result = query(
-        prompt="Use the custom tool from my MCP server",
-        options={
-            "mcpServers": {
-                "my-server": {
-                    "command": "node",
-                    "args": ["path/to/mcp-server.js"],
-                    "env": {"PORT": "3000"},
-                },
-            },
-        },
-    )
-
-    async for message in result:
-        print(message)
+result = query(
+    prompt="Use a tool from MCP",
+    options={
+        "mcpServers": {
+            "my-server": {
+                "command": "node",
+                "args": ["path/to/mcp-server.js"],
+                "env": {"PORT": "3000"},
+            }
+        }
+    },
+)
 ```
 
-## Message types
+## Message Types
 
-The iterator yields instances of:
+The iterator yields:
 
 - `SDKUserMessage`
 - `SDKAssistantMessage`
 - `SDKSystemMessage`
 - `SDKResultMessage`
-- `SDKPartialAssistantMessage` (stream events)
+- `SDKPartialAssistantMessage`
 
-These types are defined in `papert_code_sdk.protocol`.
+All protocol models are under `papert_code_sdk.protocol`.

@@ -23,6 +23,12 @@ class CLIPermissionDenial(BaseModel):
     tool_use_id: str
     tool_input: Any
 
+class PermissionSuggestion(BaseModel):
+    type: Literal["allow", "deny", "modify"]
+    label: str
+    description: Optional[str] = None
+    modifiedInput: Optional[Any] = None
+
 class TextBlock(BaseModel):
     type: Literal['text'] = 'text'
     text: str
@@ -91,8 +97,7 @@ class SDKSystemMessage(BaseModel):
     permission_mode: Optional[str] = None
     
     # Allow extra fields for system messages as they may evolve
-    class Config:
-        extra = 'allow'
+    model_config = {"extra": "allow"}
 
 class SDKResultMessage(BaseModel):
     type: Literal['result'] = 'result'
@@ -110,8 +115,7 @@ class SDKResultMessage(BaseModel):
     result: Optional[str] = None
     error: Optional[Dict[str, Any]] = None
 
-    class Config:
-        extra = 'allow'
+    model_config = {"extra": "allow"}
 
 class MessageStartStreamEvent(BaseModel):
     type: Literal['message_start'] = 'message_start'
@@ -200,5 +204,5 @@ class CLIControlResponse(BaseModel):
     response: ControlResponsePayload
 
 class ControlCancelRequest(BaseModel):
-    type: Literal['control_cancel_request']
+    type: Literal['control_cancel_request'] = 'control_cancel_request'
     request_id: Optional[str] = None
