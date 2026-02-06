@@ -12,6 +12,7 @@ import { SettingScope } from '../../config/settings.js';
 import { Colors } from '../colors.js';
 import { useKeypress } from '../hooks/useKeypress.js';
 import { RadioButtonSelect } from '../components/shared/RadioButtonSelect.js';
+import { AdminLoginPrompt } from '../components/AdminLoginPrompt.js';
 import { useUIState } from '../contexts/UIStateContext.js';
 import { useUIActions } from '../contexts/UIActionsContext.js';
 import { useSettings } from '../contexts/SettingsContext.js';
@@ -19,7 +20,7 @@ import { t } from '../../i18n/index.js';
 import {
   AdminQuotaError,
   applyAdminSessionToEnv,
-  resolveAdminSession,
+  resolveAdminSessionWithCredentials,
 } from '../../admin/adminClient.js';
 
 function parseDefaultAuthType(
@@ -40,17 +41,13 @@ export function AuthDialog(): React.JSX.Element {
   const settings = useSettings();
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const hasAdminUrl = Boolean(process.env['PAPERT_ADMIN_URL']);
+  const [showAdminPrompt, setShowAdminPrompt] = useState(false);
   const items = [
-    ...(hasAdminUrl
-      ? [
-        {
-          key: 'admin-managed',
-          label: t('Admin-managed login (Papert Admin)'),
-          value: { authType: AuthType.USE_OPENAI, source: 'admin' as const },
-        },
-      ]
-      : []),
+    {
+      key: 'admin-managed',
+      label: t('Admin-managed login (Papert Admin)'),
+      value: { authType: AuthType.USE_OPENAI, source: 'admin' as const },
+    },
     {
       key: AuthType.USE_OPENAI,
       label: t('Custom models (OpenAI compatible APIs)'),
@@ -80,9 +77,6 @@ export function AuthDialog(): React.JSX.Element {
       }
 
       // Priority 4: default to admin when available, otherwise OpenAI
-      if (hasAdminUrl) {
-        return item.value.source === 'admin';
-      }
       return item.value.authType === AuthType.USE_OPENAI;
     }),
   );
@@ -93,63 +87,71 @@ export function AuthDialog(): React.JSX.Element {
   }) => {
     setErrorMessage(null);
     if (selection.source === 'admin') {
-      if (!process.env['PAPERT_ADMIN_URL']) {
-        setErrorMessage(
-          t('Set PAPERT_ADMIN_URL to use admin-managed authentication.'),
-        );
-        return;
-      }
-      try {
-        const session = await resolveAdminSession();
-        if (!session) {
-          setErrorMessage(
-            t('Admin login required. Provide credentials to continue.'),
-          );
-          return;
-        }
-        if (!session.provider?.apiKey) {
-          setErrorMessage(
-            t('Admin-managed login requires a provider API key.'),
-          );
-          return;
-        }
-        if (!session.provider?.baseUrl) {
-          setErrorMessage(
-            t(
-              'Admin-managed login requires a provider Base URL (set Base URL in the admin controls).',
-            ),
-          );
-          return;
-        }
-        applyAdminSessionToEnv(session);
-        const adminModel =
-          session.provider.model || session.provider.models?.[0];
-        await onAuthSelect(
-          selection.authType,
-          SettingScope.User,
-          {
-            apiKey: session.provider.apiKey,
-            baseUrl: session.provider.baseUrl,
-            model: adminModel,
-          },
-          'Papert Admin credentials',
-          true,
-        );
-        return;
-      } catch (err) {
-        if (err instanceof AdminQuotaError) {
-          setErrorMessage(err.message);
-          return;
-        }
-        setErrorMessage(
-          t('Failed to authenticate. Message: {{message}}', {
-            message: err instanceof Error ? err.message : String(err),
-          }),
-        );
-        return;
-      }
+      setShowAdminPrompt(true);
+      return;
     }
     await onAuthSelect(selection.authType, SettingScope.User);
+  };
+
+  const handleAdminLogin = async (
+    baseUrl: string,
+    email: string,
+    password: string,
+  ) => {
+    try {
+      const session = await resolveAdminSessionWithCredentials({
+        baseUrl,
+        email,
+        password,
+      });
+      if (!session) {
+        setErrorMessage(
+          t('Admin login required. Provide credentials to continue.'),
+        );
+        setShowAdminPrompt(false);
+        return;
+      }
+      if (!session.provider?.apiKey) {
+        setErrorMessage(t('Admin-managed login requires a provider API key.'));
+        setShowAdminPrompt(false);
+        return;
+      }
+      if (!session.provider?.baseUrl) {
+        setErrorMessage(
+          t(
+            'Admin-managed login requires a provider Base URL (set Base URL in the admin controls).',
+          ),
+        );
+        setShowAdminPrompt(false);
+        return;
+      }
+      applyAdminSessionToEnv(session);
+      const adminModel = session.provider.model || session.provider.models?.[0];
+      await onAuthSelect(
+        AuthType.USE_OPENAI,
+        SettingScope.User,
+        {
+          apiKey: session.provider.apiKey,
+          baseUrl: session.provider.baseUrl,
+          model: adminModel,
+        },
+        'Papert Admin credentials',
+        true,
+      );
+      setShowAdminPrompt(false);
+    } catch (err) {
+      if (err instanceof AdminQuotaError) {
+        setErrorMessage(err.message);
+        setShowAdminPrompt(false);
+        return;
+      }
+      setErrorMessage(
+        t('Failed to authenticate. Message: {{message}}', {
+          message: err instanceof Error ? err.message : String(err),
+        }),
+      );
+      setShowAdminPrompt(false);
+    }
   };
 
   useKeypress(
@@ -174,6 +176,15 @@ export function AuthDialog(): React.JSX.Element {
     },
     { isActive: true },
   );
+
+  if (showAdminPrompt) {
+    return (
+      <AdminLoginPrompt
+        onSubmit={handleAdminLogin}
+        onCancel={() => setShowAdminPrompt(false)}
+      />
+    );
+  }
 
   return (
     <Box

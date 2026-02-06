@@ -236,6 +236,93 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
   }
 }
 
+export async function resolveAdminSessionWithCredentials(options: {
+  baseUrl: string;
+  email?: string;
+  password?: string;
+  token?: string;
+}): Promise<AdminSession | null> {
+  const baseUrl = options.baseUrl.replace(/\/$/, '');
+  if (!baseUrl) return null;
+
+  let authToken = options.token;
+  let loginResponse: any;
+
+  if (!authToken && options.email && options.password) {
+    try {
+      loginResponse = await requestJson<any>(baseUrl, '/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: options.email,
+          password: options.password,
+        }),
+      });
+      authToken = loginResponse.token;
+      if (authToken) {
+        await saveCachedToken(baseUrl, authToken, options.email);
+      }
+    } catch (err) {
+      if (isFetchFailure(err)) {
+        throw new Error(
+          `Unable to reach admin server at ${baseUrl}. Please check the URL and network.`,
+        );
+      }
+      throw err;
+    }
+  }
+
+  if (!authToken) {
+    return null;
+  }
+
+  try {
+    const configResponse = await requestJson<any>(baseUrl, '/api/v1/user/config', {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+    const user = configResponse.user ?? loginResponse?.user;
+    const provider =
+      configResponse.provider ??
+      loginResponse?.provider ??
+      loginResponse?.user?.provider ??
+      {};
+    return {
+      baseUrl,
+      token: authToken,
+      userId: user?.id || options.email || 'unknown-user',
+      email: user?.email || options.email || 'unknown',
+      selfManaged: Boolean(user?.selfManaged),
+      provider,
+      controls: configResponse.controls ?? loginResponse?.controls ?? {},
+      quota: configResponse.quota ?? loginResponse?.quota,
+    };
+  } catch (err) {
+    if (isFetchFailure(err)) {
+      throw new Error(
+        `Unable to reach admin server at ${baseUrl}. Please check the URL and network.`,
+      );
+    }
+    if ((err as { status?: number }).status === 401) {
+      try {
+        await fs.unlink(getAdminTokenPath());
+      } catch {
+        // ignore cache delete failures
+      }
+    }
+    const payload = (err as { payload?: any }).payload;
+    if (payload?.error === 'quota_exceeded') {
+      throw new AdminQuotaError(payload.message || 'Token quota exceeded', {
+        quota: payload.quota,
+        token: authToken,
+        baseUrl,
+      });
+    }
+    throw err;
+  }
+}
+
 export function applyAdminSessionToEnv(session: AdminSession): void {
   process.env['PAPERT_ADMIN_TOKEN'] = session.token;
   process.env['PAPERT_ADMIN_USER_ID'] = session.userId;
