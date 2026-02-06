@@ -514,6 +514,10 @@ The server-side remote driving feature is guarded by the following environment v
 
   In practice, this means `PAPERT_REMOTE_SESSION_TTL_MS` is the maximum period the client can be idle (no requests) before it must reconnect and create a new session.
 
+- **`CODER_AGENT_PORT`**:
+  - Port used by local web UI setups to expose the web/agent endpoint.
+  - Common local value: `41242`.
+
 The CLI automatically loads environment variables from an `.env` file. The loading order is:
 
 1.  `.env` file in the current working directory.
@@ -531,6 +535,7 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
 - **`PAPERT_SHARE_PUBLIC_URL_BASE`**:
   - Server-side base URL used to construct public share links (daemon).
   - Example: `https://share.example.com`.
+  - For local web UI usage, a common value is `http://localhost:41242`.
 - **`PAPERT_SHARE_DIR`**:
   - Server-side storage directory for share records (daemon).
   - Defaults to `~/.papert/shares`.

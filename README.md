@@ -72,7 +72,19 @@ papert
 How to access:
 
 - **Terminal UI**: run `papert` in your project directory.
-- **Web UI**: start Papert web mode and open the printed local URL in your browser (for example `http://localhost:41242`), or connect the web client to an existing Papert remote session token.
+- **Web UI**: run with remote/web env enabled and open `http://localhost:41242`.
+
+Example Web UI environment profile:
+
+```bash
+export PAPERT_REMOTE_ENABLED=1
+export PAPERT_REMOTE_SERVER_TOKEN=hi
+export PAPERT_REMOTE_SESSION_TTL_MS=300000
+export CODER_AGENT_PORT=41242
+export PAPERT_REMOTE_DOCS_ENABLED=1
+export PAPERT_SHARE_PUBLIC_URL_BASE=http://localhost:41242
+papert server --host 0.0.0.0 --port 41242 --docs
+```
 
 ### Terminal UI
 

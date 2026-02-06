@@ -30,6 +30,18 @@ To enable them on the daemon process, set:
 - `PAPERT_REMOTE_SERVER_TOKEN=<server-token>`
 - `PAPERT_REMOTE_SESSION_TTL_MS=<milliseconds>` (optional; default: `60000`)
 
+For local web UI development, commonly used values are:
+
+```bash
+export PAPERT_REMOTE_ENABLED=1
+export PAPERT_REMOTE_SERVER_TOKEN=hi
+export PAPERT_REMOTE_SESSION_TTL_MS=300000
+export CODER_AGENT_PORT=41242
+export PAPERT_REMOTE_DOCS_ENABLED=1
+export PAPERT_SHARE_PUBLIC_URL_BASE=http://localhost:41242
+papert server --host 0.0.0.0 --port 41242 --docs
+```
+
 ## Swagger/OpenAPI docs
 
 The daemon can optionally serve API documentation:

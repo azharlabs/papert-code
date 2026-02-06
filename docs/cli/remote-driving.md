@@ -18,6 +18,24 @@ Run a daemon that exposes Papert Code over HTTP:
 papert server --host 0.0.0.0 --port 41242
 ```
 
+### Web UI quick profile (local)
+
+If you want to use the web UI locally, you can use this env profile:
+
+```bash
+export PAPERT_REMOTE_ENABLED=1
+export PAPERT_REMOTE_SERVER_TOKEN=hi
+export PAPERT_REMOTE_SESSION_TTL_MS=300000
+export CODER_AGENT_PORT=41242
+export PAPERT_REMOTE_DOCS_ENABLED=1
+export PAPERT_SHARE_PUBLIC_URL_BASE=http://localhost:41242
+papert server --host 0.0.0.0 --port 41242 --docs
+```
+
+Then open:
+
+- `http://localhost:41242`
+
 By default, `papert server`:
 
 - enables remote driving (`PAPERT_REMOTE_ENABLED=1`)
