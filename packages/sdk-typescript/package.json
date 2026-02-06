@@ -1,6 +1,6 @@
 {
   "name": "@papert-code/sdk-typescript",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeScript SDK for programmatic access to papert-code CLI",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -46,6 +46,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@papert-code/papert-code": "^0.3.92",
     "@modelcontextprotocol/sdk": "^1.0.4",
     "diff": "8.0.3"
   },

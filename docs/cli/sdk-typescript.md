@@ -12,6 +12,9 @@ The Papert Code TypeScript SDK lets you embed Papert CLI with:
 npm install @papert-code/sdk-typescript
 ```
 
+The SDK package includes `@papert-code/papert-code` as a dependency so users do
+not need to install the CLI package separately for standard SDK usage.
+
 ## Requirements
 
 - Node.js >= 18
@@ -120,4 +123,3 @@ Detailed guide with complete examples:
 - To force a CLI binary, set `pathToPapertExecutable` or `PAPERT_CODE_CLI_PATH`
 - `session.send()` is best for request/response flows; `session.stream()` for live streaming
 - Remote daemon/client docs are here: [Remote Driving](./remote-driving.md)
-

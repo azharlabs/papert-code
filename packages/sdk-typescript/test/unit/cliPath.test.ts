@@ -51,6 +51,20 @@ describe('CLI Path Utilities', () => {
 
   describe('parseExecutableSpec', () => {
     describe('auto-detection (no spec provided)', () => {
+      it('should default to papert command when available in PATH', () => {
+        const originalEnv = process.env['PAPERT_CODE_CLI_PATH'];
+        delete process.env['PAPERT_CODE_CLI_PATH'];
+
+        // execSync success in beforeEach means command exists
+        const result = parseExecutableSpec();
+        expect(result).toEqual({
+          executablePath: 'papert',
+          isExplicitRuntime: false,
+        });
+
+        process.env['PAPERT_CODE_CLI_PATH'] = originalEnv;
+      });
+
       it('should auto-detect native CLI when no spec provided', () => {
         // Mock environment variable
         const originalEnv = process.env['PAPERT_CODE_CLI_PATH'];
@@ -69,6 +83,10 @@ describe('CLI Path Utilities', () => {
       });
 
       it('should throw when auto-detection fails', () => {
+        // Simulate no papert command in PATH.
+        mockExecSync.mockImplementation(() => {
+          throw new Error('Command not found');
+        });
         mockFs.existsSync.mockReturnValue(false);
 
         expect(() => parseExecutableSpec()).toThrow(
@@ -398,6 +416,9 @@ describe('CLI Path Utilities', () => {
     it('should search common installation locations', () => {
       const originalEnv = process.env['PAPERT_CODE_CLI_PATH'];
       delete process.env['PAPERT_CODE_CLI_PATH'];
+      mockExecSync.mockImplementation(() => {
+        throw new Error('Command not found');
+      });
 
       // Mock fs.existsSync to return true for volta bin
       // Use path.join to match platform-specific path separators
@@ -416,6 +437,9 @@ describe('CLI Path Utilities', () => {
     it('should use bundled CLI when available and no env override', () => {
       const originalEnv = process.env['PAPERT_CODE_CLI_PATH'];
       delete process.env['PAPERT_CODE_CLI_PATH'];
+      mockExecSync.mockImplementation(() => {
+        throw new Error('Command not found');
+      });
 
       const require = createRequire(import.meta.url);
       const pkgPath = require.resolve('@papert-code/sdk-typescript/package.json');
@@ -434,6 +458,9 @@ describe('CLI Path Utilities', () => {
     it('should throw descriptive error when CLI not found', () => {
       const originalEnv = process.env['PAPERT_CODE_CLI_PATH'];
       delete process.env['PAPERT_CODE_CLI_PATH'];
+      mockExecSync.mockImplementation(() => {
+        throw new Error('Command not found');
+      });
       mockFs.existsSync.mockReturnValue(false);
 
       expect(() => findNativeCliPath()).toThrow('papert CLI not found. Please:');

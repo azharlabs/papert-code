@@ -17,6 +17,9 @@ Feel free to submit a feature request/issue/PR.
 npm install @papert-code/sdk-typescript
 ```
 
+Installing `@papert-code/sdk-typescript` also installs `@papert-code/papert-code`
+as a dependency so the CLI runtime is available by default.
+
 ## Requirements
 
 - Node.js >= 18.0.0

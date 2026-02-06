@@ -8,14 +8,15 @@
  * 4. TypeScript source: 'tsx /path/to/index.ts' (development)
  *
  * Auto-detection locations for native binary:
- * 1. Bundled CLI inside the SDK package (dist/cli/cli.js)
- * 2. PAPERT_CODE_CLI_PATH environment variable
- * 3. ~/.volta/bin/papert
- * 4. ~/.npm-global/bin/papert
- * 5. /usr/local/bin/papert
- * 6. ~/.local/bin/papert
- * 7. ~/node_modules/.bin/papert
- * 8. ~/.yarn/bin/papert
+ * 1. PAPERT_CODE_CLI_PATH environment variable
+ * 2. `papert` command from PATH
+ * 3. Bundled CLI inside the SDK package (dist/cli/cli.js)
+ * 4. ~/.volta/bin/papert
+ * 5. ~/.npm-global/bin/papert
+ * 6. /usr/local/bin/papert
+ * 7. ~/.local/bin/papert
+ * 8. ~/node_modules/.bin/papert
+ * 9. ~/.yarn/bin/papert
  */
 
 import * as fs from 'node:fs';
@@ -61,29 +62,36 @@ function findBundledCliPath(): string | undefined {
 export function findNativeCliPath(): string {
   const homeDir = process.env['HOME'] || process.env['USERPROFILE'] || '';
 
-  const candidates: Array<string | undefined> = [
-    // 1. Environment variable (highest priority)
-    process.env['PAPERT_CODE_CLI_PATH'],
+  const envOverride = process.env['PAPERT_CODE_CLI_PATH'];
+  if (envOverride && fs.existsSync(envOverride)) {
+    return path.resolve(envOverride);
+  }
 
-    // 2. Bundled CLI inside the SDK package
+  // Default to native CLI command if available in PATH.
+  if (isCommandAvailable('papert')) {
+    return 'papert';
+  }
+
+  const candidates: Array<string | undefined> = [
+    // 3. Bundled CLI inside the SDK package
     findBundledCliPath(),
 
-    // 3. Volta bin
+    // 4. Volta bin
     path.join(homeDir, '.volta', 'bin', 'papert'),
 
-    // 4. Global npm installations
+    // 5. Global npm installations
     path.join(homeDir, '.npm-global', 'bin', 'papert'),
 
-    // 5. Common Unix binary locations
+    // 6. Common Unix binary locations
     '/usr/local/bin/papert',
 
-    // 6. User local bin
+    // 7. User local bin
     path.join(homeDir, '.local', 'bin', 'papert'),
 
-    // 7. Node modules bin in home directory
+    // 8. Node modules bin in home directory
     path.join(homeDir, 'node_modules', '.bin', 'papert'),
 
-    // 8. Yarn global bin
+    // 9. Yarn global bin
     path.join(homeDir, '.yarn', 'bin', 'papert'),
   ];
 
