@@ -1,5 +1,7 @@
 # Papert Code
 
+![Papert Terminal UI](docs/assets/papert-screenshot.png)
+
 Papert Code is an AI agent engine for software engineering workflows. It plans, reads, edits, and generates code across large repositories, executes shell and tool actions with safety controls, and exposes the same agent runtime through TypeScript and Python SDKs plus a VS Code companion extension.
 
 - Terminal-first agent with `papert`, built for high-signal, multi-turn coding sessions.
@@ -69,6 +71,8 @@ papert
 
 ## Interface preview
 
+![Papert Web UI](docs/assets/papert-web.png)
+
 How to access:
 
 - **Terminal UI**: run `papert` in your project directory.
@@ -85,14 +89,6 @@ export PAPERT_REMOTE_DOCS_ENABLED=1
 export PAPERT_SHARE_PUBLIC_URL_BASE=http://localhost:41242
 papert server --host 0.0.0.0 --port 41242 --docs
 ```
-
-### Terminal UI
-
-![Papert Terminal UI](docs/assets/papert-screenshot.png)
-
-### Web UI
-
-![Papert Web UI](docs/assets/papert-web.png)
 
 ## Remote driving (daemon/client)
 
