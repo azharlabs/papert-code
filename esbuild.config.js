@@ -52,12 +52,33 @@ esbuild
     inject: [path.resolve(__dirname, 'scripts/esbuild-shims.js')],
     banner: {
       js: `// Force strict mode and setup for ESM
-"use strict";`,
+"use strict";
+const __papertOriginalEmitWarning = process.emitWarning.bind(process);
+process.emitWarning = function patchedEmitWarning(warning, ...args) {
+  if (!process.env.PAPERT_SHOW_NODE_DEPRECATIONS) {
+    const warningCode =
+      (warning && typeof warning === 'object' && 'code' in warning && warning.code) ||
+      (args.length > 1 && typeof args[1] === 'string' && args[1]) ||
+      (args.length > 0 &&
+        args[0] &&
+        typeof args[0] === 'object' &&
+        'code' in args[0] &&
+        args[0].code);
+    if (warningCode === 'DEP0040' || warningCode === 'DEP0169') {
+      return;
+    }
+  }
+  return __papertOriginalEmitWarning(warning, ...args);
+};`,
     },
     alias: {
       'is-in-ci': path.resolve(
         __dirname,
         'packages/cli/src/patches/is-in-ci.ts',
+      ),
+      'node-fetch': path.resolve(
+        __dirname,
+        'packages/cli/src/patches/node-fetch.ts',
       ),
     },
     define: {

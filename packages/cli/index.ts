@@ -6,11 +6,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FatalError } from '@papert-code/papert-code-core';
-
 function isServerCommand(argv: string[]): boolean {
   // Support: `papert server ...` and `node dist/index.js server ...`
   return argv.includes('server');
+}
+
+function isFatalErrorLike(
+  error: unknown,
+): error is { message: string; exitCode: number } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    'exitCode' in error &&
+    typeof (error as { message: unknown }).message === 'string' &&
+    typeof (error as { exitCode: unknown }).exitCode === 'number'
+  );
 }
 
 async function mainEntrypoint() {
@@ -57,7 +68,7 @@ async function mainEntrypoint() {
 
 // --- Global Entry Point ---
 mainEntrypoint().catch((error) => {
-  if (error instanceof FatalError) {
+  if (isFatalErrorLike(error)) {
     let errorMessage = error.message;
     if (!process.env['NO_COLOR']) {
       errorMessage = `\x1b[31m${errorMessage}\x1b[0m`;
