@@ -1,8 +1,10 @@
 # TypeScript SDK
 
-The Papert Code TypeScript SDK lets you run the CLI as a subprocess and stream
-messages programmatically. It also bundles a CLI build so you do not need a
-separate CLI install for most SDK use cases.
+The Papert Code TypeScript SDK lets you embed Papert CLI with:
+
+- low-level streaming via `query()`
+- high-level reusable sessions via `createClient()`
+- full subprocess control via `createPapertAgent()`
 
 ## Install
 
@@ -13,16 +15,7 @@ npm install @papert-code/sdk-typescript
 ## Requirements
 
 - Node.js >= 18
-- Optional: a system `papert` install if you want to override the bundled CLI
-
-## Bundled CLI behavior
-
-The SDK package ships a bundled CLI at `dist/cli/cli.js`. By default, the SDK
-uses this bundled CLI. You can override it by setting:
-
-- `pathToPapertExecutable` in `query()`
-- `cliBinaryPath` in `createPapertAgent()`
-- `PAPERT_CODE_CLI_PATH` environment variable
+- Optional: system `papert` install if you want to override the bundled CLI
 
 ## Quick start: streaming query
 
@@ -39,6 +32,22 @@ for await (const message of result) {
     console.log(message.message.content);
   }
 }
+```
+
+## Quick start: reusable sessions
+
+```ts
+import { createClient } from '@papert-code/sdk-typescript';
+
+const client = createClient({
+  cwd: '/path/to/repo',
+  permissionMode: 'auto-edit',
+});
+
+const session = client.createSession({ sessionId: 'demo-session' });
+await session.send('Create TODO.md with 3 items');
+await session.send('Now summarize TODO.md');
+await client.close();
 ```
 
 ## Quick start: full CLI agent
@@ -62,145 +71,53 @@ const result = await agent.runPrompt('Summarize outstanding TODOs', {
 console.log(result.stdout);
 ```
 
-## Sample scripts (copy/paste)
-
-### 1) Multi-turn conversation
+## Runtime subagents example
 
 ```ts
-import { query, type SDKUserMessage } from '@papert-code/sdk-typescript';
+import { query, type SubagentConfig } from '@papert-code/sdk-typescript';
 
-async function* messages(): AsyncIterable<SDKUserMessage> {
-  yield {
-    type: 'user',
-    session_id: 'demo-session',
-    message: { role: 'user', content: 'Create a hello.txt file' },
-    parent_tool_use_id: null,
-  };
-
-  yield {
-    type: 'user',
-    session_id: 'demo-session',
-    message: { role: 'user', content: 'Now read the file back' },
-    parent_tool_use_id: null,
-  };
-}
+const agents: SubagentConfig[] = [
+  {
+    name: 'test-architect',
+    description: 'Creates robust deterministic tests',
+    systemPrompt: 'You are a test specialist.',
+    tools: ['read_file', 'write_file', 'run_shell_command'],
+    modelConfig: { model: 'gpt-4o-mini', temp: 0.1 },
+    runConfig: { max_time_minutes: 10, max_turns: 12 },
+    level: 'session',
+  },
+];
 
 const result = query({
-  prompt: messages(),
-  options: { permissionMode: 'auto-edit' },
-});
-
-for await (const message of result) {
-  console.log(message);
-}
-```
-
-### 2) Custom permission handler
-
-```ts
-import { query, type CanUseTool } from '@papert-code/sdk-typescript';
-
-const canUseTool: CanUseTool = async (toolName, input) => {
-  if (toolName.startsWith('read_')) {
-    return { behavior: 'allow', updatedInput: input };
-  }
-
-  const approved = true; // replace with your own approval UI
-  return approved
-    ? { behavior: 'allow', updatedInput: input }
-    : { behavior: 'deny', message: 'User denied the operation' };
-};
-
-const result = query({
-  prompt: 'Create a new file',
-  options: { canUseTool },
-});
-
-for await (const message of result) {
-  console.log(message);
-}
-```
-
-### 3) MCP server integration
-
-```ts
-import { query } from '@papert-code/sdk-typescript';
-
-const result = query({
-  prompt: 'Use the custom tool from my MCP server',
+  prompt: 'Use `test-architect` to improve checkout test coverage.',
   options: {
-    mcpServers: {
-      'my-server': {
-        command: 'node',
-        args: ['path/to/mcp-server.js'],
-        env: { PORT: '3000' },
-      },
-    },
+    cwd: '/path/to/project',
+    agents,
   },
 });
-
-for await (const message of result) {
-  console.log(message);
-}
 ```
 
-### 4) Abort a running query
+## Client Session API
 
-```ts
-import { query, isAbortError } from '@papert-code/sdk-typescript';
+- `createClient(options?)`
+- `client.createSession({ sessionId?, options? })`
+- `client.getSession(sessionId)`
+- `client.close()`
+- `session.stream(prompt, options?)`
+- `session.send(prompt, options?)`
+- `session.close()`
+- `session.getSessionId()`
 
-const abortController = new AbortController();
+## Multi-agent, Skills, and `.papert` Full Guide
 
-const result = query({
-  prompt: 'Long running task...',
-  options: { abortController },
-});
+Detailed guide with complete examples:
 
-setTimeout(() => abortController.abort(), 5000);
-
-try {
-  for await (const message of result) {
-    console.log(message);
-  }
-} catch (error) {
-  if (isAbortError(error)) {
-    console.log('Query was aborted');
-  } else {
-    throw error;
-  }
-}
-```
-
-### 5) Remote driving control-plane request
-
-```ts
-import { createClient } from '@papert-code/sdk-typescript';
-
-async function run() {
-  const client = await createClient({
-    url: 'http://HOST:41242',
-    token: process.env.PAPERT_REMOTE_SERVER_TOKEN,
-  });
-
-  const list = await client.control({
-    subtype: 'scheduler_list',
-    cwd: '/path/to/project',
-    include_disabled: true,
-  });
-
-  console.log(list);
-  await client.close();
-}
-
-run().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
-```
+- [TypeScript SDK Multi-agent & Skills](./sdk-typescript-multi-agent-skills.md)
 
 ## Notes
 
-- When running from the monorepo, build the SDK and bundle the CLI:
-  `npm run build && npm run bundle:cli` (from `packages/sdk-typescript`).
-- If you want to use a specific CLI binary, set `pathToPapertExecutable` or
-  `PAPERT_CODE_CLI_PATH`.
+- Build and bundle from monorepo: `npm run build && npm run bundle:cli`
+- To force a CLI binary, set `pathToPapertExecutable` or `PAPERT_CODE_CLI_PATH`
+- `session.send()` is best for request/response flows; `session.stream()` for live streaming
+- Remote daemon/client docs are here: [Remote Driving](./remote-driving.md)
+

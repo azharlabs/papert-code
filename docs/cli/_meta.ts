@@ -4,6 +4,7 @@ export default {
   'openai-auth': 'OpenAI Authentication',
   commands: 'Commands',
   'sdk-typescript': 'TypeScript SDK',
+  'sdk-typescript-multi-agent-skills': 'TypeScript SDK Multi-agent & Skills',
   'sdk-python': 'Python SDK',
   'sdk-python-multi-agent-skills': 'Python SDK Multi-agent & Skills',
   scheduler: 'Scheduler',

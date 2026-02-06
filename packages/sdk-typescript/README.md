@@ -56,6 +56,22 @@ for await (const message of result) {
 }
 ```
 
+## Quick Start (reusable sessions)
+
+```typescript
+import { createClient } from '@papert-code/sdk-typescript';
+
+const client = createClient({
+  cwd: '/path/to/project',
+  permissionMode: 'auto-edit',
+});
+
+const session = client.createSession({ sessionId: 'demo-session' });
+await session.send('Create TODO.md with 3 items');
+await session.send('Now summarize TODO.md');
+await client.close();
+```
+
 ## Quick Start (full CLI agent)
 
 Drive the CLI/core as a subprocess while setting model/base URL/API key programmatically.
@@ -79,6 +95,19 @@ const { stdout, stderr, exitCode } = await agent.runPrompt(
 );
 ```
 
+## High-level Client API
+
+The SDK now includes a reusable session client:
+
+- `createClient(options?)`
+- `client.createSession({ sessionId?, options? })`
+- `client.getSession(sessionId)`
+- `client.close()`
+- `session.stream(prompt, options?)`
+- `session.send(prompt, options?)`
+- `session.close()`
+- `session.getSessionId()`
+
 ### Run the baked examples (no ts-node needed)
 
 ```bash
@@ -88,6 +117,8 @@ node packages/sdk-typescript/examples/basic-run.mjs
 node packages/sdk-typescript/examples/custom-endpoint.mjs
 node packages/sdk-typescript/examples/abort-run.mjs
 node packages/sdk-typescript/examples/bad-key.mjs
+node packages/sdk-typescript/examples/client-session.mjs
+node packages/sdk-typescript/examples/runtime-subagents.mjs
 ```
 
 ## API Reference
@@ -333,3 +364,9 @@ try {
 ## License
 
 Apache-2.0 - see [LICENSE](./LICENSE) for details.
+
+## Multi-agent and Skills Guide
+
+For complete `.papert` setup with subagents and skills:
+
+- `docs/cli/sdk-typescript-multi-agent-skills.md`
