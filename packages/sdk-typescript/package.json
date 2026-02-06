@@ -46,7 +46,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@papert-code/papert-code": "^0.3.92",
+    "@papert-code/papert-code": "^0.3.93",
     "@modelcontextprotocol/sdk": "^1.0.4",
     "diff": "8.0.3"
   },
