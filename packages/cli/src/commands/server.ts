@@ -8,6 +8,68 @@ import type { CommandModule } from 'yargs';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+
+function resolveA2aServerEntrypoint(): string | undefined {
+  const candidates: string[] = [];
+  const commandFile = fileURLToPath(import.meta.url);
+  const commandDir = path.dirname(commandFile);
+  const papertEntrypoint = process.argv[1];
+
+  // Monorepo from current directory.
+  candidates.push(
+    path.resolve(process.cwd(), 'packages/a2a-server/dist/src/http/server.js'),
+  );
+
+  // Monorepo when command file is in packages/cli/src or packages/cli/dist/src.
+  candidates.push(
+    path.resolve(
+      commandDir,
+      '../../../../packages/a2a-server/dist/src/http/server.js',
+    ),
+  );
+  candidates.push(
+    path.resolve(
+      commandDir,
+      '../../../../../packages/a2a-server/dist/src/http/server.js',
+    ),
+  );
+
+  // Relative to resolved papert entrypoint.
+  if (papertEntrypoint) {
+    candidates.push(
+      path.resolve(
+        path.dirname(papertEntrypoint),
+        '../packages/a2a-server/dist/src/http/server.js',
+      ),
+    );
+    candidates.push(
+      path.resolve(
+        path.dirname(papertEntrypoint),
+        '../../packages/a2a-server/dist/src/http/server.js',
+      ),
+    );
+  }
+
+  // Installed package dependency resolution.
+  try {
+    const require = createRequire(import.meta.url);
+    const resolved = require.resolve(
+      '@papert-code/papert-code-a2a-server/dist/src/http/server.js',
+    );
+    candidates.push(resolved);
+  } catch {
+    // Ignore and continue with fallback command.
+  }
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return undefined;
+}
 
 export const serverCommand: CommandModule = {
   command: 'server',
@@ -66,12 +128,9 @@ export const serverCommand: CommandModule = {
         `  cmd:   papert-a2a-server`
     );
 
-    const localServerEntrypoint = path.resolve(
-      process.cwd(),
-      'packages/a2a-server/dist/src/http/server.js',
-    );
+    const localServerEntrypoint = resolveA2aServerEntrypoint();
 
-    const spawnCommand = fs.existsSync(localServerEntrypoint)
+    const spawnCommand = localServerEntrypoint
       ? {
           command: process.execPath,
           args: [localServerEntrypoint],

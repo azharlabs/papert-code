@@ -39,6 +39,7 @@
     "@google/genai": "1.30.0",
     "@iarna/toml": "^2.2.5",
     "@modelcontextprotocol/sdk": "^1.23.0",
+    "@papert-code/papert-code-a2a-server": "file:../a2a-server",
     "@papert-code/papert-code-core": "file:../core",
     "@types/update-notifier": "^6.0.8",
     "ansi-regex": "^6.2.2",
