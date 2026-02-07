@@ -1063,8 +1063,7 @@ const WEB_UI_SCRIPT = `
         }
       }
 
-      let catalog = {
-        commands: [
+      const fallbackCommandCatalog = [
           { name: 'papert server', detail: 'Start local server for remote driving', tag: 'terminal', template: 'papert server' },
           { name: 'papert connect', detail: 'Connect to a remote session', tag: 'terminal', template: 'papert connect <url>' },
           { name: 'papert mcp add', detail: 'Register an MCP server', tag: 'terminal', template: 'papert mcp add <name> <commandOrUrl>' },
@@ -1096,7 +1095,29 @@ const WEB_UI_SCRIPT = `
           { name: '/stats', detail: 'Show usage stats', tag: 'slash', template: '/stats' },
           { name: '@{path}', detail: 'Read file or directory into context', tag: 'at', template: '@{path}' },
           { name: '!<cmd>', detail: 'Run a shell command', tag: 'bang', template: '!<cmd>' },
-        ],
+      ];
+
+      function mapCommandTreeToCatalog(entries, prefix = []) {
+        const result = [];
+        (entries || []).forEach((entry) => {
+          if (!entry || !entry.name) return;
+          const pathParts = prefix.concat(entry.name);
+          const commandText = 'papert ' + pathParts.join(' ');
+          result.push({
+            name: commandText,
+            detail: entry.description || 'Server command',
+            tag: 'terminal',
+            template: commandText,
+          });
+          if (Array.isArray(entry.subCommands) && entry.subCommands.length > 0) {
+            result.push(...mapCommandTreeToCatalog(entry.subCommands, pathParts));
+          }
+        });
+        return result;
+      }
+
+      let catalog = {
+        commands: [...fallbackCommandCatalog],
         tools: [],
         agents: [],
         skills: [],
@@ -1568,9 +1589,22 @@ const WEB_UI_SCRIPT = `
         state.catalogLoading = true;
         state.catalogLoaded = false;
         try {
-          const res = await apiFetch('/api/v1/webui/catalog', { method: 'GET' });
-          const data = await res.json();
-          catalog = { ...catalog, ...data };
+          const [catalogRes, commandsRes] = await Promise.all([
+            apiFetch('/api/v1/webui/catalog', { method: 'GET' }),
+            apiFetch('/listCommands', { method: 'GET' }),
+          ]);
+          const data = await catalogRes.json();
+          const commandData = await commandsRes.json();
+          const dynamicCommands = mapCommandTreeToCatalog(commandData.commands || []);
+          const mergedCommands = [...fallbackCommandCatalog];
+          const seenTemplates = new Set(mergedCommands.map((entry) => entry.template));
+          dynamicCommands.forEach((entry) => {
+            if (!seenTemplates.has(entry.template)) {
+              seenTemplates.add(entry.template);
+              mergedCommands.push(entry);
+            }
+          });
+          catalog = { ...catalog, ...data, commands: mergedCommands };
           state.catalogLoaded = true;
           render();
         } catch (err) {

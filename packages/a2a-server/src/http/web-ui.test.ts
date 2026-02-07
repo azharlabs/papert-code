@@ -51,5 +51,6 @@ describe('Web UI', () => {
     expect(res.text).toContain('/rewind');
     expect(res.text).toContain('/mcp diagnose');
     expect(res.text).toContain('/github status');
+    expect(res.text).toContain('/listCommands');
   });
 });
