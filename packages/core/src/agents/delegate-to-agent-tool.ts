@@ -6,6 +6,7 @@
 
 import { BaseToolInvocation, type ToolBuilder, type ToolResult, Kind } from '../tools/tools.js';
 import type { PartListUnion } from '@google/genai';
+import { ToolErrorType } from '../tools/tool-error.js';
 
 interface DelegateParams {
   agentName: string;
@@ -19,10 +20,15 @@ class DelegateInvocation
   }
 
   async execute(): Promise<ToolResult> {
-    const message = `Delegated to agent "${this.params.agentName}" with input: ${this.params.input}`;
+    const message =
+      'The delegate_to_agent tool is not implemented yet. Configure and use subagents instead.';
     return {
       llmContent: [{ text: message }] as PartListUnion,
       returnDisplay: message,
+      error: {
+        message,
+        type: ToolErrorType.EXECUTION_FAILED,
+      },
     };
   }
 }

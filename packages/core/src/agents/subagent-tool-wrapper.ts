@@ -6,6 +6,7 @@
 
 import { BaseToolInvocation, type ToolBuilder, type ToolResult, Kind } from '../tools/tools.js';
 import type { PartListUnion } from '@google/genai';
+import { ToolErrorType } from '../tools/tool-error.js';
 
 interface SubagentParams {
   name: string;
@@ -19,10 +20,15 @@ class SubagentInvocation
   }
 
   async execute(): Promise<ToolResult> {
-    const message = `Subagent "${this.params.name}" invoked${this.params.input ? ` with input: ${this.params.input}` : ''}.`;
+    const message =
+      'The subagent_tool_wrapper tool is not implemented yet. Use configured subagents through the main orchestration flow.';
     return {
       llmContent: [{ text: message }] as PartListUnion,
       returnDisplay: message,
+      error: {
+        message,
+        type: ToolErrorType.EXECUTION_FAILED,
+      },
     };
   }
 }
