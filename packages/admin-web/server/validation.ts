@@ -88,9 +88,18 @@ export const UsageReportSchema = z
   })
   .strict();
 
+const SessionIdSchema = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(
+    /^[A-Za-z0-9._-]+$/,
+    'sessionId may only contain letters, numbers, dots, underscores, and hyphens.',
+  );
+
 export const SessionUploadSchema = z
   .object({
-    sessionId: z.string().min(1),
+    sessionId: SessionIdSchema,
     transcript: z.string().min(1),
     usage: z.record(z.unknown()).optional(),
     model: z.string().optional(),

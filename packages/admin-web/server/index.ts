@@ -347,7 +347,10 @@ app.post('/api/v1/user/sessions', requireAuth, async (req, res) => {
 
   const sessionDir = path.resolve(process.cwd(), 'data', 'sessions', user.id);
   await fs.mkdir(sessionDir, { recursive: true });
-  const filePath = path.join(sessionDir, `${parsed.data.sessionId}.jsonl`);
+  const filePath = path.resolve(sessionDir, `${parsed.data.sessionId}.jsonl`);
+  if (!filePath.startsWith(`${sessionDir}${path.sep}`)) {
+    return res.status(400).json({ error: 'invalid_session_id' });
+  }
   await fs.writeFile(filePath, parsed.data.transcript, 'utf-8');
 
   const record = repo.createSession({
