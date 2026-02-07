@@ -34,6 +34,7 @@ Do not edit manually. Run `npm run docs:commands:sync` to refresh.
 - `/quit-confirm`
 - `/restore`
 - `/resume`
+- `/rewind`
 - `/schedule`
 - `/settings`
 - `/share`
@@ -177,6 +178,15 @@ Slash commands provide meta-level control over the CLI itself.
   - **Description:** Restores the project files to the state they were in just before a tool was executed. This is particularly useful for undoing file edits made by a tool. If run without a tool call ID, it will list available checkpoints to restore from.
   - **Usage:** `/restore [tool_call_id]`
   - **Note:** Only available if the CLI is invoked with the `--checkpointing` option or configured via [settings](./configuration.md). See [Checkpointing documentation](../checkpointing.md) for more details.
+
+- **`/rewind`**
+  - **Description:** Preview and restore a previous checkpoint with explicit confirmation.
+  - **Usage:** `/rewind [checkpoint_id]`
+  - **Behavior:**
+    - Without arguments, lists available rewind points (newest first).
+    - With a checkpoint ID, shows a confirmation prompt before restoring.
+    - On confirmation, restores the same state as `/restore` (conversation history and file state when available).
+  - **Note:** Only available when checkpointing is enabled.
 
 - **`/settings`**
   - **Description:** Open the settings editor to view and modify Papert Code settings.

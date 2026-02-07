@@ -1,6 +1,7 @@
 export default {
   subagents: 'Subagents',
   checkpointing: 'Checkpointing',
+  rewind: 'Rewind',
   sandbox: 'Sandbox Support',
   headless: 'Headless Mode',
   'welcome-back': 'Welcome Back',

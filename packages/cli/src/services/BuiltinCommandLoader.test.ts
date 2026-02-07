@@ -3,6 +3,7 @@
  * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
+// @vitest-environment node
 
 vi.mock('../ui/commands/aboutCommand.js', async () => {
   const { CommandKind } = await import('../ui/commands/types.js');
@@ -36,6 +37,9 @@ vi.mock('../ui/commands/ideCommand.js', async () => {
 vi.mock('../ui/commands/restoreCommand.js', () => ({
   restoreCommand: vi.fn(),
 }));
+vi.mock('../ui/commands/rewindCommand.js', () => ({
+  rewindCommand: vi.fn(),
+}));
 vi.mock('../ui/commands/permissionsCommand.js', async () => {
   const { CommandKind } = await import('../ui/commands/types.js');
   return {
@@ -53,6 +57,7 @@ import type { Config } from '@papert-code/papert-code-core';
 import { CommandKind } from '../ui/commands/types.js';
 
 import { restoreCommand } from '../ui/commands/restoreCommand.js';
+import { rewindCommand } from '../ui/commands/rewindCommand.js';
 
 vi.mock('../ui/commands/authCommand.js', () => ({ authCommand: {} }));
 vi.mock('../ui/commands/bugCommand.js', () => ({ bugCommand: {} }));
@@ -95,6 +100,7 @@ describe('BuiltinCommandLoader', () => {
   let mockConfig: Config;
 
   const restoreCommandMock = restoreCommand as Mock;
+  const rewindCommandMock = rewindCommand as Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -108,6 +114,11 @@ describe('BuiltinCommandLoader', () => {
       description: 'Restore command',
       kind: CommandKind.BUILT_IN,
     });
+    rewindCommandMock.mockReturnValue({
+      name: 'rewind',
+      description: 'Rewind command',
+      kind: CommandKind.BUILT_IN,
+    });
   });
 
   it('should correctly pass the config object to restore command factory', async () => {
@@ -117,6 +128,8 @@ describe('BuiltinCommandLoader', () => {
     // ideCommand is now a constant, no longer needs config
     expect(restoreCommandMock).toHaveBeenCalledTimes(1);
     expect(restoreCommandMock).toHaveBeenCalledWith(mockConfig);
+    expect(rewindCommandMock).toHaveBeenCalledTimes(1);
+    expect(rewindCommandMock).toHaveBeenCalledWith(mockConfig);
   });
 
   it('should filter out null command definitions returned by factories', async () => {
@@ -139,6 +152,8 @@ describe('BuiltinCommandLoader', () => {
     // ideCommand is now a constant, no longer needs config
     expect(restoreCommandMock).toHaveBeenCalledTimes(1);
     expect(restoreCommandMock).toHaveBeenCalledWith(null);
+    expect(rewindCommandMock).toHaveBeenCalledTimes(1);
+    expect(rewindCommandMock).toHaveBeenCalledWith(null);
   });
 
   it('should return a list of all loaded commands', async () => {

@@ -33,6 +33,7 @@ import { lspCommand } from '../ui/commands/lspCommand.js';
 import { permissionsCommand } from '../ui/commands/permissionsCommand.js';
 import { resumeCommand } from '../ui/commands/resumeCommand.js';
 import { quitCommand, quitConfirmCommand } from '../ui/commands/quitCommand.js';
+import { rewindCommand } from '../ui/commands/rewindCommand.js';
 import { restoreCommand } from '../ui/commands/restoreCommand.js';
 import { settingsCommand } from '../ui/commands/settingsCommand.js';
 import { statsCommand } from '../ui/commands/statsCommand.js';
@@ -89,6 +90,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       resumeCommand,
       quitCommand,
       quitConfirmCommand,
+      rewindCommand(this.config),
       restoreCommand(this.config),
       statsCommand,
       summaryCommand,

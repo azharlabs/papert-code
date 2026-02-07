@@ -3,6 +3,7 @@
  * * Copyright 2026 Papert-code
  * SPDX-License-Identifier: Apache-2.0
  */
+// @vitest-environment node
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs/promises';
