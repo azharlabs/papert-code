@@ -33,6 +33,12 @@ const ROUTE_CONTRACTS: RouteContract[] = [
     requiresBearerAuth: true,
     expectedStatuses: ['204', '401', '501'],
   },
+  {
+    path: '/api/v1/webui/catalog',
+    method: 'get',
+    requiresBearerAuth: true,
+    expectedStatuses: ['200', '401'],
+  },
 ];
 
 describe('OpenAPI route contract', () => {
@@ -64,5 +70,16 @@ describe('OpenAPI route contract', () => {
       'expiresAtMs',
       'workspaceRoot',
     ]);
+  });
+
+  it('documents release channel endpoint with auth error schema', () => {
+    const operation =
+      REMOTE_CONTROL_OPENAPI_SPEC.paths['/api/v1/webui/release-channel'].put;
+    expect(operation.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation.responses['400']).toBeTruthy();
+    expect(operation.responses['401']).toBeTruthy();
+    expect(
+      operation.responses['401'].content?.['application/json'].schema,
+    ).toEqual({ $ref: '#/components/schemas/ErrorResponse' });
   });
 });
