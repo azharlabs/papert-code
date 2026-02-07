@@ -85,6 +85,7 @@ export interface PolicyRule {
   argsPattern?: RegExp;
   decision: PolicyDecision;
   priority?: number;
+  reason?: string;
 }
 
 export interface HookExecutionContext {

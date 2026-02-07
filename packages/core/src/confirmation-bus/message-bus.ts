@@ -71,15 +71,21 @@ export class MessageBus extends EventEmitter {
             });
             break;
           case PolicyDecision.DENY:
+            const reason = this.policyEngine.getDecisionReason(
+              message.toolCall,
+              message.serverName,
+            );
             // Emit both rejection and response messages
             this.emitMessage({
               type: MessageBusType.TOOL_POLICY_REJECTION,
               toolCall: message.toolCall,
+              ...(reason ? { reason } : {}),
             });
             this.emitMessage({
               type: MessageBusType.TOOL_CONFIRMATION_RESPONSE,
               correlationId: message.correlationId,
               confirmed: false,
+              ...(reason ? { reason } : {}),
             });
             break;
           case PolicyDecision.ASK_USER:

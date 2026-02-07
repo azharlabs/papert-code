@@ -3,6 +3,7 @@ export default {
   checkpointing: 'Checkpointing',
   rewind: 'Rewind',
   'mcp-diagnostics': 'MCP Diagnostics',
+  'policy-explain-mode': 'Policy Explain Mode',
   'session-workflows': 'Session Workflows',
   'github-automation': 'GitHub Automation',
   sandbox: 'Sandbox Support',

@@ -82,6 +82,7 @@ describe('MessageBus', () => {
 
     it('should emit rejection and response when policy denies', async () => {
       vi.spyOn(policyEngine, 'check').mockReturnValue(PolicyDecision.DENY);
+      vi.spyOn(policyEngine, 'getDecisionReason').mockReturnValue(undefined);
 
       const responseHandler = vi.fn();
       const rejectionHandler = vi.fn();
@@ -114,6 +115,44 @@ describe('MessageBus', () => {
         confirmed: false,
       };
       expect(responseHandler).toHaveBeenCalledWith(expectedResponse);
+    });
+
+    it('should include deny reason when policy engine provides one', async () => {
+      vi.spyOn(policyEngine, 'check').mockReturnValue(PolicyDecision.DENY);
+      vi.spyOn(policyEngine, 'getDecisionReason').mockReturnValue(
+        'Denied by admin security policy',
+      );
+
+      const responseHandler = vi.fn();
+      const rejectionHandler = vi.fn();
+      messageBus.subscribe(
+        MessageBusType.TOOL_CONFIRMATION_RESPONSE,
+        responseHandler,
+      );
+      messageBus.subscribe(
+        MessageBusType.TOOL_POLICY_REJECTION,
+        rejectionHandler,
+      );
+
+      const request: ToolConfirmationRequest = {
+        type: MessageBusType.TOOL_CONFIRMATION_REQUEST,
+        toolCall: { name: 'run_shell_command', args: { command: 'curl ...' } },
+        correlationId: 'reason-123',
+      };
+
+      await messageBus.publish(request);
+
+      expect(rejectionHandler).toHaveBeenCalledWith({
+        type: MessageBusType.TOOL_POLICY_REJECTION,
+        toolCall: { name: 'run_shell_command', args: { command: 'curl ...' } },
+        reason: 'Denied by admin security policy',
+      });
+      expect(responseHandler).toHaveBeenCalledWith({
+        type: MessageBusType.TOOL_CONFIRMATION_RESPONSE,
+        correlationId: 'reason-123',
+        confirmed: false,
+        reason: 'Denied by admin security policy',
+      });
     });
 
     it('should pass through to UI when policy says ASK_USER', async () => {
