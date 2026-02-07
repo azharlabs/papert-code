@@ -244,9 +244,9 @@ describe('handleAutoUpdate', () => {
     handleAutoUpdate(mockUpdateInfo, mockSettings, '/root', mockSpawn);
 
     expect(mockSpawn).toHaveBeenCalledWith(
-      'npm i -g @papert-code/papert-code@nightly',
+      'npm',
+      ['i', '-g', '@papert-code/papert-code@nightly'],
       {
-        shell: true,
         stdio: 'pipe',
       },
     );
@@ -265,12 +265,30 @@ describe('handleAutoUpdate', () => {
     handleAutoUpdate(mockUpdateInfo, mockSettings, '/root', mockSpawn);
 
     expect(mockSpawn).toHaveBeenCalledWith(
-      'npm i -g @papert-code/papert-code@preview',
+      'npm',
+      ['i', '-g', '@papert-code/papert-code@preview'],
       {
-        shell: true,
         stdio: 'pipe',
       },
     );
+  });
+
+  it('should reject invalid release versions before spawning', () => {
+    mockUpdateInfo.update.latest = '2.0.0 && rm -rf /';
+    mockGetInstallationInfo.mockReturnValue({
+      updateCommand: 'npm i -g @papert-code/papert-code@latest',
+      updateMessage: 'This is an additional message.',
+      isGlobal: false,
+      packageManager: PackageManager.NPM,
+    });
+
+    handleAutoUpdate(mockUpdateInfo, mockSettings, '/root', mockSpawn);
+
+    expect(mockSpawn).not.toHaveBeenCalled();
+    expect(mockUpdateEventEmitter.emit).toHaveBeenCalledWith('update-failed', {
+      message:
+        'Automatic update failed. Please try updating manually. (error: Invalid release version: 2.0.0 && rm -rf /)',
+    });
   });
 
   it('should emit "update-success" when the update process succeeds', async () => {

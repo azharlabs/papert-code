@@ -12,6 +12,33 @@ import type { HistoryItem } from '../ui/types.js';
 import { MessageType } from '../ui/types.js';
 import { spawnWrapper } from './spawnWrapper.js';
 import type { spawn } from 'node:child_process';
+import { parse as parseShellCommand } from 'shell-quote';
+
+function resolveReleaseTag(info: UpdateObject): string {
+  if (info.channel === 'nightly') return '@nightly';
+  if (info.channel === 'preview') return '@preview';
+  const safeLatest = info.update.latest.trim();
+  if (!/^[A-Za-z0-9._-]+$/.test(safeLatest)) {
+    throw new Error(`Invalid release version: ${safeLatest}`);
+  }
+  return `@${safeLatest}`;
+}
+
+function parseUpdateCommand(command: string): { cmd: string; args: string[] } {
+  const parsed = parseShellCommand(command);
+  const args: string[] = [];
+  for (const part of parsed) {
+    if (typeof part !== 'string') {
+      throw new Error('Update command contains unsupported shell operators.');
+    }
+    if (part.length === 0) continue;
+    args.push(part);
+  }
+  if (args.length === 0) {
+    throw new Error('Update command is empty.');
+  }
+  return { cmd: args[0]!, args: args.slice(1) };
+}
 
 export function handleAutoUpdate(
   info: UpdateObject | null,
@@ -47,18 +74,32 @@ export function handleAutoUpdate(
   ) {
     return;
   }
-  const releaseTag =
-    info.channel === 'nightly'
-      ? '@nightly'
-      : info.channel === 'preview'
-        ? '@preview'
-        : `@${info.update.latest}`;
+  let releaseTag: string;
+  try {
+    releaseTag = resolveReleaseTag(info);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    updateEventEmitter.emit('update-failed', {
+      message: `Automatic update failed. Please try updating manually. (error: ${message})`,
+    });
+    return;
+  }
 
   const updateCommand = installationInfo.updateCommand.replace(
     '@latest',
     releaseTag,
   );
-  const updateProcess = spawnFn(updateCommand, { stdio: 'pipe', shell: true });
+  let updateProcess: ReturnType<typeof spawnFn>;
+  try {
+    const parsed = parseUpdateCommand(updateCommand);
+    updateProcess = spawnFn(parsed.cmd, parsed.args, { stdio: 'pipe' });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    updateEventEmitter.emit('update-failed', {
+      message: `Automatic update failed. Please try updating manually. (error: ${message})`,
+    });
+    return;
+  }
   let errorOutput = '';
   updateProcess.stderr.on('data', (data) => {
     errorOutput += data.toString();

@@ -18,3 +18,4 @@
 - Secured `GET /api/v1/admin-controls` behind JWT auth and enforced self-only access for non-admin users.
 - Enforced bearer-token authentication for all VS Code IDE companion HTTP requests (removed unauthenticated compatibility path).
 - Secured share creation routes by defaulting share auth to `PAPERT_REMOTE_SERVER_TOKEN` when `PAPERT_SHARE_TOKEN` is not configured.
+- Hardened CLI auto-update execution by removing `shell: true`, parsing update commands safely, and validating release tags.
