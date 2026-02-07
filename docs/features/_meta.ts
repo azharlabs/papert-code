@@ -12,6 +12,7 @@ export default {
   'web-rewind-panel': 'Web Rewind Panel',
   'web-policy-deny-visibility': 'Web Policy Deny Visibility',
   'openapi-versioning-policy': 'OpenAPI Versioning Policy',
+  'eval-ci-matrix': 'Eval CI Matrix',
   'session-workflows': 'Session Workflows',
   'github-automation': 'GitHub Automation',
   sandbox: 'Sandbox Support',

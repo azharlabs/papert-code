@@ -1,0 +1,56 @@
+name: terminal-bench-evals
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 7 * * 1'
+
+jobs:
+  eval-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - subset: fast
+            task_ids: hello-world,json-profile-update,markdown-release-notes
+          - subset: full
+            task_ids: hello-world,json-profile-update,markdown-release-notes,swe-bench-astropy-1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build workspace
+        run: npm run build
+
+      - name: Run oracle eval subset
+        env:
+          TB_TASK_IDS: ${{ matrix.task_ids }}
+          TB_TIMEOUT_MINUTES: 45
+          KEEP_OUTPUT: 'true'
+        run: npm run test:terminal-bench:oracle
+
+      - name: Summarize results
+        run: |
+          node integration-tests/terminal-bench/scripts/summarize-results.mjs \
+            --base .integration-tests \
+            --out-json .integration-tests/terminal-bench-summary-${{ matrix.subset }}.json \
+            --out-md .integration-tests/terminal-bench-summary-${{ matrix.subset }}.md
+
+      - name: Upload summary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terminal-bench-summary-${{ matrix.subset }}
+          path: |
+            .integration-tests/terminal-bench-summary-${{ matrix.subset }}.json
+            .integration-tests/terminal-bench-summary-${{ matrix.subset }}.md
