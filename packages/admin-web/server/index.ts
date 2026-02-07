@@ -48,6 +48,11 @@ if (!process.env['PAPERT_ADMIN_ENC_KEY']) {
   );
 }
 if (process.env['NODE_ENV'] === 'production') {
+  if (env.allowlist.size === 0) {
+    throw new Error(
+      'PAPERT_ADMIN_ALLOWLIST must be set in production.',
+    );
+  }
   if (!process.env['PAPERT_ADMIN_JWT_SECRET']) {
     throw new Error(
       'PAPERT_ADMIN_JWT_SECRET must be set in production.',

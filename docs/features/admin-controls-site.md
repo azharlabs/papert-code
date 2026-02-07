@@ -37,6 +37,7 @@ Set these environment variables for the API server:
 - `PAPERT_ADMIN_BOOTSTRAP_EMAIL` / `PAPERT_ADMIN_BOOTSTRAP_PASSWORD` (creates first admin)
 
 If `PAPERT_ADMIN_ALLOWLIST` is empty, admin endpoints are open (use only for local demos).
+In production (`NODE_ENV=production`), `PAPERT_ADMIN_ALLOWLIST` is required and startup fails if it is empty.
 
 To bootstrap the first admin user:
 
