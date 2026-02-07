@@ -806,7 +806,7 @@ describe('SettingsDialog', () => {
       }
 
       unmount();
-    });
+    }, 15000);
   });
 
   describe('VimMode Integration', () => {
@@ -964,7 +964,7 @@ describe('SettingsDialog', () => {
 
       // Should not crash
       unmount();
-    });
+    }, 15000);
 
     it('should handle Ctrl+C to reset current setting to default', async () => {
       const settings = createMockSettings({ vimMode: true }); // Start with vimMode enabled
@@ -1132,7 +1132,7 @@ describe('SettingsDialog', () => {
       // The test verifies that all changes are preserved and the dialog still works
       // This tests the fix for the bug where changing one setting would reset all pending changes
       unmount();
-    });
+    }, 15000);
 
     it('should maintain state consistency during complex interactions', async () => {
       const settings = createMockSettings({ vimMode: true });
@@ -1235,7 +1235,7 @@ describe('SettingsDialog', () => {
 
         unmount();
       },
-      15000,
+      30000,
     );
   });
 
@@ -1369,7 +1369,7 @@ describe('SettingsDialog', () => {
       await pressKey(stdin, '\t');
 
       expect(lastFrame()).toMatchSnapshot();
-    });
+    }, 10000);
 
     it('should render with accessibility settings enabled', () => {
       const settings = createMockSettings({

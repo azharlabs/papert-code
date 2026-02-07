@@ -198,6 +198,7 @@ describe('<ModelDialog />', () => {
           {
             getModel: mockGetModel,
             getAuthType: mockGetAuthType,
+            getContentGeneratorConfig: () => ({ authType: 'mock' }),
           } as unknown as Config
         }
       >
@@ -212,6 +213,7 @@ describe('<ModelDialog />', () => {
     const newMockConfig = {
       getModel: mockGetModel,
       getAuthType: mockGetAuthType,
+      getContentGeneratorConfig: () => ({ authType: 'mock' }),
     } as unknown as Config;
 
     rerender(

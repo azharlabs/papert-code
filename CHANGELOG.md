@@ -22,3 +22,4 @@
 - Added a production startup guard that requires `PAPERT_ADMIN_ALLOWLIST` for admin-web deployments.
 - Updated placeholder agent tools to return explicit `EXECUTION_FAILED` results instead of misleading success messages.
 - Replaced placeholder audio token counting with a bounded mime-aware heuristic and added tokenizer coverage for audio inputs.
+- Fixed `cli` and `core` test regressions (config mock compatibility, auth dialog defaults, settings snapshots, scrolling assertions) and stabilized `cli` coverage output by creating `coverage/.tmp` in test setup.

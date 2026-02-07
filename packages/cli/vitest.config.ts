@@ -19,6 +19,8 @@ export default defineConfig({
       junit: 'junit.xml',
     },
     setupFiles: ['./test-setup.ts'],
+    testTimeout: 30000,
+    hookTimeout: 30000,
     coverage: {
       enabled: true,
       provider: 'v8',

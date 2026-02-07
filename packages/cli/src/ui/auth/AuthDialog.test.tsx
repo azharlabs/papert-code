@@ -322,9 +322,9 @@ describe('AuthDialog', () => {
 
       const { lastFrame } = renderAuthDialog(settings);
 
-      // Auth list currently has a single option, so the custom models entry should be selected.
+      // Current default selection is admin-managed login.
       expect(lastFrame()).toContain(
-        '● 1. Custom models (OpenAI compatible APIs)',
+        '● 1. Admin-managed login (Papert Admin)',
       );
     });
 
@@ -364,8 +364,8 @@ describe('AuthDialog', () => {
 
       const { lastFrame } = renderAuthDialog(settings);
 
-      // Default is OpenAI (first option)
-      expect(lastFrame()).toContain('● 1. Custom models (OpenAI compatible APIs)');
+      // Default is admin-managed login.
+      expect(lastFrame()).toContain('● 1. Admin-managed login (Papert Admin)');
     });
 
     it('should show an error and fall back to default if PAPERT_DEFAULT_AUTH_TYPE is invalid', () => {
@@ -406,9 +406,8 @@ describe('AuthDialog', () => {
 
       const { lastFrame } = renderAuthDialog(settings);
 
-      // Since the auth dialog doesn't show PAPERT_DEFAULT_AUTH_TYPE errors anymore,
-      // it will just show the default OpenAI option
-      expect(lastFrame()).toContain('● 1. Custom models (OpenAI compatible APIs)');
+      // Invalid env value falls back to default selection.
+      expect(lastFrame()).toContain('● 1. Admin-managed login (Papert Admin)');
     });
   });
 
