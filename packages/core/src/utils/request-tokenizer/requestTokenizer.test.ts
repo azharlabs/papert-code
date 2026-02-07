@@ -169,6 +169,54 @@ describe('DefaultRequestTokenizer', () => {
     });
   });
 
+  describe('audio token calculation', () => {
+    it('should calculate audio tokens from inline audio data', async () => {
+      const audioBase64 = 'a'.repeat(4000);
+      const request: CountTokensParameters = {
+        model: 'test-model',
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                inlineData: {
+                  mimeType: 'audio/wav',
+                  data: audioBase64,
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await tokenizer.calculateTokens(request);
+      expect(result.breakdown.audioTokens).toBeGreaterThanOrEqual(10);
+      expect(result.totalTokens).toBe(result.breakdown.audioTokens);
+    });
+
+    it('should enforce minimum audio token count per clip', async () => {
+      const request: CountTokensParameters = {
+        model: 'test-model',
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                inlineData: {
+                  mimeType: 'audio/mp3',
+                  data: 'abc',
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await tokenizer.calculateTokens(request);
+      expect(result.breakdown.audioTokens).toBe(10);
+    });
+  });
+
   describe('function content', () => {
     it('should handle function calls', async () => {
       const request: CountTokensParameters = {

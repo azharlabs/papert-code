@@ -143,24 +143,23 @@ export class DefaultRequestTokenizer implements RequestTokenizer {
   }
 
   /**
-   * Calculate tokens for audio contents
-   * TODO: Implement proper audio token calculation
+   * Calculate tokens for audio contents using a conservative data-size heuristic.
    */
   private async calculateAudioTokens(
     audioContents: Array<{ data: string; mimeType: string }>,
   ): Promise<number> {
     if (audioContents.length === 0) return 0;
 
-    // Placeholder implementation - audio token calculation would depend on
-    // the specific model's audio processing capabilities
-    // For now, estimate based on data size
     let totalTokens = 0;
 
     for (const audioContent of audioContents) {
       try {
         const dataSize = Math.floor(audioContent.data.length * 0.75); // Approximate binary size
-        // Rough estimate: 1 token per 100 bytes of audio data
-        totalTokens += Math.max(Math.ceil(dataSize / 100), 10); // Minimum 10 tokens per audio
+        const mimeType = audioContent.mimeType.toLowerCase();
+        const bytesPerToken =
+          mimeType.includes('wav') || mimeType.includes('wave') ? 80 : 120;
+        const estimatedTokens = Math.ceil(dataSize / bytesPerToken);
+        totalTokens += Math.min(Math.max(estimatedTokens, 10), 16384);
       } catch (error) {
         console.warn('Error calculating audio tokens:', error);
         totalTokens += 10; // Fallback minimum

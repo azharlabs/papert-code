@@ -21,3 +21,4 @@
 - Hardened CLI auto-update execution by removing `shell: true`, parsing update commands safely, and validating release tags.
 - Added a production startup guard that requires `PAPERT_ADMIN_ALLOWLIST` for admin-web deployments.
 - Updated placeholder agent tools to return explicit `EXECUTION_FAILED` results instead of misleading success messages.
+- Replaced placeholder audio token counting with a bounded mime-aware heuristic and added tokenizer coverage for audio inputs.
