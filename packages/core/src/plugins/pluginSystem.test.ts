@@ -34,9 +34,14 @@ describe('PluginSystem', () => {
   it('loads project plugin and emits tool events', async () => {
     const tmp = await mkdtemp(path.join(os.tmpdir(), 'papert-plugins-'));
     const projectRoot = path.join(tmp, 'project');
-    await mkdir(path.join(projectRoot, 'plugin'), { recursive: true });
+    await mkdir(path.join(projectRoot, '.papert', 'plugins'), { recursive: true });
 
-    const pluginFile = path.join(projectRoot, 'plugin', 'test-plugin.mjs');
+    const pluginFile = path.join(
+      projectRoot,
+      '.papert',
+      'plugins',
+      'test-plugin.mjs',
+    );
     await writeFile(
       pluginFile,
       `export default () => ({\n` +

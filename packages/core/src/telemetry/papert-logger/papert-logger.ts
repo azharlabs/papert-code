@@ -5,7 +5,7 @@
  */
 
 import { Buffer } from 'buffer';
-import * as https from 'https';
+import * as https from 'node:https';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
 import type {

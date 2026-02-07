@@ -493,14 +493,26 @@ async function runSafetyChecks(
 ): Promise<ToolResult | null> {
   if (!config) return null;
 
-  const runner = config.getSafetyCheckerRunner();
-  const rules = config.getSafetyCheckerRules();
+  const getRunner = (config as Partial<Config>).getSafetyCheckerRunner;
+  const getRules = (config as Partial<Config>).getSafetyCheckerRules;
+  const getApprovalMode = (config as Partial<Config>).getApprovalMode;
+  const isInteractive = (config as Partial<Config>).isInteractive;
+
+  if (typeof getRunner !== 'function' || typeof getRules !== 'function') {
+    return null;
+  }
+
+  const runner = getRunner.call(config);
+  const rules = getRules.call(config);
   if (!runner || rules.length === 0) return null;
 
   const argsString = rules.some((rule) => rule.argsPattern)
     ? stableStringify(toolArgs)
     : undefined;
-  const approvalMode = config.getApprovalMode();
+  const approvalMode =
+    typeof getApprovalMode === 'function'
+      ? getApprovalMode.call(config)
+      : '';
 
   for (const rule of rules) {
     if (!safetyRuleMatches(rule, toolName, argsString, approvalMode)) {
@@ -520,7 +532,7 @@ async function runSafetyChecks(
 
     if (
       result.decision === SafetyCheckDecision.ASK_USER &&
-      !config.isInteractive()
+      (typeof isInteractive === 'function' ? !isInteractive.call(config) : true)
     ) {
       return {
         llmContent: `Safety check requires user confirmation, but this session is non-interactive: ${reason}`,
