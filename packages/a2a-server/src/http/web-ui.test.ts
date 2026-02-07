@@ -52,5 +52,32 @@ describe('Web UI', () => {
     expect(res.text).toContain('/mcp diagnose');
     expect(res.text).toContain('/github status');
     expect(res.text).toContain('/listCommands');
+    expect(res.text).toContain('view-rewind');
+  });
+
+  it('GET /api/v1/webui/catalog includes rewind points payload', async () => {
+    const sessionRes = await requestApp(app, {
+      method: 'POST',
+      path: '/api/v1/sessions',
+      headers: { authorization: 'Bearer server-secret' },
+    });
+    expect(sessionRes.status).toBe(201);
+
+    const body = sessionRes.body as { sessionId: string; token: string };
+    const catalogRes = await requestApp(app, {
+      method: 'GET',
+      path: '/api/v1/webui/catalog',
+      headers: {
+        authorization: `Bearer ${body.token}`,
+        'x-papert-session-id': body.sessionId,
+      },
+    });
+
+    expect(catalogRes.status).toBe(200);
+    expect(catalogRes.body).toEqual(
+      expect.objectContaining({
+        rewindPoints: expect.any(Array),
+      }),
+    );
   });
 });

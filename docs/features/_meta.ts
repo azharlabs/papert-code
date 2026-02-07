@@ -9,6 +9,7 @@ export default {
   'eval-suite-expansion': 'Eval Suite Expansion',
   'performance-budgets': 'Performance Budgets',
   'web-command-catalog-parity': 'Web Command Catalog Parity',
+  'web-rewind-panel': 'Web Rewind Panel',
   'session-workflows': 'Session Workflows',
   'github-automation': 'GitHub Automation',
   sandbox: 'Sandbox Support',

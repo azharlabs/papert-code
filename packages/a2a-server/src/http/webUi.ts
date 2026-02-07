@@ -1126,6 +1126,7 @@ const WEB_UI_SCRIPT = `
         plugins: [],
         hooks: [],
         schedules: [],
+        rewindPoints: [],
         targets: { tools: [], agents: [], mcps: [] },
       };
 
@@ -1164,6 +1165,8 @@ const WEB_UI_SCRIPT = `
       const customToolsList = document.getElementById('customToolsList');
       const pluginsList = document.getElementById('pluginsList');
       const hooksList = document.getElementById('hooksList');
+      const rewindList = document.getElementById('rewindList');
+      const rewindRefresh = document.getElementById('rewindRefresh');
       const scheduleForm = document.getElementById('scheduleForm');
       const scheduleList = document.getElementById('scheduleList');
       const scheduleId = document.getElementById('scheduleId');
@@ -1440,6 +1443,49 @@ const WEB_UI_SCRIPT = `
         });
       }
 
+      function renderRewind() {
+        if (!rewindList) return;
+        rewindList.innerHTML = '';
+        if (!currentSession()) {
+          const empty = document.createElement('div');
+          empty.className = 'activity-item';
+          empty.textContent = 'Connect a session to load rewind points.';
+          rewindList.appendChild(empty);
+          return;
+        }
+        if (!state.catalogLoaded) {
+          const loading = document.createElement('div');
+          loading.className = 'activity-item';
+          loading.textContent = 'Loading rewind points...';
+          rewindList.appendChild(loading);
+          return;
+        }
+        const points = Array.isArray(catalog.rewindPoints)
+          ? catalog.rewindPoints
+          : [];
+        if (points.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'activity-item';
+          empty.textContent =
+            'No rewind points found. Run tools in CLI, then refresh.';
+          rewindList.appendChild(empty);
+          return;
+        }
+
+        points.forEach((point) => {
+          const el = document.createElement('div');
+          el.className = 'data-item';
+          el.innerHTML =
+            '<div class="name">' + point.name + '</div>' +
+            '<div class="meta">' + point.detail + '</div>' +
+            '<div class="tag">' + point.restoreType + '</div>' +
+            '<div class="data-item-actions">' +
+              '<button data-action="rewind-use" data-checkpoint="' + point.id + '">Use</button>' +
+            '</div>';
+          rewindList.appendChild(el);
+        });
+      }
+
       function renderScheduleTargets() {
         if (!scheduleTarget) return;
         const targets = catalog.targets || { tools: [], agents: [], mcps: [] };
@@ -1480,6 +1526,7 @@ const WEB_UI_SCRIPT = `
         renderCatalogs();
         renderCommands(cliSearch.value);
         renderSchedules();
+        renderRewind();
         renderViews();
         const session = currentSession();
         const connected = !!session;
@@ -2248,6 +2295,10 @@ const WEB_UI_SCRIPT = `
           .catch((err) => addMessage('system', 'Schedule save failed: ' + err.message));
       });
 
+      on(rewindRefresh, 'click', () => {
+        fetchCatalog();
+      });
+
       document.querySelectorAll('.menu-item').forEach((btn) => {
         btn.addEventListener('click', () => setActiveView(btn.dataset.view));
       });
@@ -2290,6 +2341,14 @@ const WEB_UI_SCRIPT = `
         if (action === 'add-plugin') return handleAddAction('plugins');
         if (action === 'add-hook') return handleAddAction('hooks');
         if (action === 'reset-schedule') return resetScheduleForm();
+        if (action === 'rewind-use') {
+          const checkpoint = button.dataset.checkpoint;
+          if (!checkpoint) return;
+          promptInput.value = '/rewind ' + checkpoint;
+          setActiveView('chat');
+          promptInput.focus();
+          return;
+        }
         if (action === 'edit' || action === 'delete') {
           return handleCrudAction(action, button.dataset.type, button.dataset.id);
         }
@@ -2382,6 +2441,7 @@ const WEB_UI_MENU_BAR = `
             <button class="menu-item" data-view="plugins">Plugins</button>
             <button class="menu-item" data-view="hooks">Hooks</button>
             <button class="menu-item" data-view="scheduler">Schedule</button>
+            <button class="menu-item" data-view="rewind">Rewind</button>
           </nav>
         </div>
         <div class="menu-right">
@@ -2623,6 +2683,24 @@ const WEB_UI_MAIN = `
                 <div class="page-card">
                   <h3>Upcoming</h3>
                   <div id="scheduleList" class="data-list"></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-rewind">
+              <div class="page-grid">
+                <div class="page-card">
+                  <div class="page-card-header">
+                    <h3>Rewind Points</h3>
+                    <button id="rewindRefresh" class="ghost">Refresh</button>
+                  </div>
+                  <div id="rewindList" class="data-list"></div>
+                </div>
+                <div class="page-card">
+                  <h3>How it works</h3>
+                  <div class="activity-item">Choose a rewind point and click Use to prefill /rewind &lt;id&gt; in chat.</div>
+                  <div class="activity-item">Rewind always asks for explicit confirmation before restoring state.</div>
+                  <div class="activity-item">For file rollback, checkpoints must include a git commit snapshot.</div>
                 </div>
               </div>
             </section>

@@ -488,6 +488,39 @@ export async function createApp() {
           mcps: mcps.map((mcp) => mcp.name),
         };
 
+        const checkpointDir = path.join(workspaceRoot, '.gemini', 'checkpoints');
+        const checkpointFiles = await listFiles(checkpointDir, '.json');
+        const rewindPoints = await Promise.all(
+          checkpointFiles.map(async (fileName) => {
+            const id = path.basename(fileName, '.json');
+            const fullPath = path.join(checkpointDir, fileName);
+            const stat = await fs.stat(fullPath);
+            let toolName = 'unknown';
+            let restoreType = 'chat-only';
+            try {
+              const parsed = JSON.parse(await readText(fullPath)) as Record<string, unknown>;
+              const toolCall = parsed['toolCall'] as Record<string, unknown> | undefined;
+              if (typeof toolCall?.['name'] === 'string') {
+                toolName = toolCall['name'] as string;
+              }
+              if (typeof parsed['commitHash'] === 'string' && parsed['commitHash']) {
+                restoreType = 'file+chat';
+              }
+            } catch {
+              // Keep fallback values for malformed checkpoints.
+            }
+            return {
+              id,
+              name: id,
+              toolName,
+              restoreType,
+              detail: `${toolName} · ${restoreType} · ${new Date(stat.mtimeMs).toISOString()}`,
+              updatedAt: stat.mtimeMs,
+            };
+          }),
+        );
+        rewindPoints.sort((a, b) => b.updatedAt - a.updatedAt);
+
         return res.status(200).json({
           agents,
           skills,
@@ -498,6 +531,7 @@ export async function createApp() {
           mcps,
           schedules,
           targets,
+          rewindPoints,
         });
       } catch (error) {
         logger.error('[WebUI] Failed to build catalog', error);
