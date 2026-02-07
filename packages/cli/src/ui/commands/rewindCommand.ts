@@ -68,6 +68,15 @@ async function rewindAction(
   context: CommandContext,
   args: string,
 ): Promise<void | SlashCommandActionReturn> {
+  if (!config.getCheckpointingEnabled()) {
+    return {
+      type: 'message',
+      messageType: 'info',
+      content:
+        'Checkpointing is disabled. Enable general.checkpointing.enabled in settings, then restart the CLI.',
+    };
+  }
+
   const checkpointDir = config.storage.getProjectTempCheckpointsDir();
 
   if (!checkpointDir) {
@@ -142,7 +151,7 @@ async function rewindAction(
 }
 
 export const rewindCommand = (config: Config | null): SlashCommand | null => {
-  if (!config?.getCheckpointingEnabled()) {
+  if (!config) {
     return null;
   }
 

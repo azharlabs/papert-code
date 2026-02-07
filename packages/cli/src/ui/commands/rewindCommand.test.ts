@@ -65,9 +65,16 @@ describe('rewindCommand', () => {
     await fs.rm(testRootDir, { recursive: true, force: true });
   });
 
-  it('returns null if checkpointing is disabled', () => {
+  it('returns explanatory message if checkpointing is disabled', async () => {
     vi.mocked(mockConfig.getCheckpointingEnabled).mockReturnValue(false);
-    expect(rewindCommand(mockConfig)).toBeNull();
+    const command = rewindCommand(mockConfig);
+    const result = await command?.action?.(mockContext, '');
+    expect(result).toEqual({
+      type: 'message',
+      messageType: 'info',
+      content:
+        'Checkpointing is disabled. Enable general.checkpointing.enabled in settings, then restart the CLI.',
+    });
   });
 
   it('lists available rewind points when no args are provided', async () => {
