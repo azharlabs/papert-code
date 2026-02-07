@@ -23,7 +23,6 @@ import {
 } from '@papert-code/papert-code-core';
 import type {
   HistoryItemWithoutId,
-  HistoryItemChatList,
   ChatDetail,
 } from '../types.js';
 import { MessageType } from '../types.js';

@@ -29,7 +29,7 @@ const installSubCommand: SlashCommand = {
   description: 'Install GitHub workflow templates for Papert automation',
   kind: CommandKind.BUILT_IN,
   action: async (context): Promise<SlashCommandActionReturn | void> =>
-    setupGithubCommand.action?.(context) ?? {
+    setupGithubCommand.action?.(context, '') ?? {
       type: 'message',
       messageType: 'error',
       content: 'GitHub installer is unavailable.',
