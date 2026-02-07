@@ -17,3 +17,4 @@
 - Hardened admin auth/crypto defaults by replacing static fallback secrets with ephemeral dev-only values and requiring explicit secrets in production.
 - Secured `GET /api/v1/admin-controls` behind JWT auth and enforced self-only access for non-admin users.
 - Enforced bearer-token authentication for all VS Code IDE companion HTTP requests (removed unauthenticated compatibility path).
+- Secured share creation routes by defaulting share auth to `PAPERT_REMOTE_SERVER_TOKEN` when `PAPERT_SHARE_TOKEN` is not configured.

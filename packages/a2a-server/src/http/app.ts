@@ -335,7 +335,9 @@ export async function createApp() {
     expressApp.use(
       createShareRouter({
         store: shareStore,
-        token: process.env['PAPERT_SHARE_TOKEN'],
+        token:
+          process.env['PAPERT_SHARE_TOKEN'] ||
+          process.env['PAPERT_REMOTE_SERVER_TOKEN'],
         publicBaseUrl: process.env['PAPERT_SHARE_PUBLIC_URL_BASE'],
       }),
     );
