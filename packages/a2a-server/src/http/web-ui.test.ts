@@ -53,6 +53,7 @@ describe('Web UI', () => {
     expect(res.text).toContain('/github status');
     expect(res.text).toContain('/listCommands');
     expect(res.text).toContain('view-rewind');
+    expect(res.text).toContain('Policy denied tool execution');
   });
 
   it('GET /api/v1/webui/catalog includes rewind points payload', async () => {

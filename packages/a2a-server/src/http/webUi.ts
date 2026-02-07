@@ -1715,6 +1715,31 @@ const WEB_UI_SCRIPT = `
         }
       }
 
+      function extractPolicyDenialReason(result) {
+        if (!result) return '';
+        const maybeReason =
+          (typeof result.reason === 'string' && result.reason) ||
+          (typeof result.error?.message === 'string' && result.error.message) ||
+          '';
+
+        const statusParts = result.status?.message?.parts;
+        if (Array.isArray(statusParts)) {
+          const denialPart = statusParts
+            .filter((part) => part && part.kind === 'text' && typeof part.text === 'string')
+            .map((part) => part.text)
+            .find((text) => /denied|policy/i.test(text));
+          if (denialPart) {
+            return denialPart;
+          }
+        }
+
+        if (maybeReason && /denied|policy/i.test(maybeReason)) {
+          return maybeReason;
+        }
+
+        return '';
+      }
+
       function handleEvent(event) {
         if (!event || !event.result) return;
         const result = event.result;
@@ -1739,7 +1764,13 @@ const WEB_UI_SCRIPT = `
             logActivity('Status', result.status.state);
           }
         } else if (result.kind && String(result.kind).includes('tool')) {
-          logActivity('Tool', String(result.kind));
+          const denialReason = extractPolicyDenialReason(result);
+          if (denialReason) {
+            logActivity('Policy Deny', denialReason);
+            addMessage('system', 'Policy denied tool execution: ' + denialReason);
+          } else {
+            logActivity('Tool', String(result.kind));
+          }
         }
       }
 

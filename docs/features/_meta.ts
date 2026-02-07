@@ -10,6 +10,7 @@ export default {
   'performance-budgets': 'Performance Budgets',
   'web-command-catalog-parity': 'Web Command Catalog Parity',
   'web-rewind-panel': 'Web Rewind Panel',
+  'web-policy-deny-visibility': 'Web Policy Deny Visibility',
   'session-workflows': 'Session Workflows',
   'github-automation': 'GitHub Automation',
   sandbox: 'Sandbox Support',
