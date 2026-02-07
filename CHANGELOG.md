@@ -15,3 +15,4 @@
 - Hardened web UI rendering against XSS by sanitizing markdown/HTML and escaping dynamic list content.
 - Hardened admin session upload handling with strict `sessionId` validation and a defensive path traversal guard.
 - Hardened admin auth/crypto defaults by replacing static fallback secrets with ephemeral dev-only values and requiring explicit secrets in production.
+- Secured `GET /api/v1/admin-controls` behind JWT auth and enforced self-only access for non-admin users.

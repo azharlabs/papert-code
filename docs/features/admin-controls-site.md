@@ -47,7 +47,7 @@ export PAPERT_ADMIN_BOOTSTRAP_PASSWORD="change-me-please"
 
 ## API endpoints (v1)
 
-- `GET /api/v1/admin-controls?userId=...` — effective controls for a user
+- `GET /api/v1/admin-controls?userId=...` — effective controls for a user (JWT required; non-admins can only request their own user ID)
 - `POST /api/v1/auth/login` — user/admin login, returns JWT + provider config
 - `GET /api/v1/user/config` — user config + permissions (JWT required)
 - `POST /api/v1/user/usage` — report token usage (JWT required)
@@ -74,6 +74,7 @@ The admin API uses the same schema as `FetchAdminControlsResponse` in core. A CL
 
 ```
 GET /api/v1/admin-controls?userId=<USER_ID>
+Authorization: Bearer <token>
 ```
 
 and apply the returned JSON as admin settings. This mirrors the `fetchAdminControls` behavior of the Code Assist server.
@@ -82,7 +83,7 @@ For local or self-hosted deployments, set these environment variables in the CLI
 
 - `PAPERT_ADMIN_URL` — base URL of the admin API (e.g., `http://localhost:4180`)
 - `PAPERT_ADMIN_EMAIL` / `PAPERT_ADMIN_PASSWORD` — user login credentials
-- `PAPERT_ADMIN_TOKEN` — optional pre-issued JWT (skips login)
+- `PAPERT_ADMIN_TOKEN` — pre-issued JWT for direct admin-controls fetches (recommended for non-interactive overrides)
 
 ## Authentication model
 

@@ -276,15 +276,20 @@ app.post('/api/v1/auth/login', async (req, res) => {
   });
 });
 
-app.get('/api/v1/admin-controls', async (req, res) => {
-  const userId =
+app.get('/api/v1/admin-controls', requireAuth, async (req, res) => {
+  const auth = (req as any).auth as { userId: string; role: string };
+  const requestedUserId =
     (req.header('x-user-id') ||
       (typeof req.query.userId === 'string' ? req.query.userId : undefined))?.trim();
+  const userId = requestedUserId || auth.userId;
   if (!userId) {
     return res.status(400).json({
       error: 'missing_user_id',
       message: 'Provide userId query param or x-user-id header.',
     });
+  }
+  if (userId !== auth.userId && auth.role !== 'admin') {
+    return res.status(403).json({ error: 'admin_forbidden' });
   }
 
   const resolved = resolveUserControls(userId);
