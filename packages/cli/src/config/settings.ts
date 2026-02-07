@@ -113,6 +113,7 @@ const MIGRATION_MAP: Record<string, string> = {
   memoryDiscoveryMaxDirs: 'context.discoveryMaxDirs',
   model: 'model.name',
   preferredEditor: 'general.preferredEditor',
+  releaseChannel: 'general.releaseChannel',
   sandbox: 'tools.sandbox',
   selectedAuthType: 'security.auth.selectedType',
   shouldUseNodePtyShell: 'tools.shell.enableInteractiveShell',

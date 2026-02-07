@@ -192,7 +192,7 @@ export async function startInteractiveUI(
     },
   );
 
-  checkForUpdates()
+  checkForUpdates(settings.merged.general?.releaseChannel ?? 'stable')
     .then((info) => {
       handleAutoUpdate(info, settings, config.getProjectRoot());
     })

@@ -226,6 +226,21 @@ const SETTINGS_SCHEMA = {
         description: 'Disable update notification prompts.',
         showInDialog: false,
       },
+      releaseChannel: {
+        type: 'enum',
+        label: 'Release Channel',
+        category: 'General',
+        requiresRestart: false,
+        default: 'stable',
+        description:
+          'Select which release stream should be used for update checks and auto-updates.',
+        showInDialog: true,
+        options: [
+          { value: 'stable', label: 'Stable' },
+          { value: 'preview', label: 'Preview' },
+          { value: 'nightly', label: 'Nightly' },
+        ],
+      },
       checkpointing: {
         type: 'object',
         label: 'Checkpointing',

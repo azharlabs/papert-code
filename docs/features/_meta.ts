@@ -4,6 +4,7 @@ export default {
   rewind: 'Rewind',
   'mcp-diagnostics': 'MCP Diagnostics',
   'policy-explain-mode': 'Policy Explain Mode',
+  'release-channels': 'Release Channels',
   'session-workflows': 'Session Workflows',
   'github-automation': 'GitHub Automation',
   sandbox: 'Sandbox Support',

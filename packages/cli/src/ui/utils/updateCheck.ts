@@ -10,36 +10,71 @@ import semver from 'semver';
 import { getPackageJson } from '../../utils/package.js';
 
 export const FETCH_TIMEOUT_MS = 2000;
+export type ReleaseChannel = 'stable' | 'preview' | 'nightly';
 
 export interface UpdateObject {
   message: string;
   update: UpdateInfo;
+  channel: ReleaseChannel;
 }
 
 /**
- * From a nightly and stable update, determines which is the "best" one to offer.
- * The rule is to always prefer nightly if the base versions are the same.
+ * From a list of available updates, determines which is the "best" one to offer.
+ * If base versions are equal, channel precedence determines the winner.
  */
 function getBestAvailableUpdate(
-  nightly?: UpdateInfo,
-  stable?: UpdateInfo,
-): UpdateInfo | null {
-  if (!nightly) return stable || null;
-  if (!stable) return nightly || null;
+  candidates: Array<{ channel: ReleaseChannel; info: UpdateInfo | null }>,
+): { channel: ReleaseChannel; info: UpdateInfo } | null {
+  const validCandidates = candidates.filter(
+    (candidate): candidate is { channel: ReleaseChannel; info: UpdateInfo } =>
+      Boolean(candidate.info),
+  );
 
-  const nightlyVer = nightly.latest;
-  const stableVer = stable.latest;
-
-  if (
-    semver.coerce(stableVer)?.version === semver.coerce(nightlyVer)?.version
-  ) {
-    return nightly;
+  if (validCandidates.length === 0) {
+    return null;
   }
 
-  return semver.gt(stableVer, nightlyVer) ? stable : nightly;
+  const channelPriority: Record<ReleaseChannel, number> = {
+    nightly: 0,
+    preview: 1,
+    stable: 2,
+  };
+
+  return validCandidates.reduce((best, current) => {
+    const bestBase = semver.coerce(best.info.latest)?.version;
+    const currentBase = semver.coerce(current.info.latest)?.version;
+    if (bestBase && currentBase && bestBase === currentBase) {
+      return channelPriority[current.channel] < channelPriority[best.channel]
+        ? current
+        : best;
+    }
+
+    return semver.gt(current.info.latest, best.info.latest) ? current : best;
+  });
 }
 
-export async function checkForUpdates(): Promise<UpdateObject | null> {
+function getTagsForChannel(
+  channel: ReleaseChannel,
+): Array<{ channel: ReleaseChannel; distTag: 'latest' | 'preview' | 'nightly' }> {
+  if (channel === 'nightly') {
+    return [
+      { channel: 'nightly', distTag: 'nightly' },
+      { channel: 'preview', distTag: 'preview' },
+      { channel: 'stable', distTag: 'latest' },
+    ];
+  }
+  if (channel === 'preview') {
+    return [
+      { channel: 'preview', distTag: 'preview' },
+      { channel: 'stable', distTag: 'latest' },
+    ];
+  }
+  return [{ channel: 'stable', distTag: 'latest' }];
+}
+
+export async function checkForUpdates(
+  releaseChannel: ReleaseChannel = 'stable',
+): Promise<UpdateObject | null> {
   try {
     // Skip update check when running from source (development mode)
     if (process.env['DEV'] === 'true') {
@@ -51,8 +86,7 @@ export async function checkForUpdates(): Promise<UpdateObject | null> {
     }
 
     const { name, version: currentVersion } = packageJson;
-    const isNightly = currentVersion.includes('nightly');
-    const createNotifier = (distTag: 'latest' | 'nightly') =>
+    const createNotifier = (distTag: 'latest' | 'preview' | 'nightly') =>
       updateNotifier({
         pkg: {
           name,
@@ -63,34 +97,22 @@ export async function checkForUpdates(): Promise<UpdateObject | null> {
         distTag,
       });
 
-    if (isNightly) {
-      const [nightlyUpdateInfo, latestUpdateInfo] = await Promise.all([
-        createNotifier('nightly').fetchInfo(),
-        createNotifier('latest').fetchInfo(),
-      ]);
+    const channelTags = getTagsForChannel(releaseChannel);
+    const updates = await Promise.all(
+      channelTags.map(async ({ channel, distTag }) => ({
+        channel,
+        info: await createNotifier(distTag).fetchInfo(),
+      })),
+    );
 
-      const bestUpdate = getBestAvailableUpdate(
-        nightlyUpdateInfo,
-        latestUpdateInfo,
-      );
-
-      if (bestUpdate && semver.gt(bestUpdate.latest, currentVersion)) {
-        const message = `A new version of Papert Code is available! ${currentVersion} → ${bestUpdate.latest}`;
-        return {
-          message,
-          update: { ...bestUpdate, current: currentVersion },
-        };
-      }
-    } else {
-      const updateInfo = await createNotifier('latest').fetchInfo();
-
-      if (updateInfo && semver.gt(updateInfo.latest, currentVersion)) {
-        const message = `Papert Code update available! ${currentVersion} → ${updateInfo.latest}`;
-        return {
-          message,
-          update: { ...updateInfo, current: currentVersion },
-        };
-      }
+    const bestUpdate = getBestAvailableUpdate(updates);
+    if (bestUpdate && semver.gt(bestUpdate.info.latest, currentVersion)) {
+      const message = `Papert Code update available! ${currentVersion} → ${bestUpdate.info.latest}`;
+      return {
+        message,
+        update: { ...bestUpdate.info, current: currentVersion },
+        channel: releaseChannel,
+      };
     }
 
     return null;

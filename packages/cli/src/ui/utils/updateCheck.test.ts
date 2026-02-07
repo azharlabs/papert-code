@@ -79,6 +79,7 @@ describe('checkForUpdates', () => {
     const result = await checkForUpdates();
     expect(result?.message).toContain('1.0.0 → 1.1.0');
     expect(result?.update).toEqual({ current: '1.0.0', latest: '1.1.0' });
+    expect(result?.channel).toBe('stable');
   });
 
   it('should return null if the latest version is the same as the current version', async () => {
@@ -128,8 +129,8 @@ describe('checkForUpdates', () => {
     expect(result).toBeNull();
   });
 
-  describe('nightly updates', () => {
-    it('should notify for a newer nightly version when current is nightly', async () => {
+  describe('release channels', () => {
+    it('should notify for a newer nightly version when channel is nightly', async () => {
       getPackageJson.mockResolvedValue({
         name: 'test-package',
         version: '1.2.3-nightly.1',
@@ -155,9 +156,78 @@ describe('checkForUpdates', () => {
         fetchInfo: () => fetchInfoMock({ pkg, distTag }),
       }));
 
-      const result = await checkForUpdates();
+      const result = await checkForUpdates('nightly');
       expect(result?.message).toContain('1.2.3-nightly.1 → 1.2.3-nightly.2');
       expect(result?.update.latest).toBe('1.2.3-nightly.2');
+      expect(result?.channel).toBe('nightly');
+    });
+
+    it('should check preview dist-tag when channel is preview', async () => {
+      getPackageJson.mockResolvedValue({
+        name: 'test-package',
+        version: '1.2.3',
+      });
+
+      const fetchInfoMock = vi.fn().mockImplementation(({ distTag }) => {
+        if (distTag === 'preview') {
+          return Promise.resolve({
+            latest: '1.3.0-preview.1',
+            current: '1.2.3',
+          });
+        }
+        if (distTag === 'latest') {
+          return Promise.resolve({
+            latest: '1.2.4',
+            current: '1.2.3',
+          });
+        }
+        return Promise.resolve(null);
+      });
+
+      updateNotifier.mockImplementation(({ pkg, distTag }) => ({
+        fetchInfo: () => fetchInfoMock({ pkg, distTag }),
+      }));
+
+      const result = await checkForUpdates('preview');
+      expect(result?.update.latest).toBe('1.3.0-preview.1');
+      expect(result?.channel).toBe('preview');
+    });
+
+    it('should preserve channel preference for same base version', async () => {
+      getPackageJson.mockResolvedValue({
+        name: 'test-package',
+        version: '1.2.3-nightly.1',
+      });
+
+      const fetchInfoMock = vi.fn().mockImplementation(({ distTag }) => {
+        if (distTag === 'nightly') {
+          return Promise.resolve({
+            latest: '1.2.4-nightly.2',
+            current: '1.2.3-nightly.1',
+          });
+        }
+        if (distTag === 'preview') {
+          return Promise.resolve({
+            latest: '1.2.4-preview.9',
+            current: '1.2.3-nightly.1',
+          });
+        }
+        if (distTag === 'latest') {
+          return Promise.resolve({
+            latest: '1.2.4',
+            current: '1.2.3-nightly.1',
+          });
+        }
+        return Promise.resolve(null);
+      });
+
+      updateNotifier.mockImplementation(({ pkg, distTag }) => ({
+        fetchInfo: () => fetchInfoMock({ pkg, distTag }),
+      }));
+
+      const result = await checkForUpdates('nightly');
+      expect(result?.update.latest).toBe('1.2.4-nightly.2');
+      expect(result?.channel).toBe('nightly');
     });
   });
 });

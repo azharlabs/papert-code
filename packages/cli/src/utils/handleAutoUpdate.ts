@@ -47,11 +47,16 @@ export function handleAutoUpdate(
   ) {
     return;
   }
-  const isNightly = info.update.latest.includes('nightly');
+  const releaseTag =
+    info.channel === 'nightly'
+      ? '@nightly'
+      : info.channel === 'preview'
+        ? '@preview'
+        : `@${info.update.latest}`;
 
   const updateCommand = installationInfo.updateCommand.replace(
     '@latest',
-    isNightly ? '@nightly' : `@${info.update.latest}`,
+    releaseTag,
   );
   const updateProcess = spawnFn(updateCommand, { stdio: 'pipe', shell: true });
   let errorOutput = '';

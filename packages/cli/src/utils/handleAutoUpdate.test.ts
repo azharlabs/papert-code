@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// @vitest-environment node
+
 import type { Mock } from 'vitest';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getInstallationInfo, PackageManager } from './installationInfo.js';
@@ -60,6 +62,7 @@ describe('handleAutoUpdate', () => {
         name: '@papert-code/papert-code',
       },
       message: 'An update is available!',
+      channel: 'stable',
     };
 
     mockSettings = {
@@ -230,7 +233,7 @@ describe('handleAutoUpdate', () => {
   });
 
   it('should use the "@nightly" tag for nightly updates', async () => {
-    mockUpdateInfo.update.latest = '2.0.0-nightly';
+    mockUpdateInfo.channel = 'nightly';
     mockGetInstallationInfo.mockReturnValue({
       updateCommand: 'npm i -g @papert-code/papert-code@latest',
       updateMessage: 'This is an additional message.',
@@ -242,6 +245,27 @@ describe('handleAutoUpdate', () => {
 
     expect(mockSpawn).toHaveBeenCalledWith(
       'npm i -g @papert-code/papert-code@nightly',
+      {
+        shell: true,
+        stdio: 'pipe',
+      },
+    );
+  });
+
+  it('should use the "@preview" tag for preview updates', async () => {
+    mockUpdateInfo.channel = 'preview';
+    mockUpdateInfo.update.latest = '2.0.0-preview.3';
+    mockGetInstallationInfo.mockReturnValue({
+      updateCommand: 'npm i -g @papert-code/papert-code@latest',
+      updateMessage: 'This is an additional message.',
+      isGlobal: false,
+      packageManager: PackageManager.NPM,
+    });
+
+    handleAutoUpdate(mockUpdateInfo, mockSettings, '/root', mockSpawn);
+
+    expect(mockSpawn).toHaveBeenCalledWith(
+      'npm i -g @papert-code/papert-code@preview',
       {
         shell: true,
         stdio: 'pipe',
