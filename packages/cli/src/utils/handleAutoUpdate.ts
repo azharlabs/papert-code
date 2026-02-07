@@ -101,7 +101,7 @@ export function handleAutoUpdate(
     return;
   }
   let errorOutput = '';
-  updateProcess.stderr.on('data', (data) => {
+  updateProcess.stderr?.on('data', (data) => {
     errorOutput += data.toString();
   });
 
