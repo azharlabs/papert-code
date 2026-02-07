@@ -23,6 +23,7 @@ import { editorCommand } from '../ui/commands/editorCommand.js';
 import { extensionsCommand } from '../ui/commands/extensionsCommand.js';
 import { skillsCommand } from '../ui/commands/skillsCommand.js';
 import { helpCommand } from '../ui/commands/helpCommand.js';
+import { githubCommand } from '../ui/commands/githubCommand.js';
 import { ideCommand } from '../ui/commands/ideCommand.js';
 import { initCommand } from '../ui/commands/initCommand.js';
 import { languageCommand } from '../ui/commands/languageCommand.js';
@@ -40,6 +41,7 @@ import { statsCommand } from '../ui/commands/statsCommand.js';
 import { summaryCommand } from '../ui/commands/summaryCommand.js';
 import { scheduleCommand } from '../ui/commands/scheduleCommand.js';
 import { terminalSetupCommand } from '../ui/commands/terminalSetupCommand.js';
+import { setupGithubCommand } from '../ui/commands/setupGithubCommand.js';
 import { themeCommand } from '../ui/commands/themeCommand.js';
 import { toolsCommand } from '../ui/commands/toolsCommand.js';
 import { vimCommand } from '../ui/commands/vimCommand.js';
@@ -79,6 +81,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       extensionsCommand,
       skillsCommand,
       helpCommand,
+      githubCommand,
       await ideCommand(),
       initCommand,
       languageCommand,
@@ -102,6 +105,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       settingsCommand,
       vimCommand,
       terminalSetupCommand,
+      setupGithubCommand,
       ...(this.config?.getEnableHooks?.() ? [hooksCommand] : []),
       pluginsCommand,
     ];

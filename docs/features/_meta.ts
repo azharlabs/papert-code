@@ -3,6 +3,7 @@ export default {
   checkpointing: 'Checkpointing',
   rewind: 'Rewind',
   'session-workflows': 'Session Workflows',
+  'github-automation': 'GitHub Automation',
   sandbox: 'Sandbox Support',
   headless: 'Headless Mode',
   'welcome-back': 'Welcome Back',

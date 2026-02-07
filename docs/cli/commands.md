@@ -19,6 +19,7 @@ Do not edit manually. Run `npm run docs:commands:sync` to refresh.
 - `/docs`
 - `/editor`
 - `/extensions`
+- `/github`
 - `/help`
 - `/hooks`
 - `/ide`
@@ -37,6 +38,7 @@ Do not edit manually. Run `npm run docs:commands:sync` to refresh.
 - `/rewind`
 - `/schedule`
 - `/settings`
+- `/setup-github`
 - `/share`
 - `/skills`
 - `/stats`
@@ -134,6 +136,19 @@ Slash commands provide meta-level control over the CLI itself.
 
 - **`/editor`**
   - **Description:** Open a dialog for selecting supported editors.
+
+- **`/github`**
+  - **Description:** Manage GitHub automation workflows.
+  - **Usage:** `/github <install|status|run>`
+  - **Sub-commands:**
+    - **`install`**: Install Papert workflow templates under `.github/workflows`.
+    - **`status`**: Show which expected workflow files are installed or missing.
+    - **`run <alias>`**: Trigger a workflow with GitHub CLI (`gh workflow run ...`).
+      - Supported aliases: `dispatch`, `assistant`, `triage`, `scheduled-triage`, `review`.
+
+- **`/setup-github`**
+  - **Description:** Legacy one-shot installer for GitHub workflows.
+  - **Note:** `/github install` is the recommended flow for new usage.
 
 - **`/extensions`**
   - **Description:** Lists all active extensions in the current Papert Code session. See [Papert Code Extensions](../extension.md).
