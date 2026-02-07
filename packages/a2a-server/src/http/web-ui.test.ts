@@ -48,5 +48,8 @@ describe('Web UI', () => {
     const res = await requestApp(app, { method: 'GET', path: '/' });
     expect(res.status).toBe(200);
     expect(res.text).toContain('<title>Papert Code Web</title>');
+    expect(res.text).toContain('/rewind');
+    expect(res.text).toContain('/mcp diagnose');
+    expect(res.text).toContain('/github status');
   });
 });
