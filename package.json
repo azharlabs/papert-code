@@ -26,6 +26,7 @@
     "docs:commands:sync": "node scripts/command-doc-parity.mjs --write",
     "docs:commands:check": "node scripts/command-doc-parity.mjs --check",
     "perf:check": "node scripts/perf-budgets.mjs",
+    "bundle:check": "node scripts/bundle-budgets.mjs",
     "generate:settings-schema": "node --import tsx scripts/generate-settings-schema.ts",
     "build": "node scripts/build.js",
     "build-and-start": "npm run build && npm run start",

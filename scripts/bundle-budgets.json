@@ -1,0 +1,19 @@
+{
+  "budgets": [
+    {
+      "glob": "packages/admin-web/dist/assets/*.js",
+      "maxBytes": 280000,
+      "description": "Admin web JS bundle budget"
+    },
+    {
+      "glob": "packages/admin-web/dist/assets/*.css",
+      "maxBytes": 20000,
+      "description": "Admin web CSS bundle budget"
+    },
+    {
+      "glob": "packages/a2a-server/dist/src/http/webUi.js",
+      "maxBytes": 140000,
+      "description": "A2A embedded Web UI bundle budget"
+    }
+  ]
+}

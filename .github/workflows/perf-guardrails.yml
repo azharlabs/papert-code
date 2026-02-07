@@ -1,0 +1,40 @@
+name: perf-guardrails
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'packages/**'
+      - 'scripts/**'
+      - 'package.json'
+
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build workspace
+        run: npm run build
+
+      - name: Core perf guardrail
+        run: npm run perf:check
+
+      - name: Bundle size guardrail
+        run: npm run bundle:check -- --out .artifacts/bundle-budget-summary.json
+
+      - name: Upload perf summary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-guardrail-summary
+          path: .artifacts/bundle-budget-summary.json

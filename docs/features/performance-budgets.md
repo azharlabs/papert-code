@@ -8,6 +8,10 @@ Papert Code now enforces file-size performance budgets for critical hot-path mod
 - Checker: `scripts/perf-budgets.mjs`
 - Shared logic: `scripts/lib/perfBudgets.mjs`
 - Unit tests: `scripts/tests/perf-budgets.test.js`
+- Bundle budget source: `scripts/bundle-budgets.json`
+- Bundle checker: `scripts/bundle-budgets.mjs`
+- Bundle logic: `scripts/lib/bundleBudgets.mjs`
+- Bundle tests: `scripts/tests/bundle-budgets.test.js`
 
 ## CI integration
 
@@ -19,6 +23,7 @@ This means pull requests fail early when a critical module grows past its budget
 
 ```bash
 npm run perf:check
+npm run bundle:check
 ```
 
 Output includes:
@@ -37,3 +42,11 @@ Recommended process:
 1. Keep budgets tight to preserve responsiveness in hot paths.
 2. Include code-level refactors before raising limits.
 3. Raise only the specific budget that needs adjustment.
+
+## CI artifact summary
+
+Workflow `.github/workflows/perf-guardrails.yml` uploads:
+
+- `.artifacts/bundle-budget-summary.json`
+
+This artifact provides regression-ready size summary output for PR review.
