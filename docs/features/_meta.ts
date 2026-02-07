@@ -2,6 +2,7 @@ export default {
   subagents: 'Subagents',
   checkpointing: 'Checkpointing',
   rewind: 'Rewind',
+  'mcp-diagnostics': 'MCP Diagnostics',
   'session-workflows': 'Session Workflows',
   'github-automation': 'GitHub Automation',
   sandbox: 'Sandbox Support',

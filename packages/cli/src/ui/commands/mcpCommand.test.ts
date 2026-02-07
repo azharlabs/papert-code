@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// @vitest-environment node
+
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { mcpCommand } from './mcpCommand.js';
 import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
@@ -23,6 +25,7 @@ vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
   const actual =
     await importOriginal<typeof import('@papert-code/papert-code-core')>();
   const mockAuthenticate = vi.fn();
+  const mockGetCredentials = vi.fn();
   return {
     ...actual,
     getMCPServerStatus: vi.fn(),
@@ -33,6 +36,7 @@ vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
     MCPOAuthTokenStorage: vi.fn(() => ({
       getToken: vi.fn(),
       isTokenExpired: vi.fn(),
+      getCredentials: mockGetCredentials,
     })),
   };
 });
@@ -205,6 +209,70 @@ describe('mcpCommand', () => {
         }),
         expect.any(Number),
       );
+    });
+  });
+
+  describe('diagnose subcommand', () => {
+    it('should return server diagnostics including next-step guidance', async () => {
+      const now = Date.now();
+      mockConfig.getMcpServers = vi.fn().mockReturnValue({
+        oauthServer: {
+          httpUrl: 'https://mcp.example.com',
+          oauth: { enabled: true },
+        },
+      });
+      vi.mocked(getMCPServerStatus).mockImplementation((serverName) =>
+        serverName === 'oauthServer'
+          ? MCPServerStatus.DISCONNECTED
+          : MCPServerStatus.CONNECTED,
+      );
+
+      const { MCPOAuthTokenStorage } = await import('@papert-code/papert-code-core');
+      const tokenStorageInstance = new MCPOAuthTokenStorage() as {
+        getCredentials: ReturnType<typeof vi.fn>;
+      };
+      tokenStorageInstance.getCredentials.mockResolvedValue({
+        serverName: 'oauthServer',
+        token: { accessToken: 'abc', expiresAt: now - 1000 },
+      });
+
+      const diagnoseSubCommand = mcpCommand.subCommands?.find(
+        (command) => command.name === 'diagnose',
+      );
+
+      const result = await diagnoseSubCommand?.action!(mockContext, 'oauthServer');
+
+      expect(result).toMatchObject({
+        type: 'message',
+        messageType: 'info',
+      });
+      expect(result).toHaveProperty('content');
+      expect((result as { content: string }).content).toContain('Server: oauthServer');
+      expect((result as { content: string }).content).toContain('OAuth token is expired');
+      expect((result as { content: string }).content).toContain(
+        'Run /mcp auth oauthServer to refresh credentials',
+      );
+      expect((result as { content: string }).content).toContain(
+        'Run /mcp refresh to restart MCP servers',
+      );
+    });
+
+    it('should return an error when diagnosing an unknown server', async () => {
+      mockConfig.getMcpServers = vi.fn().mockReturnValue({
+        server1: { command: 'cmd1' },
+      });
+
+      const diagnoseSubCommand = mcpCommand.subCommands?.find(
+        (command) => command.name === 'diagnose',
+      );
+
+      const result = await diagnoseSubCommand?.action!(mockContext, 'missing-server');
+
+      expect(result).toEqual({
+        type: 'message',
+        messageType: 'error',
+        content: "MCP server 'missing-server' not found.",
+      });
     });
   });
 });

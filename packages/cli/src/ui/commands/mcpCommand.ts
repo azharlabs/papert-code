@@ -352,6 +352,132 @@ const refreshCommand: SlashCommand = {
   },
 };
 
+const diagnoseCommand: SlashCommand = {
+  name: 'diagnose',
+  get description() {
+    return t('Diagnose MCP server and OAuth configuration issues');
+  },
+  kind: CommandKind.BUILT_IN,
+  action: async (
+    context: CommandContext,
+    args: string,
+  ): Promise<SlashCommandActionReturn> => {
+    const { config } = context.services;
+    if (!config) {
+      return {
+        type: 'message',
+        messageType: 'error',
+        content: t('Config not loaded.'),
+      };
+    }
+
+    const mcpServers = config.getMcpServers() || {};
+    const allServerNames = Object.keys(mcpServers);
+    const requestedServer = args.trim();
+
+    if (allServerNames.length === 0) {
+      return {
+        type: 'message',
+        messageType: 'info',
+        content: t('No MCP servers are configured.'),
+      };
+    }
+
+    if (requestedServer && !mcpServers[requestedServer]) {
+      return {
+        type: 'message',
+        messageType: 'error',
+        content: t("MCP server '{{name}}' not found.", { name: requestedServer }),
+      };
+    }
+
+    const blockedServers =
+      (config.getBlockedMcpServers() || []).map((entry) => entry.name) ?? [];
+    const serverNames = requestedServer ? [requestedServer] : allServerNames;
+    const tokenStorage = new MCPOAuthTokenStorage();
+    const lines: string[] = [];
+
+    for (const serverName of serverNames) {
+      const server = mcpServers[serverName];
+      const status = getMCPServerStatus(serverName);
+      const transport = server.command
+        ? 'stdio'
+        : server.httpUrl
+          ? 'streamable-http'
+          : server.url
+            ? 'sse'
+            : server.tcp
+              ? 'tcp'
+              : 'unknown';
+
+      const issues: string[] = [];
+      const hints: string[] = [];
+
+      if (transport === 'unknown') {
+        issues.push('No transport configured');
+        hints.push('Set one of command/url/httpUrl/tcp in mcpServers settings');
+      }
+
+      const isBlocked = blockedServers.includes(serverName);
+      if (isBlocked) {
+        issues.push('Server blocked by policy');
+        hints.push('Review policy mcp.allowed/mcp.excluded and extension trust');
+      }
+
+      const oauthEnabled = Boolean(server.oauth?.enabled);
+      if (oauthEnabled) {
+        const creds = await tokenStorage.getCredentials(serverName);
+        if (!creds) {
+          issues.push('OAuth enabled but no stored credentials');
+          hints.push(`Run /mcp auth ${serverName}`);
+        } else if (creds.token.expiresAt && creds.token.expiresAt < Date.now()) {
+          issues.push('OAuth token is expired');
+          hints.push(`Run /mcp auth ${serverName} to refresh credentials`);
+        }
+
+        if (!server.url && !server.httpUrl) {
+          issues.push('OAuth is typically used with url/httpUrl transports');
+        }
+      }
+
+      if (
+        status === MCPServerStatus.DISCONNECTED &&
+        !isBlocked &&
+        transport !== 'unknown'
+      ) {
+        hints.push('Run /mcp refresh to restart MCP servers');
+      }
+
+      lines.push(
+        [
+          `Server: ${serverName}`,
+          `  Status: ${status}`,
+          `  Transport: ${transport}`,
+          `  OAuth: ${oauthEnabled ? 'enabled' : 'disabled'}`,
+          `  Blocked: ${isBlocked ? 'yes' : 'no'}`,
+          `  Issues: ${issues.length > 0 ? issues.join('; ') : 'none'}`,
+          `  Next steps: ${hints.length > 0 ? hints.join('; ') : 'none'}`,
+        ].join('\n'),
+      );
+    }
+
+    return {
+      type: 'message',
+      messageType: 'info',
+      content: lines.join('\n\n'),
+    };
+  },
+  completion: async (context: CommandContext, partialArg: string) => {
+    const { config } = context.services;
+    if (!config) return [];
+
+    const mcpServers = config.getMcpServers() || {};
+    return Object.keys(mcpServers).filter((name) =>
+      name.startsWith(partialArg),
+    );
+  },
+};
+
 export const mcpCommand: SlashCommand = {
   name: 'mcp',
   get description() {
@@ -360,7 +486,7 @@ export const mcpCommand: SlashCommand = {
     );
   },
   kind: CommandKind.BUILT_IN,
-  subCommands: [listCommand, authCommand, refreshCommand],
+  subCommands: [listCommand, authCommand, refreshCommand, diagnoseCommand],
   // Default action when no subcommand is provided
   action: async (
     context: CommandContext,
