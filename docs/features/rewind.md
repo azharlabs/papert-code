@@ -10,9 +10,13 @@ It lets you:
 
 ## Prerequisites
 
-`/rewind` is available only when checkpointing is enabled.
+`/rewind` requires checkpointing to be enabled for restore operations.
 
-Enable via settings or CLI flags documented in:
+If checkpointing is disabled, running `/rewind` shows a guidance message:
+
+- `Checkpointing is disabled. Enable general.checkpointing.enabled in settings, then restart the CLI.`
+
+Enable checkpointing via settings or CLI flags documented in:
 
 - `docs/features/checkpointing.md`
 
