@@ -5,6 +5,7 @@ export default {
   'mcp-diagnostics': 'MCP Diagnostics',
   'policy-explain-mode': 'Policy Explain Mode',
   'release-channels': 'Release Channels',
+  'server-openapi-contracts': 'Server OpenAPI Contracts',
   'session-workflows': 'Session Workflows',
   'github-automation': 'GitHub Automation',
   sandbox: 'Sandbox Support',
