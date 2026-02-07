@@ -93,6 +93,22 @@ Slash commands provide meta-level control over the CLI itself.
 - **`/copy`**
   - **Description:** Copies the last output produced by Papert Code to your clipboard, for easy sharing or reuse.
 
+- **`/chat`**
+  - **Description:** Manage chat checkpoints and session navigation.
+  - **Usage:** `/chat <list|save|resume|delete|share>`
+  - **Behavior:**
+    - `/chat list` opens the same session browser used by `/resume`.
+    - `/chat resume` without a tag opens the session browser.
+    - `/chat resume <tag>` resumes a named checkpoint.
+    - `/chat save <tag>` saves the current chat as a tagged checkpoint.
+    - `/chat delete <tag>` deletes a tagged checkpoint.
+    - `/chat share [filename]` exports the current chat to markdown/json.
+
+- **`/resume`**
+  - **Description:** Open the interactive session browser and resume previous sessions.
+  - **Usage:** `/resume`
+  - **Note:** `/chat list` and `/chat resume` (without tag) use the same browser.
+
 - **`/share`**
   - **Description:** Create a public share link for the current session and copy it to the clipboard.
   - **Usage:** `/share`

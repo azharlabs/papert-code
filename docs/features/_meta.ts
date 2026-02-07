@@ -2,6 +2,7 @@ export default {
   subagents: 'Subagents',
   checkpointing: 'Checkpointing',
   rewind: 'Rewind',
+  'session-workflows': 'Session Workflows',
   sandbox: 'Sandbox Support',
   headless: 'Headless Mode',
   'welcome-back': 'Welcome Back',

@@ -13,6 +13,7 @@ import type {
   SlashCommand,
   SlashCommandActionReturn,
   MessageActionReturn,
+  OpenDialogActionReturn,
 } from './types.js';
 import { CommandKind } from './types.js';
 import {
@@ -71,19 +72,13 @@ const getSavedChatTags = async (
 const listCommand: SlashCommand = {
   name: 'list',
   get description() {
-    return t('List saved conversation checkpoints');
+    return t('Open the session browser');
   },
   kind: CommandKind.BUILT_IN,
-  action: async (context): Promise<void> => {
-    const chatDetails = await getSavedChatTags(context, false);
-
-    const item: HistoryItemChatList = {
-      type: MessageType.CHAT_LIST,
-      chats: chatDetails,
-    };
-
-    context.ui.addItem(item, Date.now());
-  },
+  action: async (): Promise<OpenDialogActionReturn> => ({
+    type: 'dialog',
+    dialog: 'sessionBrowser',
+  }),
 };
 
 const saveCommand: SlashCommand = {
@@ -163,16 +158,18 @@ const resumeCommand: SlashCommand = {
   name: 'resume',
   altNames: ['load'],
   get description() {
-    return t('Resume a conversation from a checkpoint. Usage: /chat resume <tag>');
+    return t('Resume a conversation from a checkpoint. Usage: /chat resume [tag]');
   },
   kind: CommandKind.BUILT_IN,
-  action: async (context, args) => {
+  action: async (
+    context,
+    args,
+  ): Promise<SlashCommandActionReturn | void | OpenDialogActionReturn> => {
     const tag = args.trim();
     if (!tag) {
       return {
-        type: 'message',
-        messageType: 'error',
-        content: t('Missing tag. Usage: /chat resume <tag>'),
+        type: 'dialog',
+        dialog: 'sessionBrowser',
       };
     }
 
