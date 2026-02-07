@@ -8,6 +8,7 @@ Papert Code now includes `/mcp diagnose` to quickly identify MCP connectivity, O
 - Transport type (`stdio`, `sse`, `streamable-http`, `tcp`)
 - OAuth enablement and token state
 - Policy/extension blocking state
+- Remote transport reachability probe (`HEAD` request with timeout)
 - Suggested next actions
 
 ## Usage
@@ -29,8 +30,10 @@ Papert Code now includes `/mcp diagnose` to quickly identify MCP connectivity, O
 - `Transport`: detected transport type
 - `OAuth`: enabled/disabled
 - `Blocked`: yes/no
+- `Transport probe`: reachable/unreachable/not-applicable
 - `Issues`: detected configuration/runtime problems
 - `Next steps`: concrete remediation actions
+- `Suggested commands`: ready-to-run command sequence for fixes
 
 ## Typical fixes
 
@@ -38,6 +41,7 @@ Papert Code now includes `/mcp diagnose` to quickly identify MCP connectivity, O
 - `OAuth token is expired`: run `/mcp auth <server>` to refresh tokens
 - `Status disconnected`: run `/mcp refresh` to restart MCP servers
 - `Server blocked by policy`: review `mcp.allowed`, `mcp.excluded`, and extension trust settings
+- `Remote transport probe failed`: verify endpoint URL, network policy, and remote server uptime
 
 ## Notes for agents and maintainers
 

@@ -397,6 +397,26 @@ const diagnoseCommand: SlashCommand = {
     const tokenStorage = new MCPOAuthTokenStorage();
     const lines: string[] = [];
 
+    const probeRemoteTransport = async (
+      serverUrl: string | undefined,
+    ): Promise<'reachable' | 'unreachable' | 'not-applicable'> => {
+      if (!serverUrl) {
+        return 'not-applicable';
+      }
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2000);
+        await fetch(serverUrl, {
+          method: 'HEAD',
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        return 'reachable';
+      } catch {
+        return 'unreachable';
+      }
+    };
+
     for (const serverName of serverNames) {
       const server = mcpServers[serverName];
       const status = getMCPServerStatus(serverName);
@@ -412,6 +432,7 @@ const diagnoseCommand: SlashCommand = {
 
       const issues: string[] = [];
       const hints: string[] = [];
+      const suggestedCommands = [`/mcp diagnose ${serverName}`];
 
       if (transport === 'unknown') {
         issues.push('No transport configured');
@@ -426,13 +447,24 @@ const diagnoseCommand: SlashCommand = {
 
       const oauthEnabled = Boolean(server.oauth?.enabled);
       if (oauthEnabled) {
-        const creds = await tokenStorage.getCredentials(serverName);
+        const creds = await tokenStorage.getCredentials(serverName) as
+          | { token?: { expiresAt?: number } }
+          | null;
         if (!creds) {
           issues.push('OAuth enabled but no stored credentials');
           hints.push(`Run /mcp auth ${serverName}`);
-        } else if (creds.token.expiresAt && creds.token.expiresAt < Date.now()) {
+          suggestedCommands.push(`/mcp auth ${serverName}`);
+        } else if (
+          creds.token?.expiresAt &&
+          creds.token.expiresAt < Date.now()
+        ) {
           issues.push('OAuth token is expired');
           hints.push(`Run /mcp auth ${serverName} to refresh credentials`);
+          suggestedCommands.push(`/mcp auth ${serverName}`);
+        } else if (creds.token?.expiresAt) {
+          const remainingMs = Math.max(0, creds.token.expiresAt - Date.now());
+          const remainingMinutes = Math.floor(remainingMs / 60000);
+          hints.push(`OAuth token expires in ~${remainingMinutes}m`);
         }
 
         if (!server.url && !server.httpUrl) {
@@ -446,6 +478,14 @@ const diagnoseCommand: SlashCommand = {
         transport !== 'unknown'
       ) {
         hints.push('Run /mcp refresh to restart MCP servers');
+        suggestedCommands.push('/mcp refresh');
+      }
+
+      const probeTarget = server.httpUrl || server.url;
+      const transportProbe = await probeRemoteTransport(probeTarget);
+      if (transportProbe === 'unreachable' && probeTarget) {
+        issues.push(`Remote transport probe failed (${probeTarget})`);
+        hints.push('Check URL, network policy, and MCP server uptime');
       }
 
       lines.push(
@@ -453,10 +493,12 @@ const diagnoseCommand: SlashCommand = {
           `Server: ${serverName}`,
           `  Status: ${status}`,
           `  Transport: ${transport}`,
+          `  Transport probe: ${transportProbe}`,
           `  OAuth: ${oauthEnabled ? 'enabled' : 'disabled'}`,
           `  Blocked: ${isBlocked ? 'yes' : 'no'}`,
           `  Issues: ${issues.length > 0 ? issues.join('; ') : 'none'}`,
           `  Next steps: ${hints.length > 0 ? hints.join('; ') : 'none'}`,
+          `  Suggested commands: ${Array.from(new Set(suggestedCommands)).join(' | ')}`,
         ].join('\n'),
       );
     }

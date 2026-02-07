@@ -70,6 +70,7 @@ describe('mcpCommand', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
 
     // Set up default mock environment
     vi.unstubAllEnvs();
@@ -99,6 +100,14 @@ describe('mcpCommand', () => {
         config: mockConfig,
       },
     });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+      }),
+    );
   });
 
   describe('basic functionality', () => {
@@ -249,11 +258,15 @@ describe('mcpCommand', () => {
       expect(result).toHaveProperty('content');
       expect((result as { content: string }).content).toContain('Server: oauthServer');
       expect((result as { content: string }).content).toContain('OAuth token is expired');
+      expect((result as { content: string }).content).toContain('Transport probe: reachable');
       expect((result as { content: string }).content).toContain(
         'Run /mcp auth oauthServer to refresh credentials',
       );
       expect((result as { content: string }).content).toContain(
         'Run /mcp refresh to restart MCP servers',
+      );
+      expect((result as { content: string }).content).toContain(
+        'Suggested commands: /mcp diagnose oauthServer | /mcp auth oauthServer | /mcp refresh',
       );
     });
 
