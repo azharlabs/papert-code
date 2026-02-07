@@ -1127,6 +1127,7 @@ const WEB_UI_SCRIPT = `
         hooks: [],
         schedules: [],
         rewindPoints: [],
+        releaseChannel: 'stable',
         targets: { tools: [], agents: [], mcps: [] },
       };
 
@@ -1155,6 +1156,8 @@ const WEB_UI_SCRIPT = `
       const commandPalette = document.getElementById('commandPalette');
       const cliSearch = document.getElementById('cliSearch');
       const cliList = document.getElementById('cliList');
+      const releaseChannelSelect = document.getElementById('releaseChannelSelect');
+      const releaseChannelSave = document.getElementById('releaseChannelSave');
       const brandHome = document.getElementById('brandHome');
       const activityFab = document.getElementById('activityFab');
       const activityPanel = document.getElementById('activityPanel');
@@ -1197,7 +1200,8 @@ const WEB_UI_SCRIPT = `
       }
 
       function setStatus(text, connected) {
-        statusText.textContent = text;
+        const channel = catalog.releaseChannel ? ' [' + catalog.releaseChannel + ']' : '';
+        statusText.textContent = text + channel;
         statusPulse.classList.toggle('off', !connected);
       }
 
@@ -1380,7 +1384,9 @@ const WEB_UI_SCRIPT = `
         }
         if (state.activeView !== 'chat') {
           activeSessionTitle.textContent = 'Control Center';
-          activeSessionMeta.textContent = 'Manage tools, agents, and integrations.';
+          activeSessionMeta.textContent =
+            'Manage tools, agents, and integrations. Release channel: ' +
+            (catalog.releaseChannel || 'stable');
           return;
         }
         activeSessionTitle.textContent = session.label;
@@ -1403,6 +1409,9 @@ const WEB_UI_SCRIPT = `
           cmd.name.toLowerCase().includes(query) || cmd.detail.toLowerCase().includes(query)
         );
         renderList(cliList, items);
+        if (releaseChannelSelect) {
+          releaseChannelSelect.value = catalog.releaseChannel || 'stable';
+        }
       }
 
       function renderSchedules() {
@@ -2290,6 +2299,22 @@ const WEB_UI_SCRIPT = `
         renderCommands(cliSearch.value);
       });
 
+      on(releaseChannelSave, 'click', () => {
+        const selected = releaseChannelSelect ? releaseChannelSelect.value : '';
+        if (!selected) return;
+        apiFetch('/api/v1/webui/release-channel', {
+          method: 'PUT',
+          body: JSON.stringify({ releaseChannel: selected }),
+        })
+          .then(() => fetchCatalog())
+          .catch((err) =>
+            addMessage(
+              'system',
+              'Release channel update failed: ' + err.message,
+            ),
+          );
+      });
+
       on(scheduleForm, 'submit', (event) => {
         event.preventDefault();
         const name = document.getElementById('scheduleName').value.trim();
@@ -2567,6 +2592,17 @@ const WEB_UI_MAIN = `
                   <div class="activity-item">Slash commands control the CLI UI and settings.</div>
                   <div class="activity-item">Terminal commands are invoked as papert &lt;command&gt;.</div>
                   <div class="activity-item">Use @ to load files and ! to run shell commands.</div>
+                  <div class="activity-item" style="margin-top:12px;">
+                    <strong>Release channel</strong>
+                    <div class="action-row" style="margin-top:8px;">
+                      <select id="releaseChannelSelect">
+                        <option value="stable">stable</option>
+                        <option value="preview">preview</option>
+                        <option value="nightly">nightly</option>
+                      </select>
+                      <button id="releaseChannelSave" class="ghost">Save</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>

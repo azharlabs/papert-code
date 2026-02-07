@@ -487,6 +487,11 @@ export async function createApp() {
           agents: agents.map((agent) => agent.name),
           mcps: mcps.map((mcp) => mcp.name),
         };
+        const general = (settings['general'] || {}) as Record<string, unknown>;
+        const releaseChannel =
+          typeof general['releaseChannel'] === 'string'
+            ? general['releaseChannel']
+            : 'stable';
 
         const checkpointDir = path.join(workspaceRoot, '.gemini', 'checkpoints');
         const checkpointFiles = await listFiles(checkpointDir, '.json');
@@ -532,6 +537,7 @@ export async function createApp() {
           schedules,
           targets,
           rewindPoints,
+          releaseChannel,
         });
       } catch (error) {
         logger.error('[WebUI] Failed to build catalog', error);
@@ -582,6 +588,24 @@ export async function createApp() {
       } catch (error) {
         logger.error('[WebUI] Failed to load content', error);
         return res.status(500).json({ error: 'Failed to load content' });
+      }
+    });
+
+    expressApp.put('/api/v1/webui/release-channel', async (req, res) => {
+      try {
+        const requested = String(req.body?.releaseChannel || '').trim();
+        if (!['stable', 'preview', 'nightly'].includes(requested)) {
+          return res.status(400).json({ error: 'Invalid release channel' });
+        }
+        const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+        const general = (settings['general'] || {}) as Record<string, unknown>;
+        general['releaseChannel'] = requested;
+        settings['general'] = general;
+        await writeJson(settingsPath, settings);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[WebUI] Failed to update release channel', error);
+        return res.status(500).json({ error: 'Failed to update release channel' });
       }
     });
 

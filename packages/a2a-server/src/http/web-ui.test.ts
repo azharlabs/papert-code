@@ -54,6 +54,8 @@ describe('Web UI', () => {
     expect(res.text).toContain('/listCommands');
     expect(res.text).toContain('view-rewind');
     expect(res.text).toContain('Policy denied tool execution');
+    expect(res.text).toContain('releaseChannelSelect');
+    expect(res.text).toContain('/api/v1/webui/release-channel');
   });
 
   it('GET /api/v1/webui/catalog includes rewind points payload', async () => {
@@ -78,7 +80,42 @@ describe('Web UI', () => {
     expect(catalogRes.body).toEqual(
       expect.objectContaining({
         rewindPoints: expect.any(Array),
+        releaseChannel: expect.any(String),
       }),
+    );
+  });
+
+  it('PUT /api/v1/webui/release-channel updates channel', async () => {
+    const sessionRes = await requestApp(app, {
+      method: 'POST',
+      path: '/api/v1/sessions',
+      headers: { authorization: 'Bearer server-secret' },
+    });
+    expect(sessionRes.status).toBe(201);
+    const body = sessionRes.body as { sessionId: string; token: string };
+
+    const updateRes = await requestApp(app, {
+      method: 'PUT',
+      path: '/api/v1/webui/release-channel',
+      headers: {
+        authorization: `Bearer ${body.token}`,
+        'x-papert-session-id': body.sessionId,
+      },
+      body: { releaseChannel: 'nightly' },
+    });
+    expect(updateRes.status).toBe(204);
+
+    const catalogRes = await requestApp(app, {
+      method: 'GET',
+      path: '/api/v1/webui/catalog',
+      headers: {
+        authorization: `Bearer ${body.token}`,
+        'x-papert-session-id': body.sessionId,
+      },
+    });
+    expect(catalogRes.status).toBe(200);
+    expect((catalogRes.body as { releaseChannel: string }).releaseChannel).toBe(
+      'nightly',
     );
   });
 });

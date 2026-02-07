@@ -18,6 +18,12 @@ Set the channel in `settings.json`:
 }
 ```
 
+Or set it in Web UI:
+
+- Open `CLI` view
+- Use the **Release channel** selector (`stable`, `preview`, `nightly`)
+- Click **Save**
+
 Allowed values:
 
 - `stable`: checks the `latest` dist-tag
@@ -40,3 +46,11 @@ When auto-update is enabled:
 - `nightly` installs from `@nightly`
 
 This preserves your selected channel on future updates.
+
+## Web client support
+
+The web client now:
+
+- reads current channel from `GET /api/v1/webui/catalog`
+- writes updates via `PUT /api/v1/webui/release-channel`
+- shows active channel in connection/status text
