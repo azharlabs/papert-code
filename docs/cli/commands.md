@@ -1,3 +1,53 @@
+<!-- BEGIN AUTO-GENERATED BUILTIN COMMAND INDEX -->
+
+### Built-in Slash Command Index (Auto-Generated)
+
+The list below is generated from `packages/cli/src/services/BuiltinCommandLoader.ts`.
+Do not edit manually. Run `npm run docs:commands:sync` to refresh.
+
+- `/about`
+- `/agents`
+- `/approval-mode`
+- `/auth`
+- `/bug`
+- `/chat`
+- `/clear`
+- `/compress`
+- `/copy`
+- `/corgi`
+- `/directory`
+- `/docs`
+- `/editor`
+- `/extensions`
+- `/help`
+- `/hooks`
+- `/ide`
+- `/init`
+- `/language`
+- `/lsp`
+- `/mcp`
+- `/memory`
+- `/model`
+- `/permissions`
+- `/plugins`
+- `/quit`
+- `/quit-confirm`
+- `/restore`
+- `/resume`
+- `/schedule`
+- `/settings`
+- `/share`
+- `/skills`
+- `/stats`
+- `/summary`
+- `/terminal-setup`
+- `/theme`
+- `/tools`
+- `/unshare`
+- `/vim`
+
+<!-- END AUTO-GENERATED BUILTIN COMMAND INDEX -->
+
 # CLI Commands
 
 Papert Code supports several built-in commands to help you manage your session, customize the interface, and control its behavior.
