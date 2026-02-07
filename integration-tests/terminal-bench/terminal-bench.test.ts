@@ -11,6 +11,7 @@ import { execSync, spawn } from 'child_process';
 import { existsSync, mkdirSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { resolveTerminalBenchTasks } from './taskCatalog.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, '..');
@@ -80,34 +81,14 @@ describe('terminal-bench integration', () => {
     // We only clean up our subdirectory if needed for specific reasons
   });
 
-  // Test configuration for different tasks
-  const baseTestTasks = ['hello-world', 'swe-bench-astropy-1'] as const;
-
   // Allow CI to select a specific task (or a subset) via env var
   const envTaskId = process.env['TB_TASK_ID'];
   const envTaskIds = process.env['TB_TASK_IDS']; // comma-separated list
 
-  let testTasks = [...baseTestTasks];
-  if (envTaskId || envTaskIds) {
-    const selected = (envTaskIds || envTaskId || '')
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    const available = new Set(baseTestTasks.map((t) => t));
-    const unknown = selected.filter((s) => !available.has(s));
-    if (unknown.length > 0) {
-      throw new Error(
-        `Unknown TB task id(s): ${unknown.join(', ')}. Available: ${[...available].join(', ')}`,
-      );
-    }
-
-    testTasks = baseTestTasks.filter((t) => selected.includes(t));
-
-    if (testTasks.length === 0) {
-      throw new Error('No tasks selected via TB_TASK_ID/TB_TASK_IDS.');
-    }
-  }
+  const testTasks = resolveTerminalBenchTasks({
+    taskId: envTaskId,
+    taskIds: envTaskIds,
+  });
 
   describe.each(testTasks)('Task: %s', (taskId) => {
     it(

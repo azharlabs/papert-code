@@ -6,6 +6,7 @@ export default {
   'policy-explain-mode': 'Policy Explain Mode',
   'release-channels': 'Release Channels',
   'server-openapi-contracts': 'Server OpenAPI Contracts',
+  'eval-suite-expansion': 'Eval Suite Expansion',
   'session-workflows': 'Session Workflows',
   'github-automation': 'GitHub Automation',
   sandbox: 'Sandbox Support',
