@@ -21,12 +21,13 @@ Checks installed workflow files and reports:
 
 Use this command after cloning a repo or changing workflow files.
 
-### `/github run <alias>`
+### `/github run <alias> [--ref <branch>] [--input key=value]`
 
 Triggers a workflow via GitHub CLI:
 
 ```bash
 /github run review
+/github run dispatch --ref main --input env=prod --input dryRun=true
 ```
 
 Alias mapping:
@@ -42,6 +43,17 @@ Requirements:
 - `gh` CLI installed and authenticated
 - repository has the target workflow file
 
+### `/github runs [alias]`
+
+Fetches recent workflow runs from GitHub:
+
+```bash
+/github runs
+/github runs triage
+```
+
+This uses `gh run list --limit 10` and, when alias is provided, applies a workflow filter.
+
 ## Legacy command
 
 `/setup-github` remains available as a compatibility installer.
@@ -53,6 +65,7 @@ For new usage, prefer `/github install` + `/github status`.
 1. Run `/github install`.
 2. Run `/github status` and ensure all expected files are `OK`.
 3. Trigger workflows with `/github run <alias>` as needed.
+4. Check recent execution status with `/github runs [alias]`.
 
 ## Troubleshooting
 
@@ -70,7 +83,7 @@ Fix:
 
 Cause:
 
-- unsupported alias passed to `/github run`
+- unsupported alias passed to `/github run` or `/github runs`
 
 Fix:
 

@@ -24,6 +24,14 @@ const WORKFLOW_ALIASES: WorkflowRunAlias[] = [
   { alias: 'review', fileName: 'gemini-review.yml' },
 ];
 
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+function resolveWorkflowAlias(alias: string): WorkflowRunAlias | undefined {
+  return WORKFLOW_ALIASES.find((item) => item.alias === alias);
+}
+
 const installSubCommand: SlashCommand = {
   name: 'install',
   description: 'Install GitHub workflow templates for Papert automation',
@@ -83,23 +91,24 @@ const statusSubCommand: SlashCommand = {
 const runSubCommand: SlashCommand = {
   name: 'run',
   description:
-    'Trigger a configured GitHub workflow with gh CLI. Usage: /github run <dispatch|assistant|triage|scheduled-triage|review>',
+    'Trigger a configured GitHub workflow with gh CLI. Usage: /github run <dispatch|assistant|triage|scheduled-triage|review> [--ref <branch>] [--input key=value]',
   kind: CommandKind.BUILT_IN,
   action: async (
     _context: CommandContext,
     args: string,
   ): Promise<SlashCommandActionReturn> => {
-    const workflowAlias = args.trim();
+    const argv = args.trim().split(/\s+/).filter(Boolean);
+    const workflowAlias = argv[0] || '';
     if (!workflowAlias) {
       return {
         type: 'message',
         messageType: 'error',
         content:
-          'Missing workflow alias. Usage: /github run <dispatch|assistant|triage|scheduled-triage|review>',
+          'Missing workflow alias. Usage: /github run <dispatch|assistant|triage|scheduled-triage|review> [--ref <branch>] [--input key=value]',
       };
     }
 
-    const selected = WORKFLOW_ALIASES.find((item) => item.alias === workflowAlias);
+    const selected = resolveWorkflowAlias(workflowAlias);
     if (!selected) {
       return {
         type: 'message',
@@ -108,13 +117,81 @@ const runSubCommand: SlashCommand = {
       };
     }
 
+    let ref: string | undefined;
+    const inputs: string[] = [];
+    for (let i = 1; i < argv.length; i++) {
+      const token = argv[i];
+      if (token === '--ref') {
+        ref = argv[i + 1];
+        i += 1;
+        continue;
+      }
+      if (token === '--input') {
+        const inputValue = argv[i + 1];
+        if (!inputValue || !inputValue.includes('=')) {
+          return {
+            type: 'message',
+            messageType: 'error',
+            content:
+              'Invalid --input value. Usage: --input key=value (repeatable).',
+          };
+        }
+        inputs.push(inputValue);
+        i += 1;
+      }
+    }
+
+    const parts = ['gh workflow run', shellQuote(selected.fileName)];
+    if (ref) {
+      parts.push('--ref', shellQuote(ref));
+    }
+    for (const input of inputs) {
+      parts.push('-f', shellQuote(input));
+    }
+    const command = parts.join(' ');
+
     return {
       type: 'tool',
       toolName: 'run_shell_command',
       toolArgs: {
         is_background: false,
         description: `Trigger GitHub workflow ${selected.fileName}`,
-        command: `gh workflow run ${selected.fileName}`,
+        command,
+      },
+    };
+  },
+};
+
+const runsSubCommand: SlashCommand = {
+  name: 'runs',
+  description:
+    'Fetch recent workflow runs. Usage: /github runs [dispatch|assistant|triage|scheduled-triage|review]',
+  kind: CommandKind.BUILT_IN,
+  action: async (
+    _context: CommandContext,
+    args: string,
+  ): Promise<SlashCommandActionReturn> => {
+    const alias = args.trim();
+    let command = 'gh run list --limit 10';
+    if (alias) {
+      const selected = resolveWorkflowAlias(alias);
+      if (!selected) {
+        return {
+          type: 'message',
+          messageType: 'error',
+          content: `Unknown workflow alias: ${alias}`,
+        };
+      }
+      command += ` --workflow ${shellQuote(selected.fileName)}`;
+    }
+
+    return {
+      type: 'tool',
+      toolName: 'run_shell_command',
+      toolArgs: {
+        is_background: false,
+        description: 'Fetch recent GitHub workflow runs',
+        command,
       },
     };
   },
@@ -124,5 +201,5 @@ export const githubCommand: SlashCommand = {
   name: 'github',
   description: 'Manage GitHub automation workflows',
   kind: CommandKind.BUILT_IN,
-  subCommands: [installSubCommand, statusSubCommand, runSubCommand],
+  subCommands: [installSubCommand, statusSubCommand, runSubCommand, runsSubCommand],
 };

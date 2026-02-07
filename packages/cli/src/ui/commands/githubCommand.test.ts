@@ -82,7 +82,26 @@ describe('githubCommand', () => {
       toolArgs: {
         is_background: false,
         description: 'Trigger GitHub workflow gemini-review.yml',
-        command: 'gh workflow run gemini-review.yml',
+        command: "gh workflow run 'gemini-review.yml'",
+      },
+    });
+  });
+
+  it('run supports --ref and --input flags', async () => {
+    const run = getSub('run');
+    const result = await run.action?.(
+      createMockCommandContext(),
+      'dispatch --ref main --input env=prod --input dryRun=true',
+    );
+
+    expect(result).toEqual({
+      type: 'tool',
+      toolName: 'run_shell_command',
+      toolArgs: {
+        is_background: false,
+        description: 'Trigger GitHub workflow gemini-dispatch.yml',
+        command:
+          "gh workflow run 'gemini-dispatch.yml' --ref 'main' -f 'env=prod' -f 'dryRun=true'",
       },
     });
   });
@@ -95,7 +114,21 @@ describe('githubCommand', () => {
       type: 'message',
       messageType: 'error',
       content:
-        'Missing workflow alias. Usage: /github run <dispatch|assistant|triage|scheduled-triage|review>',
+        'Missing workflow alias. Usage: /github run <dispatch|assistant|triage|scheduled-triage|review> [--ref <branch>] [--input key=value]',
+    });
+  });
+
+  it('runs subcommand builds status command with workflow filter', async () => {
+    const runs = getSub('runs');
+    const result = await runs.action?.(createMockCommandContext(), 'triage');
+    expect(result).toEqual({
+      type: 'tool',
+      toolName: 'run_shell_command',
+      toolArgs: {
+        is_background: false,
+        description: 'Fetch recent GitHub workflow runs',
+        command: "gh run list --limit 10 --workflow 'gemini-triage.yml'",
+      },
     });
   });
 
