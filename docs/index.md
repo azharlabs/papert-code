@@ -1,6 +1,6 @@
 # Welcome to Papert Code documentation
 
-Papert Code is a terminal-native AI coding companion adapted from [**Gemini CLI**](https://github.com/google-gemini/gemini-cli) ([details](./README.gemini.md)). It keeps the upstream capabilities while adding Papert defaults and integrations for everyday coding, testing, and automation tasks.
+Papert Code is an AI engine for coding workflows. It focuses on practical defaults and integrations for everyday coding, testing, and automation tasks.
 
 ## 🚀 Why Choose Papert Code?
 
