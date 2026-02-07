@@ -1,9 +1,12 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 
-const DEFAULT_KEY = 'papert-admin-dev-key-please-change';
+const DEV_FALLBACK_KEY = randomBytes(32);
 
 function getKey(): Buffer {
-  const raw = process.env['PAPERT_ADMIN_ENC_KEY'] || DEFAULT_KEY;
+  const raw = process.env['PAPERT_ADMIN_ENC_KEY'];
+  if (!raw) {
+    return DEV_FALLBACK_KEY;
+  }
   if (raw.length < 32) {
     return Buffer.from(raw.padEnd(32, '0'));
   }

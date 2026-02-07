@@ -1,12 +1,13 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { randomBytes } from 'node:crypto';
 import type { UserRecord } from './repo.js';
 
-const DEFAULT_SECRET = 'papert-admin-dev-secret';
+const DEV_FALLBACK_SECRET = randomBytes(32).toString('hex');
 const TOKEN_TTL_SECONDS = 60 * 60 * 12; // 12h
 
 export function getJwtSecret(): string {
-  return process.env['PAPERT_ADMIN_JWT_SECRET'] || DEFAULT_SECRET;
+  return process.env['PAPERT_ADMIN_JWT_SECRET'] || DEV_FALLBACK_SECRET;
 }
 
 export async function hashPassword(password: string): Promise<string> {

@@ -39,13 +39,23 @@ if (env.allowlist.size === 0) {
 }
 if (!process.env['PAPERT_ADMIN_JWT_SECRET']) {
   console.warn(
-    '[admin-web] PAPERT_ADMIN_JWT_SECRET is not set. Using a dev-only default.',
+    '[admin-web] PAPERT_ADMIN_JWT_SECRET is not set. Using an ephemeral dev-only fallback.',
   );
 }
 if (!process.env['PAPERT_ADMIN_ENC_KEY']) {
   console.warn(
-    '[admin-web] PAPERT_ADMIN_ENC_KEY is not set. Using a dev-only encryption key.',
+    '[admin-web] PAPERT_ADMIN_ENC_KEY is not set. Using an ephemeral dev-only encryption key.',
   );
+}
+if (process.env['NODE_ENV'] === 'production') {
+  if (!process.env['PAPERT_ADMIN_JWT_SECRET']) {
+    throw new Error(
+      'PAPERT_ADMIN_JWT_SECRET must be set in production.',
+    );
+  }
+  if (!process.env['PAPERT_ADMIN_ENC_KEY']) {
+    throw new Error('PAPERT_ADMIN_ENC_KEY must be set in production.');
+  }
 }
 
 const DEFAULT_GROUP_NAME = 'Default';
