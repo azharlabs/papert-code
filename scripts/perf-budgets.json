@@ -1,0 +1,24 @@
+{
+  "budgets": [
+    {
+      "path": "packages/core/src/core/coreToolScheduler.ts",
+      "maxBytes": 46000,
+      "description": "Core scheduler hot-path complexity budget"
+    },
+    {
+      "path": "packages/core/src/core/client.ts",
+      "maxBytes": 32000,
+      "description": "Main client execution flow budget"
+    },
+    {
+      "path": "packages/cli/src/ui/AppContainer.tsx",
+      "maxBytes": 50000,
+      "description": "Primary CLI UI orchestration budget"
+    },
+    {
+      "path": "packages/cli/src/ui/components/SessionBrowser.tsx",
+      "maxBytes": 30000,
+      "description": "Session browser rendering budget"
+    }
+  ]
+}

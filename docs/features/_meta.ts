@@ -7,6 +7,7 @@ export default {
   'release-channels': 'Release Channels',
   'server-openapi-contracts': 'Server OpenAPI Contracts',
   'eval-suite-expansion': 'Eval Suite Expansion',
+  'performance-budgets': 'Performance Budgets',
   'session-workflows': 'Session Workflows',
   'github-automation': 'GitHub Automation',
   sandbox: 'Sandbox Support',
