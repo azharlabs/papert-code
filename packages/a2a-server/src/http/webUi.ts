@@ -1032,7 +1032,7 @@ const WEB_UI_SCRIPT = `
 
       function loadServerToken() {
         try {
-          return localStorage.getItem(serverTokenStorageKey) || '';
+          return sessionStorage.getItem(serverTokenStorageKey) || '';
         } catch {
           return '';
         }
@@ -1040,7 +1040,7 @@ const WEB_UI_SCRIPT = `
 
       function saveServerToken(value) {
         try {
-          localStorage.setItem(serverTokenStorageKey, value);
+          sessionStorage.setItem(serverTokenStorageKey, value);
         } catch {
           // ignore storage errors
         }
@@ -1247,9 +1247,9 @@ const WEB_UI_SCRIPT = `
           const el = document.createElement('div');
           el.className = 'data-item';
           el.innerHTML =
-            '<div class="name">' + item.name + '</div>' +
-            '<div class="meta">' + item.detail + '</div>' +
-            '<div class="tag ' + tagClass(item.tag) + '">' + item.tag + '</div>';
+            '<div class="name">' + escapeHtml(item.name || '') + '</div>' +
+            '<div class="meta">' + escapeHtml(item.detail || '') + '</div>' +
+            '<div class="tag ' + tagClass(item.tag) + '">' + escapeHtml(item.tag || '') + '</div>';
           target.appendChild(el);
         });
       }
@@ -1281,13 +1281,14 @@ const WEB_UI_SCRIPT = `
           const el = document.createElement('div');
           el.className = 'data-item';
           const tag = item.tag || type;
+          const itemId = item.id || item.name || '';
           el.innerHTML =
-            '<div class="name">' + item.name + '</div>' +
-            '<div class="meta">' + (item.detail || '') + '</div>' +
-            '<div class="tag ' + tagClass(tag) + '">' + tag + '</div>' +
+            '<div class="name">' + escapeHtml(item.name || '') + '</div>' +
+            '<div class="meta">' + escapeHtml(item.detail || '') + '</div>' +
+            '<div class="tag ' + tagClass(tag) + '">' + escapeHtml(tag) + '</div>' +
             '<div class="data-item-actions">' +
-              '<button data-action="edit" data-type="' + type + '" data-id="' + (item.id || item.name) + '">Edit</button>' +
-              '<button data-action="delete" data-type="' + type + '" data-id="' + (item.id || item.name) + '">Delete</button>' +
+              '<button data-action="edit" data-type="' + escapeAttr(type) + '" data-id="' + escapeAttr(itemId) + '">Edit</button>' +
+              '<button data-action="delete" data-type="' + escapeAttr(type) + '" data-id="' + escapeAttr(itemId) + '">Delete</button>' +
             '</div>';
           target.appendChild(el);
         });
@@ -1299,8 +1300,8 @@ const WEB_UI_SCRIPT = `
           const button = document.createElement('button');
           button.type = 'button';
           button.dataset.value = item.template || item.name;
-          button.innerHTML = '<strong>' + item.name + '</strong>' +
-            '<span>' + item.detail + '</span>';
+          button.innerHTML = '<strong>' + escapeHtml(item.name || '') + '</strong>' +
+            '<span>' + escapeHtml(item.detail || '') + '</span>';
           target.appendChild(button);
         });
       }
@@ -1316,8 +1317,8 @@ const WEB_UI_SCRIPT = `
         state.sessions.forEach((session) => {
           const el = document.createElement('div');
           el.className = 'list-item' + (session.id === state.activeSessionId ? ' active' : '');
-          el.innerHTML = '<div class="title">' + session.label + '</div>' +
-            '<div class="meta">' + session.workspaceRoot + '</div>';
+          el.innerHTML = '<div class="title">' + escapeHtml(session.label || '') + '</div>' +
+            '<div class="meta">' + escapeHtml(session.workspaceRoot || '') + '</div>';
           el.addEventListener('click', () => {
             state.activeSessionId = session.id;
             ensureChat(session);
@@ -1336,7 +1337,7 @@ const WEB_UI_SCRIPT = `
         session.chats.forEach((chat) => {
           const el = document.createElement('div');
           el.className = 'list-item' + (chat.id === state.activeChatId ? ' active' : '');
-          el.innerHTML = '<div class="title">' + chat.title + '</div>' +
+          el.innerHTML = '<div class="title">' + escapeHtml(chat.title || '') + '</div>' +
             '<div class="meta">' + formatTime(chat.createdAt) + '</div>';
           el.addEventListener('click', () => {
             state.activeChatId = chat.id;
@@ -1370,7 +1371,9 @@ const WEB_UI_SCRIPT = `
         chat.activity.slice(-12).forEach((item) => {
           const el = document.createElement('div');
           el.className = 'activity-item';
-          el.innerHTML = '<strong>' + item.label + '</strong> ' + item.detail;
+          el.innerHTML =
+            '<strong>' + escapeHtml(item.label || '') + '</strong> ' +
+            escapeHtml(item.detail || '');
           activityFeed.appendChild(el);
         });
       }
@@ -1441,12 +1444,12 @@ const WEB_UI_SCRIPT = `
           const el = document.createElement('div');
           el.className = 'data-item';
           el.innerHTML =
-            '<div class="name">' + task.name + '</div>' +
-            '<div class="meta">' + task.detail + '</div>' +
-            '<div class="tag ' + tagClass(task.status) + '">' + task.status + '</div>' +
+            '<div class="name">' + escapeHtml(task.name || '') + '</div>' +
+            '<div class="meta">' + escapeHtml(task.detail || '') + '</div>' +
+            '<div class="tag ' + tagClass(task.status) + '">' + escapeHtml(task.status || '') + '</div>' +
             '<div class="data-item-actions">' +
-              '<button data-action="edit" data-type="schedules" data-id="' + task.id + '">Edit</button>' +
-              '<button data-action="delete" data-type="schedules" data-id="' + task.id + '">Delete</button>' +
+              '<button data-action="edit" data-type="schedules" data-id="' + escapeAttr(task.id || '') + '">Edit</button>' +
+              '<button data-action="delete" data-type="schedules" data-id="' + escapeAttr(task.id || '') + '">Delete</button>' +
             '</div>';
           scheduleList.appendChild(el);
         });
@@ -1485,11 +1488,11 @@ const WEB_UI_SCRIPT = `
           const el = document.createElement('div');
           el.className = 'data-item';
           el.innerHTML =
-            '<div class="name">' + point.name + '</div>' +
-            '<div class="meta">' + point.detail + '</div>' +
-            '<div class="tag">' + point.restoreType + '</div>' +
+            '<div class="name">' + escapeHtml(point.name || '') + '</div>' +
+            '<div class="meta">' + escapeHtml(point.detail || '') + '</div>' +
+            '<div class="tag">' + escapeHtml(point.restoreType || '') + '</div>' +
             '<div class="data-item-actions">' +
-              '<button data-action="rewind-use" data-checkpoint="' + point.id + '">Use</button>' +
+              '<button data-action="rewind-use" data-checkpoint="' + escapeAttr(point.id || '') + '">Use</button>' +
             '</div>';
           rewindList.appendChild(el);
         });
@@ -2440,7 +2443,8 @@ const WEB_UI_SCRIPT = `
       });
 
       function escapeHtml(text) {
-        return text
+        const raw = String(text || '');
+        return raw
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
@@ -2448,11 +2452,70 @@ const WEB_UI_SCRIPT = `
           .replace(/'/g, '&#39;');
       }
 
+      function escapeAttr(text) {
+        return text
+          ? escapeHtml(text).replace(/\x60/g, '&#96;')
+          : '';
+      }
+
+      function sanitizeUrl(url) {
+        const raw = String(url || '').trim();
+        if (!raw) return '#';
+        if (raw.startsWith('/')) return raw;
+        const lower = raw.toLowerCase();
+        if (
+          lower.startsWith('http://') ||
+          lower.startsWith('https://') ||
+          lower.startsWith('mailto:')
+        ) {
+          return raw;
+        }
+        return '#';
+      }
+
+      function sanitizeHtml(html) {
+        const template = document.createElement('template');
+        template.innerHTML = String(html || '');
+        const blockedTags = new Set([
+          'script',
+          'iframe',
+          'object',
+          'embed',
+          'link',
+          'meta',
+          'style',
+        ]);
+        const elements = template.content.querySelectorAll('*');
+        elements.forEach((el) => {
+          const tagName = el.tagName.toLowerCase();
+          if (blockedTags.has(tagName)) {
+            el.remove();
+            return;
+          }
+          const attributes = Array.from(el.attributes);
+          attributes.forEach((attr) => {
+            const name = attr.name.toLowerCase();
+            if (name.startsWith('on')) {
+              el.removeAttribute(attr.name);
+              return;
+            }
+            if (name === 'href' || name === 'src' || name === 'xlink:href') {
+              el.setAttribute(attr.name, sanitizeUrl(attr.value));
+              if (tagName === 'a' && name === 'href') {
+                el.setAttribute('rel', 'noopener noreferrer');
+                el.setAttribute('target', '_blank');
+              }
+            }
+          });
+        });
+        return template.innerHTML;
+      }
+
       function renderMarkdown(input) {
         const text = String(input || '');
         if (!text) return '';
         if (window.marked && typeof window.marked.parse === 'function') {
-          return window.marked.parse(text, { breaks: true, gfm: true });
+          return sanitizeHtml(window.marked.parse(text, { breaks: true, gfm: true }));
         }
         return '<pre>' + escapeHtml(text) + '</pre>';
       }

@@ -56,6 +56,9 @@ describe('Web UI', () => {
     expect(res.text).toContain('Policy denied tool execution');
     expect(res.text).toContain('releaseChannelSelect');
     expect(res.text).toContain('/api/v1/webui/release-channel');
+    expect(res.text).toContain('function sanitizeHtml(html)');
+    expect(res.text).toContain('sessionStorage.getItem(serverTokenStorageKey)');
+    expect(res.text).not.toContain('localStorage.getItem(serverTokenStorageKey)');
   });
 
   it('GET /api/v1/webui/catalog includes rewind points payload', async () => {

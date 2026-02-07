@@ -12,3 +12,4 @@
 - Added CI bundle budget guardrails and performance artifact publishing.
 - Extended GitHub run command support with ref inputs and run status output.
 - Added end-to-end operations documentation for feature usage and testing.
+- Hardened web UI rendering against XSS by sanitizing markdown/HTML and escaping dynamic list content.
