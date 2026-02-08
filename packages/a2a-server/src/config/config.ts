@@ -210,10 +210,44 @@ export function loadEnvironment(): void {
 
   const envFilePath = findEnvFile(process.cwd());
   if (envFilePath) {
+    const runtimeKeys = [
+      'CODER_AGENT_PORT',
+      'CODER_AGENT_HOST',
+      'CODER_AGENT_WORKSPACE_PATH',
+      'PAPERT_REMOTE_ENABLED',
+      'PAPERT_REMOTE_SERVER_TOKEN',
+      'PAPERT_REMOTE_SESSION_TTL_MS',
+      'PAPERT_REMOTE_DOCS_ENABLED',
+      'PAPERT_WEB_UI_ENABLED',
+      'PAPERT_WEB_UI_ALLOW_EMPTY_TOKEN',
+      'PAPERT_WEB_UI_DESKTOP_MODE',
+      'PAPERT_SHARE_PUBLIC_URL_BASE',
+      'OPENAI_API_KEY',
+      'OPENAI_BASE_URL',
+      'OPENAI_MODEL',
+      'PAPERT_MODEL',
+      'PAPERT_OAUTH',
+      'PAPERT_ADMIN_URL',
+      'PAPERT_ADMIN_EMAIL',
+      'PAPERT_ADMIN_PASSWORD',
+      'PAPERT_ADMIN_TOKEN',
+    ] as const;
+    const preserved = new Map<string, string>();
+    for (const key of runtimeKeys) {
+      const value = process.env[key];
+      if (typeof value === 'string') {
+        preserved.set(key, value);
+      }
+    }
+
     const hasRemoteToken =
       typeof process.env['PAPERT_REMOTE_SERVER_TOKEN'] === 'string' &&
       process.env['PAPERT_REMOTE_SERVER_TOKEN']!.trim().length > 0;
     dotenv.config({ path: envFilePath, override: !hasRemoteToken });
+
+    for (const [key, value] of preserved.entries()) {
+      process.env[key] = value;
+    }
   }
 }
 

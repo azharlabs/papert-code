@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Papert Code Desktop</title>
+    <meta name="theme-color" content="#101726" />
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="top-actions">
+          <button id="toggle-sidebar-btn" class="secondary" title="Hide projects" aria-label="Hide projects">◀</button>
+          <button id="new-project-btn" class="primary">New Project</button>
+          <button id="update-app-btn" class="secondary">Update</button>
+          <button id="auth-settings-btn" class="secondary icon-btn" title="Auth Settings" aria-label="Auth Settings">⚙</button>
+        </div>
+      </header>
+
+      <div class="layout">
+        <aside id="project-sidebar" class="sidebar">
+          <div class="sidebar-title">Projects</div>
+          <div id="projects-list" class="projects-list"></div>
+        </aside>
+
+        <main class="workspace">
+          <div id="empty-state" class="panel">
+            <h1>Start with a local folder</h1>
+            <p>
+              Create a project by picking a folder from your device. Papert Code runs fully local in this desktop app.
+            </p>
+            <button id="empty-state-open-btn" class="primary">Select Folder</button>
+          </div>
+
+          <div id="loading-card" class="panel hidden">
+            <div id="status" class="status">Starting project...</div>
+            <div id="hint" class="hint">Launching local workspace session.</div>
+          </div>
+
+          <div id="error-card" class="panel hidden">
+            <div id="error-title" class="status error">Project failed to start</div>
+            <div id="error-message" class="hint">Papert Code local server could not be started.</div>
+            <pre id="error-details" class="error-details"></pre>
+            <button id="restart-btn" class="secondary">Retry</button>
+          </div>
+
+          <div id="webview-wrap" class="webview-wrap hidden">
+            <iframe id="webview" class="webview" title="Papert Code Workspace"></iframe>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="auth-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="auth-modal-title">Authentication</h2>
+          <button id="auth-modal-close-btn" class="secondary">Close</button>
+        </div>
+        <div class="modal-body">
+          <label class="field-label" for="auth-mode-select">Mode</label>
+          <select id="auth-mode-select">
+            <option value="admin">Admin Login</option>
+            <option value="openai">OpenAI Compatible</option>
+          </select>
+
+          <div id="auth-admin-fields">
+            <label class="field-label" for="auth-admin-url">Admin URL</label>
+            <input id="auth-admin-url" type="text" placeholder="http://localhost:4180" />
+            <label class="field-label" for="auth-admin-email">Admin Email</label>
+            <input id="auth-admin-email" type="text" placeholder="admin@company.com" />
+            <label class="field-label" for="auth-admin-password">Admin Password</label>
+            <input id="auth-admin-password" type="password" placeholder="Password" />
+            <label class="field-label" for="auth-admin-token">Admin Token (Optional)</label>
+            <input id="auth-admin-token" type="password" placeholder="JWT token" />
+          </div>
+
+          <div id="auth-openai-fields" class="hidden">
+            <label class="field-label" for="auth-openai-api-key">API Key</label>
+            <input id="auth-openai-api-key" type="password" placeholder="sk-..." />
+            <label class="field-label" for="auth-openai-base-url">Base URL (Optional)</label>
+            <input id="auth-openai-base-url" type="text" placeholder="https://api.openai.com/v1" />
+            <label class="field-label" for="auth-openai-model">Model (Optional)</label>
+            <input id="auth-openai-model" type="text" placeholder="gpt-4.1" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="auth-modal-refresh-btn" class="secondary">Refresh Autofill</button>
+          <div id="auth-modal-hint" class="hint">These settings are stored locally on this device.</div>
+          <button id="auth-modal-save-btn" class="primary">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/src/index.ts" type="module"></script>
+  </body>
+</html>

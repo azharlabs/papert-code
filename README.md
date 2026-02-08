@@ -90,6 +90,14 @@ export PAPERT_SHARE_PUBLIC_URL_BASE=http://localhost:41242
 papert server --host 0.0.0.0 --port 41242 --docs
 ```
 
+## Desktop app
+
+Papert Code also ships as a local-first desktop app (Tauri).
+
+- Desktop package docs: `packages/desktop/README.md`
+- Download installers: [GitHub Releases](https://github.com/azharlabs/papert-code/releases)
+- Release workflow: `.github/workflows/desktop-release.yml`
+
 ## Remote driving (daemon/client)
 
 Papert Code supports an optional remote-driving mode where you run a daemon on one machine (or container/VM) and connect to it from another machine.

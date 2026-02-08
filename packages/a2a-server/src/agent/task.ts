@@ -880,6 +880,32 @@ export class Task {
     }
   }
 
+  private _extractInlineFilePart(part: Part): PartUnion | null {
+    if (part.kind !== 'data' || !part.data || typeof part.data !== 'object') {
+      return null;
+    }
+    const type = part.data['type'];
+    if (type !== 'inline-file') {
+      return null;
+    }
+    const mimeType = part.data['mimeType'];
+    const data = part.data['data'];
+    if (
+      typeof mimeType !== 'string' ||
+      !mimeType.startsWith('image/') ||
+      typeof data !== 'string' ||
+      !data
+    ) {
+      return null;
+    }
+    return {
+      inlineData: {
+        mimeType,
+        data,
+      },
+    };
+  }
+
   getAndClearCompletedTools(): CompletedToolCall[] {
     const tools = [...this.completedToolCalls];
     this.completedToolCalls = [];
@@ -970,6 +996,13 @@ export class Task {
 
       if (part.kind === 'text') {
         llmParts.push({ text: part.text });
+        hasContentForLlm = true;
+        continue;
+      }
+
+      const filePart = this._extractInlineFilePart(part);
+      if (filePart) {
+        llmParts.push(filePart);
         hasContentForLlm = true;
       }
     }

@@ -212,6 +212,7 @@ export async function createApp() {
     const papertDir = storage.getPapertDir();
     const settingsPath = storage.getWorkspaceSettingsPath();
     const schedulePath = path.join(papertDir, 'schedule', 'jobs.json');
+    const webUiStatePath = path.join(papertDir, 'webui', 'state.json');
 
     const normalizeName = (value: string) =>
       value.trim().replace(/[^a-zA-Z0-9._-]/g, '-');
@@ -323,12 +324,20 @@ export async function createApp() {
     }
 
     if (webUiEnabled) {
-      expressApp.get('/', (_req, res) => {
+      expressApp.get('/', async (_req, res) => {
+        const initialWebUiState = await readJson<unknown>(webUiStatePath, null);
         res
           .status(200)
           .setHeader('content-type', 'text/html; charset=utf-8')
           .setHeader('cache-control', 'no-store');
-        res.send(getWebUiHtml());
+        res.send(
+          getWebUiHtml(
+            process.env['PAPERT_WEB_UI_ALLOW_EMPTY_TOKEN'] === '1',
+            process.env['PAPERT_WEB_UI_DESKTOP_MODE'] === '1',
+            workspaceRoot,
+            initialWebUiState,
+          ),
+        );
       });
     }
 
@@ -351,9 +360,9 @@ export async function createApp() {
       }),
     );
 
+    expressApp.use(express.json({ limit: '15mb' }));
     const appBuilder = new A2AExpressApp(requestHandler);
     expressApp = appBuilder.setupRoutes(expressApp, '');
-    expressApp.use(express.json({ limit: '2mb' }));
 
     expressApp.get('/api/v1/webui/catalog', async (_req, res) => {
       try {
@@ -544,6 +553,25 @@ export async function createApp() {
       } catch (error) {
         logger.error('[WebUI] Failed to build catalog', error);
         return res.status(500).json({ error: 'Failed to load catalog' });
+      }
+    });
+
+    expressApp.get('/api/v1/webui/state', async (_req, res) => {
+      const state = await readJson<unknown>(webUiStatePath, null);
+      res.status(200).json({ state });
+    });
+
+    expressApp.put('/api/v1/webui/state', async (req, res) => {
+      try {
+        const body = req.body;
+        if (!body || typeof body !== 'object') {
+          return res.status(400).json({ error: 'Invalid state payload' });
+        }
+        await writeJson(webUiStatePath, body);
+        return res.status(204).end();
+      } catch (error) {
+        logger.error('[CoreAgent] Failed to save web UI state', error);
+        return res.status(500).json({ error: 'Failed to save state' });
       }
     });
 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>dev.papert.desktop</id>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Apache-2.0</project_license>
+
+  <name>Papert Code</name>
+  <summary>Terminal-native AI coding companion with a desktop web UI</summary>
+
+  <developer id="dev.papert">
+    <name>Papert</name>
+  </developer>
+
+  <description>
+    <p>
+      Papert Code is a terminal-native AI coding companion. The desktop app launches the local Papert Code web UI
+      inside a native window.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">dev.papert.desktop</launchable>
+
+  <content_rating type="oars-1.1" />
+
+  <url type="bugtracker">https://github.com/azharlabs/papert-code/issues</url>
+  <url type="homepage">https://papert.dev</url>
+  <url type="vcs-browser">https://github.com/azharlabs/papert-code</url>
+</component>

@@ -18,7 +18,7 @@ export function createRemoteRouter(options: {
   const { auth, sessions, workspaceRoot } = options;
 
   const router = express.Router();
-  router.use(express.json());
+  router.use(express.json({ limit: '15mb' }));
 
   router.get('/api/v1/health', (_req, res) => {
     res.status(200).json({ status: 'ok' });

@@ -5,8 +5,6 @@
  */
 
 const WEB_UI_STYLES = `
-      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
-
       :root {
         color-scheme: light dark;
         --bg: #0b0f14;
@@ -172,6 +170,37 @@ const WEB_UI_STYLES = `
       .chip:hover {
         transform: translateY(-1px);
         box-shadow: 0 8px 16px var(--shadow);
+      }
+
+      body.desktop-embed .window-controls,
+      body.desktop-embed #brandHome,
+      body.desktop-embed #remoteConnectCard {
+        display: none !important;
+      }
+
+      body.desktop-embed #sessionSection {
+        display: none !important;
+      }
+
+      body.desktop-embed #autoExecToggleRow,
+      body.desktop-embed .menu-item[data-view="cli"],
+      body.desktop-embed .menu-item[data-view="tools"],
+      body.desktop-embed .chip[data-modal="tools"],
+      body.desktop-embed #view-cli,
+      body.desktop-embed #view-tools,
+      body.desktop-embed #shareBtn,
+      body.desktop-embed #clearChatBtn {
+        display: none !important;
+      }
+
+      body.chat-sidebar-collapsed .workspace {
+        grid-template-columns: 0 minmax(0, 1fr);
+      }
+
+      body.chat-sidebar-collapsed .sidebar {
+        border-right: none;
+        padding: 0;
+        overflow: hidden;
       }
 
       .workspace {
@@ -382,21 +411,27 @@ const WEB_UI_STYLES = `
         background: rgba(12, 18, 28, 0.85);
         border: 1px solid var(--stroke);
         overflow-y: auto;
+        overflow-x: hidden;
         max-height: 100%;
         height: 100%;
       }
 
       .msg {
-        padding: 12px 14px;
+        padding: 0 14px;
         border-radius: 12px;
         margin-bottom: 12px;
         background: #111827;
-        border: 1px solid #1f2a3b;
+        border: none;
+        font-size: 13px;
       }
 
       .msg.user {
-        border-color: rgba(60, 214, 180, 0.6);
-        background: rgba(20, 40, 48, 0.8);
+        border: none;
+        background: transparent;
+      }
+
+      .msg.assistant {
+        border: none;
       }
 
       .msg.system {
@@ -407,8 +442,9 @@ const WEB_UI_STYLES = `
 
       .msg .content {
         line-height: 1.6;
-        white-space: normal;
+        white-space: pre-wrap;
         word-break: break-word;
+        overflow-wrap: anywhere;
       }
 
       .msg .content pre {
@@ -416,7 +452,10 @@ const WEB_UI_STYLES = `
         border: 1px solid #233148;
         border-radius: 10px;
         padding: 12px;
-        overflow-x: auto;
+        overflow-x: hidden;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
         font-family: 'JetBrains Mono', monospace;
         font-size: 12px;
       }
@@ -430,16 +469,150 @@ const WEB_UI_STYLES = `
         padding: 2px 6px;
       }
 
+      .msg.assistant .content pre,
+      .msg.assistant .content code {
+        border: none;
+        background: transparent;
+      }
+
       .composer {
         display: grid;
         gap: 8px;
-        padding: 12px;
+        padding: 8px;
         border-radius: 16px;
         background: var(--panel);
         border: 1px solid var(--stroke);
         flex: 0 0 auto;
         position: sticky;
         bottom: 0;
+      }
+
+      .composer-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        border: 1px solid var(--stroke-soft);
+        border-radius: 14px;
+        padding: 8px 10px;
+        background: #0b111c;
+      }
+
+      #promptInput {
+        border: none;
+        background: transparent;
+        padding: 0;
+        min-height: 54px;
+        font-size: 13px;
+        line-height: 1.4;
+        resize: vertical;
+      }
+
+      #promptInput:focus {
+        outline: none;
+      }
+
+      .composer-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .composer-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .composer-hint {
+        font-size: 11px;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .icon-btn {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        border-radius: 999px;
+        border: 1px solid var(--stroke-soft);
+        background: linear-gradient(180deg, #1a2537 0%, #121a28 100%);
+        color: var(--text);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        line-height: 1;
+        padding: 0;
+      }
+
+      #sendBtn.composer-send {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        border-radius: 999px;
+        padding: 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .attachment-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .attachment-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        max-width: 100%;
+        border: 1px solid var(--stroke-soft);
+        border-radius: 999px;
+        background: #101827;
+        color: var(--text);
+        font-size: 11px;
+        padding: 4px 8px;
+      }
+
+      .attachment-chip span {
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .attachment-remove {
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        padding: 0;
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        border-radius: 999px;
+        line-height: 1;
+      }
+
+      .attachment-remove:hover {
+        color: var(--text);
+        box-shadow: none;
+      }
+
+      .attachment-error {
+        font-size: 12px;
+        color: #ff8a8a;
+        min-height: 14px;
+      }
+
+      .composer-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
 
       .toggle {
@@ -821,6 +994,20 @@ const WEB_UI_STYLES = `
         overflow: hidden;
       }
 
+      .editor-fallback {
+        width: 100%;
+        height: 100%;
+        border: none;
+        outline: none;
+        resize: none;
+        padding: 12px;
+        color: var(--text);
+        background: #0d1422;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
       .editor-actions {
         display: flex;
         justify-content: flex-end;
@@ -958,8 +1145,8 @@ const WEB_UI_STYLES = `
         .composer {
           padding: 8px;
         }
-        .composer textarea {
-          min-height: 60px;
+        #promptInput {
+          min-height: 52px;
         }
         .card {
           padding: 12px;
@@ -967,8 +1154,8 @@ const WEB_UI_STYLES = `
         .messages {
           padding: 12px;
         }
-        .composer textarea {
-          min-height: 70px;
+        #promptInput {
+          min-height: 52px;
         }
         .action-row {
           gap: 8px;
@@ -990,21 +1177,38 @@ const WEB_UI_STYLES = `
 `
 
 const WEB_UI_SCRIPT = `
+      const workspaceRootFromHost = window.__PAPERT_WEB_UI_WORKSPACE_ROOT__ || 'workspace';
+      function makeWorkspaceSuffix(input) {
+        try {
+          const encoded = encodeURIComponent(String(input || 'workspace'));
+          return btoa(encoded).replace(/=+$/g, '');
+        } catch {
+          return 'workspace';
+        }
+      }
+      const workspaceSuffix = makeWorkspaceSuffix(workspaceRootFromHost);
+      const stateStorageKey = 'papert.web.state.' + workspaceSuffix;
+      const serverTokenStorageKey = 'papert.web.serverToken.' + workspaceSuffix;
+      const autoConnectStorageKey = 'papert.web.autoConnect.' + workspaceSuffix;
+      const hostInitialState = window.__PAPERT_WEB_UI_INITIAL_STATE__;
+      const allowEmptyToken = window.__PAPERT_WEB_UI_ALLOW_EMPTY_TOKEN__ === true;
+      const desktopMode = window.__PAPERT_WEB_UI_DESKTOP_MODE__ === true;
+
       const storage = {
         load() {
           try {
-            const raw = localStorage.getItem('papert.web.state');
+            const raw = localStorage.getItem(stateStorageKey);
             return raw ? JSON.parse(raw) : null;
           } catch {
             return null;
           }
         },
         save(state) {
-          localStorage.setItem('papert.web.state', JSON.stringify(state));
+          localStorage.setItem(stateStorageKey, JSON.stringify(state));
         },
       };
 
-      const state = storage.load() || {
+      const state = hostInitialState || storage.load() || {
         sessions: [],
         activeSessionId: '',
         activeChatId: '',
@@ -1015,20 +1219,88 @@ const WEB_UI_SCRIPT = `
       };
 
       function normalizeState() {
-        // Always start clean; stale sessions cause 401s after refresh.
-        state.sessions = [];
+        state.sessions = Array.isArray(state.sessions)
+          ? state.sessions.map((session, index) => ({
+              id: '',
+              token: '',
+              workspaceRoot:
+                (session && typeof session.workspaceRoot === 'string' && session.workspaceRoot) ||
+                workspaceRootFromHost ||
+                '',
+              label:
+                (session && typeof session.label === 'string' && session.label) ||
+                (desktopMode ? 'Workspace' : 'Session ' + (index + 1)),
+              createdAt:
+                (session && Number.isFinite(session.createdAt) && session.createdAt) ||
+                Date.now(),
+              chats:
+                session && Array.isArray(session.chats)
+                  ? session.chats
+                      .map((chat) => ({
+                        id:
+                          (chat && typeof chat.id === 'string' && chat.id) ||
+                          'chat-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+                        title:
+                          (chat && typeof chat.title === 'string' && chat.title) || 'New chat',
+                        createdAt:
+                          (chat && Number.isFinite(chat.createdAt) && chat.createdAt) ||
+                          Date.now(),
+                        taskId: '',
+                        messages:
+                          chat && Array.isArray(chat.messages)
+                            ? chat.messages
+                                .filter(
+                                  (msg) =>
+                                    msg &&
+                                    typeof msg.role === 'string' &&
+                                    typeof msg.content === 'string',
+                                )
+                                .map((msg) => ({
+                                  role: msg.role,
+                                  content: msg.content,
+                                  createdAt:
+                                    Number.isFinite(msg.createdAt) ? msg.createdAt : Date.now(),
+                                }))
+                            : [],
+                        activity:
+                          chat && Array.isArray(chat.activity)
+                            ? chat.activity
+                                .filter(
+                                  (item) =>
+                                    item &&
+                                    typeof item.label === 'string' &&
+                                    typeof item.detail === 'string',
+                                )
+                                .map((item) => ({
+                                  label: item.label,
+                                  detail: item.detail,
+                                  createdAt:
+                                    Number.isFinite(item.createdAt)
+                                      ? item.createdAt
+                                      : Date.now(),
+                                }))
+                            : [],
+                      }))
+                      .slice(0, 100)
+                  : [],
+            }))
+          : [];
+        state.sessions = state.sessions.slice(0, 1);
+        if (state.sessions[0] && (!Array.isArray(state.sessions[0].chats) || state.sessions[0].chats.length === 0)) {
+          state.sessions[0].chats = [createChat()];
+        }
         state.shareHistory = Array.isArray(state.shareHistory) ? state.shareHistory : [];
         state.activeView = state.activeView || 'chat';
         state.catalogLoaded = false;
         state.catalogLoading = false;
         state.activeSessionId = '';
-        state.activeChatId = '';
+        state.activeChatId =
+          state.sessions[0] && state.sessions[0].chats && state.sessions[0].chats[0]
+            ? state.sessions[0].chats[0].id
+            : '';
       }
 
       normalizeState();
-
-      const serverTokenStorageKey = 'papert.web.serverToken';
-      const autoConnectStorageKey = 'papert.web.autoConnect';
 
       function loadServerToken() {
         try {
@@ -1130,6 +1402,29 @@ const WEB_UI_SCRIPT = `
         releaseChannel: 'stable',
         targets: { tools: [], agents: [], mcps: [] },
       };
+      let activeStreamingChatId = '';
+      const maxAttachments = 3;
+      const maxAttachmentSizeBytes = 2 * 1024 * 1024;
+      const allowedDocumentMimeTypes = new Set([
+        'application/pdf',
+        'text/plain',
+        'text/markdown',
+        'text/csv',
+        'application/json',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ]);
+      const allowedDocumentExtensions = new Set([
+        'pdf',
+        'txt',
+        'md',
+        'markdown',
+        'csv',
+        'json',
+        'doc',
+        'docx',
+      ]);
+      let pendingAttachments = [];
 
       const serverTokenInput = document.getElementById('serverToken');
       const connectBtn = document.getElementById('connectBtn');
@@ -1148,6 +1443,10 @@ const WEB_UI_SCRIPT = `
       const activeSessionTitle = document.getElementById('activeSessionTitle');
       const activeSessionMeta = document.getElementById('activeSessionMeta');
       const autoExecToggle = document.getElementById('autoExecToggle');
+      const attachmentStrip = document.getElementById('attachmentStrip');
+      const attachmentError = document.getElementById('attachmentError');
+      const uploadImageBtn = document.getElementById('uploadImageBtn');
+      const imageUploadInput = document.getElementById('imageUploadInput');
       const activityFeed = document.getElementById('activityFeed');
       const shareBtn = document.getElementById('shareBtn');
       const shareNowBtn = document.getElementById('shareNowBtn');
@@ -1161,6 +1460,7 @@ const WEB_UI_SCRIPT = `
       const brandHome = document.getElementById('brandHome');
       const activityFab = document.getElementById('activityFab');
       const activityPanel = document.getElementById('activityPanel');
+      const chatSidebarToggle = document.getElementById('chatSidebarToggle');
       const toolsList = document.getElementById('toolsList');
       const agentsList = document.getElementById('agentsList');
       const skillsList = document.getElementById('skillsList');
@@ -1190,8 +1490,83 @@ const WEB_UI_SCRIPT = `
       const editorCancel = document.getElementById('editorCancel');
       const editorSave = document.getElementById('editorSave');
 
+      let stateSyncTimer = null;
+
+      function toPersistedState() {
+        const session = Array.isArray(state.sessions) && state.sessions[0] ? state.sessions[0] : null;
+        const chats = session && Array.isArray(session.chats)
+          ? session.chats.map((chat) => ({
+              id: chat.id,
+              title: chat.title,
+              createdAt: chat.createdAt,
+              taskId: '',
+              messages: Array.isArray(chat.messages)
+                ? chat.messages.map((msg) => ({
+                    role: msg.role,
+                    content: msg.content,
+                    createdAt: msg.createdAt,
+                  }))
+                : [],
+              activity: Array.isArray(chat.activity)
+                ? chat.activity.map((item) => ({
+                    label: item.label,
+                    detail: item.detail,
+                    createdAt: item.createdAt,
+                  }))
+                : [],
+            }))
+          : [];
+        return {
+          sessions: session
+            ? [
+                {
+                  id: '',
+                  token: '',
+                  workspaceRoot: session.workspaceRoot || workspaceRootFromHost || '',
+                  label: session.label || (desktopMode ? 'Workspace' : 'Session 1'),
+                  createdAt: session.createdAt || Date.now(),
+                  chats,
+                },
+              ]
+            : [],
+          activeSessionId: '',
+          activeChatId: chats[0] ? chats[0].id : '',
+          shareHistory: Array.isArray(state.shareHistory) ? state.shareHistory : [],
+          activeView: state.activeView || 'chat',
+          catalogLoaded: false,
+          catalogLoading: false,
+        };
+      }
+
+      async function persistStateToDisk(snapshot) {
+        const session = currentSession();
+        const headers = buildHeaders(session || undefined);
+        try {
+          await fetch('/api/v1/webui/state', {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(snapshot),
+          });
+        } catch {
+          // ignore save failures; localStorage still keeps recent state
+        }
+      }
+
+      function scheduleStateSync(snapshot) {
+        if (stateSyncTimer) {
+          clearTimeout(stateSyncTimer);
+        }
+        stateSyncTimer = setTimeout(() => {
+          persistStateToDisk(snapshot).catch(() => {
+            // ignore
+          });
+        }, 250);
+      }
+
       function saveState() {
-        storage.save(state);
+        const snapshot = toPersistedState();
+        storage.save(snapshot);
+        scheduleStateSync(snapshot);
       }
 
       function formatTime(ts) {
@@ -1205,10 +1580,124 @@ const WEB_UI_SCRIPT = `
         statusPulse.classList.toggle('off', !connected);
       }
 
+      function setAttachmentError(text) {
+        if (!attachmentError) return;
+        attachmentError.textContent = text || '';
+      }
+
+      function formatAttachmentBytes(bytes) {
+        if (!Number.isFinite(bytes) || bytes <= 0) return '0 KB';
+        if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+      }
+
+      function renderAttachmentStrip() {
+        if (!attachmentStrip) return;
+        attachmentStrip.innerHTML = '';
+        pendingAttachments.forEach((attachment) => {
+          const chip = document.createElement('div');
+          chip.className = 'attachment-chip';
+          chip.innerHTML =
+            '<span>' +
+            escapeHtml(attachment.name) +
+            ' (' +
+            escapeHtml(formatAttachmentBytes(attachment.size)) +
+            ')</span>';
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'attachment-remove';
+          removeBtn.setAttribute('aria-label', 'Remove file');
+          removeBtn.textContent = 'x';
+          removeBtn.addEventListener('click', () => {
+            pendingAttachments = pendingAttachments.filter((item) => item.id !== attachment.id);
+            renderAttachmentStrip();
+            setAttachmentError('');
+          });
+          chip.appendChild(removeBtn);
+          attachmentStrip.appendChild(chip);
+        });
+      }
+
+      function readFileAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = () => reject(new Error('Failed to read file'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function getFileExtension(fileName) {
+        const name = String(fileName || '');
+        const idx = name.lastIndexOf('.');
+        if (idx < 0 || idx === name.length - 1) return '';
+        return name.slice(idx + 1).toLowerCase();
+      }
+
+      function isAllowedAttachment(file) {
+        if (!file) return false;
+        const mimeType = typeof file.type === 'string' ? file.type.toLowerCase() : '';
+        if (mimeType.startsWith('image/')) return true;
+        if (allowedDocumentMimeTypes.has(mimeType)) return true;
+        const ext = getFileExtension(file.name);
+        return allowedDocumentExtensions.has(ext);
+      }
+
+      async function handleAttachmentSelection(fileList) {
+        const files = Array.from(fileList || []);
+        if (!files.length) return;
+        const remaining = maxAttachments - pendingAttachments.length;
+        if (remaining <= 0) {
+          setAttachmentError('Maximum 3 files allowed.');
+          return;
+        }
+
+        const selected = files.slice(0, remaining);
+        if (files.length > remaining) {
+          setAttachmentError('Only 3 files can be attached.');
+        } else {
+          setAttachmentError('');
+        }
+
+        for (const file of selected) {
+          if (!isAllowedAttachment(file)) {
+            setAttachmentError('Only images or supported docs are allowed.');
+            continue;
+          }
+          if (file.size > maxAttachmentSizeBytes) {
+            setAttachmentError('Each file must be 2MB or less.');
+            continue;
+          }
+          try {
+            const dataUrl = await readFileAsDataUrl(file);
+            const commaIndex = dataUrl.indexOf(',');
+            const base64 = commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : '';
+            const mimePrefix = commaIndex >= 0 ? dataUrl.slice(0, commaIndex) : '';
+            const parsedMime = /^data:([^;]+);base64$/i.test(mimePrefix)
+              ? mimePrefix.replace(/^data:/i, '').replace(/;base64$/i, '')
+              : '';
+            if (!base64) {
+              setAttachmentError('Failed to process one selected file.');
+              continue;
+            }
+            pendingAttachments.push({
+              id: 'img-' + Date.now() + '-' + Math.random().toString(36).slice(2),
+              name: file.name || 'file',
+              mimeType: file.type || parsedMime || 'application/octet-stream',
+              size: file.size,
+              data: base64,
+            });
+          } catch {
+            setAttachmentError('Failed to read one selected file.');
+          }
+        }
+        renderAttachmentStrip();
+      }
+
       function updateConnectState() {
         const tokenReady = serverTokenInput.value.trim().length > 0;
-        const connected = !!currentSession();
-        connectBtn.disabled = !tokenReady || connected;
+        const connected = !!currentConnectedSession();
+        connectBtn.disabled = !(tokenReady || allowEmptyToken) || connected;
         disconnectBtn.disabled = !connected;
       }
 
@@ -1216,10 +1705,22 @@ const WEB_UI_SCRIPT = `
         return state.sessions.find((s) => s.id === state.activeSessionId) || null;
       }
 
+      function currentConnectedSession() {
+        const session = currentSession();
+        if (!session || !session.id) return null;
+        return session;
+      }
+
       function currentChat() {
         const session = currentSession();
         if (!session) return null;
         return session.chats.find((c) => c.id === state.activeChatId) || null;
+      }
+
+      function getChatById(chatId) {
+        const session = currentSession();
+        if (!session || !chatId) return null;
+        return session.chats.find((c) => c.id === chatId) || null;
       }
 
       function ensureChat(session) {
@@ -1239,6 +1740,39 @@ const WEB_UI_SCRIPT = `
           messages: [],
           activity: [],
         };
+      }
+
+      function formatChatTitleFromQuery(text) {
+        const limit = 44;
+        const compact = String(text || '').replace(/\s+/g, ' ').trim();
+        if (compact.length <= limit) return compact || 'New chat';
+        return compact.slice(0, limit - 3) + '...';
+      }
+
+      function buildContextualPrompt(chat, text) {
+        if (!desktopMode || !chat) return text;
+        const history = Array.isArray(chat.messages) ? chat.messages.slice(-12) : [];
+        if (history.length === 0) return text;
+
+        const transcript = history
+          .map((msg) => {
+            const role = msg && msg.role ? String(msg.role) : 'user';
+            const content = msg && typeof msg.content === 'string' ? msg.content.trim() : '';
+            return content ? role + ': ' + content : '';
+          })
+          .filter(Boolean)
+          .join('\\n');
+
+        if (!transcript) return text;
+
+        return (
+          'Use this recent local chat context when responding.\\n' +
+          'Recent chat transcript:\\n' +
+          transcript +
+          '\\n\\n' +
+          'New user message:\\n' +
+          text
+        );
       }
 
       function renderList(target, items) {
@@ -1341,6 +1875,7 @@ const WEB_UI_SCRIPT = `
             '<div class="meta">' + formatTime(chat.createdAt) + '</div>';
           el.addEventListener('click', () => {
             state.activeChatId = chat.id;
+            goToWorkspace();
             render();
             saveState();
           });
@@ -1392,7 +1927,7 @@ const WEB_UI_SCRIPT = `
             (catalog.releaseChannel || 'stable');
           return;
         }
-        activeSessionTitle.textContent = session.label;
+        activeSessionTitle.textContent = desktopMode ? '' : session.label;
         activeSessionMeta.textContent = session.workspaceRoot || 'Workspace pending';
       }
 
@@ -1540,7 +2075,7 @@ const WEB_UI_SCRIPT = `
         renderSchedules();
         renderRewind();
         renderViews();
-        const session = currentSession();
+        const session = currentConnectedSession();
         const connected = !!session;
         setStatus(connected ? 'Connected' : 'Disconnected', connected);
         const setDisabled = (el, value) => {
@@ -1560,19 +2095,24 @@ const WEB_UI_SCRIPT = `
         renderScheduleTargets();
       }
 
-      function addMessage(role, content) {
-        const chat = currentChat();
+      function addMessage(role, content, chatId) {
+        const chat = chatId ? getChatById(chatId) : currentChat();
         if (!chat) return;
         chat.messages.push({ role, content, createdAt: Date.now() });
-        if (role === 'user' && chat.title === 'New chat') {
-          chat.title = content.slice(0, 32) || 'New chat';
+        if (role === 'user') {
+          const userMessageCount = chat.messages.filter((item) => item.role === 'user').length;
+          if (userMessageCount === 1) {
+            chat.title = formatChatTitleFromQuery(content);
+          }
         }
-        renderMessages();
+        if (!chatId || state.activeChatId === chat.id) {
+          renderMessages();
+        }
         saveState();
       }
 
-      function appendAssistantText(text) {
-        const chat = currentChat();
+      function appendAssistantText(text, chatId) {
+        const chat = chatId ? getChatById(chatId) : currentChat();
         if (!chat) return;
         let last = chat.messages[chat.messages.length - 1];
         if (!last || last.role !== 'assistant' || !last.streaming) {
@@ -1580,12 +2120,14 @@ const WEB_UI_SCRIPT = `
           chat.messages.push(last);
         }
         last.content += text;
-        renderMessages();
+        if (!chatId || state.activeChatId === chat.id) {
+          renderMessages();
+        }
         saveState();
       }
 
-      function endStreaming() {
-        const chat = currentChat();
+      function endStreaming(chatId) {
+        const chat = chatId ? getChatById(chatId) : currentChat();
         if (!chat) return;
         const last = chat.messages[chat.messages.length - 1];
         if (last && last.role === 'assistant' && last.streaming) {
@@ -1593,11 +2135,13 @@ const WEB_UI_SCRIPT = `
         }
       }
 
-      function logActivity(label, detail) {
-        const chat = currentChat();
+      function logActivity(label, detail, chatId) {
+        const chat = chatId ? getChatById(chatId) : currentChat();
         if (!chat) return;
         chat.activity.push({ label, detail, createdAt: Date.now() });
-        renderActivity();
+        if (!chatId || state.activeChatId === chat.id) {
+          renderActivity();
+        }
         saveState();
       }
 
@@ -1613,7 +2157,7 @@ const WEB_UI_SCRIPT = `
       }
 
       async function apiFetch(url, options = {}, allowRetry = true) {
-        const session = currentSession();
+        const session = currentConnectedSession();
         if (!session) {
           addMessage('system', 'Connect a session to manage configuration.');
           throw new Error('No active session');
@@ -1621,11 +2165,27 @@ const WEB_UI_SCRIPT = `
         const headers = buildHeaders(session);
         const response = await fetch(url, { ...options, headers: { ...headers, ...(options.headers || {}) } });
         if (response.status === 401 || response.status === 409) {
-          state.sessions = [];
+          const previousChats =
+            state.sessions[0] && Array.isArray(state.sessions[0].chats)
+              ? state.sessions[0].chats
+              : [];
+          state.sessions = previousChats.length
+            ? [
+                {
+                  id: '',
+                  token: '',
+                  workspaceRoot: workspaceRootFromHost || '',
+                  label: desktopMode ? 'Workspace' : 'Session 1',
+                  createdAt: Date.now(),
+                  chats: previousChats,
+                },
+              ]
+            : [];
           state.activeSessionId = '';
-          state.activeChatId = '';
+          state.activeChatId = previousChats[0] ? previousChats[0].id : '';
           state.catalogLoaded = false;
           setStatus('Session expired. Reconnect.', false);
+          saveState();
           render();
           const storedToken = loadServerToken();
           if (storedToken) {
@@ -1644,6 +2204,11 @@ const WEB_UI_SCRIPT = `
       }
 
       async function fetchCatalog() {
+        if (!currentConnectedSession()) {
+          state.catalogLoading = false;
+          state.catalogLoaded = false;
+          return;
+        }
         if (state.catalogLoading) return;
         state.catalogLoading = true;
         state.catalogLoaded = false;
@@ -1667,13 +2232,31 @@ const WEB_UI_SCRIPT = `
           state.catalogLoaded = true;
           render();
         } catch (err) {
-          addMessage('system', 'Failed to load catalog: ' + err.message);
+          const message = err && err.message ? String(err.message) : 'Request failed';
+          if (!/Session expired/i.test(message)) {
+            addMessage('system', 'Failed to load catalog: ' + message);
+          } else {
+            setStatus('Disconnected', false);
+          }
         } finally {
           state.catalogLoading = false;
         }
       }
 
-      function buildRpcRequest(session, promptText, taskId) {
+      function buildRpcRequest(session, promptText, taskId, attachments) {
+        const parts = [{ kind: 'text', text: promptText }];
+        (attachments || []).forEach((attachment) => {
+          parts.push({
+            kind: 'data',
+            data: {
+              type: 'inline-file',
+              mimeType: attachment.mimeType,
+              data: attachment.data,
+              name: attachment.name,
+              size: attachment.size,
+            },
+          });
+        });
         const request = {
           jsonrpc: '2.0',
           id: 'web-' + Date.now(),
@@ -1682,7 +2265,7 @@ const WEB_UI_SCRIPT = `
             message: {
               kind: 'message',
               role: 'user',
-              parts: [{ kind: 'text', text: promptText }],
+              parts,
               messageId: 'web-msg-' + Math.random().toString(36).slice(2),
             },
             metadata: {
@@ -1752,14 +2335,14 @@ const WEB_UI_SCRIPT = `
         return '';
       }
 
-      function handleEvent(event) {
+      function handleEvent(event, chatId) {
         if (!event || !event.result) return;
         const result = event.result;
         if (result.kind === 'task' && result.id) {
-          const chat = currentChat();
+          const chat = chatId ? getChatById(chatId) : currentChat();
           if (chat) {
             chat.taskId = result.id;
-            logActivity('Task', 'Created ' + result.id);
+            logActivity('Task', 'Created ' + result.id, chatId);
             saveState();
           }
           return;
@@ -1769,30 +2352,31 @@ const WEB_UI_SCRIPT = `
           if (Array.isArray(parts)) {
             parts.forEach((part) => {
               if (part.kind === 'text' && part.text) {
-                appendAssistantText(part.text);
+                appendAssistantText(part.text, chatId);
               }
             });
           } else if (result.status && result.status.state) {
-            logActivity('Status', result.status.state);
+            logActivity('Status', result.status.state, chatId);
           }
         } else if (result.kind && String(result.kind).includes('tool')) {
           const denialReason = extractPolicyDenialReason(result);
           if (denialReason) {
-            logActivity('Policy Deny', denialReason);
-            addMessage('system', 'Policy denied tool execution: ' + denialReason);
+            logActivity('Policy Deny', denialReason, chatId);
+            addMessage('system', 'Policy denied tool execution: ' + denialReason, chatId);
           } else {
-            logActivity('Tool', String(result.kind));
+            logActivity('Tool', String(result.kind), chatId);
           }
         }
       }
 
       async function createSession() {
         const token = serverTokenInput.value.trim();
-        if (!token) {
+        if (!token && !allowEmptyToken) {
           setStatus('Enter server token to connect.', false);
           return;
         }
-        const headers = { authorization: 'Bearer ' + token };
+        const headers = {};
+        if (token) headers.authorization = 'Bearer ' + token;
 
         setStatus('Connecting...', true);
         const res = await fetch('/api/v1/sessions', { method: 'POST', headers });
@@ -1801,18 +2385,25 @@ const WEB_UI_SCRIPT = `
           return;
         }
         const data = await res.json();
+        const previousChats =
+          state.sessions[0] && Array.isArray(state.sessions[0].chats)
+            ? state.sessions[0].chats
+            : [];
+        const chats = previousChats.length ? previousChats : [createChat()];
         const session = {
           id: data.sessionId,
           token: data.token,
           workspaceRoot: data.workspaceRoot || '',
-          label: 'Session ' + (state.sessions.length + 1),
+          label: desktopMode ? 'Workspace' : 'Session ' + (state.sessions.length + 1),
           createdAt: Date.now(),
-          chats: [createChat()],
+          chats,
         };
         saveAutoConnect(true);
         state.sessions = [session];
         state.activeSessionId = session.id;
-        state.activeChatId = session.chats[0].id;
+        state.activeChatId = chats.some((chat) => chat.id === state.activeChatId)
+          ? state.activeChatId
+          : session.chats[0].id;
         state.catalogLoaded = false;
         state.catalogLoading = false;
         setStatus('Connected', true);
@@ -1823,8 +2414,9 @@ const WEB_UI_SCRIPT = `
       }
 
       async function createSessionWithToken(token) {
-        if (!token) return false;
-        const headers = { authorization: 'Bearer ' + token };
+        if (!token && !allowEmptyToken) return false;
+        const headers = {};
+        if (token) headers.authorization = 'Bearer ' + token;
         setStatus('Connecting...', true);
         const res = await fetch('/api/v1/sessions', { method: 'POST', headers });
         if (!res.ok) {
@@ -1832,18 +2424,25 @@ const WEB_UI_SCRIPT = `
           return false;
         }
         const data = await res.json();
+        const previousChats =
+          state.sessions[0] && Array.isArray(state.sessions[0].chats)
+            ? state.sessions[0].chats
+            : [];
+        const chats = previousChats.length ? previousChats : [createChat()];
         const session = {
           id: data.sessionId,
           token: data.token,
           workspaceRoot: data.workspaceRoot || '',
-          label: 'Session ' + (state.sessions.length + 1),
+          label: desktopMode ? 'Workspace' : 'Session ' + (state.sessions.length + 1),
           createdAt: Date.now(),
-          chats: [createChat()],
+          chats,
         };
         saveAutoConnect(true);
         state.sessions = [session];
         state.activeSessionId = session.id;
-        state.activeChatId = session.chats[0].id;
+        state.activeChatId = chats.some((chat) => chat.id === state.activeChatId)
+          ? state.activeChatId
+          : session.chats[0].id;
         state.catalogLoaded = false;
         state.catalogLoading = false;
         setStatus('Connected', true);
@@ -1879,24 +2478,45 @@ const WEB_UI_SCRIPT = `
         const session = currentSession();
         const chat = currentChat();
         const text = promptInput.value.trim();
-        if (!session || !chat || !text) return;
+        const attachments = pendingAttachments.slice();
+        if (!session || !chat || (!text && attachments.length === 0)) return;
         promptInput.value = '';
-        endStreaming();
-        addMessage('user', text);
-        endStreaming();
-        logActivity('User', 'Sent prompt');
-        const request = buildRpcRequest(session, text, chat.taskId);
+        pendingAttachments = [];
+        renderAttachmentStrip();
+        setAttachmentError('');
+        endStreaming(chat.id);
+        const attachmentSummary = attachments
+          .map((attachment) =>
+            String(attachment.mimeType || '').startsWith('image/')
+              ? '[Image] ' + attachment.name
+              : '[Doc] ' + attachment.name,
+          )
+          .join('\\n');
+        const userMessage = text
+          ? (attachmentSummary ? text + '\\n\\n' + attachmentSummary : text)
+          : attachmentSummary;
+        addMessage('user', userMessage);
+        endStreaming(chat.id);
+        logActivity('User', 'Sent prompt', chat.id);
+        const promptText = text || 'Analyze the attached image(s).';
+        const contextualText = buildContextualPrompt(chat, promptText);
+        const request = buildRpcRequest(session, contextualText, chat.taskId, attachments);
+        activeStreamingChatId = chat.id;
         const res = await fetch('/', {
           method: 'POST',
           headers: buildHeaders(session),
           body: JSON.stringify(request),
         });
         if (!res.ok) {
-          addMessage('system', 'Request failed: ' + res.status);
+          addMessage('system', 'Request failed: ' + res.status, chat.id);
+          activeStreamingChatId = '';
           return;
         }
-        await readSse(res, handleEvent);
-        endStreaming();
+        await readSse(res, (event) => handleEvent(event, chat.id));
+        endStreaming(chat.id);
+        if (activeStreamingChatId === chat.id) {
+          activeStreamingChatId = '';
+        }
       }
 
       function newChat() {
@@ -1973,6 +2593,9 @@ const WEB_UI_SCRIPT = `
           payload = 'Use this agent: ' + value;
         }
         promptInput.value = payload;
+        if (type === 'commands' || type === 'agents') {
+          goToWorkspace();
+        }
         promptInput.focus();
         if (type === 'commands' && currentSession()) {
           sendPrompt().catch((err) => addMessage('system', 'Error: ' + err.message));
@@ -2012,6 +2635,35 @@ const WEB_UI_SCRIPT = `
       let editorContext = null;
       let monacoReady = null;
       let monacoEditor = null;
+      let fallbackEditor = null;
+      let useFallbackEditor = false;
+
+      function ensureFallbackEditor() {
+        if (fallbackEditor) return fallbackEditor;
+        fallbackEditor = document.createElement('textarea');
+        fallbackEditor.className = 'editor-fallback';
+        fallbackEditor.setAttribute('spellcheck', 'false');
+        editorSurface.innerHTML = '';
+        editorSurface.appendChild(fallbackEditor);
+        return fallbackEditor;
+      }
+
+      function setEditorValue(value, language) {
+        if (useFallbackEditor || !monacoEditor) {
+          const el = ensureFallbackEditor();
+          el.value = value || '';
+          return;
+        }
+        monacoEditor.setValue(value || '');
+        window.monaco.editor.setModelLanguage(monacoEditor.getModel(), language || 'markdown');
+      }
+
+      function getEditorValue() {
+        if (useFallbackEditor || !monacoEditor) {
+          return fallbackEditor ? fallbackEditor.value : '';
+        }
+        return monacoEditor.getValue();
+      }
 
       function closeEditorModal() {
         editorModal.classList.remove('active');
@@ -2043,19 +2695,27 @@ const WEB_UI_SCRIPT = `
           editorSection.value = options.section;
         }
         editorModal.classList.add('active');
-        await loadMonaco();
-        if (!monacoEditor) {
-          monacoEditor = window.monaco.editor.create(editorSurface, {
-            value: options.content || '',
-            language: options.language || 'markdown',
-            theme: 'vs-dark',
-            minimap: { enabled: false },
-            fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 12,
-          });
-        } else {
-          monacoEditor.setValue(options.content || '');
-          window.monaco.editor.setModelLanguage(monacoEditor.getModel(), options.language || 'markdown');
+        try {
+          await loadMonaco();
+          useFallbackEditor = false;
+          if (fallbackEditor && fallbackEditor.parentNode === editorSurface) {
+            editorSurface.removeChild(fallbackEditor);
+          }
+          if (!monacoEditor) {
+            monacoEditor = window.monaco.editor.create(editorSurface, {
+              value: options.content || '',
+              language: options.language || 'markdown',
+              theme: 'vs-dark',
+              minimap: { enabled: false },
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: 12,
+            });
+          } else {
+            setEditorValue(options.content || '', options.language || 'markdown');
+          }
+        } catch {
+          useFallbackEditor = true;
+          setEditorValue(options.content || '', options.language || 'markdown');
         }
       }
 
@@ -2070,7 +2730,7 @@ const WEB_UI_SCRIPT = `
         if (!editorContext) return;
         const type = editorContext.type;
         const endpoint = typeToEndpoint[type];
-        const content = monacoEditor ? monacoEditor.getValue() : '';
+        const content = getEditorValue();
         const name = editorName.value.trim();
         if (editorContext.showName !== false && !name) {
           addMessage('system', 'Name is required.');
@@ -2229,7 +2889,7 @@ const WEB_UI_SCRIPT = `
       function setActiveView(view) {
         state.activeView = view;
         render();
-        if (currentSession()) {
+        if (currentConnectedSession()) {
           fetchCatalog();
         }
         saveState();
@@ -2254,7 +2914,7 @@ const WEB_UI_SCRIPT = `
 
       on(refreshSessions, 'click', () => {
         render();
-        if (currentSession()) {
+        if (currentConnectedSession()) {
           fetchCatalog();
         }
       });
@@ -2271,6 +2931,18 @@ const WEB_UI_SCRIPT = `
 
       on(sendBtn, 'click', () => {
         sendPrompt().catch((err) => addMessage('system', 'Error: ' + err.message));
+      });
+
+      on(uploadImageBtn, 'click', () => {
+        if (!imageUploadInput) return;
+        imageUploadInput.click();
+      });
+
+      on(imageUploadInput, 'change', () => {
+        handleAttachmentSelection(imageUploadInput.files).catch(() => {
+          setAttachmentError('Failed to process selected file.');
+        });
+        imageUploadInput.value = '';
       });
 
       on(promptInput, 'keydown', (event) => {
@@ -2290,6 +2962,15 @@ const WEB_UI_SCRIPT = `
       if (activityFab && activityPanel) {
         activityFab.addEventListener('click', () => {
           activityPanel.classList.toggle('active');
+        });
+      }
+
+      if (chatSidebarToggle) {
+        chatSidebarToggle.addEventListener('click', () => {
+          const collapsed = document.body.classList.toggle('chat-sidebar-collapsed');
+          chatSidebarToggle.textContent = collapsed ? '▶' : '◀';
+          chatSidebarToggle.setAttribute('title', collapsed ? 'Show chats sidebar' : 'Hide chats sidebar');
+          chatSidebarToggle.setAttribute('aria-label', collapsed ? 'Show chats sidebar' : 'Hide chats sidebar');
         });
       }
 
@@ -2511,13 +3192,48 @@ const WEB_UI_SCRIPT = `
         return template.innerHTML;
       }
 
+      function renderFallbackMarkdown(input) {
+        let text = escapeHtml(input || '');
+        const codeBlocks = [];
+
+        text = text.replace(/\`\`\`([a-zA-Z0-9_-]+)?\\n([\\s\\S]*?)\`\`\`/g, (_match, lang, code) => {
+          const language = lang ? ' class="language-' + lang + '"' : '';
+          const html = '<pre><code' + language + '>' + code + '</code></pre>';
+          const index = codeBlocks.push(html) - 1;
+          return '@@CODEBLOCK_' + index + '@@';
+        });
+
+        text = text.replace(/^###\\s+(.*)$/gm, '<h3>$1</h3>');
+        text = text.replace(/^##\\s+(.*)$/gm, '<h2>$1</h2>');
+        text = text.replace(/^#\\s+(.*)$/gm, '<h1>$1</h1>');
+        text = text.replace(/^[-*]\\s+(.*)$/gm, '&#8226; $1');
+        text = text.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '<a href="$2">$1</a>');
+        text = text.replace(/\`([^\`]+)\`/g, '<code>$1</code>');
+        text = text.replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');
+        text = text.replace(/\\*([^*\\n]+)\\*/g, '<em>$1</em>');
+
+        let html = text
+          .split(/\\n{2,}/)
+          .map((chunk) => '<p>' + chunk.replace(/\\n/g, '<br>') + '</p>')
+          .join('');
+
+        codeBlocks.forEach((block, index) => {
+          const token = '@@CODEBLOCK_' + index + '@@';
+          html = html.replace('<p>' + token + '</p>', block);
+          html = html.replace(token, block);
+        });
+
+        html = html.replace(/<p>(<h[1-3]>[\\s\\S]*?<\\/h[1-3]>)<\\/p>/g, '$1');
+        return sanitizeHtml(html);
+      }
+
       function renderMarkdown(input) {
         const text = String(input || '');
         if (!text) return '';
         if (window.marked && typeof window.marked.parse === 'function') {
           return sanitizeHtml(window.marked.parse(text, { breaks: true, gfm: true }));
         }
-        return '<pre>' + escapeHtml(text) + '</pre>';
+        return renderFallbackMarkdown(text);
       }
 
       const storedToken = loadServerToken();
@@ -2526,14 +3242,19 @@ const WEB_UI_SCRIPT = `
         updateConnectState();
       }
 
-      if (!currentSession() && storedToken) {
-        if (loadAutoConnect()) {
+      if (desktopMode && allowEmptyToken) {
+        createSessionWithToken(storedToken).catch(() => {
+          setStatus('Session connection failed.', false);
+        });
+      } else if (!currentConnectedSession() && loadAutoConnect()) {
+        if (storedToken) {
           createSessionWithToken(storedToken).catch(() => {
             setStatus('Enter server token to connect.', false);
           });
         }
       }
 
+      renderAttachmentStrip();
       render();
 `
 
@@ -2576,7 +3297,7 @@ const WEB_UI_MENU_BAR = `
 
 const WEB_UI_SIDEBAR = `
         <aside class="sidebar">
-          <div class="card">
+          <div class="card" id="remoteConnectCard">
             <div class="card-title">Connection</div>
             <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Server token (optional)</div>
             <input id="serverToken" type="password" placeholder="Token for remote session" />
@@ -2590,7 +3311,7 @@ const WEB_UI_SIDEBAR = `
             </div>
           </div>
 
-          <div class="section">
+          <div id="sessionSection" class="section">
             <div class="section-header">
               <span>Sessions</span>
               <button id="refreshSessions" class="ghost">Refresh</button>
@@ -2617,6 +3338,7 @@ const WEB_UI_MAIN = `
               <div class="subtitle" id="activeSessionMeta">Connect to start chatting</div>
             </div>
             <div class="action-row">
+              <button id="chatSidebarToggle" class="ghost" aria-label="Hide chats sidebar" title="Hide chats sidebar">◀</button>
               <button id="shareBtn" class="secondary">Share</button>
               <button id="newChatTopBtn">New chat</button>
               <button id="clearChatBtn" class="ghost">Clear</button>
@@ -2629,14 +3351,24 @@ const WEB_UI_MAIN = `
                 <div class="chat-window">
                   <div id="messages" class="messages"></div>
                   <div class="composer">
-                    <label style="font-size:12px;color:var(--muted);">Prompt</label>
-                    <textarea id="promptInput" placeholder="Ask Papert Code... (Cmd/Ctrl + Enter to send)"></textarea>
-                    <div class="action-row">
-                      <label class="toggle">
+                    <div class="composer-shell">
+                      <textarea id="promptInput" placeholder="Ask Papert Code... (Cmd/Ctrl + Enter to send)"></textarea>
+                      <div id="attachmentStrip" class="attachment-strip"></div>
+                      <div class="composer-controls">
+                        <div class="composer-left">
+                          <button id="uploadImageBtn" class="icon-btn" type="button" aria-label="Upload files" title="Upload files">+</button>
+                          <input id="imageUploadInput" type="file" accept="image/*,.pdf,.txt,.md,.markdown,.csv,.json,.doc,.docx" multiple style="display:none;" />
+                          <span class="composer-hint">Up to 3 files, 2MB each</span>
+                        </div>
+                        <button id="sendBtn" class="composer-send" type="button" aria-label="Send prompt" title="Send prompt">↑</button>
+                      </div>
+                    </div>
+                    <div id="attachmentError" class="attachment-error"></div>
+                    <div class="composer-meta">
+                      <label id="autoExecToggleRow" class="toggle">
                         <input id="autoExecToggle" type="checkbox" />
                         Auto-execute tools
                       </label>
-                      <button id="sendBtn">Send</button>
                     </div>
                   </div>
                 </div>
@@ -2902,20 +3634,24 @@ const WEB_UI_COMMAND_PALETTE = `
 `
 
 
-export function getWebUiHtml(): string {
+export function getWebUiHtml(
+  allowEmptyToken = false,
+  desktopMode = false,
+  workspaceRoot = '',
+  initialState: unknown = null,
+): string {
+  const safeInitialState = JSON.stringify(initialState).replace(/</g, '\\u003c');
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Papert Code Web</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.49.0/min/vs/loader.min.js"></script>
     <style>
 ${WEB_UI_STYLES}
     </style>
   </head>
-  <body>
+  <body class="${desktopMode ? "desktop-embed" : ""}">
     <div class="app">
 ${WEB_UI_MENU_BAR}
 
@@ -2938,6 +3674,10 @@ ${WEB_UI_COMMAND_PALETTE}
     <button class="activity-fab" id="activityFab" aria-label="Activity">⚙️</button>
 
     <script>
+window.__PAPERT_WEB_UI_ALLOW_EMPTY_TOKEN__ = ${allowEmptyToken ? "true" : "false"};
+window.__PAPERT_WEB_UI_DESKTOP_MODE__ = ${desktopMode ? "true" : "false"};
+window.__PAPERT_WEB_UI_WORKSPACE_ROOT__ = ${JSON.stringify(workspaceRoot)};
+window.__PAPERT_WEB_UI_INITIAL_STATE__ = ${safeInitialState};
 ${WEB_UI_SCRIPT}
     </script>
   </body>

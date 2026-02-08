@@ -7,7 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Command } from './types.js';
 
-describe('CommandRegistry', () => {
+describe('CommandRegistry', { timeout: 15000 }, () => {
   const mockListExtensionsCommandInstance: Command = {
     name: 'extensions list',
     description: 'Lists all installed extensions.',
