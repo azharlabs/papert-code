@@ -4,6 +4,9 @@
 
 This package contains the A2A server implementation for Papert Code.
 
+For migration details from `gemini-cli`, see:
+- `/Users/azhar/code/coding-agent/papert-code/packages/a2a-server/docs/gemini-parity-improvements.md`
+
 ## Commands
 
 The server exposes command execution over `/executeCommand`.
