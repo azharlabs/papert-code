@@ -130,7 +130,7 @@ describe('Task', () => {
       });
       mockProcessRestorableToolCalls.mockResolvedValue({
         checkpointsToWrite: new Map([['test.json', 'test content']]),
-        toolCallToCheckpointMap: new Map(),
+        toolCallToCheckpointMap: new Map([['1', 'test']]),
         errors: [],
       });
       // @ts-expect-error - Calling private constructor for test purposes.
@@ -156,6 +156,38 @@ describe('Task', () => {
       const abortController = new AbortController();
       await task.scheduleToolCalls(requests, abortController.signal);
       expect(mockProcessRestorableToolCalls).toHaveBeenCalledOnce();
+      expect(requests[0].checkpoint).toBe('test');
+    });
+
+    it('should skip checkpoint creation when checkpointing is disabled', async () => {
+      const mockConfig = createMockConfig({
+        getCheckpointingEnabled: () => false,
+        getGitService: () => Promise.resolve({} as GitService),
+      });
+      // @ts-expect-error - Calling private constructor for test purposes.
+      const task = new Task(
+        'task-id',
+        'context-id',
+        mockConfig as Config,
+        mockEventBus,
+      );
+      const requests: ToolCallRequestInfo[] = [
+        {
+          callId: '1',
+          name: 'replace',
+          args: {
+            file_path: 'test.txt',
+            old_string: 'old',
+            new_string: 'new',
+          },
+          isClientInitiated: false,
+          prompt_id: 'prompt-id-1',
+        },
+      ];
+      const abortController = new AbortController();
+      await task.scheduleToolCalls(requests, abortController.signal);
+      expect(mockProcessRestorableToolCalls).not.toHaveBeenCalled();
+      expect(requests[0].checkpoint).toBeUndefined();
     });
 
     it('should process all restorable tools for checkpointing in a single batch', async () => {
@@ -302,6 +334,70 @@ describe('Task', () => {
       ]);
     });
 
+    it('updates modelInfo when ModelInfo event is received', async () => {
+      const mockConfig = createMockConfig();
+      const mockEventBus: ExecutionEventBus = {
+        publish: vi.fn(),
+        on: vi.fn(),
+        off: vi.fn(),
+        once: vi.fn(),
+        removeAllListeners: vi.fn(),
+        finished: vi.fn(),
+      };
+
+      // @ts-expect-error - Calling private constructor for test purposes.
+      const task = new Task(
+        'task-id',
+        'context-id',
+        mockConfig as Config,
+        mockEventBus,
+      );
+
+      await task.acceptAgentMessage({
+        type: 'model_info',
+        value: 'papert-model-v2',
+      } as unknown as Parameters<typeof task.acceptAgentMessage>[0]);
+
+      expect(task.modelInfo).toBe('papert-model-v2');
+    });
+
+    it.each([
+      { eventType: GeminiEventType.Retry },
+      { eventType: 'invalid_stream' },
+    ])(
+      'does not trigger error handling for $eventType event',
+      async ({ eventType }) => {
+        const mockConfig = createMockConfig();
+        const mockEventBus: ExecutionEventBus = {
+          publish: vi.fn(),
+          on: vi.fn(),
+          off: vi.fn(),
+          once: vi.fn(),
+          removeAllListeners: vi.fn(),
+          finished: vi.fn(),
+        };
+
+        // @ts-expect-error - Calling private constructor for test purposes.
+        const task = new Task(
+          'task-id',
+          'context-id',
+          mockConfig as Config,
+          mockEventBus,
+        );
+
+        const cancelPendingToolsSpy = vi.spyOn(task, 'cancelPendingTools');
+        const setTaskStateSpy = vi.spyOn(task, 'setTaskStateAndPublishUpdate');
+
+        await task.acceptAgentMessage(
+          {
+            type: eventType,
+          } as unknown as Parameters<typeof task.acceptAgentMessage>[0],
+        );
+
+        expect(cancelPendingToolsSpy).not.toHaveBeenCalled();
+        expect(setTaskStateSpy).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('_schedulerToolCallsUpdate', () => {

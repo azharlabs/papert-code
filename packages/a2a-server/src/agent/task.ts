@@ -605,10 +605,13 @@ export class Task {
       EDIT_TOOL_NAMES.has(request.name),
     );
 
-    if (restorableToolCalls.length > 0) {
+    if (
+      restorableToolCalls.length > 0 &&
+      this.config.getCheckpointingEnabled()
+    ) {
       const gitService = await this.config.getGitService();
       if (gitService) {
-        const { checkpointsToWrite, errors } =
+        const { checkpointsToWrite, toolCallToCheckpointMap, errors } =
           await processRestorableToolCalls(
             restorableToolCalls,
             gitService,
@@ -629,6 +632,13 @@ export class Task {
           }
         }
 
+        for (const request of requests) {
+          const checkpoint = toolCallToCheckpointMap.get(request.callId);
+          if (checkpoint) {
+            (request as ToolCallRequestInfo & { checkpoint?: string }).checkpoint =
+              checkpoint;
+          }
+        }
       }
     }
 
@@ -668,7 +678,27 @@ export class Task {
     const stateChange: StateChange = {
       kind: CoderAgentEvent.StateChangeEvent,
     };
-    const traceId = (event as { traceId?: string }).traceId;
+    const traceId =
+      'traceId' in event && typeof event.traceId === 'string'
+        ? event.traceId
+        : undefined;
+    const eventType = event.type as string;
+
+    if (eventType === 'model_info') {
+      const modelName =
+        typeof (event as { value?: unknown }).value === 'string'
+          ? ((event as { value?: string }).value as string)
+          : undefined;
+      if (modelName) {
+        this.modelInfo = modelName;
+      }
+      return;
+    }
+
+    if (eventType === 'invalid_stream') {
+      // Invalid stream should be retried internally and does not need user-visible handling.
+      return;
+    }
 
     switch (event.type) {
       case GeminiEventType.Content:
@@ -728,6 +758,8 @@ export class Task {
         break;
       case GeminiEventType.Finished:
         logger.info(`[Task ${this.id}] Agent finished its turn.`);
+        break;
+      case GeminiEventType.Retry:
         break;
       case GeminiEventType.Error:
       default: {
