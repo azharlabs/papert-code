@@ -22,3 +22,4 @@ The server exposes command execution over `/executeCommand`.
 - If checkpointing is enabled but `git` is not available on the host, the server automatically disables checkpointing at startup.
 - Memory loading supports custom ignore files via `CUSTOM_IGNORE_FILE_PATHS` (path-delimited list) and `settings.fileFiltering.customIgnoreFilePaths`.
 - Task streaming now tolerates retry/invalid-stream control events and preserves checkpoint ids on restorable tool calls.
+- Command registry can be reinitialized at runtime (`CommandRegistry.initialize()`), which clears stale registrations and restores built-ins.

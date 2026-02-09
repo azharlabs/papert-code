@@ -136,4 +136,22 @@ describe('CommandRegistry', { timeout: 15000 }, () => {
     // If the test finishes, it means we didn't get into an infinite loop.
     warnSpy.mockRestore();
   });
+
+  it('initialize() should clear ad-hoc commands and restore defaults', async () => {
+    const { commandRegistry } = await import('./command-registry.js');
+    commandRegistry.register({
+      name: 'temporary-command',
+      description: 'Temporary command',
+      execute: vi.fn(),
+    });
+    expect(commandRegistry.get('temporary-command')).toBeDefined();
+
+    commandRegistry.initialize();
+
+    expect(commandRegistry.get('temporary-command')).toBeUndefined();
+    expect(commandRegistry.get('extensions')).toBeDefined();
+    expect(commandRegistry.get('restore')).toBeDefined();
+    expect(commandRegistry.get('init')).toBeDefined();
+    expect(commandRegistry.get('memory')).toBeDefined();
+  });
 });
