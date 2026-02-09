@@ -7,6 +7,7 @@
 import { debugLogger } from '@papert-code/papert-code-core';
 import { ExtensionsCommand } from './extensions.js';
 import { InitCommand } from './init.js';
+import { MemoryCommand } from './memory.js';
 import { RestoreCommand } from './restore.js';
 import type { Command } from './types.js';
 
@@ -17,6 +18,7 @@ class CommandRegistry {
     this.register(new ExtensionsCommand());
     this.register(new RestoreCommand());
     this.register(new InitCommand());
+    this.register(new MemoryCommand());
   }
 
   register(command: Command) {

@@ -45,6 +45,13 @@ describe('CommandRegistry', { timeout: 15000 }, () => {
         execute = vi.fn();
       },
     }));
+    vi.doMock('./memory.js', () => ({
+      MemoryCommand: class MemoryCommand {
+        name = 'memory';
+        description = 'Memory command (mock).';
+        execute = vi.fn();
+      },
+    }));
   });
 
   it('should register ExtensionsCommand on initialization', async () => {
