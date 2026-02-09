@@ -36,7 +36,9 @@ const mockLoadServerHierarchicalMemory = loadServerHierarchicalMemory as Mock;
 describe('memoryCommand', () => {
   let mockContext: CommandContext;
 
-  const getSubCommand = (name: 'show' | 'add' | 'refresh'): SlashCommand => {
+  const getSubCommand = (
+    name: 'show' | 'add' | 'refresh' | 'list',
+  ): SlashCommand => {
     const subCommand = memoryCommand.subCommands?.find(
       (cmd) => cmd.name === name,
     );
@@ -246,7 +248,14 @@ describe('memoryCommand', () => {
       if (!refreshCommand.action) throw new Error('Command has no action');
 
       const refreshResult: LoadServerHierarchicalMemoryResponse = {
-        memoryContent: 'new memory content',
+        memoryContent: [
+          '--- Context from: .papert/papert.md ---',
+          'global memory',
+          '--- End of Context from: .papert/papert.md ---',
+          '--- Context from: papert.md ---',
+          'project memory',
+          '--- End of Context from: papert.md ---',
+        ].join('\n'),
         fileCount: 2,
       };
       mockLoadServerHierarchicalMemory.mockResolvedValue(refreshResult);
@@ -269,10 +278,12 @@ describe('memoryCommand', () => {
         refreshResult.fileCount,
       );
 
-      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+      expect(mockContext.ui.addItem).toHaveBeenNthCalledWith(
+        2,
         {
           type: MessageType.INFO,
-          text: 'Memory refreshed successfully. Loaded 18 characters from 2 file(s).',
+          text:
+            'Memory refreshed successfully. Loaded 186 characters from 2 file(s).\n\nLoaded source paths:\n.papert/papert.md\npapert.md',
         },
         expect.any(Number),
       );
@@ -342,6 +353,68 @@ describe('memoryCommand', () => {
       );
 
       expect(loadServerHierarchicalMemory).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('/memory list', () => {
+    let listCommand: SlashCommand;
+    let mockGetUserMemory: Mock;
+    let mockGetGeminiMdFileCount: Mock;
+
+    beforeEach(() => {
+      listCommand = getSubCommand('list');
+      mockGetUserMemory = vi.fn();
+      mockGetGeminiMdFileCount = vi.fn();
+      mockContext = createMockCommandContext({
+        services: {
+          config: {
+            getUserMemory: mockGetUserMemory,
+            getGeminiMdFileCount: mockGetGeminiMdFileCount,
+          },
+        },
+      });
+    });
+
+    it('should list exact source paths when available in memory markers', async () => {
+      if (!listCommand.action) throw new Error('Command has no action');
+
+      mockGetUserMemory.mockReturnValue(
+        [
+          '--- Context from: .papert/papert.md ---',
+          'Global',
+          '--- End of Context from: .papert/papert.md ---',
+          '--- Context from: papert.md ---',
+          'Project',
+          '--- End of Context from: papert.md ---',
+        ].join('\n'),
+      );
+      mockGetGeminiMdFileCount.mockReturnValue(2);
+
+      await listCommand.action(mockContext, '');
+
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        {
+          type: MessageType.INFO,
+          text: 'Memory sources (2):\n\n.papert/papert.md\npapert.md',
+        },
+        expect.any(Number),
+      );
+    });
+
+    it('should show fallback when file count exists but paths are unavailable', async () => {
+      if (!listCommand.action) throw new Error('Command has no action');
+      mockGetUserMemory.mockReturnValue('plain memory without markers');
+      mockGetGeminiMdFileCount.mockReturnValue(3);
+
+      await listCommand.action(mockContext, '');
+
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        {
+          type: MessageType.INFO,
+          text: 'Memory currently reports 3 file(s), but source paths are unavailable.',
+        },
+        expect.any(Number),
+      );
     });
   });
 });

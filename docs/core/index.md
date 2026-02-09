@@ -52,4 +52,4 @@ The memory discovery service is responsible for finding and loading the context 
 
 This allows you to have global, project-level, and component-level context files, which are all combined to provide the model with the most relevant information.
 
-You can use the [`/memory` command](../cli/commands.md) to `show`, `add`, and `refresh` the content of loaded context files.
+You can use the [`/memory` command](../cli/commands.md) to `show`, `list`, `add`, and `refresh` the content and source paths of loaded context files.

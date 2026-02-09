@@ -187,8 +187,11 @@ Slash commands provide meta-level control over the CLI itself.
       - **Description:** Adds the following text to the AI's memory. Usage: `/memory add <text to remember>`
     - **`show`**:
       - **Description:** Display the full, concatenated content of the current hierarchical memory that has been loaded from all context files (e.g., `papert.md`). This lets you inspect the instructional context being provided to the model.
+      - **Flags:** `--project` (show only project memory file), `--global` (show only global memory file)
+    - **`list`**:
+      - **Description:** Display the exact file paths of memory sources currently loaded in runtime context.
     - **`refresh`**:
-      - **Description:** Reload the hierarchical instructional memory from all context files (default: `papert.md`) found in the configured locations (global, project/ancestors, and sub-directories). This updates the model with the latest context content.
+      - **Description:** Reload the hierarchical instructional memory from all context files (default: `papert.md`) found in configured locations. After refresh, the CLI reports both summary stats and the exact loaded source paths.
     - **Note:** For more details on how context files contribute to hierarchical memory, see the [CLI Configuration documentation](./configuration.md#context-files-hierarchical-instructional-context).
 
 - **`/model`**

@@ -17,6 +17,20 @@ import type { SlashCommand, SlashCommandActionReturn } from './types.js';
 import { CommandKind } from './types.js';
 import { t } from '../../i18n/index.js';
 
+function extractMemorySourcePaths(memoryContent: string): string[] {
+  const markerRegex = /--- Context from: (.+?) ---/g;
+  const paths = new Set<string>();
+
+  for (const match of memoryContent.matchAll(markerRegex)) {
+    const rawPath = match[1]?.trim();
+    if (rawPath) {
+      paths.add(rawPath);
+    }
+  }
+
+  return [...paths].sort((a, b) => a.localeCompare(b));
+}
+
 export const memoryCommand: SlashCommand = {
   name: 'memory',
   get description() {
@@ -139,6 +153,33 @@ export const memoryCommand: SlashCommand = {
           },
         },
       ],
+    },
+    {
+      name: 'list',
+      get description() {
+        return t('List the exact memory source file paths currently loaded.');
+      },
+      kind: CommandKind.BUILT_IN,
+      action: async (context) => {
+        const memoryContent = context.services.config?.getUserMemory() || '';
+        const fileCount = context.services.config?.getGeminiMdFileCount() || 0;
+        const sourcePaths = extractMemorySourcePaths(memoryContent);
+
+        const text =
+          sourcePaths.length > 0
+            ? `Memory sources (${sourcePaths.length}):\n\n${sourcePaths.join('\n')}`
+            : fileCount > 0
+              ? `Memory currently reports ${fileCount} file(s), but source paths are unavailable.`
+              : 'No memory sources currently loaded. Run /memory refresh first.';
+
+        context.ui.addItem(
+          {
+            type: MessageType.INFO,
+            text,
+          },
+          Date.now(),
+        );
+      },
     },
     {
       name: 'add',
@@ -317,7 +358,14 @@ export const memoryCommand: SlashCommand = {
 
             const successMessage =
               memoryContent.length > 0
-                ? `Memory refreshed successfully. Loaded ${memoryContent.length} characters from ${fileCount} file(s).`
+                ? (() => {
+                  const sourcePaths = extractMemorySourcePaths(memoryContent);
+                  const sourcesSection =
+                    sourcePaths.length > 0
+                      ? `\n\nLoaded source paths:\n${sourcePaths.join('\n')}`
+                      : '\n\nLoaded source paths are unavailable for this memory format.';
+                  return `Memory refreshed successfully. Loaded ${memoryContent.length} characters from ${fileCount} file(s).${sourcesSection}`;
+                })()
                 : 'Memory refreshed successfully. No memory content found.';
 
             context.ui.addItem(

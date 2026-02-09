@@ -602,9 +602,10 @@ This example demonstrates how you can provide general project context, specific 
 - **Concatenation & UI Indication:** The contents of all found context files are concatenated (with separators indicating their origin and path) and provided as part of the system prompt. The CLI footer displays the count of loaded context files, giving you a quick visual cue about the active instructional context.
 - **Importing Content:** You can modularize your context files by importing other Markdown files using the `@path/to/file.md` syntax. For more details, see the [Memory Import Processor documentation](../core/memport.md).
 - **Commands for Memory Management:**
-  - Use `/memory refresh` to force a re-scan and reload of all context files from all configured locations. This updates the AI's instructional context.
-  - Use `/memory show` to display the combined instructional context currently loaded, allowing you to verify the hierarchy and content being used by the AI.
-  - See the [Commands documentation](./commands.md#memory) for full details on the `/memory` command and its sub-commands (`show` and `refresh`).
+  - Use `/memory refresh` to force a re-scan and reload of all context files from configured locations. The output includes exact loaded source paths for transparency.
+  - Use `/memory show` to display the combined instructional context currently loaded.
+  - Use `/memory list` to display exact source file paths currently loaded into runtime memory context.
+  - See the [Commands documentation](./commands.md#memory) for full details on `/memory` sub-commands (`show`, `list`, `refresh`, and `add`).
 
 By understanding and utilizing these configuration layers and the hierarchical nature of context files, you can effectively manage the AI's memory and tailor Papert Code's responses to your specific needs and projects.
 
