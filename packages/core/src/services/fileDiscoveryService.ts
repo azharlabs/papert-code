@@ -10,10 +10,16 @@ import { GitIgnoreParser } from '../utils/gitIgnoreParser.js';
 import { PapertIgnoreParser } from '../utils/papertIgnoreParser.js';
 import { isGitRepository } from '../utils/gitUtils.js';
 import * as path from 'node:path';
+import * as fs from 'node:fs';
+import ignore from 'ignore';
 
 export interface FilterFilesOptions {
   respectGitIgnore?: boolean;
   respectPapertIgnore?: boolean;
+}
+
+export interface FileDiscoveryServiceOptions {
+  customIgnoreFilePaths?: string[];
 }
 
 export interface FilterReport {
@@ -26,13 +32,35 @@ export class FileDiscoveryService {
   private gitIgnoreFilter: GitIgnoreFilter | null = null;
   private papertIgnoreFilter: PapertIgnoreFilter | null = null;
   private projectRoot: string;
+  private customIgnoreMatcher = ignore();
+  private hasCustomIgnorePatterns = false;
 
-  constructor(projectRoot: string) {
+  constructor(projectRoot: string, options: FileDiscoveryServiceOptions = {}) {
     this.projectRoot = path.resolve(projectRoot);
     if (isGitRepository(this.projectRoot)) {
       this.gitIgnoreFilter = new GitIgnoreParser(this.projectRoot);
     }
     this.papertIgnoreFilter = new PapertIgnoreParser(this.projectRoot);
+    this.loadCustomIgnorePatterns(options.customIgnoreFilePaths || []);
+  }
+
+  private loadCustomIgnorePatterns(customIgnoreFilePaths: string[]): void {
+    for (const filePath of customIgnoreFilePaths) {
+      const resolvedPath = path.resolve(this.projectRoot, filePath);
+      try {
+        const content = fs.readFileSync(resolvedPath, 'utf-8');
+        const patterns = content
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0 && !line.startsWith('#'));
+        if (patterns.length > 0) {
+          this.customIgnoreMatcher.add(patterns);
+          this.hasCustomIgnorePatterns = true;
+        }
+      } catch {
+        // Ignore missing or unreadable custom ignore files.
+      }
+    }
   }
 
   /**
@@ -50,6 +78,9 @@ export class FileDiscoveryService {
         return false;
       }
       if (options.respectPapertIgnore && this.shouldPapertIgnoreFile(filePath)) {
+        return false;
+      }
+      if (this.shouldCustomIgnoreFile(filePath)) {
         return false;
       }
       return true;
@@ -82,6 +113,10 @@ export class FileDiscoveryService {
         continue;
       }
 
+      if (this.shouldCustomIgnoreFile(filePath)) {
+        continue;
+      }
+
       filteredPaths.push(filePath);
     }
 
@@ -100,6 +135,25 @@ export class FileDiscoveryService {
       return this.gitIgnoreFilter.isIgnored(filePath);
     }
     return false;
+  }
+
+  shouldCustomIgnoreFile(filePath: string): boolean {
+    if (!this.hasCustomIgnorePatterns) {
+      return false;
+    }
+
+    if (!filePath || typeof filePath !== 'string') {
+      return false;
+    }
+
+    const resolved = path.resolve(this.projectRoot, filePath);
+    const relativePath = path.relative(this.projectRoot, resolved);
+    if (!relativePath || relativePath.startsWith('..')) {
+      return false;
+    }
+
+    const normalizedPath = relativePath.replace(/\\/g, '/');
+    return this.customIgnoreMatcher.ignores(normalizedPath);
   }
 
   /**
@@ -128,6 +182,9 @@ export class FileDiscoveryService {
       return true;
     }
     if (respectPapertIgnore && this.shouldPapertIgnoreFile(filePath)) {
+      return true;
+    }
+    if (this.shouldCustomIgnoreFile(filePath)) {
       return true;
     }
     return false;

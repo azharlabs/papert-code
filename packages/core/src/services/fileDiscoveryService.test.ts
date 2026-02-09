@@ -208,4 +208,30 @@ describe('FileDiscoveryService', () => {
       ]);
     });
   });
+
+  describe('custom ignore files', () => {
+    it('filters files from custom ignore paths', async () => {
+      await createTestFile('custom.ignore', 'generated/\n*.tmp');
+      const service = new FileDiscoveryService(projectRoot, {
+        customIgnoreFilePaths: ['custom.ignore'],
+      });
+
+      const files = ['generated/out.js', 'src/index.ts', 'note.tmp'].map((f) =>
+        path.join(projectRoot, f),
+      );
+
+      expect(service.filterFiles(files)).toEqual([
+        path.join(projectRoot, 'src/index.ts'),
+      ]);
+    });
+
+    it('ignores missing custom ignore files', () => {
+      const service = new FileDiscoveryService(projectRoot, {
+        customIgnoreFilePaths: ['missing.ignore'],
+      });
+
+      const files = ['src/index.ts'].map((f) => path.join(projectRoot, f));
+      expect(service.filterFiles(files)).toEqual(files);
+    });
+  });
 });

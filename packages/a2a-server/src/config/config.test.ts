@@ -5,11 +5,13 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import * as path from 'node:path';
 import { loadConfig } from './config.js';
 import type { Settings } from './settings.js';
 
 const mockVerifyGitAvailability = vi.hoisted(() => vi.fn());
 const mockConfigCtor = vi.hoisted(() => vi.fn());
+const mockFileDiscoveryCtor = vi.hoisted(() => vi.fn());
 
 vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
   const actual =
@@ -24,7 +26,9 @@ vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
   }
 
   class MockFileDiscoveryService {
-    constructor(_workspaceDir: string) {}
+    constructor(workspaceDir: string, options?: unknown) {
+      mockFileDiscoveryCtor(workspaceDir, options);
+    }
   }
 
   return {
@@ -52,6 +56,7 @@ describe('loadConfig checkpointing guard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env['PAPERT_OAUTH'] = '1';
+    delete process.env['CUSTOM_IGNORE_FILE_PATHS'];
   });
 
   it('disables checkpointing when git is unavailable', async () => {
@@ -81,6 +86,46 @@ describe('loadConfig checkpointing guard', () => {
     expect(mockConfigCtor).toHaveBeenCalledWith(
       expect.objectContaining({
         checkpointing: true,
+      }),
+    );
+  });
+
+  it('passes custom ignore paths from settings and env to FileDiscoveryService', async () => {
+    mockVerifyGitAvailability.mockResolvedValue(true);
+    process.env['CUSTOM_IGNORE_FILE_PATHS'] = ['/env/a', '/env/b'].join(
+      path.delimiter,
+    );
+    const settings: Settings = {
+      fileFiltering: {
+        customIgnoreFilePaths: ['/settings/custom.ignore'],
+      },
+    };
+
+    await loadConfig(settings, [], 'task-id');
+
+    expect(mockFileDiscoveryCtor).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        customIgnoreFilePaths: ['/settings/custom.ignore', '/env/a', '/env/b'],
+      }),
+    );
+  });
+
+  it('passes respectPapertIgnore in fileFiltering config', async () => {
+    mockVerifyGitAvailability.mockResolvedValue(true);
+    const settings: Settings = {
+      fileFiltering: {
+        respectPapertIgnore: false,
+      },
+    };
+
+    await loadConfig(settings, [], 'task-id');
+
+    expect(mockConfigCtor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fileFiltering: expect.objectContaining({
+          respectPapertIgnore: false,
+        }),
       }),
     );
   });

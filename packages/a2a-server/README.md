@@ -20,3 +20,4 @@ The server exposes command execution over `/executeCommand`.
 ## Runtime Notes
 
 - If checkpointing is enabled but `git` is not available on the host, the server automatically disables checkpointing at startup.
+- Memory loading supports custom ignore files via `CUSTOM_IGNORE_FILE_PATHS` (path-delimited list) and `settings.fileFiltering.customIgnoreFilePaths`.

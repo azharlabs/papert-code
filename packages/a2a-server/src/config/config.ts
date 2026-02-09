@@ -104,6 +104,13 @@ export async function loadConfig(
     checkpointing = false;
   }
 
+  const customIgnoreFilePaths = [
+    ...(settings.fileFiltering?.customIgnoreFilePaths || []),
+    ...(process.env['CUSTOM_IGNORE_FILE_PATHS']
+      ? process.env['CUSTOM_IGNORE_FILE_PATHS'].split(path.delimiter)
+      : []),
+  ];
+
   const configParams: ConfigParameters = {
     sessionId: taskId,
     model: resolvedModel,
@@ -135,6 +142,7 @@ export async function loadConfig(
     // Git-aware file filtering settings
     fileFiltering: {
       respectGitIgnore: settings.fileFiltering?.respectGitIgnore,
+      respectPapertIgnore: settings.fileFiltering?.respectPapertIgnore,
       enableRecursiveFileSearch:
         settings.fileFiltering?.enableRecursiveFileSearch,
     },
@@ -147,7 +155,13 @@ export async function loadConfig(
     interactive: true,
   };
 
-  const fileService = new FileDiscoveryService(workspaceDir);
+  const FileDiscoveryServiceCtor = FileDiscoveryService as unknown as new (
+    projectRoot: string,
+    options?: { customIgnoreFilePaths?: string[] },
+  ) => FileDiscoveryService;
+  const fileService = new FileDiscoveryServiceCtor(workspaceDir, {
+    customIgnoreFilePaths,
+  });
   const { memoryContent, fileCount } = await loadServerHierarchicalMemory(
     workspaceDir,
     [workspaceDir],

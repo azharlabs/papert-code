@@ -41,7 +41,9 @@ export interface Settings {
   // Git-aware file filtering settings
   fileFiltering?: {
     respectGitIgnore?: boolean;
+    respectPapertIgnore?: boolean;
     enableRecursiveFileSearch?: boolean;
+    customIgnoreFilePaths?: string[];
   };
 }
 

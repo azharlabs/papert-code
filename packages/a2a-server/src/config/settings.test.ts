@@ -159,6 +159,8 @@ describe('loadSettings', () => {
       },
       fileFiltering: {
         respectGitIgnore: true,
+        respectPapertIgnore: false,
+        customIgnoreFilePaths: ['custom.ignore'],
       },
     };
     fs.writeFileSync(USER_SETTINGS_PATH, JSON.stringify(settings));
@@ -168,6 +170,10 @@ describe('loadSettings', () => {
     expect(result.coreTools).toEqual(['tool1', 'tool2']);
     expect(result.mcpServers).toHaveProperty('server1');
     expect(result.fileFiltering?.respectGitIgnore).toBe(true);
+    expect(result.fileFiltering?.respectPapertIgnore).toBe(false);
+    expect(result.fileFiltering?.customIgnoreFilePaths).toEqual([
+      'custom.ignore',
+    ]);
   });
 
   it('should overwrite top-level settings from workspace (shallow merge)', () => {
