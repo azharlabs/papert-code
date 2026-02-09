@@ -10,7 +10,7 @@ The server exposes command execution over `/executeCommand`.
 
 - `extensions list`: Lists installed extensions.
 - `init`: Generates a tailored `papert.md` context file for the workspace.
-- `restore`: Restores to a checkpoint.
+- `restore <checkpoint>`: Restores conversation/file state for a specific checkpoint.
 - `restore list`: Lists available checkpoints.
 - `memory show`: Shows loaded memory content.
 - `memory refresh`: Reloads memory from disk.

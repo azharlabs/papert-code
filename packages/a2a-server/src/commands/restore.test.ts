@@ -41,47 +41,55 @@ vi.mock('../utils/logger.js', () => ({
 }));
 
 describe('RestoreCommand', () => {
-  const mockConfig = {
-    config: createMockConfig() as Config,
-    git: {},
-  } as CommandContext;
-
-  it('should list available checkpoints when no name is provided', async () => {
+  it('requires checkpoint name when none is provided', async () => {
+    const mockContext = {
+      config: createMockConfig() as Config,
+      git: {},
+    } as CommandContext;
     const command = new RestoreCommand();
-    mockFs.readdir.mockResolvedValue([]);
-    const result = await command.execute(mockConfig, []);
+    const result = await command.execute(mockContext, []);
     expect(result.data).toEqual({
       type: 'message',
-      messageType: 'info',
-      content: 'No restorable tool calls found.',
+      messageType: 'error',
+      content: 'Please provide a checkpoint name to restore.',
     });
   });
 
-  it('should restore a checkpoint when a valid file is provided', async () => {
+  it('returns load_history when checkpoint includes history', async () => {
+    const mockContext = {
+      config: createMockConfig() as Config,
+      git: {},
+    } as CommandContext;
     const command = new RestoreCommand();
     const toolCallData = {
       toolCall: {
         name: 'test-tool',
         args: {},
       },
-      history: [],
-      clientHistory: [],
+      history: [{ role: 'user', text: 'hello' }],
+      clientHistory: [{ role: 'user', parts: [] }],
     };
     mockFs.readFile.mockResolvedValue(JSON.stringify(toolCallData));
-    const result = await command.execute(mockConfig, ['checkpoint1.json']);
-    expect(result.data).toEqual({
-      type: 'tool',
-      toolName: 'test-tool',
-      toolArgs: {},
-    });
+    const result = await command.execute(mockContext, ['checkpoint1.json']);
+    expect(result.data).toEqual([
+      {
+        type: 'load_history',
+        history: [{ role: 'user', text: 'hello' }],
+        clientHistory: [{ role: 'user', parts: [] }],
+      },
+    ]);
   });
 
   it('should show "file not found" error for a non-existent checkpoint', async () => {
+    const mockContext = {
+      config: createMockConfig() as Config,
+      git: {},
+    } as CommandContext;
     const command = new RestoreCommand();
     const error = new Error('File not found');
     (error as NodeJS.ErrnoException).code = 'ENOENT';
     mockFs.readFile.mockRejectedValue(error);
-    const result = await command.execute(mockConfig, ['checkpoint2.json']);
+    const result = await command.execute(mockContext, ['checkpoint2.json']);
     expect(result.data).toEqual({
       type: 'message',
       messageType: 'error',
@@ -90,12 +98,99 @@ describe('RestoreCommand', () => {
   });
 
   it('should handle invalid JSON in checkpoint file', async () => {
+    const mockContext = {
+      config: createMockConfig() as Config,
+      git: {},
+    } as CommandContext;
     const command = new RestoreCommand();
     mockFs.readFile.mockResolvedValue('invalid json');
-    const result = await command.execute(mockConfig, ['checkpoint1.json']);
+    const result = await command.execute(mockContext, ['checkpoint1.json']);
     expect((result.data as { content: string }).content).toContain(
       'An unexpected error occurred during restore.',
     );
+  });
+
+  it('returns git service missing error when commitHash exists but git is unavailable', async () => {
+    const mockContext = {
+      config: createMockConfig() as Config,
+      git: undefined,
+    } as CommandContext;
+    const command = new RestoreCommand();
+    const toolCallData = {
+      toolCall: {
+        name: 'test-tool',
+        args: {},
+      },
+      commitHash: 'abc123',
+    };
+    mockFs.readFile.mockResolvedValue(JSON.stringify(toolCallData));
+    const result = await command.execute(mockContext, ['checkpoint1.json']);
+    expect(result.data).toEqual([
+      {
+        type: 'message',
+        messageType: 'error',
+        content:
+          'Git service is not available, cannot restore checkpoint. Please ensure you are in a git repository.',
+      },
+    ]);
+  });
+
+  it('restores snapshot and returns success info message', async () => {
+    const mockGit = {
+      restoreProjectFromSnapshot: vi.fn().mockResolvedValue(undefined),
+    };
+    const mockContext = {
+      config: createMockConfig() as Config,
+      git: mockGit,
+    } as CommandContext;
+    const command = new RestoreCommand();
+    const toolCallData = {
+      toolCall: {
+        name: 'test-tool',
+        args: {},
+      },
+      commitHash: 'abc123',
+    };
+    mockFs.readFile.mockResolvedValue(JSON.stringify(toolCallData));
+    const result = await command.execute(mockContext, ['checkpoint1.json']);
+    expect(mockGit.restoreProjectFromSnapshot).toHaveBeenCalledWith('abc123');
+    expect(result.data).toEqual([
+      {
+        type: 'message',
+        messageType: 'info',
+        content: 'Restored project to the state before the tool call.',
+      },
+    ]);
+  });
+
+  it('returns invalid commit message when git restore fails with missing tree', async () => {
+    const mockGit = {
+      restoreProjectFromSnapshot: vi
+        .fn()
+        .mockRejectedValue(new Error('fatal: unable to read tree abc123')),
+    };
+    const mockContext = {
+      config: createMockConfig() as Config,
+      git: mockGit,
+    } as CommandContext;
+    const command = new RestoreCommand();
+    const toolCallData = {
+      toolCall: {
+        name: 'test-tool',
+        args: {},
+      },
+      commitHash: 'abc123',
+    };
+    mockFs.readFile.mockResolvedValue(JSON.stringify(toolCallData));
+    const result = await command.execute(mockContext, ['checkpoint1.json']);
+    expect(result.data).toEqual([
+      {
+        type: 'message',
+        messageType: 'error',
+        content:
+          "The commit hash 'abc123' associated with this checkpoint could not be found in your Git repository. This can happen if the repository has been re-cloned, reset, or if old commits have been garbage collected. This checkpoint cannot be restored.",
+      },
+    ]);
   });
 });
 
