@@ -19,6 +19,7 @@ import {
   type ConfigParameters,
   FileDiscoveryService,
   ApprovalMode,
+  GitService,
   loadServerHierarchicalMemory,
   PAPERT_DIR,
   DEFAULT_PAPERT_EMBEDDING_MODEL,
@@ -87,6 +88,22 @@ export async function loadConfig(
     generationConfig.baseUrl = openAiBaseUrl;
   }
 
+  let checkpointing = process.env['CHECKPOINTING']
+    ? process.env['CHECKPOINTING'] === 'true'
+    : settings.checkpointing?.enabled;
+  const gitServiceClass = GitService as unknown as {
+    verifyGitAvailability?: () => Promise<boolean>;
+  };
+  const gitIsAvailable = gitServiceClass.verifyGitAvailability
+    ? await gitServiceClass.verifyGitAvailability()
+    : true;
+  if (checkpointing && !gitIsAvailable) {
+    logger.warn(
+      '[Config] Checkpointing is enabled but git is not installed. Disabling checkpointing.',
+    );
+    checkpointing = false;
+  }
+
   const configParams: ConfigParameters = {
     sessionId: taskId,
     model: resolvedModel,
@@ -124,9 +141,7 @@ export async function loadConfig(
     ideMode: false,
     folderTrust: settings.folderTrust === true,
     extensionContextFilePaths,
-    checkpointing: process.env['CHECKPOINTING']
-      ? process.env['CHECKPOINTING'] === 'true'
-      : settings.checkpointing?.enabled,
+    checkpointing,
     authType: resolvedAuthType,
     generationConfig,
     interactive: true,

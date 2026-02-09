@@ -16,6 +16,11 @@ export class GitService {
   private projectRoot: string;
   private storage: Storage;
 
+  static async verifyGitAvailability(): Promise<boolean> {
+    const { available } = isCommandAvailable('git');
+    return available;
+  }
+
   constructor(projectRoot: string, storage: Storage) {
     this.projectRoot = path.resolve(projectRoot);
     this.storage = storage;

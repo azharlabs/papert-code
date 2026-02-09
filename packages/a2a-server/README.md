@@ -16,3 +16,7 @@ The server exposes command execution over `/executeCommand`.
 - `memory refresh`: Reloads memory from disk.
 - `memory list`: Lists discovered `papert.md` memory files (or file count when paths are unavailable).
 - `memory add <text>`: Saves a new memory entry using the `save_memory` tool.
+
+## Runtime Notes
+
+- If checkpointing is enabled but `git` is not available on the host, the server automatically disables checkpointing at startup.
