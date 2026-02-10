@@ -6,7 +6,7 @@ Papert Code can automatically ignore files, similar to `.gitignore` (used by Git
 
 ## How it works
 
-When you add a path to your `.papertignore` file, tools that respect this file will exclude matching files and directories from their operations. For example, when you use the [`read_many_files`](./tools/multi-file.md) command, any paths in your `.papertignore` file will be automatically excluded.
+When you add a path to your `.papertignore` file, tools that respect this file will exclude matching files and directories from their operations. For example, when you use the [`read_many_files`](../tools/multi-file.md) command, any paths in your `.papertignore` file will be automatically excluded.
 
 For the most part, `.papertignore` follows the conventions of `.gitignore` files:
 

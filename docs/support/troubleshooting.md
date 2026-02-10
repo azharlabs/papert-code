@@ -31,7 +31,7 @@ This guide provides solutions to common issues and debugging tips, including top
     1. In your home directory: `~/.papert/settings.json`.
     2. In your project's root directory: `./.papert/settings.json`.
 
-    Refer to [Papert Code Configuration](./cli/configuration.md) for more details.
+    Refer to [Papert Code Configuration](../cli/configuration.md) for more details.
 
 - **Q: Why don't I see cached token counts in my stats output?**
   - A: Cached token information is only displayed when cached tokens are being used. This feature is available for API key users (for example, Alibaba DashScope or Google Cloud Vertex AI) but not for OAuth-based providers that disable cached content creation. You can still view your total token usage using the `/stats` command.
@@ -59,7 +59,7 @@ This guide provides solutions to common issues and debugging tips, including top
 
 - **Error: "Operation not permitted", "Permission denied", or similar.**
   - **Cause:** When sandboxing is enabled, Papert Code may attempt operations that are restricted by your sandbox configuration, such as writing outside the project directory or system temp directory.
-  - **Solution:** Refer to the [Configuration: Sandboxing](./cli/configuration.md#sandboxing) documentation for more information, including how to customize your sandbox configuration.
+  - **Solution:** Refer to the [Configuration: Sandboxing](../cli/configuration.md#sandboxing) documentation for more information, including how to customize your sandbox configuration.
 
 - **Papert Code is not running in interactive mode in "CI" environments**
   - **Issue:** Papert Code does not enter interactive mode (no prompt appears) if an environment variable starting with `CI_` (e.g., `CI_TOKEN`) is set. This is because the `is-in-ci` package, used by the underlying UI framework, detects these variables and assumes a non-interactive CI environment.

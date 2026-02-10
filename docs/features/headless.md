@@ -228,7 +228,7 @@ Key command-line options for headless usage:
 | `--continue`                 | Resume the most recent session for this project     | `papert --continue -p "Pick up where we left off"`                         |
 | `--resume [sessionId]`       | Resume a specific session (or choose interactively) | `papert --resume 123e... -p "Finish the refactor"`                         |
 
-For complete details on all available configuration options, settings files, and environment variables, see the [Configuration Guide](./cli/configuration.md).
+For complete details on all available configuration options, settings files, and environment variables, see the [Configuration Guide](../cli/configuration.md).
 
 ## Examples
 
@@ -301,7 +301,7 @@ tail -5 usage.log
 
 ## Resources
 
-- [CLI Configuration](./cli/configuration.md) - Complete configuration guide
-- [Authentication](./cli/authentication.md) - Setup authentication
-- [Commands](./cli/commands.md) - Interactive commands reference
-- [Tutorials](./cli/tutorials.md) - Step-by-step automation guides
+- [CLI Configuration](../cli/configuration.md) - Complete configuration guide
+- [Authentication](../cli/authentication.md) - Setup authentication
+- [Commands](../cli/commands.md) - Interactive commands reference
+- [Tutorials](../cli/tutorials.md) - Step-by-step automation guides

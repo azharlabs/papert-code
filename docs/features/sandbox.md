@@ -152,6 +152,6 @@ papert -s -p "run shell command: mount | grep workspace"
 
 ## Related documentation
 
-- [Configuration](./cli/configuration.md): Full configuration options.
-- [Commands](./cli/commands.md): Available commands.
-- [Troubleshooting](./troubleshooting.md): General troubleshooting.
+- [Configuration](../cli/configuration.md): Full configuration options.
+- [Commands](../cli/commands.md): Available commands.
+- [Troubleshooting](../support/troubleshooting.md): General troubleshooting.

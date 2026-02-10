@@ -1,4 +1,5 @@
 export default {
+  index: 'Overview',
   architecture: 'Architecture',
   'remote-driving': 'Remote Driving',
   npm: 'NPM',

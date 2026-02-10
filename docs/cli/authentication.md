@@ -103,4 +103,4 @@ OpenAI-compatible API method if configured:
 If none of these environment variables are set in a non-interactive session, the CLI will exit with an error.
 
 For comprehensive guidance on using Papert Code programmatically and in
-automation workflows, see the [Headless Mode Guide](../headless.md).
+automation workflows, see the [Headless Mode Guide](../features/headless.md).

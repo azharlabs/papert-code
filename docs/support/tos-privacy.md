@@ -30,4 +30,4 @@ That depends entirely on your chosen API provider. Papert Code does not train mo
 - Within the CLI: use the `/auth` command to reconfigure.
 - Environment variables: set values in your shell or `.env` files for automatic use.
 
-See the [Authentication Setup](./cli/authentication.md) guide for details.
+See the [Authentication Setup](../cli/authentication.md) guide for details.

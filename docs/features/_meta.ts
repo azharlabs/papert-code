@@ -1,4 +1,5 @@
 export default {
+  index: 'Overview',
   subagents: 'Subagents',
   checkpointing: 'Checkpointing',
   rewind: 'Rewind',

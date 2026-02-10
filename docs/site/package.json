@@ -1,0 +1,20 @@
+{
+  "name": "papert-docs-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf .next content",
+    "sync-content": "node ./scripts/sync-content.mjs",
+    "dev": "npm run clean && npm run sync-content && next --turbopack",
+    "build": "npm run clean && npm run sync-content && next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^16.0.8",
+    "nextra": "^4.6.1",
+    "nextra-theme-docs": "^4.6.1",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
+  }
+}

@@ -396,7 +396,7 @@ Configures connections to one or more Model-Context Protocol (MCP) servers for d
 
 #### `telemetry`
 
-Configures logging and metrics collection for Papert Code. For more information, see [Telemetry](../telemetry.md).
+Configures logging and metrics collection for Papert Code. For more information, see [Telemetry](../development/telemetry.md).
 
 - **Properties:**
   - **`enabled`** (boolean): Whether or not telemetry is enabled.
@@ -658,17 +658,17 @@ Arguments passed directly when running the CLI can override other configurations
   - A comma-separated list of tool names that will bypass the confirmation dialog.
   - Example: `papert --allowed-tools "Shell(git status)"`
 - **`--telemetry`**:
-  - Enables [telemetry](../telemetry.md).
+  - Enables [telemetry](../development/telemetry.md).
 - **`--telemetry-target`**:
-  - Sets the telemetry target. See [telemetry](../telemetry.md) for more information.
+  - Sets the telemetry target. See [telemetry](../development/telemetry.md) for more information.
 - **`--telemetry-otlp-endpoint`**:
-  - Sets the OTLP endpoint for telemetry. See [telemetry](../telemetry.md) for more information.
+  - Sets the OTLP endpoint for telemetry. See [telemetry](../development/telemetry.md) for more information.
 - **`--telemetry-otlp-protocol`**:
-  - Sets the OTLP protocol for telemetry (`grpc` or `http`). Defaults to `grpc`. See [telemetry](../telemetry.md) for more information.
+  - Sets the OTLP protocol for telemetry (`grpc` or `http`). Defaults to `grpc`. See [telemetry](../development/telemetry.md) for more information.
 - **`--telemetry-log-prompts`**:
-  - Enables logging of prompts for telemetry. See [telemetry](../telemetry.md) for more information.
+  - Enables logging of prompts for telemetry. See [telemetry](../development/telemetry.md) for more information.
 - **`--checkpointing`**:
-  - Enables [checkpointing](../checkpointing.md).
+  - Enables [checkpointing](../features/checkpointing.md).
 - **`--extensions <extension_name ...>`** (**`-e <extension_name ...>`**):
   - Specifies a list of extensions to use for the session. If not provided, all available extensions are used.
   - Use the special term `papert -e none` to disable all extensions.

@@ -1,10 +1,11 @@
 [
   {
-    "label": "Overview",
+    "label": "Get Started",
     "items": [
-      { "label": "Welcome", "slug": "docs" },
-      { "label": "Execution and Deployment", "slug": "docs/deployment" },
-      { "label": "Architecture Overview", "slug": "docs/architecture" }
+      { "label": "Documentation Home", "slug": "docs" },
+      { "label": "User Guide", "slug": "docs/cli" },
+      { "label": "Outside the Terminal", "slug": "docs/ide-integration" },
+      { "label": "Features", "slug": "docs/features" }
     ]
   },
   {
@@ -12,58 +13,56 @@
     "items": [
       { "label": "Introduction", "slug": "docs/cli" },
       { "label": "Authentication", "slug": "docs/cli/authentication" },
+      { "label": "OpenAI Authentication", "slug": "docs/cli/openai-auth" },
       { "label": "Commands", "slug": "docs/cli/commands" },
-      { "label": "Scheduler", "slug": "docs/cli/scheduler" },
+      { "label": "Settings", "slug": "docs/cli/settings" },
       { "label": "Configuration", "slug": "docs/cli/configuration" },
-      { "label": "Checkpointing", "slug": "docs/checkpointing" },
-      { "label": "Extensions", "slug": "docs/extension" },
-      { "label": "Headless Mode", "slug": "docs/headless" },
-      { "label": "IDE Integration", "slug": "docs/ide-integration" },
-      {
-        "label": "IDE Companion Spec",
-        "slug": "docs/ide-companion-spec"
-      },
-      { "label": "Telemetry", "slug": "docs/telemetry" },
+      { "label": "Remote Driving", "slug": "docs/cli/remote-driving" },
+      { "label": "Scheduler", "slug": "docs/cli/scheduler" },
+      { "label": "Hooks", "slug": "docs/cli/hooks" },
       { "label": "Themes", "slug": "docs/cli/themes" },
-      { "label": "Token Caching", "slug": "docs/cli/token-caching" },
-      { "label": "Trusted Folders", "slug": "docs/trusted-folders" },
-      { "label": "Tutorials", "slug": "docs/cli/tutorials" }
+      { "label": "Language", "slug": "docs/cli/language" },
+      { "label": "Trusted Folders", "slug": "docs/cli/trusted-folders" },
+      { "label": "Ignoring Files", "slug": "docs/cli/papert-ignore" },
+      { "label": "Keyboard Shortcuts", "slug": "docs/cli/keyboard-shortcuts" },
+      { "label": "TypeScript SDK", "slug": "docs/cli/sdk-typescript" },
+      { "label": "Python SDK", "slug": "docs/cli/sdk-python" }
     ]
   },
   {
-    "label": "Core",
+    "label": "Desktop and IDE",
     "items": [
-      { "label": "Introduction", "slug": "docs/core" },
-      { "label": "Tools API", "slug": "docs/core/tools-api" },
-      { "label": "Memory Import Processor", "slug": "docs/core/memport" }
+      { "label": "Overview", "slug": "docs/ide-integration" },
+      { "label": "Desktop App", "slug": "docs/ide-integration/desktop-app" },
+      { "label": "IDE Integration", "slug": "docs/ide-integration/ide-integration" },
+      { "label": "IDE Companion Spec", "slug": "docs/ide-integration/ide-companion-spec" }
     ]
   },
   {
-    "label": "Tools",
+    "label": "Core and Tools",
     "items": [
-      { "label": "Overview", "slug": "docs/tools" },
-      { "label": "File System", "slug": "docs/tools/file-system" },
-      { "label": "Multi-File Read", "slug": "docs/tools/multi-file" },
-      { "label": "Shell", "slug": "docs/tools/shell" },
-      { "label": "Web Fetch", "slug": "docs/tools/web-fetch" },
-      { "label": "Web Search", "slug": "docs/tools/web-search" },
-      { "label": "Memory", "slug": "docs/tools/memory" },
-      { "label": "MCP Servers", "slug": "docs/tools/mcp-server" },
-      { "label": "Sandboxing", "slug": "docs/sandbox" }
+      { "label": "Core", "slug": "docs/core" },
+      { "label": "Tools", "slug": "docs/tools" },
+      { "label": "Extensions", "slug": "docs/extensions" }
     ]
   },
   {
-    "label": "Development",
+    "label": "Developer Guide",
     "items": [
-      { "label": "NPM", "slug": "docs/npm" },
-      { "label": "Releases", "slug": "docs/releases" }
+      { "label": "Development Overview", "slug": "docs/development" },
+      { "label": "Architecture", "slug": "docs/development/architecture" },
+      { "label": "Deployment", "slug": "docs/development/deployment" },
+      { "label": "NPM", "slug": "docs/development/npm" },
+      { "label": "Integration Tests", "slug": "docs/development/integration-tests" }
     ]
   },
   {
     "label": "Support",
     "items": [
-      { "label": "Troubleshooting", "slug": "docs/troubleshooting" },
-      { "label": "Terms of Service", "slug": "docs/tos-privacy" }
+      { "label": "Support Overview", "slug": "docs/support" },
+      { "label": "Troubleshooting", "slug": "docs/support/troubleshooting" },
+      { "label": "Terms of Service", "slug": "docs/support/tos-privacy" },
+      { "label": "Uninstall", "slug": "docs/cli/Uninstall" }
     ]
   }
 ]

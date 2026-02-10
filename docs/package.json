@@ -1,0 +1,12 @@
+{
+  "name": "papert-docs-wrapper",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "install:site": "npm --prefix site install",
+    "dev": "npm --prefix site run dev",
+    "build": "npm --prefix site run build",
+    "start": "npm --prefix site run start",
+    "sync-content": "npm --prefix site run sync-content"
+  }
+}

@@ -1,6 +1,6 @@
 # Papert Code Core
 
-Papert Code's core package (`packages/core`) is the backend portion of Papert Code, handling communication with model APIs, managing tools, and processing requests sent from `packages/cli`. For a general overview of Papert Code, see the [main documentation page](../index.md).
+Papert Code's core package (`packages/core`) is the backend portion of Papert Code, handling communication with model APIs, managing tools, and processing requests sent from `packages/cli`. For a general overview of Papert Code, see the [main documentation page](../).
 
 ## Navigating this section
 

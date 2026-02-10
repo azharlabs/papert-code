@@ -206,7 +206,7 @@ If you are experiencing performance issues with file searching (e.g., with `@` c
     ```
 
 - **`checkpointing`** (object):
-  - **Description:** Configures the checkpointing feature, which allows you to save and restore conversation and file states. See the [Checkpointing documentation](../checkpointing.md) for more details.
+  - **Description:** Configures the checkpointing feature, which allows you to save and restore conversation and file states. See the [Checkpointing documentation](../features/checkpointing.md) for more details.
   - **Default:** `{"enabled": false}`
   - **Properties:**
     - **`enabled`** (boolean): When `true`, the `/restore` command is available.
@@ -217,7 +217,7 @@ If you are experiencing performance issues with file searching (e.g., with `@` c
   - **Example:** `"preferredEditor": "vscode"`
 
 - **`telemetry`** (object)
-  - **Description:** Configures logging and metrics collection for Papert Code. For more information, see [Telemetry](../telemetry.md).
+  - **Description:** Configures logging and metrics collection for Papert Code. For more information, see [Telemetry](../development/telemetry.md).
   - **Default:** `{"enabled": false, "target": "local", "otlpEndpoint": "http://localhost:4317", "logPrompts": true}`
   - **Properties:**
     - **`enabled`** (boolean): Whether or not telemetry is enabled.
@@ -510,17 +510,17 @@ Arguments passed directly when running the CLI can override other configurations
   - A comma-separated list of tool names that will bypass the confirmation dialog.
   - Example: `papert --allowed-tools "ShellTool(git status)"`
 - **`--telemetry`**:
-  - Enables [telemetry](../telemetry.md).
+  - Enables [telemetry](../development/telemetry.md).
 - **`--telemetry-target`**:
-  - Sets the telemetry target. See [telemetry](../telemetry.md) for more information.
+  - Sets the telemetry target. See [telemetry](../development/telemetry.md) for more information.
 - **`--telemetry-otlp-endpoint`**:
-  - Sets the OTLP endpoint for telemetry. See [telemetry](../telemetry.md) for more information.
+  - Sets the OTLP endpoint for telemetry. See [telemetry](../development/telemetry.md) for more information.
 - **`--telemetry-otlp-protocol`**:
-  - Sets the OTLP protocol for telemetry (`grpc` or `http`). Defaults to `grpc`. See [telemetry](../telemetry.md) for more information.
+  - Sets the OTLP protocol for telemetry (`grpc` or `http`). Defaults to `grpc`. See [telemetry](../development/telemetry.md) for more information.
 - **`--telemetry-log-prompts`**:
-  - Enables logging of prompts for telemetry. See [telemetry](../telemetry.md) for more information.
+  - Enables logging of prompts for telemetry. See [telemetry](../development/telemetry.md) for more information.
 - **`--checkpointing`**:
-  - Enables [checkpointing](../checkpointing.md).
+  - Enables [checkpointing](../features/checkpointing.md).
 - **`--extensions <extension_name ...>`** (**`-e <extension_name ...>`**):
   - Specifies a list of extensions to use for the session. If not provided, all available extensions are used.
   - Use the special term `papert -e none` to disable all extensions.
@@ -672,4 +672,4 @@ Note: When usage statistics are enabled, events are sent to an Alibaba Cloud RUM
   - **Category:** UI
   - **Requires Restart:** No
   - **Example:** `"enableWelcomeBack": false`
-  - **Details:** When enabled, Papert Code will automatically detect if you're returning to a project with a previously generated project summary (`.papert/PROJECT_SUMMARY.md`) and show a dialog allowing you to continue your previous conversation or start fresh. This feature integrates with the `/summary` command and quit confirmation dialog. See the [Welcome Back documentation](./welcome-back.md) for more details.
+  - **Details:** When enabled, Papert Code will automatically detect if you're returning to a project with a previously generated project summary (`.papert/PROJECT_SUMMARY.md`) and show a dialog allowing you to continue your previous conversation or start fresh. This feature integrates with the `/summary` command and quit confirmation dialog. See the [Welcome Back documentation](../features/welcome-back.md) for more details.

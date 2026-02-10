@@ -151,7 +151,7 @@ Slash commands provide meta-level control over the CLI itself.
   - **Note:** `/github install` is the recommended flow for new usage.
 
 - **`/extensions`**
-  - **Description:** Lists all active extensions in the current Papert Code session. See [Papert Code Extensions](../extension.md).
+  - **Description:** Lists all active extensions in the current Papert Code session. See [Papert Code Extensions](../extensions/extension.md).
 
 - **`/help`** (or **`/?`**)
   - **Description:** Display help information about the Papert Code, including available commands and their usage.
@@ -211,7 +211,7 @@ Slash commands provide meta-level control over the CLI itself.
 - **`/restore`**
   - **Description:** Restores the project files to the state they were in just before a tool was executed. This is particularly useful for undoing file edits made by a tool. If run without a tool call ID, it will list available checkpoints to restore from.
   - **Usage:** `/restore [tool_call_id]`
-  - **Note:** Only available if the CLI is invoked with the `--checkpointing` option or configured via [settings](./configuration.md). See [Checkpointing documentation](../checkpointing.md) for more details.
+  - **Note:** Only available if the CLI is invoked with the `--checkpointing` option or configured via [settings](./configuration.md). See [Checkpointing documentation](../features/checkpointing.md) for more details.
 
 - **`/rewind`**
   - **Description:** Preview and restore a previous checkpoint with explicit confirmation.
@@ -272,9 +272,9 @@ Slash commands provide meta-level control over the CLI itself.
   - **Storage Locations:**
     - **Project-level:** `.papert/agents/` (shared with team, takes precedence)
     - **User-level:** `~/.papert/agents/` (personal agents, available across projects)
-  - **Note:** For detailed information on creating and managing subagents, see the [Subagents documentation](../subagents.md).
+  - **Note:** For detailed information on creating and managing subagents, see the [Subagents documentation](../features/subagents.md).
 
-- [**`/tools`**](../tools/index.md)
+- [**`/tools`**](../tools)
   - **Description:** Display a list of tools that are currently available within Papert Code.
   - **Usage:** `/tools [desc]`
   - **Sub-commands:**

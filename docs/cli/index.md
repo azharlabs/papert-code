@@ -13,6 +13,7 @@ Within Papert Code, `packages/cli` is the frontend for users to send and receive
 - **[Settings](./settings.md):** How to view and edit settings via the `/settings` command or JSON files.
 - **[Themes](./themes.md)**: A guide to customizing the CLI's appearance with different themes.
 - **[Tutorials](tutorials.md)**: A tutorial showing how to use Papert Code to automate a development task.
+- **[Desktop App](../ide-integration/desktop-app.md)**: Run Papert Code as a native desktop application.
 
 ## Non-interactive mode
 
@@ -30,4 +31,4 @@ You can also use the `--prompt` or `-p` flag:
 papert -p "What is fine tuning?"
 ```
 
-For comprehensive documentation on headless usage, scripting, automation, and advanced examples, see the **[Headless Mode](../headless.md)** guide.
+For comprehensive documentation on headless usage, scripting, automation, and advanced examples, see the **[Headless Mode](../features/headless.md)** guide.

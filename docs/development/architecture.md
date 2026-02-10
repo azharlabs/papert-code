@@ -23,11 +23,11 @@ Papert Code's local (non-remote) architecture is primarily composed of two main 
 1.  **CLI package (`packages/cli`):**
     - **Purpose:** This contains the user-facing portion of Papert Code, such as handling the initial user input, presenting the final output, and managing the overall user experience.
     - **Key functions contained in the package:**
-      - [Input processing](./cli/commands.md)
+      - [Input processing](../cli/commands.md)
       - History management
       - Display rendering
-      - [Theme and UI customization](./cli/themes.md)
-      - [CLI configuration settings](./cli/configuration.md)
+      - [Theme and UI customization](../cli/themes.md)
+      - [CLI configuration settings](../cli/configuration.md)
 
 2.  **Core package (`packages/core`):**
     - **Purpose:** This acts as the backend for Papert Code. It receives requests sent from `packages/cli`, orchestrates interactions with the configured model API, and manages the execution of available tools.
