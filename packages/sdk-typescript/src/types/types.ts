@@ -77,6 +77,12 @@ export interface SdkMcpServerConfig {
  */
 export interface QueryOptions {
   /**
+   * Session identifier to reuse conversation context across calls.
+   * When omitted, a random UUID is generated.
+   */
+  sessionId?: string;
+
+  /**
    * The working directory for the query session.
    * This determines the context in which file operations and commands are executed.
    * @default process.cwd()

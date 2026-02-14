@@ -70,6 +70,7 @@ function main() {
 
   console.log('[sdk prepack] Copying CLI bundle into SDK dist/...');
   cpSync(rootCliJs, join(cliDistDir, 'cli.js'));
+  copyIfExists(join(rootDistDir, 'chunks'), join(cliDistDir, 'chunks'));
 
   const vendorSource = join(rootDistDir, 'vendor');
   copyIfExists(vendorSource, join(cliDistDir, 'vendor'));

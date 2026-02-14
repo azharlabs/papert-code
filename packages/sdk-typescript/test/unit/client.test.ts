@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import type { SDKMessage, SDKUserMessage } from '../../src/types/protocol.js';
+import type { SDKMessage } from '../../src/types/protocol.js';
 
 const queryMock = vi.fn();
 
 vi.mock('../../src/query/createQuery.js', () => ({
   query: (args: {
-    prompt: string | AsyncIterable<SDKUserMessage>;
+    prompt: string;
     options?: Record<string, unknown>;
   }) => queryMock(args),
 }));
@@ -48,7 +48,7 @@ describe('PapertClient', () => {
     vi.clearAllMocks();
   });
 
-  it('reuses session id in streamed prompt messages', async () => {
+  it('reuses session id via options and sends string prompt', async () => {
     const fakeQuery = new FakeQuery([]);
     queryMock.mockReturnValue(fakeQuery);
 
@@ -57,17 +57,13 @@ describe('PapertClient', () => {
     session.stream('hello', { model: 'gpt-4o-mini' });
 
     const firstCall = queryMock.mock.calls[0][0] as {
-      prompt: AsyncIterable<SDKUserMessage>;
+      prompt: string;
       options: Record<string, unknown>;
     };
     expect(firstCall.options.cwd).toBe('/repo');
     expect(firstCall.options.model).toBe('gpt-4o-mini');
-
-    const iterator = firstCall.prompt[Symbol.asyncIterator]();
-    const firstMessage = await iterator.next();
-    expect(firstMessage.done).toBe(false);
-    expect(firstMessage.value?.session_id).toBe('session-123');
-    expect(firstMessage.value?.message.content).toBe('hello');
+    expect(firstCall.options.sessionId).toBe('session-123');
+    expect(firstCall.prompt).toBe('hello');
   });
 
   it('send() collects all messages and closes query', async () => {

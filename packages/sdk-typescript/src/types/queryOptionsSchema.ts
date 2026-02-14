@@ -39,6 +39,7 @@ export const SubagentConfigSchema = z.object({
 
 export const QueryOptionsSchema = z
   .object({
+    sessionId: z.string().optional(),
     cwd: z.string().optional(),
     model: z.string().optional(),
     pathToPapertExecutable: z.string().optional(),

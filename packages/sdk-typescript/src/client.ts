@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { SDKMessage, SDKUserMessage } from './types/protocol.js';
+import type { SDKMessage } from './types/protocol.js';
 import type { QueryOptions } from './types/types.js';
 import { query } from './query/createQuery.js';
 import type { Query } from './query/Query.js';
@@ -77,11 +77,11 @@ export class PapertClientSession {
       ...this.client.getDefaultOptions(),
       ...this.options,
       ...options,
+      sessionId: this.sessionId,
     };
 
-    const promptStream = this.createPromptStream(prompt);
     const q = query({
-      prompt: promptStream,
+      prompt,
       options: mergedOptions,
     });
 
@@ -116,20 +116,6 @@ export class PapertClientSession {
 
     await Promise.allSettled(queries.map((q) => q.close()));
     this.client.unregisterSession(this.sessionId);
-  }
-
-  private async *createPromptStream(
-    prompt: string,
-  ): AsyncIterable<SDKUserMessage> {
-    yield {
-      type: 'user',
-      session_id: this.sessionId,
-      message: {
-        role: 'user',
-        content: prompt,
-      },
-      parent_tool_use_id: null,
-    };
   }
 }
 

@@ -224,3 +224,29 @@ q = query(
     },
 )
 ```
+
+## 15 Python SDK Usecases
+
+Use the cookbook runner:
+
+```bash
+python packages/sdk-python/examples/usecases.py --usecase 01
+```
+
+Available usecases (`01`-`15`):
+
+1. Basic prompt
+2. Prompt with custom cwd
+3. Prompt with explicit model
+4. Plan mode permissions
+5. Allowed tools allowlist
+6. Excluded tools denylist
+7. Custom skills path
+8. Specific skill instruction
+9. PDF to PPT using `pptx` skill (`--pdf /abs/path/to/file.pdf`)
+10. Abort controller cancellation
+11. `canUseTool` policy callback
+12. Multi-turn async input stream
+13. Reusable client session (`send`)
+14. Reusable client session (`stream`)
+15. Runtime subagents (`--agents reviewer,writer`)

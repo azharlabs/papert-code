@@ -1,9 +1,9 @@
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import path from 'node:path';
+import * as path from 'node:path';
+import { findNativeCliPath, prepareSpawnInfo } from './utils/cliPath.js';
 
 type ApprovalMode = 'default' | 'yolo' | 'auto-edit';
+const SKILLS_PATHS_ENV = 'PAPERT_CODE_SKILLS_PATHS';
 
 export interface PapertAgentOptions {
   /**
@@ -11,6 +11,10 @@ export interface PapertAgentOptions {
    * resolved from Node (equivalent to `require.resolve('@papert-code/papert-code')`).
    */
   cliBinaryPath?: string;
+  /**
+   * Additional skill directories to load (same behavior as query()/createClient()).
+   */
+  skillsPath?: string | string[];
   /**
    * CLI arguments to seed the agent with (mirrors CLI flags).
    */
@@ -42,62 +46,38 @@ export interface PapertAgent {
   ) => Promise<{ stdout: string; stderr: string; exitCode: number | null }>;
 }
 
-function resolveBundledCliBinary(): string | undefined {
-  try {
-    const require = createRequire(import.meta.url);
-    const pkgPath = require.resolve('@papert-code/sdk-typescript/package.json');
-    const pkgDir = path.dirname(pkgPath);
-    const bundledCli = path.join(pkgDir, 'dist', 'cli', 'cli.js');
-    if (existsSync(bundledCli)) {
-      return bundledCli;
+function parseSkillsPathList(raw: string): string[] {
+  const separator = new RegExp(`[${path.delimiter},]`);
+  return raw.split(separator).map((entry) => entry.trim()).filter(Boolean);
+}
+
+function normalizeSkillsPaths(
+  skillsPath: string | string[] | undefined,
+  existingValue: string | undefined,
+): string | undefined {
+  const paths: string[] = [];
+  if (existingValue) {
+    paths.push(...parseSkillsPathList(existingValue));
+  }
+  if (skillsPath) {
+    if (Array.isArray(skillsPath)) {
+      paths.push(...skillsPath);
+    } else {
+      paths.push(skillsPath);
     }
-  } catch {
+  }
+  const normalized = paths.map((entry) => entry.trim()).filter(Boolean);
+  if (normalized.length === 0) {
     return undefined;
   }
-
-  return undefined;
+  return Array.from(new Set(normalized)).join(path.delimiter);
 }
 
 function resolveCliBinary(customPath?: string): string {
   if (customPath) return customPath;
 
-  // Use the module location when available (works in ESM/CJS after build).
-  let moduleDir: string;
-  try {
-     
-    const url = new URL(import.meta.url);
-    moduleDir = path.dirname(url.pathname);
-  } catch {
-    // Fallback for older runtimes/tooling that lack import.meta.url
-    const syntheticModuleUrl = new URL(
-      'file:///papert-sdk-agent-entrypoint.js',
-    );
-    moduleDir = path.dirname(syntheticModuleUrl.pathname);
-  }
-
-  const require = createRequire(moduleDir);
-
-  // Try resolving the installed CLI first.
-  try {
-    const resolved = require.resolve('@papert-code/papert-code');
-    return path.resolve(resolved);
-  } catch {
-    const bundledCli = resolveBundledCliBinary();
-    if (bundledCli) {
-      return bundledCli;
-    }
-
-    // Fallback: use monorepo-relative CLI dist (../../cli/dist/index.js from dist folder)
-    const fallback = path.resolve(
-      moduleDir,
-      '..',
-      '..',
-      'cli',
-      'dist',
-      'index.js',
-    );
-    return fallback;
-  }
+  // Reuse the same robust auto-detection path used by query()/ProcessTransport.
+  return findNativeCliPath();
 }
 
 /**
@@ -121,6 +101,7 @@ export async function createPapertAgent(
     cwd,
     extraArgs: defaultExtraArgs = [],
   } = options.cliArgs || {};
+  const { skillsPath } = options;
 
   const baseArgs: string[] = [];
   if (model) {
@@ -143,8 +124,16 @@ export async function createPapertAgent(
     options?: RunPromptOptions,
   ): Promise<{ stdout: string; stderr: string; exitCode: number | null }> => {
     const env = { ...process.env, ...baseEnvOverrides };
+    const skillsPaths = normalizeSkillsPaths(
+      skillsPath,
+      env[SKILLS_PATHS_ENV],
+    );
+    if (skillsPaths) {
+      env[SKILLS_PATHS_ENV] = skillsPaths;
+    }
+    const spawnInfo = prepareSpawnInfo(cliBinary);
     const args = [
-      cliBinary,
+      ...spawnInfo.args,
       '--prompt',
       prompt,
       ...baseArgs,
@@ -153,7 +142,7 @@ export async function createPapertAgent(
     ];
 
     return new Promise((resolve, reject) => {
-      const child = spawn('node', args, {
+      const child = spawn(spawnInfo.command, args, {
         cwd: cwd || process.cwd(),
         env,
         stdio: ['ignore', 'pipe', 'pipe'],
