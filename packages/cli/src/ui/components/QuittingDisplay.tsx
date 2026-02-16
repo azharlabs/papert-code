@@ -19,9 +19,11 @@ export const QuittingDisplay = () => {
     return null;
   }
 
+  const itemsToRender = [...uiState.history, ...uiState.quittingMessages];
+
   return (
     <Box flexDirection="column" marginBottom={1}>
-      {uiState.quittingMessages.map((item) => (
+      {itemsToRender.map((item) => (
         <HistoryItemDisplay
           key={item.id}
           availableTerminalHeight={

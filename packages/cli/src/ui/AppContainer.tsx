@@ -543,9 +543,6 @@ export const AppContainer = (props: AppContainerProps) => {
       openApprovalModeDialog,
       openSessionBrowser,
       quit: (messages: HistoryItem[]) => {
-        // Ensure quit view starts from a clean terminal frame rather than
-        // inheriting accumulated session spacing from prior renders.
-        refreshStatic();
         setQuittingMessages(messages);
         setTimeout(() => {
           void performGracefulExit();
@@ -578,7 +575,6 @@ export const AppContainer = (props: AppContainerProps) => {
       addConfirmUpdateSkillRequest,
       showQuitConfirmation,
       performGracefulExit,
-      refreshStatic,
       openSubagentCreateDialog,
       openAgentsManagerDialog,
     ],
