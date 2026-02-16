@@ -6,7 +6,14 @@
 
 import type { GeminiCLIExtension } from '@papert-code/papert-code-core';
 import type { ExtensionInstallMetadata } from '@papert-code/papert-code-core';
-import { installExtension } from '../../config/extension.js';
+import {
+  disableExtension,
+  enableExtension,
+  installExtension,
+  loadExtensionByName,
+  toOutputString,
+  uninstallExtension,
+} from '../../config/extension.js';
 import { parseInstallSource } from '../../config/extensions/marketplace.js';
 import {
   updateAllUpdatableExtensions,
@@ -35,6 +42,11 @@ vi.mock('../../config/extensions/update.js', () => ({
 vi.mock('../../config/extension.js', () => ({
   requestConsentInteractive: vi.fn(),
   installExtension: vi.fn(),
+  uninstallExtension: vi.fn(),
+  disableExtension: vi.fn(),
+  enableExtension: vi.fn(),
+  loadExtensionByName: vi.fn(),
+  toOutputString: vi.fn(),
 }));
 
 vi.mock('../../config/extensions/marketplace.js', () => ({
@@ -51,6 +63,21 @@ const mockUpdateAllUpdatableExtensions =
   >;
 const mockInstallExtension = installExtension as MockedFunction<
   typeof installExtension
+>;
+const mockUninstallExtension = uninstallExtension as MockedFunction<
+  typeof uninstallExtension
+>;
+const mockDisableExtension = disableExtension as MockedFunction<
+  typeof disableExtension
+>;
+const mockEnableExtension = enableExtension as MockedFunction<
+  typeof enableExtension
+>;
+const mockLoadExtensionByName = loadExtensionByName as MockedFunction<
+  typeof loadExtensionByName
+>;
+const mockToOutputString = toOutputString as MockedFunction<
+  typeof toOutputString
 >;
 const mockParseInstallSource = parseInstallSource as MockedFunction<
   typeof parseInstallSource
@@ -447,6 +474,135 @@ describe('extensionsCommand', () => {
         {
           type: MessageType.ERROR,
           text: expect.stringContaining('Please specify one with'),
+        },
+        expect.any(Number),
+      );
+    });
+  });
+
+  describe('uninstall', () => {
+    const uninstallAction = extensionsCommand.subCommands?.find(
+      (cmd) => cmd.name === 'uninstall',
+    )?.action;
+
+    if (!uninstallAction) {
+      throw new Error('Uninstall action not found');
+    }
+
+    it('should show usage if no name is provided', async () => {
+      await uninstallAction(mockContext, '');
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        {
+          type: MessageType.ERROR,
+          text: 'Usage: /extensions uninstall <name>',
+        },
+        expect.any(Number),
+      );
+    });
+
+    it('should uninstall an extension', async () => {
+      await uninstallAction(mockContext, 'ext-one');
+      expect(mockUninstallExtension).toHaveBeenCalledWith('ext-one', '/test/dir');
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        {
+          type: MessageType.INFO,
+          text: 'Extension "ext-one" uninstalled successfully.',
+        },
+        expect.any(Number),
+      );
+    });
+  });
+
+  describe('enable and disable', () => {
+    const enableAction = extensionsCommand.subCommands?.find(
+      (cmd) => cmd.name === 'enable',
+    )?.action;
+    const disableAction = extensionsCommand.subCommands?.find(
+      (cmd) => cmd.name === 'disable',
+    )?.action;
+
+    if (!enableAction || !disableAction) {
+      throw new Error('Enable/disable actions not found');
+    }
+
+    it('should enable extension with workspace scope', async () => {
+      await enableAction(mockContext, 'ext-one --scope workspace');
+      expect(mockEnableExtension).toHaveBeenCalledWith(
+        'ext-one',
+        'Workspace',
+        '/test/dir',
+      );
+    });
+
+    it('should disable extension with default user scope', async () => {
+      await disableAction(mockContext, 'ext-one');
+      expect(mockDisableExtension).toHaveBeenCalledWith(
+        'ext-one',
+        'User',
+        '/test/dir',
+      );
+    });
+  });
+
+  describe('detail', () => {
+    const detailAction = extensionsCommand.subCommands?.find(
+      (cmd) => cmd.name === 'detail',
+    )?.action;
+
+    if (!detailAction) {
+      throw new Error('Detail action not found');
+    }
+
+    it('should show details for an extension', async () => {
+      const extension = {
+        path: '/tmp/ext-one',
+        config: { name: 'ext-one', version: '1.0.0' },
+        contextFiles: [],
+      };
+      mockLoadExtensionByName.mockReturnValue(extension);
+      mockToOutputString.mockReturnValue('detail-output');
+
+      await detailAction(mockContext, 'ext-one');
+
+      expect(mockLoadExtensionByName).toHaveBeenCalledWith('ext-one', '/test/dir');
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        {
+          type: MessageType.INFO,
+          text: 'detail-output',
+        },
+        expect.any(Number),
+      );
+    });
+  });
+
+  describe('explore', () => {
+    const exploreAction = extensionsCommand.subCommands?.find(
+      (cmd) => cmd.name === 'explore',
+    )?.action;
+
+    if (!exploreAction) {
+      throw new Error('Explore action not found');
+    }
+
+    it('uses default source when none is provided', async () => {
+      const metadata: ExtensionInstallMetadata = {
+        type: 'marketplace',
+        source: 'https://github.com/wshobson/agents',
+        marketplaceConfig: {
+          name: 'agents',
+          owner: {},
+          plugins: [{ name: 'reverse-engineering', source: 'owner/repo' }],
+        },
+      };
+      mockParseInstallSource.mockResolvedValue(metadata);
+
+      await exploreAction(mockContext, '');
+
+      expect(mockParseInstallSource).toHaveBeenCalledWith('wshobson/agents');
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        {
+          type: MessageType.INFO,
+          text: expect.stringContaining('reverse-engineering'),
         },
         expect.any(Number),
       );
