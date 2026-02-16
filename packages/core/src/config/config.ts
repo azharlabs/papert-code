@@ -218,6 +218,8 @@ export interface GitCoAuthorSettings {
   email?: string;
 }
 
+export type ExtensionOriginSource = 'PapertCode' | 'Claude' | 'Gemini';
+
 export interface GeminiCLIExtension {
   name: string;
   version: string;
@@ -236,11 +238,14 @@ export interface GeminiCLISkill {
 
 export interface ExtensionInstallMetadata {
   source: string;
-  type: 'git' | 'local' | 'link' | 'github-release';
+  type: 'git' | 'local' | 'link' | 'github-release' | 'marketplace';
+  originSource?: ExtensionOriginSource;
   releaseTag?: string; // Only present for github-release installs.
   ref?: string;
   autoUpdate?: boolean;
   allowPreRelease?: boolean;
+  marketplaceConfig?: unknown;
+  pluginName?: string;
 }
 
 export const DEFAULT_TRUNCATE_TOOL_OUTPUT_THRESHOLD = 25_000;

@@ -34,6 +34,7 @@ import {
   cloneFromGit,
   downloadFromGitHubRelease,
 } from './extensions/github.js';
+import { prepareMarketplaceExtensionSource } from './extensions/marketplace.js';
 import type { LoadExtensionContext } from './extensions/variableSchema.js';
 import { ExtensionEnablementManager } from './extensions/extensionEnablement.js';
 import chalk from 'chalk';
@@ -461,16 +462,44 @@ export async function installExtension(
       tempDir = await ExtensionStorage.createTmpDir();
       try {
         const result = await downloadFromGitHubRelease(
-          installMetadata,
+          { ...installMetadata, type: 'git' },
           tempDir,
         );
         installMetadata.type = result.type;
         installMetadata.releaseTag = result.tagName;
       } catch (_error) {
-        await cloneFromGit(installMetadata, tempDir);
+        await cloneFromGit({ ...installMetadata, type: 'git' }, tempDir);
         installMetadata.type = 'git';
       }
       localSourcePath = tempDir;
+    } else if (installMetadata.type === 'marketplace') {
+      tempDir = await ExtensionStorage.createTmpDir();
+      const source = installMetadata.source;
+      const isRemoteSource =
+        source.startsWith('http://') ||
+        source.startsWith('https://') ||
+        source.startsWith('git@') ||
+        source.startsWith('sso://');
+
+      if (isRemoteSource) {
+        try {
+          const result = await downloadFromGitHubRelease(
+            { ...installMetadata, type: 'git' },
+            tempDir,
+          );
+          installMetadata.type = 'marketplace';
+          installMetadata.releaseTag = result.tagName;
+        } catch {
+          await cloneFromGit({ ...installMetadata, type: 'git' }, tempDir);
+        }
+      } else {
+        await copyExtension(source, tempDir);
+      }
+
+      localSourcePath = await prepareMarketplaceExtensionSource(
+        tempDir,
+        installMetadata,
+      );
     } else if (
       installMetadata.type === 'local' ||
       installMetadata.type === 'link'

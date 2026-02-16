@@ -11,7 +11,11 @@ import {
 } from '../../config/extension.js';
 import type { ExtensionInstallMetadata } from '@papert-code/papert-code-core';
 import { getErrorMessage } from '../../utils/errors.js';
-import { stat } from 'node:fs/promises';
+import {
+  parseInstallSource,
+  requestChoicePluginNonInteractive,
+  type ClaudeMarketplaceConfig,
+} from '../../config/extensions/marketplace.js';
 
 interface InstallArgs {
   source: string;
@@ -26,37 +30,40 @@ const INSTALL_WARNING_MESSAGE =
 
 export async function handleInstall(args: InstallArgs) {
   try {
-    let installMetadata: ExtensionInstallMetadata;
-    const { source } = args;
-    if (
-      source.startsWith('http://') ||
-      source.startsWith('https://') ||
-      source.startsWith('git@') ||
-      source.startsWith('sso://')
-    ) {
-      installMetadata = {
-        source,
-        type: 'git',
-        ref: args.ref,
-        autoUpdate: args.autoUpdate,
-        allowPreRelease: args.allowPreRelease,
-      };
-    } else {
-      if (args.ref || args.autoUpdate) {
-        throw new Error(
-          '--ref and --auto-update are not applicable for local extensions.',
-        );
-      }
-      try {
-        await stat(source);
-        installMetadata = {
-          source,
-          type: 'local',
-        };
-      } catch {
-        throw new Error('Install source not found.');
-      }
+    const installMetadata: ExtensionInstallMetadata =
+      await parseInstallSource(args.source);
+
+    if (installMetadata.type === 'marketplace' && (args.ref || args.autoUpdate)) {
+      throw new Error(
+        '--ref and --auto-update are not applicable for marketplace extensions.',
+      );
     }
+
+    if (
+      installMetadata.type !== 'git' &&
+      installMetadata.type !== 'github-release' &&
+      (args.ref || args.autoUpdate)
+    ) {
+      throw new Error(
+        '--ref and --auto-update are not applicable for local extensions.',
+      );
+    }
+
+    if (installMetadata.type === 'marketplace' && !installMetadata.pluginName) {
+      const marketplace = installMetadata.marketplaceConfig as
+        | ClaudeMarketplaceConfig
+        | undefined;
+      if (!marketplace) {
+        throw new Error('Marketplace config missing.');
+      }
+      installMetadata.pluginName = await requestChoicePluginNonInteractive(
+        marketplace,
+      );
+    }
+
+    installMetadata.ref = args.ref;
+    installMetadata.autoUpdate = args.autoUpdate;
+    installMetadata.allowPreRelease = args.allowPreRelease;
 
     const requestConsent = args.consent
       ? () => Promise.resolve(true)
@@ -77,11 +84,13 @@ export async function handleInstall(args: InstallArgs) {
 
 export const installCommand: CommandModule = {
   command: 'install <source>',
-  describe: 'Installs an extension from a git repository URL or a local path.',
+  describe:
+    'Installs an extension from a git repository URL, local path, or claude marketplace (marketplace-url:plugin-name).',
   builder: (yargs) =>
     yargs
       .positional('source', {
-        describe: 'The github URL or local path of the extension to install.',
+        describe:
+          'The github URL, local path, or marketplace source (marketplace-url:plugin-name) of the extension to install.',
         type: 'string',
         demandOption: true,
       })

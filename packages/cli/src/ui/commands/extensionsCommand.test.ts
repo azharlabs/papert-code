@@ -5,6 +5,9 @@
  */
 
 import type { GeminiCLIExtension } from '@papert-code/papert-code-core';
+import type { ExtensionInstallMetadata } from '@papert-code/papert-code-core';
+import { installExtension } from '../../config/extension.js';
+import { parseInstallSource } from '../../config/extensions/marketplace.js';
 import {
   updateAllUpdatableExtensions,
   updateExtension,
@@ -29,6 +32,15 @@ vi.mock('../../config/extensions/update.js', () => ({
   checkForAllExtensionUpdates: vi.fn(),
 }));
 
+vi.mock('../../config/extension.js', () => ({
+  requestConsentInteractive: vi.fn(),
+  installExtension: vi.fn(),
+}));
+
+vi.mock('../../config/extensions/marketplace.js', () => ({
+  parseInstallSource: vi.fn(),
+}));
+
 const mockUpdateExtension = updateExtension as MockedFunction<
   typeof updateExtension
 >;
@@ -37,6 +49,12 @@ const mockUpdateAllUpdatableExtensions =
   updateAllUpdatableExtensions as MockedFunction<
     typeof updateAllUpdatableExtensions
   >;
+const mockInstallExtension = installExtension as MockedFunction<
+  typeof installExtension
+>;
+const mockParseInstallSource = parseInstallSource as MockedFunction<
+  typeof parseInstallSource
+>;
 
 const mockGetExtensions = vi.fn();
 
@@ -330,6 +348,108 @@ describe('extensionsCommand', () => {
         const suggestions = await updateCompletion(mockContext, partialArg);
         expect(suggestions).toEqual(expected);
       });
+    });
+  });
+
+  describe('install', () => {
+    const installAction = extensionsCommand.subCommands?.find(
+      (cmd) => cmd.name === 'install',
+    )?.action;
+
+    if (!installAction) {
+      throw new Error('Install action not found');
+    }
+
+    it('should show usage if no source is provided', async () => {
+      await installAction(mockContext, '');
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        {
+          type: MessageType.ERROR,
+          text: 'Usage: /extensions install <source>',
+        },
+        expect.any(Number),
+      );
+    });
+
+    it('should install a regular extension source', async () => {
+      const metadata: ExtensionInstallMetadata = {
+        type: 'git',
+        source: 'https://github.com/example/ext',
+      };
+      mockParseInstallSource.mockResolvedValue(metadata);
+      mockInstallExtension.mockResolvedValue('example-ext');
+
+      await installAction(mockContext, 'example/ext');
+
+      expect(mockParseInstallSource).toHaveBeenCalledWith('example/ext');
+      expect(mockInstallExtension).toHaveBeenCalledWith(
+        metadata,
+        expect.any(Function),
+        '/test/dir',
+      );
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        {
+          type: MessageType.INFO,
+          text: 'Extension "example-ext" installed successfully and enabled.',
+        },
+        expect.any(Number),
+      );
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        {
+          type: MessageType.EXTENSIONS_LIST,
+        },
+        expect.any(Number),
+      );
+    });
+
+    it('should auto-select the only marketplace plugin', async () => {
+      const metadata: ExtensionInstallMetadata = {
+        type: 'marketplace',
+        source: 'https://github.com/example/market',
+        marketplaceConfig: {
+          name: 'example',
+          owner: {},
+          plugins: [{ name: 'only-plugin', source: 'owner/repo' }],
+        },
+      };
+      mockParseInstallSource.mockResolvedValue(metadata);
+      mockInstallExtension.mockResolvedValue('only-plugin');
+
+      await installAction(mockContext, 'example/market');
+
+      expect(metadata.pluginName).toBe('only-plugin');
+      expect(mockInstallExtension).toHaveBeenCalledWith(
+        metadata,
+        expect.any(Function),
+        '/test/dir',
+      );
+    });
+
+    it('should fail when marketplace source has multiple plugins', async () => {
+      const metadata: ExtensionInstallMetadata = {
+        type: 'marketplace',
+        source: 'https://github.com/example/market',
+        marketplaceConfig: {
+          name: 'example',
+          owner: {},
+          plugins: [
+            { name: 'plugin-one', source: 'owner/repo-one' },
+            { name: 'plugin-two', source: 'owner/repo-two' },
+          ],
+        },
+      };
+      mockParseInstallSource.mockResolvedValue(metadata);
+
+      await installAction(mockContext, 'example/market');
+
+      expect(mockInstallExtension).not.toHaveBeenCalled();
+      expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+        {
+          type: MessageType.ERROR,
+          text: expect.stringContaining('Please specify one with'),
+        },
+        expect.any(Number),
+      );
     });
   });
 });

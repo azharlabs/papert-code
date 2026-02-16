@@ -4,13 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { requestConsentInteractive } from '../../config/extension.js';
+import {
+  installExtension,
+  requestConsentInteractive,
+} from '../../config/extension.js';
 import {
   updateAllUpdatableExtensions,
   type ExtensionUpdateInfo,
   updateExtension,
   checkForAllExtensionUpdates,
 } from '../../config/extensions/update.js';
+import {
+  parseInstallSource,
+  type ClaudeMarketplaceConfig,
+} from '../../config/extensions/marketplace.js';
 import { getErrorMessage } from '../../utils/errors.js';
 import { ExtensionUpdateState } from '../state/extensions.js';
 import { MessageType } from '../types.js';
@@ -130,6 +137,70 @@ async function updateAction(context: CommandContext, args: string) {
   }
 }
 
+async function installAction(context: CommandContext, args: string) {
+  const source = args.trim();
+  if (!source) {
+    context.ui.addItem(
+      {
+        type: MessageType.ERROR,
+        text: 'Usage: /extensions install <source>',
+      },
+      Date.now(),
+    );
+    return;
+  }
+
+  try {
+    const installMetadata = await parseInstallSource(source);
+    if (installMetadata.type === 'marketplace' && !installMetadata.pluginName) {
+      const marketplace = installMetadata.marketplaceConfig as
+        | ClaudeMarketplaceConfig
+        | undefined;
+      if (!marketplace || marketplace.plugins.length === 0) {
+        throw new Error('No plugins available in this marketplace.');
+      }
+      if (marketplace.plugins.length === 1) {
+        installMetadata.pluginName = marketplace.plugins[0].name;
+      } else {
+        throw new Error(
+          `Marketplace source contains multiple plugins. Please specify one with /extensions install <source>:<plugin-name>. Available plugins: ${marketplace.plugins.map((plugin) => plugin.name).join(', ')}`,
+        );
+      }
+    }
+
+    const name = await installExtension(
+      installMetadata,
+      (description) =>
+        requestConsentInteractive(
+          description,
+          context.ui.addConfirmUpdateExtensionRequest,
+        ),
+      context.services.config!.getWorkingDir(),
+    );
+    context.ui.addItem(
+      {
+        type: MessageType.INFO,
+        text: `Extension "${name}" installed successfully and enabled.`,
+      },
+      Date.now(),
+    );
+    context.ui.addItem(
+      {
+        type: MessageType.EXTENSIONS_LIST,
+      },
+      Date.now(),
+    );
+  } catch (error) {
+    context.ui.addItem(
+      {
+        type: MessageType.ERROR,
+        text: getErrorMessage(error),
+      },
+      Date.now(),
+    );
+  }
+}
+
 const listExtensionsCommand: SlashCommand = {
   name: 'list',
   get description() {
@@ -161,13 +232,26 @@ const updateExtensionsCommand: SlashCommand = {
   },
 };
 
+const installExtensionsCommand: SlashCommand = {
+  name: 'install',
+  get description() {
+    return t('Install an extension. Usage: install <source>');
+  },
+  kind: CommandKind.BUILT_IN,
+  action: installAction,
+};
+
 export const extensionsCommand: SlashCommand = {
   name: 'extensions',
   get description() {
     return t('Manage extensions');
   },
   kind: CommandKind.BUILT_IN,
-  subCommands: [listExtensionsCommand, updateExtensionsCommand],
+  subCommands: [
+    listExtensionsCommand,
+    installExtensionsCommand,
+    updateExtensionsCommand,
+  ],
   action: (context, args) =>
     // Default to list if no subcommand is provided
     listExtensionsCommand.action!(context, args),
