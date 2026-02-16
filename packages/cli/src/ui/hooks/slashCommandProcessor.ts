@@ -277,14 +277,32 @@ export const useSlashCommandProcessor = (
     };
 
     (async () => {
-      const ideClient = await IdeClient.getInstance();
-      ideClient.addStatusChangeListener(listener);
+      try {
+        const ideClient = await IdeClient.getInstance();
+        ideClient.addStatusChangeListener(listener);
+      } catch (error) {
+        if (config.getDebugMode()) {
+          console.error(
+            '[slashCommand] Failed to register IDE status listener:',
+            error,
+          );
+        }
+      }
     })();
 
     return () => {
       (async () => {
-        const ideClient = await IdeClient.getInstance();
-        ideClient.removeStatusChangeListener(listener);
+        try {
+          const ideClient = await IdeClient.getInstance();
+          ideClient.removeStatusChangeListener(listener);
+        } catch (error) {
+          if (config.getDebugMode()) {
+            console.error(
+              '[slashCommand] Failed to unregister IDE status listener:',
+              error,
+            );
+          }
+        }
       })();
     };
   }, [config, reloadCommands]);
@@ -304,12 +322,27 @@ export const useSlashCommandProcessor = (
       setCommands(commandService.getCommands());
     };
 
-    load();
+    void load().catch((error) => {
+      if (controller.signal.aborted) {
+        return;
+      }
+      setCommands([]);
+      addItem(
+        {
+          type: MessageType.ERROR,
+          text: `Failed to load slash commands: ${error instanceof Error ? error.message : String(error)}`,
+        },
+        Date.now(),
+      );
+      if (config?.getDebugMode()) {
+        console.error('[slashCommand] Command loading failed:', error);
+      }
+    });
 
     return () => {
       controller.abort();
     };
-  }, [config, reloadTrigger, isConfigInitialized]);
+  }, [addItem, config, reloadTrigger, isConfigInitialized]);
 
   const handleSlashCommand = useCallback(
     async (
@@ -478,14 +511,28 @@ export const useSlashCommandProcessor = (
                         return;
                       }
                       if (shouldQuit) {
+                        const scheduleQuit = (delayMs: number) => {
+                          setTimeout(() => {
+                            void handleSlashCommand('/quit').catch((quitError) => {
+                              addItemWithRecording(
+                                {
+                                  type: MessageType.ERROR,
+                                  text: `Failed to quit cleanly: ${quitError instanceof Error
+                                      ? quitError.message
+                                      : String(quitError)
+                                    }`,
+                                },
+                                Date.now(),
+                              );
+                            });
+                          }, delayMs);
+                        };
                         if (action === 'summary_and_quit') {
                           // Generate summary and then quit
                           handleSlashCommand('/summary')
                             .then(() => {
                               // Wait for user to see the summary result
-                              setTimeout(() => {
-                                handleSlashCommand('/quit');
-                              }, 1200);
+                              scheduleQuit(1200);
                             })
                             .catch((error) => {
                               // If summary fails, still quit but show error
@@ -495,14 +542,12 @@ export const useSlashCommandProcessor = (
                                   text: `Failed to generate summary before quit: ${error instanceof Error
                                       ? error.message
                                       : String(error)
-                                    }`,
+                                  }`,
                                 },
                                 Date.now(),
                               );
                               // Give user time to see the error message
-                              setTimeout(() => {
-                                handleSlashCommand('/quit');
-                              }, 1000);
+                              scheduleQuit(1000);
                             });
                         } else {
                           // Just quit immediately - trigger the actual quit action

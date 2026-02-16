@@ -513,6 +513,24 @@ export const AppContainer = (props: AppContainerProps) => {
     }) => void;
     reject: () => void;
   } | null>(null);
+  const quitInProgressRef = useRef(false);
+
+  const performGracefulExit = useCallback(async () => {
+    if (quitInProgressRef.current) {
+      return;
+    }
+    quitInProgressRef.current = true;
+    try {
+      await Promise.race([
+        runExitCleanup(),
+        new Promise<void>((resolve) => setTimeout(resolve, 1500)),
+      ]);
+    } catch (error) {
+      console.error('Exit cleanup failed:', getErrorMessage(error));
+    } finally {
+      process.exit(0);
+    }
+  }, []);
 
   const slashCommandActions = useMemo(
     () => ({
@@ -526,9 +544,8 @@ export const AppContainer = (props: AppContainerProps) => {
       openSessionBrowser,
       quit: (messages: HistoryItem[]) => {
         setQuittingMessages(messages);
-        setTimeout(async () => {
-          await runExitCleanup();
-          process.exit(0);
+        setTimeout(() => {
+          void performGracefulExit();
         }, 100);
       },
       setDebugMessage,
@@ -557,6 +574,7 @@ export const AppContainer = (props: AppContainerProps) => {
       dispatchSkillStateUpdate,
       addConfirmUpdateSkillRequest,
       showQuitConfirmation,
+      performGracefulExit,
       openSubagentCreateDialog,
       openAgentsManagerDialog,
     ],
