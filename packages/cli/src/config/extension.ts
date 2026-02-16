@@ -539,7 +539,8 @@ export async function installExtension(
       if (
         installMetadata.type === 'local' ||
         installMetadata.type === 'git' ||
-        installMetadata.type === 'github-release'
+        installMetadata.type === 'github-release' ||
+        installMetadata.type === 'marketplace'
       ) {
         await copyExtension(localSourcePath, destinationPath);
       }
