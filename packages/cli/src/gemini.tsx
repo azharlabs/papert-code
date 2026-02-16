@@ -42,7 +42,6 @@ import { SettingsContext } from './ui/contexts/SettingsContext.js';
 import { VimModeProvider } from './ui/contexts/VimModeContext.js';
 import { useKittyKeyboardProtocol } from './ui/hooks/useKittyKeyboardProtocol.js';
 import { themeManager } from './ui/themes/theme-manager.js';
-import { ConsolePatcher } from './ui/utils/ConsolePatcher.js';
 import { detectAndEnableKittyProtocol } from './ui/utils/kittyProtocolDetector.js';
 import { checkForUpdates } from './ui/utils/updateCheck.js';
 import {
@@ -367,15 +366,6 @@ export async function main() {
       }
       process.exit(0);
     }
-
-    // Setup unified ConsolePatcher based on interactive mode
-    const isInteractive = config.isInteractive();
-    const consolePatcher = new ConsolePatcher({
-      stderr: isInteractive,
-      debugMode: isDebugMode,
-    });
-    consolePatcher.patch();
-    registerCleanup(consolePatcher.cleanup);
 
     const wasRaw = process.stdin.isRaw;
     let kittyProtocolDetectionComplete: Promise<boolean> | undefined;

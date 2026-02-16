@@ -14,27 +14,11 @@ export const quitConfirmCommand: SlashCommand = {
     return t('Show quit confirmation dialog');
   },
   kind: CommandKind.BUILT_IN,
-  action: (context) => {
-    const now = Date.now();
-    const { sessionStartTime } = context.session.stats;
-    const wallDuration = now - sessionStartTime.getTime();
-
-    return {
-      type: 'quit_confirmation',
-      messages: [
-        {
-          type: 'user',
-          text: `/quit-confirm`,
-          id: now - 1,
-        },
-        {
-          type: 'quit_confirmation',
-          duration: formatDuration(wallDuration),
-          id: now,
-        },
-      ],
-    };
-  },
+  action: () => ({
+    type: 'message',
+    messageType: 'info',
+    content: t('Type /quit to exit immediately, or /summary then /quit.'),
+  }),
 };
 
 export const quitCommand: SlashCommand = {
