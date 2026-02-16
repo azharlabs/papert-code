@@ -7,10 +7,14 @@
 import { Box, Text } from 'ink';
 import { useUIState } from '../../contexts/UIStateContext.js';
 import { ExtensionUpdateState } from '../../state/extensions.js';
+import { loadUserExtensions } from '../../../config/extension.js';
 
 export const ExtensionsList = () => {
   const { commandContext, extensionsUpdateState } = useUIState();
-  const allExtensions = commandContext.services.config!.getExtensions();
+  const allExtensions = loadUserExtensions().map((extension) => ({
+    name: extension.config.name,
+    version: extension.config.version,
+  }));
   const settings = commandContext.services.settings;
   const disabledExtensions = settings.merged.extensions?.disabled ?? [];
 
