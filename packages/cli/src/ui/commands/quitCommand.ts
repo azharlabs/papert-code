@@ -23,11 +23,6 @@ export const quitConfirmCommand: SlashCommand = {
       type: 'quit_confirmation',
       messages: [
         {
-          type: 'user',
-          text: '/quit-confirm',
-          id: now - 1,
-        },
-        {
           type: 'quit_confirmation',
           duration: formatDuration(wallDuration),
           id: now,
@@ -52,11 +47,6 @@ export const quitCommand: SlashCommand = {
     return {
       type: 'quit',
       messages: [
-        {
-          type: 'user',
-          text: `/quit`, // Keep it consistent, even if /exit was used
-          id: now - 1,
-        },
         {
           type: 'quit',
           duration: formatDuration(wallDuration),

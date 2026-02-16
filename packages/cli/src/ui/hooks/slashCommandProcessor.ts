@@ -325,6 +325,8 @@ export const useSlashCommandProcessor = (
       if (!trimmed.startsWith('/') && !trimmed.startsWith('?')) {
         return false;
       }
+      const suppressInitialUserHistory =
+        trimmed === '/quit' || trimmed === '/exit' || trimmed === '/quit-confirm';
 
       const recordedItems: Array<Omit<HistoryItem, 'id'>> = [];
       const recordItem = (item: Omit<HistoryItem, 'id'>) => {
@@ -341,10 +343,12 @@ export const useSlashCommandProcessor = (
       setIsProcessing(true);
 
       const userMessageTimestamp = Date.now();
-      addItemWithRecording(
-        { type: MessageType.USER, text: trimmed },
-        userMessageTimestamp,
-      );
+      if (!suppressInitialUserHistory) {
+        addItemWithRecording(
+          { type: MessageType.USER, text: trimmed },
+          userMessageTimestamp,
+        );
+      }
 
       let hasError = false;
       const {
@@ -507,11 +511,6 @@ export const useSlashCommandProcessor = (
                           const wallDuration = now - sessionStartTime.getTime();
 
                           actions.quit([
-                            {
-                              type: 'user',
-                              text: `/quit`,
-                              id: now - 1,
-                            },
                             {
                               type: 'quit',
                               duration: formatDuration(wallDuration),

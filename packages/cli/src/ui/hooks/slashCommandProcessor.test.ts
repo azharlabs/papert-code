@@ -868,7 +868,7 @@ describe('useSlashCommandProcessor', () => {
       expect(quitAction).not.toHaveBeenCalled();
     });
 
-    it('should add an overridden command to the history', async () => {
+    it('should not add quit/exit commands to history when overridden', async () => {
       const quitCommand = createTestCommand({
         name: 'quit',
         altNames: ['exit'],
@@ -886,8 +886,8 @@ describe('useSlashCommandProcessor', () => {
         await result.current.handleSlashCommand('/exit');
       });
 
-      // It should be added to the history.
-      expect(mockAddItem).toHaveBeenCalledWith(
+      // Quit/exit flows intentionally bypass normal user history rows.
+      expect(mockAddItem).not.toHaveBeenCalledWith(
         { type: MessageType.USER, text: '/exit' },
         expect.any(Number),
       );

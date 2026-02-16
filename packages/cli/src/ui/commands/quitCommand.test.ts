@@ -40,11 +40,6 @@ describe('quitCommand', () => {
       type: 'quit',
       messages: [
         {
-          type: 'user',
-          text: '/quit',
-          id: expect.any(Number),
-        },
-        {
           type: 'quit',
           duration: '1h 0m 0s',
           id: expect.any(Number),
@@ -69,11 +64,6 @@ describe('quitCommand', () => {
     expect(result).toEqual({
       type: 'quit_confirmation',
       messages: [
-        {
-          type: 'user',
-          text: '/quit-confirm',
-          id: expect.any(Number),
-        },
         {
           type: 'quit_confirmation',
           duration: '1h 0m 0s',
