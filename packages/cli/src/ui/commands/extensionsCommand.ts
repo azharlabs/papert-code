@@ -23,6 +23,7 @@ import {
   parseInstallSource,
   type ClaudeMarketplaceConfig,
 } from '../../config/extensions/marketplace.js';
+import { exploreMarketplacePlugins } from '../../config/extensions/explore.js';
 import { getErrorMessage } from '../../utils/errors.js';
 import { SettingScope } from '../../config/settings.js';
 import { ExtensionUpdateState } from '../state/extensions.js';
@@ -415,24 +416,8 @@ async function exploreAction(context: CommandContext, args: string) {
     .toLowerCase();
 
   try {
-    const installMetadata = await parseInstallSource(source);
-    if (installMetadata.type !== 'marketplace') {
-      throw new Error(
-        `Source "${source}" does not expose a marketplace config. Try another source.`,
-      );
-    }
-    const marketplace = installMetadata.marketplaceConfig as
-      | ClaudeMarketplaceConfig
-      | undefined;
-    if (!marketplace) {
-      throw new Error('Marketplace config missing.');
-    }
-
-    const plugins = marketplace.plugins
-      .map((plugin) => plugin.name)
-      .filter((name) =>
-        keyword.length > 0 ? name.toLowerCase().includes(keyword) : true,
-      );
+    const result = await exploreMarketplacePlugins(source, keyword);
+    const plugins = result.plugins;
 
     if (plugins.length === 0) {
       context.ui.addItem(
@@ -449,7 +434,7 @@ async function exploreAction(context: CommandContext, args: string) {
       {
         type: MessageType.INFO,
         text:
-          `Marketplace "${marketplace.name}" plugins:\n` +
+          `Marketplace "${result.marketplaceName}" plugins:\n` +
           plugins.map((name) => `  - ${name}`).join('\n') +
           `\n\nInstall with: /extensions install ${source}:<plugin-name>`,
       },

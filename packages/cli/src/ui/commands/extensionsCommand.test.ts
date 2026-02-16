@@ -15,6 +15,7 @@ import {
   uninstallExtension,
 } from '../../config/extension.js';
 import { parseInstallSource } from '../../config/extensions/marketplace.js';
+import { exploreMarketplacePlugins } from '../../config/extensions/explore.js';
 import {
   updateAllUpdatableExtensions,
   updateExtension,
@@ -52,6 +53,9 @@ vi.mock('../../config/extension.js', () => ({
 vi.mock('../../config/extensions/marketplace.js', () => ({
   parseInstallSource: vi.fn(),
 }));
+vi.mock('../../config/extensions/explore.js', () => ({
+  exploreMarketplacePlugins: vi.fn(),
+}));
 
 const mockUpdateExtension = updateExtension as MockedFunction<
   typeof updateExtension
@@ -82,6 +86,8 @@ const mockToOutputString = toOutputString as MockedFunction<
 const mockParseInstallSource = parseInstallSource as MockedFunction<
   typeof parseInstallSource
 >;
+const mockExploreMarketplacePlugins =
+  exploreMarketplacePlugins as MockedFunction<typeof exploreMarketplacePlugins>;
 
 const mockGetExtensions = vi.fn();
 
@@ -585,20 +591,18 @@ describe('extensionsCommand', () => {
     }
 
     it('uses default source when none is provided', async () => {
-      const metadata: ExtensionInstallMetadata = {
-        type: 'marketplace',
-        source: 'https://github.com/wshobson/agents',
-        marketplaceConfig: {
-          name: 'agents',
-          owner: {},
-          plugins: [{ name: 'reverse-engineering', source: 'owner/repo' }],
-        },
-      };
-      mockParseInstallSource.mockResolvedValue(metadata);
+      mockExploreMarketplacePlugins.mockResolvedValue({
+        source: 'wshobson/agents',
+        marketplaceName: 'agents',
+        plugins: ['reverse-engineering'],
+      });
 
       await exploreAction(mockContext, '');
 
-      expect(mockParseInstallSource).toHaveBeenCalledWith('wshobson/agents');
+      expect(mockExploreMarketplacePlugins).toHaveBeenCalledWith(
+        'wshobson/agents',
+        '',
+      );
       expect(mockContext.ui.addItem).toHaveBeenCalledWith(
         {
           type: MessageType.INFO,

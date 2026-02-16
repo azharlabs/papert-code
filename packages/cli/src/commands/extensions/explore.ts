@@ -5,10 +5,7 @@
  */
 
 import type { CommandModule } from 'yargs';
-import {
-  parseInstallSource,
-  type ClaudeMarketplaceConfig,
-} from '../../config/extensions/marketplace.js';
+import { exploreMarketplacePlugins } from '../../config/extensions/explore.js';
 import { getErrorMessage } from '../../utils/errors.js';
 
 interface ExploreArgs {
@@ -17,34 +14,15 @@ interface ExploreArgs {
 }
 
 export async function handleExplore(args: ExploreArgs) {
-  const source = args.source?.trim() || 'wshobson/agents';
-  const keyword = args.keyword?.trim().toLowerCase();
-
   try {
-    const installMetadata = await parseInstallSource(source);
-    if (installMetadata.type !== 'marketplace') {
-      throw new Error(
-        `Source "${source}" does not expose a marketplace config.`,
-      );
-    }
-    const marketplace = installMetadata.marketplaceConfig as
-      | ClaudeMarketplaceConfig
-      | undefined;
-    if (!marketplace) {
-      throw new Error('Marketplace config missing.');
-    }
-
-    const plugins = marketplace.plugins
-      .map((plugin) => plugin.name)
-      .filter((name) =>
-        keyword ? name.toLowerCase().includes(keyword) : true,
-      );
+    const result = await exploreMarketplacePlugins(args.source, args.keyword);
+    const { source, marketplaceName, plugins } = result;
     if (plugins.length === 0) {
       console.log(`No plugins found for keyword "${args.keyword}".`);
       return;
     }
 
-    console.log(`Marketplace "${marketplace.name}" plugins:`);
+    console.log(`Marketplace "${marketplaceName}" plugins:`);
     for (const plugin of plugins) {
       console.log(`  - ${plugin}`);
     }
