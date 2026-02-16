@@ -11,11 +11,13 @@ import {
   enableExtension,
   installExtension,
   loadExtensionByName,
+  loadUserExtensions,
   toOutputString,
   uninstallExtension,
 } from '../../config/extension.js';
 import { parseInstallSource } from '../../config/extensions/marketplace.js';
 import { exploreMarketplacePlugins } from '../../config/extensions/explore.js';
+import { checkForExtensionUpdate } from '../../config/extensions/github.js';
 import {
   updateAllUpdatableExtensions,
   updateExtension,
@@ -47,6 +49,7 @@ vi.mock('../../config/extension.js', () => ({
   disableExtension: vi.fn(),
   enableExtension: vi.fn(),
   loadExtensionByName: vi.fn(),
+  loadUserExtensions: vi.fn(),
   toOutputString: vi.fn(),
 }));
 
@@ -55,6 +58,9 @@ vi.mock('../../config/extensions/marketplace.js', () => ({
 }));
 vi.mock('../../config/extensions/explore.js', () => ({
   exploreMarketplacePlugins: vi.fn(),
+}));
+vi.mock('../../config/extensions/github.js', () => ({
+  checkForExtensionUpdate: vi.fn(),
 }));
 
 const mockUpdateExtension = updateExtension as MockedFunction<
@@ -80,6 +86,9 @@ const mockEnableExtension = enableExtension as MockedFunction<
 const mockLoadExtensionByName = loadExtensionByName as MockedFunction<
   typeof loadExtensionByName
 >;
+const mockLoadUserExtensions = loadUserExtensions as MockedFunction<
+  typeof loadUserExtensions
+>;
 const mockToOutputString = toOutputString as MockedFunction<
   typeof toOutputString
 >;
@@ -88,6 +97,9 @@ const mockParseInstallSource = parseInstallSource as MockedFunction<
 >;
 const mockExploreMarketplacePlugins =
   exploreMarketplacePlugins as MockedFunction<typeof exploreMarketplacePlugins>;
+const mockCheckForExtensionUpdate = checkForExtensionUpdate as MockedFunction<
+  typeof checkForExtensionUpdate
+>;
 
 const mockGetExtensions = vi.fn();
 
@@ -411,6 +423,17 @@ describe('extensionsCommand', () => {
       };
       mockParseInstallSource.mockResolvedValue(metadata);
       mockInstallExtension.mockResolvedValue('example-ext');
+      mockLoadUserExtensions.mockReturnValue([
+        {
+          path: '/test/dir/.papert/extensions/example-ext',
+          config: { name: 'example-ext', version: '1.0.0' },
+          contextFiles: [],
+          installMetadata: {
+            type: 'git',
+            source: 'https://github.com/example/ext',
+          },
+        },
+      ]);
 
       await installAction(mockContext, 'example/ext');
 
@@ -420,6 +443,7 @@ describe('extensionsCommand', () => {
         expect.any(Function),
         '/test/dir',
       );
+      expect(mockCheckForExtensionUpdate).toHaveBeenCalled();
       expect(mockContext.ui.addItem).toHaveBeenCalledWith(
         {
           type: MessageType.INFO,

@@ -9,6 +9,7 @@ import {
   enableExtension,
   installExtension,
   loadExtensionByName,
+  loadUserExtensions,
   requestConsentInteractive,
   toOutputString,
   uninstallExtension,
@@ -24,6 +25,7 @@ import {
   type ClaudeMarketplaceConfig,
 } from '../../config/extensions/marketplace.js';
 import { exploreMarketplacePlugins } from '../../config/extensions/explore.js';
+import { checkForExtensionUpdate } from '../../config/extensions/github.js';
 import { getErrorMessage } from '../../utils/errors.js';
 import { SettingScope } from '../../config/settings.js';
 import { ExtensionUpdateState } from '../state/extensions.js';
@@ -158,6 +160,10 @@ async function installAction(context: CommandContext, args: string) {
   }
 
   try {
+    context.ui.setPendingItem({
+      type: MessageType.INFO,
+      text: `Installing extension from "${source}"...`,
+    });
     const installMetadata = await parseInstallSource(source);
     if (installMetadata.type === 'marketplace' && !installMetadata.pluginName) {
       const marketplace = installMetadata.marketplaceConfig as
@@ -184,6 +190,30 @@ async function installAction(context: CommandContext, args: string) {
         ),
       context.services.config!.getWorkingDir(),
     );
+    const installedExtension = loadUserExtensions().find(
+      (extension) => extension.config.name === name,
+    );
+    if (installedExtension) {
+      await checkForExtensionUpdate(
+        {
+          name: installedExtension.config.name,
+          version: installedExtension.config.version,
+          path: installedExtension.path,
+          isActive: true,
+          installMetadata: installedExtension.installMetadata,
+        },
+        (updatedState) => {
+          context.ui.dispatchExtensionStateUpdate({
+            type: 'SET_STATE',
+            payload: {
+              name,
+              state: updatedState,
+            },
+          });
+        },
+        context.services.config!.getWorkingDir(),
+      );
+    }
     context.ui.addItem(
       {
         type: MessageType.INFO,
@@ -205,6 +235,8 @@ async function installAction(context: CommandContext, args: string) {
       },
       Date.now(),
     );
+  } finally {
+    context.ui.setPendingItem(null);
   }
 }
 
