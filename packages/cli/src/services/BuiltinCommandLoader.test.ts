@@ -82,6 +82,9 @@ vi.mock('../ui/commands/quitCommand.js', () => ({
 vi.mock('../ui/commands/statsCommand.js', () => ({ statsCommand: {} }));
 vi.mock('../ui/commands/themeCommand.js', () => ({ themeCommand: {} }));
 vi.mock('../ui/commands/toolsCommand.js', () => ({ toolsCommand: {} }));
+vi.mock('../ui/commands/teamCommand.js', () => ({
+  teamCommand: { name: 'team', description: 'Team command', kind: 'built-in' },
+}));
 vi.mock('../ui/commands/setupGithubCommand.js', () => ({ setupGithubCommand: {} }));
 vi.mock('../ui/commands/mcpCommand.js', () => ({
   mcpCommand: {
@@ -178,6 +181,9 @@ describe('BuiltinCommandLoader', () => {
 
     const modelCmd = commands.find((c) => c.name === 'model');
     expect(modelCmd).toBeDefined();
+
+    const teamCmd = commands.find((c) => c.name === 'team');
+    expect(teamCmd).toBeDefined();
   });
 
   it('should include permissions command when folder trust is enabled', async () => {

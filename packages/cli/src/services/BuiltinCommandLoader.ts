@@ -42,6 +42,7 @@ import { summaryCommand } from '../ui/commands/summaryCommand.js';
 import { scheduleCommand } from '../ui/commands/scheduleCommand.js';
 import { terminalSetupCommand } from '../ui/commands/terminalSetupCommand.js';
 import { setupGithubCommand } from '../ui/commands/setupGithubCommand.js';
+import { teamCommand } from '../ui/commands/teamCommand.js';
 import { themeCommand } from '../ui/commands/themeCommand.js';
 import { toolsCommand } from '../ui/commands/toolsCommand.js';
 import { vimCommand } from '../ui/commands/vimCommand.js';
@@ -106,6 +107,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       vimCommand,
       terminalSetupCommand,
       setupGithubCommand,
+      teamCommand,
       ...(this.config?.getEnableHooks?.() ? [hooksCommand] : []),
       pluginsCommand,
     ];
