@@ -23,6 +23,9 @@ import {
   SubagentTerminateMode,
 } from '../subagents/types.js';
 import { ContextState } from '../subagents/subagent.js';
+import { SubagentTeamManager } from '../subagent-teams/team-manager.js';
+import { SubagentTeamExecutor } from '../subagent-teams/team-executor.js';
+import type { SubagentTeamConfig } from '../subagent-teams/types.js';
 import {
   SubAgentEventEmitter,
   SubAgentEventType,
@@ -39,6 +42,7 @@ export interface TaskParams {
   description: string;
   prompt: string;
   subagent_type: string;
+  sender_id?: string;
 }
 
 /**
@@ -51,6 +55,8 @@ export class TaskTool extends BaseDeclarativeTool<TaskParams, ToolResult> {
 
   private subagentManager: SubagentManager;
   private availableSubagents: SubagentConfig[] = [];
+  private readonly teamManager: SubagentTeamManager;
+  private availableTeams: SubagentTeamConfig[] = [];
 
   constructor(private readonly config: Config) {
     // Initialize with a basic schema first
@@ -69,6 +75,11 @@ export class TaskTool extends BaseDeclarativeTool<TaskParams, ToolResult> {
           type: 'string',
           description: 'The type of specialized agent to use for this task',
         },
+        sender_id: {
+          type: 'string',
+          description:
+            'Optional sender identifier for team allowlist checks.',
+        },
       },
       required: ['description', 'prompt', 'subagent_type'],
       additionalProperties: false,
@@ -86,6 +97,7 @@ export class TaskTool extends BaseDeclarativeTool<TaskParams, ToolResult> {
     );
 
     this.subagentManager = config.getSubagentManager();
+    this.teamManager = new SubagentTeamManager(config);
     this.subagentManager.addChangeListener(() => {
       void this.refreshSubagents();
     });
@@ -101,10 +113,12 @@ export class TaskTool extends BaseDeclarativeTool<TaskParams, ToolResult> {
   async refreshSubagents(): Promise<void> {
     try {
       this.availableSubagents = await this.subagentManager.listSubagents();
+      this.availableTeams = await this.teamManager.listTeams();
       this.updateDescriptionAndSchema();
     } catch (error) {
       console.warn('Failed to load subagents for Task tool:', error);
       this.availableSubagents = [];
+      this.availableTeams = [];
       this.updateDescriptionAndSchema();
     } finally {
       // Update the client with the new tools
@@ -129,12 +143,28 @@ export class TaskTool extends BaseDeclarativeTool<TaskParams, ToolResult> {
         .join('\n');
     }
 
+    const teamDescriptions =
+      this.availableTeams.length === 0
+        ? 'No teams are currently configured.'
+        : this.availableTeams
+            .map(
+              (team) =>
+                `- **team:${team.id}**: ${team.name} (leader: @${team.leader})`,
+            )
+            .join('\n');
+
     const baseDescription = `Launch a new agent to handle complex, multi-step tasks autonomously. 
 
 Available agent types and the tools they have access to:
 ${subagentDescriptions}
 
+Available team targets:
+${teamDescriptions}
+
 When using the Task tool, you must specify a subagent_type parameter to select which agent type to use.
+Team targeting also supports:
+- \`team:<team-id>\`
+- \`@<team-id>\`
 
 When NOT to use the Agent tool:
 - If you want to read a specific file path, use the Read or Glob tool instead of the Agent tool, to find the match more quickly
@@ -192,6 +222,12 @@ assistant: "I'm going to use the Task tool to launch the with the greeting-respo
 
     // Generate dynamic schema with enum of available subagent names
     const subagentNames = this.availableSubagents.map((s) => s.name);
+    const teamNames = this.availableTeams.flatMap((team) => [
+      `team:${team.id}`,
+      `@${team.id}`,
+      team.id,
+    ]);
+    const targetNames = Array.from(new Set([...subagentNames, ...teamNames]));
 
     // Update the parameter schema by modifying the existing object
     const schema = this.parameterSchema as {
@@ -202,8 +238,8 @@ assistant: "I'm going to use the Task tool to launch the with the greeting-respo
       };
     };
     if (schema.properties && schema.properties.subagent_type) {
-      if (subagentNames.length > 0) {
-        schema.properties.subagent_type.enum = subagentNames;
+      if (targetNames.length > 0) {
+        schema.properties.subagent_type.enum = targetNames;
       } else {
         delete schema.properties.subagent_type.enum;
       }
@@ -237,20 +273,36 @@ assistant: "I'm going to use the Task tool to launch the with the greeting-respo
     }
 
     // Validate that the subagent exists
+    const normalized = params.subagent_type.trim().toLowerCase();
+    const teamKey = normalized.startsWith('team:')
+      ? normalized.slice('team:'.length)
+      : normalized.startsWith('@')
+        ? normalized.slice(1)
+        : normalized;
     const subagentExists = this.availableSubagents.some(
-      (subagent) => subagent.name === params.subagent_type,
+      (subagent) => subagent.name.toLowerCase() === normalized,
+    );
+    const teamExists = this.availableTeams.some(
+      (team) =>
+        team.id.toLowerCase() === teamKey || team.name.toLowerCase() === teamKey,
     );
 
-    if (!subagentExists) {
+    if (!subagentExists && !teamExists) {
       const availableNames = this.availableSubagents.map((s) => s.name);
-      return `Subagent "${params.subagent_type}" not found. Available subagents: ${availableNames.join(', ')}`;
+      const availableTeams = this.availableTeams.map((t) => `team:${t.id}`);
+      return `Subagent/team "${params.subagent_type}" not found. Available subagents: ${availableNames.join(', ')}. Available teams: ${availableTeams.join(', ')}`;
     }
 
     return null;
   }
 
   protected createInvocation(params: TaskParams) {
-    return new TaskToolInvocation(this.config, this.subagentManager, params);
+    return new TaskToolInvocation(
+      this.config,
+      this.subagentManager,
+      this.teamManager,
+      params,
+    );
   }
 }
 
@@ -262,6 +314,7 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
   constructor(
     private readonly config: Config,
     private readonly subagentManager: SubagentManager,
+    private readonly teamManager: SubagentTeamManager,
     params: TaskParams,
   ) {
     super(params);
@@ -461,9 +514,50 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
     updateOutput?: (output: ToolResultDisplay) => void,
   ): Promise<ToolResult> {
     try {
+      const normalizedTarget = this.params.subagent_type.trim().toLowerCase();
+      const isTeamTarget =
+        normalizedTarget.startsWith('team:') ||
+        normalizedTarget.startsWith('@') ||
+        !!(await this.teamManager.loadTeam(normalizedTarget));
+      if (isTeamTarget) {
+        const teamIdOrName = normalizedTarget.startsWith('team:')
+          ? normalizedTarget.slice('team:'.length)
+          : normalizedTarget.startsWith('@')
+            ? normalizedTarget.slice(1)
+            : normalizedTarget;
+
+        const teamExecutor = new SubagentTeamExecutor(
+          this.config,
+          this.subagentManager,
+        );
+        const teamResult = await teamExecutor.execute({
+          teamIdOrName,
+          prompt: this.params.prompt,
+          senderId: this.params.sender_id,
+        });
+
+        const teamDisplay: TaskResultDisplay = {
+          type: 'task_execution',
+          subagentName: `team:${teamResult.teamId}`,
+          taskDescription: this.params.description,
+          taskPrompt: this.params.prompt,
+          status: 'completed',
+          result: teamResult.finalText,
+          terminateReason: `TEAM_COMPLETE (${teamResult.steps.length} step(s))`,
+        };
+        if (updateOutput) {
+          updateOutput(teamDisplay);
+        }
+
+        return {
+          llmContent: [{ text: teamResult.finalText }],
+          returnDisplay: teamDisplay,
+        };
+      }
+
       // Load the subagent configuration
       const subagentConfig = await this.subagentManager.loadSubagent(
-        this.params.subagent_type,
+        normalizedTarget,
       );
 
       if (!subagentConfig) {

@@ -9,6 +9,7 @@ Papert Code ships with workflow and platform features for safe, scalable coding 
 - [Checkpointing](./checkpointing.md)
 - [Rewind](./rewind.md)
 - [Subagents](./subagents.md)
+- [Subagent Teams](./subagent-teams.md)
 - [Token Caching](./token-caching.md)
 - [Session Workflows](./session-workflows.md)
 - [Welcome Back](./welcome-back.md)

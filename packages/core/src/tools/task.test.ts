@@ -243,7 +243,7 @@ describe('TaskTool', () => {
         subagent_type: 'non-existent',
       });
       expect(result).toBe(
-        'Subagent "non-existent" not found. Available subagents: file-search, code-review',
+        'Subagent/team "non-existent" not found. Available subagents: file-search, code-review. Available teams: ',
       );
     });
   });

@@ -1,6 +1,7 @@
 export default {
   index: 'Overview',
   subagents: 'Subagents',
+  'subagent-teams': 'Subagent Teams',
   checkpointing: 'Checkpointing',
   rewind: 'Rewind',
   'mcp-diagnostics': 'MCP Diagnostics',
