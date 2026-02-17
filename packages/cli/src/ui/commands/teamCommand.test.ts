@@ -69,6 +69,13 @@ describe('teamCommand', () => {
     );
   });
 
+  it('exposes subcommands for command suggestions', () => {
+    const names = (teamCommand.subCommands ?? []).map((item) => item.name);
+    expect(names).toEqual(
+      expect.arrayContaining(['list', 'show', 'validate', 'subagents', 'help']),
+    );
+  });
+
   it('lists teams', async () => {
     const context = makeContext();
     if (!teamCommand.action) throw new Error('Action not defined');
@@ -111,4 +118,3 @@ describe('teamCommand', () => {
     );
   });
 });
-
