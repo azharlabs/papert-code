@@ -296,13 +296,26 @@ export class Turn {
         }
 
         const text = getResponseText(resp);
-        if (text) {
-          yield { type: GeminiEventType.Content, value: text };
+        const functionCalls = resp.functionCalls ?? [];
+        let parsedTextToolCalls: FunctionCall[] = [];
+        let contentToEmit = text;
+
+        // Fallback for providers that emit textual tool-call syntax instead of
+        // structured functionCalls.
+        if (text && functionCalls.length === 0) {
+          const parsed = parseToolCallsFromText(text);
+          parsedTextToolCalls = parsed.calls;
+          contentToEmit = parsed.cleanedText;
+        }
+
+        if (contentToEmit) {
+          yield { type: GeminiEventType.Content, value: contentToEmit };
         }
 
         // Handle function calls (requesting tool execution)
-        const functionCalls = resp.functionCalls ?? [];
-        for (const fnCall of functionCalls) {
+        const callsToHandle =
+          functionCalls.length > 0 ? functionCalls : parsedTextToolCalls;
+        for (const fnCall of callsToHandle) {
           const event = this.handlePendingFunctionCall(fnCall);
           if (event) {
             yield event;
@@ -410,4 +423,105 @@ function getCitations(resp: GenerateContentResponse): string[] {
       }
       return citation.uri!;
     });
+}
+
+type ParsedToolCallText = {
+  calls: FunctionCall[];
+  cleanedText: string;
+};
+
+function parseToolCallsFromText(text: string): ParsedToolCallText {
+  const calls: FunctionCall[] = [];
+  const matchedRanges: Array<{ start: number; end: number }> = [];
+  const value = String(text || '');
+  if (!value) {
+    return { calls, cleanedText: '' };
+  }
+
+  const paramRegex =
+    /<parameter(?:\s+name\s*=\s*"([^"]+)"|=([a-zA-Z0-9_.-]+))\s*>([\s\S]*?)<\/parameter>/g;
+
+  const parseArgs = (body: string) => {
+    const args: Record<string, unknown> = {};
+    let match: RegExpExecArray | null;
+    paramRegex.lastIndex = 0;
+    while ((match = paramRegex.exec(body)) !== null) {
+      const key = (match[1] || match[2] || '').trim();
+      if (!key) continue;
+      const raw = (match[3] || '').trim();
+      args[key] = coerceToolArg(raw);
+    }
+    return args;
+  };
+
+  const addCall = (nameRaw: string, body: string, start: number, end: number) => {
+    const name = String(nameRaw || '').trim();
+    if (!name) return;
+    calls.push({ name, args: parseArgs(body) });
+    matchedRanges.push({ start, end });
+  };
+
+  const minimaxRegex = /\[tool_call:\s*([a-zA-Z0-9_.:-]+)\s*\]([\s\S]*?)(?=\n\s*\[tool_call:|$)/g;
+  let mm: RegExpExecArray | null;
+  while ((mm = minimaxRegex.exec(value)) !== null) {
+    const full = mm[0] || '';
+    const body = mm[2] || '';
+    addCall(mm[1] || '', body, mm.index, mm.index + full.length);
+  }
+
+  const invokeRegex = /<invoke[^>]*name\s*=\s*"([^"]+)"[^>]*>([\s\S]*?)<\/invoke>/g;
+  let inv: RegExpExecArray | null;
+  while ((inv = invokeRegex.exec(value)) !== null) {
+    const full = inv[0] || '';
+    addCall(inv[1] || '', inv[2] || '', inv.index, inv.index + full.length);
+  }
+
+  const toolCallRegex = /<tool_call>([\s\S]*?)<\/tool_call>/g;
+  let tc: RegExpExecArray | null;
+  while ((tc = toolCallRegex.exec(value)) !== null) {
+    const full = tc[0] || '';
+    const body = tc[1] || '';
+    const nameMatch = /<name>\s*([^<]+)\s*<\/name>/.exec(body);
+    addCall(nameMatch?.[1] || '', body, tc.index, tc.index + full.length);
+  }
+
+  if (calls.length === 0) {
+    return { calls, cleanedText: value };
+  }
+
+  matchedRanges.sort((a, b) => a.start - b.start);
+  let cleaned = '';
+  let cursor = 0;
+  for (const range of matchedRanges) {
+    if (range.start < cursor) continue;
+    cleaned += value.slice(cursor, range.start);
+    cursor = range.end;
+  }
+  cleaned += value.slice(cursor);
+  cleaned = cleaned.replace(/<\/?minimax:tool_call>/g, '').trim();
+
+  return { calls, cleanedText: cleaned };
+}
+
+function coerceToolArg(raw: string): unknown {
+  const value = String(raw || '').trim();
+  if (!value) return '';
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  if (value === 'null') return null;
+  if (/^-?\d+(?:\.\d+)?$/.test(value)) {
+    const n = Number(value);
+    if (!Number.isNaN(n)) return n;
+  }
+  if (
+    (value.startsWith('{') && value.endsWith('}')) ||
+    (value.startsWith('[') && value.endsWith(']'))
+  ) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      // fallthrough
+    }
+  }
+  return value;
 }

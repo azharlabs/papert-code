@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.94
+## 0.3.95
 
 - Added dynamic web command catalog loading from `listCommands`.
 - Added web rewind panel with checkpoint catalog support.

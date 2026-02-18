@@ -76,6 +76,9 @@ export class Task {
 
   // For tool waiting logic
   private pendingToolCalls: Map<string, string> = new Map(); //toolCallId --> status
+  private toolCallNames: Map<string, string> = new Map(); //toolCallId --> tool name
+  private outputSequence = 0;
+  private outputChunks: Array<{ seq: number; text: string; ts: string }> = [];
   private toolCompletionPromise?: Promise<void>;
   private toolCompletionNotifier?: {
     resolve: () => void;
@@ -176,6 +179,7 @@ export class Task {
   private _resolveToolCall(toolCallId: string): void {
     if (this.pendingToolCalls.has(toolCallId)) {
       this.pendingToolCalls.delete(toolCallId);
+      this.toolCallNames.delete(toolCallId);
       logger.info(
         `[Task] Resolved tool call: ${toolCallId}. Pending: ${this.pendingToolCalls.size}`,
       );
@@ -397,6 +401,9 @@ export class Task {
     toolCalls.forEach((tc) => {
       const previousStatus = this.pendingToolCalls.get(tc.request.callId);
       const hasChanged = previousStatus !== tc.status;
+      if (tc.request?.callId) {
+        this.toolCallNames.set(tc.request.callId, tc.request.name || 'Tool call');
+      }
 
       // Resolve tool call if it has reached a terminal state
       if (['success', 'error', 'cancelled'].includes(tc.status)) {
@@ -792,17 +799,27 @@ export class Task {
   }
 
   private async _handleToolConfirmationPart(part: Part): Promise<boolean> {
-    if (
-      part.kind !== 'data' ||
-      !part.data ||
-      typeof part.data['callId'] !== 'string' ||
-      typeof part.data['outcome'] !== 'string'
-    ) {
+    if (part.kind !== 'data' || !part.data) {
       return false;
     }
 
-    const callId = part.data['callId'];
-    const outcomeString = part.data['outcome'];
+    const callIdRaw =
+      (typeof part.data['callId'] === 'string' && part.data['callId']) ||
+      (typeof part.data['tool_call_id'] === 'string' &&
+        part.data['tool_call_id']) ||
+      '';
+    const outcomeRaw =
+      (typeof part.data['outcome'] === 'string' && part.data['outcome']) ||
+      (typeof part.data['selected_option_id'] === 'string' &&
+        part.data['selected_option_id']) ||
+      '';
+
+    if (!callIdRaw || !outcomeRaw) {
+      return false;
+    }
+
+    const callId = callIdRaw;
+    const outcomeString = outcomeRaw;
     let confirmationOutcome: ToolConfirmationOutcome | undefined;
 
     if (outcomeString === 'proceed_once') {
@@ -909,6 +926,89 @@ export class Task {
       );
       this.eventBus?.publish(event);
       return false;
+    }
+  }
+
+  async handleToolConfirmation(
+    callId: string,
+    outcome: string,
+    newContent?: string,
+  ): Promise<boolean> {
+    if (!callId || !outcome) return false;
+    const data: Record<string, unknown> = { callId, outcome };
+    if (typeof newContent === 'string') {
+      data['newContent'] = newContent;
+    }
+    const accepted = await this._handleToolConfirmationPart({
+      kind: 'data',
+      data,
+    } as Part);
+    if (accepted) return true;
+
+    // Fallback: if exactly one confirmation is pending, apply outcome to it.
+    // This makes web approval resilient to stale/mismatched callIds.
+    if (this.pendingToolConfirmationDetails.size === 1) {
+      const [pendingCallId] = Array.from(this.pendingToolConfirmationDetails.keys());
+      if (pendingCallId && pendingCallId !== callId) {
+        const fallbackData: Record<string, unknown> = {
+          callId: pendingCallId,
+          outcome,
+        };
+        if (typeof newContent === 'string') {
+          fallbackData['newContent'] = newContent;
+        }
+        return this._handleToolConfirmationPart({
+          kind: 'data',
+          data: fallbackData,
+        } as Part);
+      }
+    }
+
+    return false;
+  }
+
+  hasPendingToolConfirmation(callId: string): boolean {
+    if (!callId) return false;
+    return this.pendingToolConfirmationDetails.has(callId);
+  }
+
+  getPendingToolConfirmationCount(): number {
+    return this.pendingToolConfirmationDetails.size;
+  }
+
+  getPendingApprovalsSummary(): Array<{ callId: string; name: string }> {
+    return Array.from(this.pendingToolCalls.entries())
+      .filter(([, status]) => status === 'awaiting_approval')
+      .map(([callId]) => ({
+        callId,
+        name: this.toolCallNames.get(callId) || 'Tool call',
+      }));
+  }
+
+  getOutputChunksSince(
+    sinceSeq: number,
+  ): { latestSeq: number; chunks: Array<{ seq: number; text: string; ts: string }> } {
+    const latestSeq = this.outputSequence;
+    if (!Number.isFinite(sinceSeq) || sinceSeq < 0) {
+      return { latestSeq, chunks: [] };
+    }
+    return {
+      latestSeq,
+      chunks: this.outputChunks.filter((chunk) => chunk.seq > sinceSeq),
+    };
+  }
+
+  private _recordOutputChunk(text: string): void {
+    const value = String(text || '');
+    if (!value) return;
+    this.outputSequence += 1;
+    this.outputChunks.push({
+      seq: this.outputSequence,
+      text: value,
+      ts: new Date().toISOString(),
+    });
+    if (this.outputChunks.length > 500) {
+      this.outputChunks.splice(0, this.outputChunks.length - 500);
     }
   }
 
@@ -1087,6 +1187,7 @@ export class Task {
     if (content === '') {
       return;
     }
+    this._recordOutputChunk(content);
     logger.info('[Task] Sending text content to event bus.');
     const message = this._createTextMessage(content);
     const textContent: TextContent = {
@@ -1108,6 +1209,10 @@ export class Task {
   _sendThought(content: ThoughtSummary, traceId?: string): void {
     if (!content.subject && !content.description) {
       return;
+    }
+    const thoughtText = [content.subject, content.description].filter(Boolean).join('\n');
+    if (thoughtText) {
+      this._recordOutputChunk(thoughtText);
     }
     logger.info('[Task] Sending thought to event bus.');
     const message: Message = {
@@ -1143,6 +1248,7 @@ export class Task {
     if (!citation || citation.trim() === '') {
       return;
     }
+    this._recordOutputChunk(citation);
     logger.info('[Task] Sending citation to event bus.');
     const message = this._createTextMessage(citation);
     const citationEvent: Citation = {

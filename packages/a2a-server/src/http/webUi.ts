@@ -182,7 +182,6 @@ const WEB_UI_STYLES = `
         display: none !important;
       }
 
-      body.desktop-embed #autoExecToggleRow,
       body.desktop-embed .menu-item[data-view="cli"],
       body.desktop-embed .menu-item[data-view="tools"],
       body.desktop-embed .chip[data-modal="tools"],
@@ -261,7 +260,9 @@ const WEB_UI_STYLES = `
       }
 
       .list-item {
+        position: relative;
         padding: 10px 12px;
+        padding-right: 44px;
         border-radius: 10px;
         background: var(--panel-2);
         border: 1px solid transparent;
@@ -287,6 +288,29 @@ const WEB_UI_STYLES = `
       .list-item .meta {
         font-size: 12px;
         color: var(--muted);
+      }
+
+      .chat-delete-btn {
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        transform: translateY(-50%);
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+        border-radius: 999px;
+        border: 1px solid var(--stroke-soft);
+        background: transparent;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1;
+        padding: 0;
+      }
+
+      .chat-delete-btn:hover:not(:disabled) {
+        color: #ffd7d7;
+        border-color: #7b3a46;
+        box-shadow: none;
       }
 
       .main {
@@ -475,6 +499,43 @@ const WEB_UI_STYLES = `
         background: transparent;
       }
 
+      .approval-panel {
+        border: 1px solid #3a4d69;
+        background: rgba(18, 26, 40, 0.9);
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 12px;
+      }
+
+      .approval-title {
+        font-size: 12px;
+        color: var(--accent-2);
+        margin-bottom: 6px;
+      }
+
+      .approval-name {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .approval-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .approval-actions button {
+        padding: 6px 9px;
+        font-size: 12px;
+        border-radius: 8px;
+      }
+
+      .approval-actions button.danger {
+        background: #3a1f28;
+        color: #ffdbe2;
+      }
+
       .composer {
         display: grid;
         gap: 8px;
@@ -558,6 +619,29 @@ const WEB_UI_STYLES = `
         padding: 0;
         font-size: 18px;
         font-weight: 600;
+        position: relative;
+      }
+
+      #sendBtn.composer-send.loading {
+        color: transparent;
+      }
+
+      #sendBtn.composer-send.loading::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(4, 20, 17, 0.5);
+        border-top-color: rgba(4, 20, 17, 0.08);
+        border-radius: 50%;
+        animation: send-spin 0.8s linear infinite;
+      }
+
+      @keyframes send-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
       }
 
       .attachment-strip {
@@ -1208,7 +1292,29 @@ const WEB_UI_SCRIPT = `
         },
       };
 
-      const state = hostInitialState || storage.load() || {
+      function scoreState(candidate) {
+        if (!candidate || typeof candidate !== 'object') return -1;
+        const sessions = Array.isArray(candidate.sessions) ? candidate.sessions : [];
+        let chatCount = 0;
+        let messageCount = 0;
+        sessions.forEach((session) => {
+          const chats = session && Array.isArray(session.chats) ? session.chats : [];
+          chatCount += chats.length;
+          chats.forEach((chat) => {
+            const messages = chat && Array.isArray(chat.messages) ? chat.messages : [];
+            messageCount += messages.length;
+          });
+        });
+        return (chatCount * 1000) + messageCount;
+      }
+
+      const localInitialState = storage.load();
+      const selectedInitialState =
+        scoreState(localInitialState) > scoreState(hostInitialState)
+          ? localInitialState
+          : hostInitialState;
+
+      const state = selectedInitialState || {
         sessions: [],
         activeSessionId: '',
         activeChatId: '',
@@ -1405,6 +1511,9 @@ const WEB_UI_SCRIPT = `
         targets: { tools: [], agents: [], mcps: [] },
       };
       let activeStreamingChatId = '';
+      const pendingApprovalsByChatId = {};
+      const approvalSyncInFlightByChatId = {};
+      const lastTaskFeedSeqByChatId = {};
       const maxAttachments = 3;
       const maxAttachmentSizeBytes = 2 * 1024 * 1024;
       const allowedDocumentMimeTypes = new Set([
@@ -1435,6 +1544,7 @@ const WEB_UI_SCRIPT = `
       const sessionList = document.getElementById('sessionList');
       const chatList = document.getElementById('chatList');
       const sendBtn = document.getElementById('sendBtn');
+      const sendBtnDefaultLabel = sendBtn ? (sendBtn.textContent || '↑') : '↑';
       const newChatBtn = document.getElementById('newChatBtn');
       const newChatTopBtn = document.getElementById('newChatTopBtn');
       const clearChatBtn = document.getElementById('clearChatBtn');
@@ -1739,6 +1849,7 @@ const WEB_UI_SCRIPT = `
           title: 'New chat',
           createdAt: Date.now(),
           taskId: '',
+          contextId: '',
           messages: [],
           activity: [],
         };
@@ -1874,13 +1985,21 @@ const WEB_UI_SCRIPT = `
           const el = document.createElement('div');
           el.className = 'list-item' + (chat.id === state.activeChatId ? ' active' : '');
           el.innerHTML = '<div class="title">' + escapeHtml(chat.title || '') + '</div>' +
-            '<div class="meta">' + formatTime(chat.createdAt) + '</div>';
+            '<div class="meta">' + formatTime(chat.createdAt) + '</div>' +
+            '<button class="chat-delete-btn" type="button" aria-label="Delete chat" title="Delete chat">&times;</button>';
           el.addEventListener('click', () => {
             state.activeChatId = chat.id;
             goToWorkspace();
             render();
             saveState();
           });
+          const deleteBtn = el.querySelector('.chat-delete-btn');
+          if (deleteBtn) {
+            deleteBtn.addEventListener('click', (event) => {
+              event.stopPropagation();
+              deleteChat(chat.id);
+            });
+          }
           chatList.appendChild(el);
         });
       }
@@ -1897,6 +2016,33 @@ const WEB_UI_SCRIPT = `
           content.innerHTML = renderMarkdown(msg.content || '');
           el.appendChild(content);
           messagesEl.appendChild(el);
+        });
+        const pendingApprovals = Array.isArray(pendingApprovalsByChatId[chat.id])
+          ? pendingApprovalsByChatId[chat.id]
+          : [];
+        pendingApprovals.forEach((approval) => {
+          const disabledAttr = approval && approval.submitting ? ' disabled' : '';
+          const panel = document.createElement('div');
+          panel.className = 'approval-panel';
+          panel.innerHTML =
+            '<div class="approval-title">Tool approval required</div>' +
+            '<div class="approval-name">' + escapeHtml(approval.name || approval.callId || 'Tool call') + '</div>' +
+            '<div class="approval-actions">' +
+              '<button data-outcome="proceed_once" data-call-id="' + escapeAttr(approval.callId || '') + '"' + disabledAttr + '>Approve once</button>' +
+              '<button class="secondary" data-outcome="proceed_always" data-call-id="' + escapeAttr(approval.callId || '') + '"' + disabledAttr + '>Always</button>' +
+              '<button class="secondary" data-outcome="proceed_always_tool" data-call-id="' + escapeAttr(approval.callId || '') + '"' + disabledAttr + '>Always this tool</button>' +
+              '<button class="danger" data-outcome="cancel" data-call-id="' + escapeAttr(approval.callId || '') + '"' + disabledAttr + '>Deny</button>' +
+            '</div>';
+          panel.querySelectorAll('button[data-outcome]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const callId = btn.getAttribute('data-call-id') || '';
+              const outcome = btn.getAttribute('data-outcome') || '';
+              sendToolApproval(callId, outcome, chat.id).catch((err) => {
+                addMessage('system', 'Approval failed: ' + (err && err.message ? err.message : String(err)), chat.id);
+              });
+            });
+          });
+          messagesEl.appendChild(panel);
         });
         messagesEl.scrollTop = messagesEl.scrollHeight;
       }
@@ -2084,7 +2230,14 @@ const WEB_UI_SCRIPT = `
           if (!el) return;
           el.disabled = value;
         };
-        setDisabled(sendBtn, !connected);
+        const isGenerating = !!activeStreamingChatId;
+        setDisabled(sendBtn, !connected || isGenerating);
+        if (sendBtn) {
+          sendBtn.classList.toggle('loading', isGenerating);
+          sendBtn.textContent = isGenerating ? '' : sendBtnDefaultLabel;
+          sendBtn.setAttribute('title', isGenerating ? 'Generating response...' : 'Send prompt');
+          sendBtn.setAttribute('aria-label', isGenerating ? 'Generating response' : 'Send prompt');
+        }
         setDisabled(newChatBtn, !connected);
         setDisabled(newChatTopBtn, !connected);
         setDisabled(clearChatBtn, !connected);
@@ -2285,6 +2438,45 @@ const WEB_UI_SCRIPT = `
         return request;
       }
 
+      function buildResumeStreamRequest(session, taskId, contextId) {
+        const normalizedTaskId = String(taskId || '').trim();
+        if (!normalizedTaskId) {
+          throw new Error('Missing task id for resume stream.');
+        }
+        const request = {
+          jsonrpc: '2.0',
+          id: 'web-resume-' + Date.now(),
+          method: 'message/stream',
+          params: {
+            message: {
+              kind: 'message',
+              role: 'user',
+              parts: [
+                {
+                  kind: 'data',
+                  data: {
+                    type: 'webui-resume-stream',
+                  },
+                },
+              ],
+              messageId: 'web-resume-msg-' + Math.random().toString(36).slice(2),
+            },
+            metadata: {
+              coderAgent: {
+                kind: 'agent-settings',
+                workspacePath: session.workspaceRoot || '/',
+                autoExecute: autoExecToggle.checked,
+              },
+            },
+          },
+        };
+        request.params.taskId = normalizedTaskId;
+        if (contextId) {
+          request.params.contextId = contextId;
+        }
+        return request;
+      }
+
       async function readSse(response, onEvent) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -2303,7 +2495,15 @@ const WEB_UI_SCRIPT = `
               const payload = line.slice(6);
               try {
                 const event = JSON.parse(payload);
-                onEvent(event);
+                const shouldContinue = onEvent(event);
+                if (shouldContinue === false) {
+                  try {
+                    await reader.cancel();
+                  } catch {
+                    // ignore cancel errors
+                  }
+                  return;
+                }
               } catch {
                 addMessage('system', 'Failed to parse event payload.');
               }
@@ -2337,29 +2537,547 @@ const WEB_UI_SCRIPT = `
         return '';
       }
 
-      function handleEvent(event, chatId) {
-        if (!event || !event.result) return;
+      function sanitizeAssistantText(text) {
+        const value = String(text || '');
+        if (!value) return '';
+        return value
+          .replace(/<think>[\\s\\S]*?<\\/think>/gi, '')
+          .replace(/<\\/?think>/gi, '')
+          .trim();
+      }
+
+      function looksLikeToolSchemaDump(text) {
+        const value = String(text || '').trim();
+        if (!value) return false;
+        const hasSchemaKeys =
+          value.includes('"parametersJsonSchema"') ||
+          value.includes('"parameterSchema"') ||
+          value.includes('"required"') ||
+          value.includes('"old_string"') ||
+          value.includes('"new_string"');
+        const hasToolMeta =
+          value.includes('"tool"') &&
+          value.includes('"name"') &&
+          value.includes('"description"');
+        return hasSchemaKeys && hasToolMeta;
+      }
+
+      function looksLikeInternalToolPseudoCall(text) {
+        const value = String(text || '').trim();
+        if (!value) return false;
+        if (value.includes('[TOOL_CALL]') || value.includes('[/TOOL_CALL]')) return true;
+        if (value.includes('tool =>') && value.includes('path=>')) return true;
+        return false;
+      }
+
+      function toAssistantChunk(part) {
+        if (!part || typeof part !== 'object') return '';
+        if (part.kind === 'text' && typeof part.text === 'string') {
+          const sanitized = sanitizeAssistantText(part.text);
+          if (
+            !sanitized ||
+            looksLikeToolSchemaDump(sanitized) ||
+            looksLikeInternalToolPseudoCall(sanitized)
+          ) {
+            return '';
+          }
+          return sanitized;
+        }
+        if (part.kind !== 'data') return '';
+        const data = part.data;
+        if (!data) return '';
+        if (typeof data === 'string') return data;
+        if (typeof data !== 'object') return String(data);
+        if (data.type === 'inline-file') return '';
+        if (typeof data.fileDiff === 'string') {
+          const fileName = typeof data.fileName === 'string' ? data.fileName : '';
+          const prefix = fileName ? fileName + '\\n' : '';
+          return '\\n' + prefix + '~~~diff\\n' + data.fileDiff + '\\n~~~\\n';
+        }
+        if (Array.isArray(data.ansiOutput)) {
+          const lines = data.ansiOutput
+            .map((line) =>
+              Array.isArray(line)
+                ? line.map((token) => (token && typeof token.text === 'string' ? token.text : '')).join('')
+                : '',
+            )
+            .filter(Boolean);
+          return lines.length ? '\\n' + lines.join('\\n') + '\\n' : '';
+        }
+        if (Array.isArray(data.todos)) {
+          const todos = data.todos
+            .map((todo) => {
+              if (!todo || typeof todo !== 'object') return '';
+              const status = typeof todo.status === 'string' ? todo.status : 'pending';
+              const content = typeof todo.content === 'string' ? todo.content : '';
+              return content ? '- [' + status + '] ' + content : '';
+            })
+            .filter(Boolean);
+          return todos.length ? '\\n' + todos.join('\\n') + '\\n' : '';
+        }
+        if (typeof data.message === 'string' && typeof data.plan === 'string') {
+          return '\\nPlan: ' + data.message + '\\n' + data.plan + '\\n';
+        }
+        if (
+          typeof data.subject === 'string' ||
+          typeof data.description === 'string'
+        ) {
+          const subject = typeof data.subject === 'string' ? data.subject.trim() : '';
+          const description =
+            typeof data.description === 'string' ? data.description.trim() : '';
+          return '\\n' + [subject, description].filter(Boolean).join('\\n') + '\\n';
+        }
+        return '';
+      }
+
+      function appendPartsToChat(parts, chatId) {
+        if (!Array.isArray(parts)) return false;
+        let appended = false;
+        parts.forEach((part) => {
+          const chunk = toAssistantChunk(part);
+          if (chunk) {
+            appendAssistantText(chunk, chatId);
+            appended = true;
+          }
+        });
+        return appended;
+      }
+
+      function upsertPendingApproval(chatId, item) {
+        if (!chatId || !item || !item.callId) return;
+        const list = Array.isArray(pendingApprovalsByChatId[chatId])
+          ? pendingApprovalsByChatId[chatId]
+          : [];
+        const idx = list.findIndex((entry) => entry.callId === item.callId);
+        if (idx >= 0) {
+          const prev = list[idx];
+          const next = { ...prev, ...item };
+          list[idx] = next;
+          pendingApprovalsByChatId[chatId] = list;
+          return JSON.stringify(prev) !== JSON.stringify(next);
+        }
+        list.push(item);
+        pendingApprovalsByChatId[chatId] = list;
+        return true;
+      }
+
+      function removePendingApproval(chatId, callId) {
+        if (!chatId || !callId) return;
+        const list = Array.isArray(pendingApprovalsByChatId[chatId])
+          ? pendingApprovalsByChatId[chatId]
+          : [];
+        const next = list.filter((entry) => entry.callId !== callId);
+        pendingApprovalsByChatId[chatId] = next;
+        return next.length !== list.length;
+      }
+
+      function processToolCallStatusParts(parts, chatId, taskId, contextId) {
+        if (!Array.isArray(parts) || !chatId) return false;
+        const chat = getChatById(chatId);
+        const resolvedTaskId =
+          (typeof taskId === 'string' && taskId) ||
+          (chat && typeof chat.taskId === 'string' ? chat.taskId : '') ||
+          '';
+        const resolvedContextId =
+          (typeof contextId === 'string' && contextId) ||
+          (chat && typeof chat.contextId === 'string' ? chat.contextId : '') ||
+          '';
+        let changed = false;
+        parts.forEach((part) => {
+          if (!part || part.kind !== 'data' || !part.data || typeof part.data !== 'object') return;
+          const data = part.data;
+          const request = data.request && typeof data.request === 'object' ? data.request : {};
+          const callId =
+            (typeof request.callId === 'string' && request.callId) ||
+            (typeof request.call_id === 'string' && request.call_id) ||
+            (typeof data.callId === 'string' && data.callId) ||
+            (typeof data.call_id === 'string' && data.call_id) ||
+            '';
+          let status =
+            (typeof data.status === 'string' && data.status) ||
+            (typeof data.state === 'string' && data.state) ||
+            '';
+          const toolName =
+            (typeof request.name === 'string' && request.name) ||
+            (typeof data.name === 'string' && data.name) ||
+            (data.tool && typeof data.tool === 'object' && typeof data.tool.name === 'string'
+              ? data.tool.name
+              : '') ||
+            'Tool call';
+          if (!status && data.confirmationDetails) {
+            status = 'awaiting_approval';
+          }
+          if (!callId) return;
+          if (status === 'awaiting_approval') {
+            changed =
+              upsertPendingApproval(chatId, {
+                callId,
+                name: toolName,
+                taskId: resolvedTaskId,
+                contextId: resolvedContextId,
+              }) || changed;
+          } else if (status) {
+            changed = removePendingApproval(chatId, callId) || changed;
+          }
+        });
+        return changed;
+      }
+
+      async function sendToolApproval(callId, outcome, chatId) {
+        const session = currentSession();
+        const chat = getChatById(chatId);
+        if (!session || !chat || !callId || !outcome) return;
+        const approvals = Array.isArray(pendingApprovalsByChatId[chat.id])
+          ? pendingApprovalsByChatId[chat.id]
+          : [];
+        const approval = approvals.find((item) => item.callId === callId) || null;
+        const approvalTaskId = (approval && approval.taskId ? approval.taskId : '') || chat.taskId || '';
+        const approvalContextId =
+          (approval && approval.contextId ? approval.contextId : '') || chat.contextId || '';
+        if (!approvalTaskId) {
+          addMessage('system', 'Approval failed: missing task id for pending tool call.', chat.id);
+          return;
+        }
+        // Lock chat routing to the approval origin task/context for continuation.
+        chat.taskId = approvalTaskId;
+        if (approvalContextId) {
+          chat.contextId = approvalContextId;
+        }
+        const approvalName = approval && approval.name ? approval.name : 'Tool call';
+        removePendingApproval(chat.id, callId);
+        addMessage('system', 'Approval sent for ' + callId + ' (' + outcome + ')', chat.id);
+        if (!activeStreamingChatId) {
+          activeStreamingChatId = chat.id;
+        }
+        render();
+        try {
+          const res = await fetch('/api/v1/webui/tool-approval', {
+            method: 'POST',
+            headers: buildHeaders(session),
+            body: JSON.stringify({
+              taskId: approvalTaskId,
+              contextId: approvalContextId || '',
+              callId,
+              outcome,
+            }),
+          });
+          if (!res.ok) {
+            upsertPendingApproval(chat.id, {
+              callId,
+              name: approvalName,
+              taskId: approvalTaskId || '',
+              contextId: approvalContextId || '',
+            });
+            addMessage('system', 'Approval request failed: ' + res.status, chat.id);
+            return;
+          }
+          const approvalData = await res.json().catch(() => ({}));
+          const resolvedTaskId =
+            approvalData && typeof approvalData.taskId === 'string' && approvalData.taskId
+              ? approvalData.taskId
+              : approvalTaskId;
+          const resolvedContextId =
+            approvalData && typeof approvalData.contextId === 'string'
+              ? approvalData.contextId
+              : approvalContextId || '';
+          chat.taskId = resolvedTaskId;
+          if (resolvedContextId) {
+            chat.contextId = resolvedContextId;
+          }
+          logActivity('Approval', 'Submitted ' + outcome + ' for ' + callId, chat.id);
+
+          const resumeRequest = buildResumeStreamRequest(
+            session,
+            resolvedTaskId,
+            resolvedContextId,
+          );
+          const streamRes = await fetch('/', {
+            method: 'POST',
+            headers: buildHeaders(session),
+            body: JSON.stringify(resumeRequest),
+          });
+          if (!streamRes.ok) {
+            addMessage('system', 'Resume stream failed: ' + streamRes.status, chat.id);
+            return;
+          }
+          await readSse(streamRes, (event) =>
+            handleEvent(event, chat.id, true, resolvedTaskId),
+          );
+        } finally {
+          endStreaming(chat.id);
+          if (activeStreamingChatId === chat.id) {
+            activeStreamingChatId = '';
+          }
+          render();
+        }
+      }
+
+      async function syncPendingApprovals(chatId) {
+        const session = currentSession();
+        const chat = getChatById(chatId);
+        if (!session || !chat || (!chat.taskId && !chat.contextId)) return;
+        if (approvalSyncInFlightByChatId[chat.id]) return;
+        approvalSyncInFlightByChatId[chat.id] = true;
+        const query = new URLSearchParams();
+        if (chat.taskId) query.set('taskId', chat.taskId);
+        if (chat.contextId) query.set('contextId', chat.contextId);
+        try {
+          const res = await apiFetch('/api/v1/webui/pending-approvals?' + query.toString(), {
+            method: 'GET',
+          });
+          const data = await res.json();
+          if (data && typeof data.taskId === 'string' && data.taskId) {
+            chat.taskId = data.taskId;
+          }
+          if (data && typeof data.contextId === 'string' && data.contextId) {
+            chat.contextId = data.contextId;
+          }
+          const approvals = Array.isArray(data && data.approvals) ? data.approvals : [];
+          let changed = false;
+          approvals.forEach((item) => {
+            if (!item || typeof item !== 'object') return;
+            const callId = typeof item.callId === 'string' ? item.callId : '';
+            if (!callId) return;
+            const name = typeof item.name === 'string' ? item.name : 'Tool call';
+            changed =
+              upsertPendingApproval(chat.id, {
+                callId,
+                name,
+                taskId:
+                  (data && typeof data.taskId === 'string' && data.taskId) ||
+                  chat.taskId ||
+                  '',
+                contextId:
+                  (data && typeof data.contextId === 'string' && data.contextId) ||
+                  chat.contextId ||
+                  '',
+              }) || changed;
+          });
+          if (changed && state.activeChatId === chat.id) {
+            renderMessages();
+          }
+        } catch {
+          // best-effort fallback only
+        } finally {
+          approvalSyncInFlightByChatId[chat.id] = false;
+        }
+      }
+
+      async function syncPendingApprovalsGlobal() {
+        const session = currentSession();
+        const chat = currentChat();
+        if (!session || !chat) return;
+        try {
+          const res = await apiFetch('/api/v1/webui/pending-approvals/all', {
+            method: 'GET',
+          });
+          const data = await res.json();
+          const tasks = Array.isArray(data && data.tasks) ? data.tasks : [];
+          if (tasks.length === 0) return;
+          const active = tasks.find((item) => {
+            if (!item || typeof item !== 'object') return false;
+            const taskId = typeof item.taskId === 'string' ? item.taskId : '';
+            const contextId = typeof item.contextId === 'string' ? item.contextId : '';
+            return (chat.taskId && chat.taskId === taskId) || (chat.contextId && chat.contextId === contextId);
+          }) || tasks[0];
+          if (!active || typeof active !== 'object') return;
+          const taskId = typeof active.taskId === 'string' ? active.taskId : '';
+          const contextId = typeof active.contextId === 'string' ? active.contextId : '';
+          const approvals = Array.isArray(active.approvals) ? active.approvals : [];
+          if (!taskId || approvals.length === 0) return;
+          chat.taskId = taskId;
+          if (contextId) chat.contextId = contextId;
+          let changed = false;
+          approvals.forEach((item) => {
+            if (!item || typeof item !== 'object') return;
+            const callId = typeof item.callId === 'string' ? item.callId : '';
+            if (!callId) return;
+            const name = typeof item.name === 'string' ? item.name : 'Tool call';
+            changed =
+              upsertPendingApproval(chat.id, {
+                callId,
+                name,
+                taskId,
+                contextId,
+              }) || changed;
+          });
+          if (changed && state.activeChatId === chat.id) {
+            renderMessages();
+          }
+        } catch {
+          // best-effort fallback only
+        }
+      }
+
+      async function syncTaskFeed(chatId) {
+        const session = currentSession();
+        const chat = getChatById(chatId);
+        if (!session || !chat || (!chat.taskId && !chat.contextId)) return;
+        if (activeStreamingChatId && activeStreamingChatId === chat.id) return;
+        const key = chat.id;
+        const since = Number.isFinite(lastTaskFeedSeqByChatId[key])
+          ? lastTaskFeedSeqByChatId[key]
+          : -1;
+        const query = new URLSearchParams();
+        if (chat.taskId) query.set('taskId', chat.taskId);
+        if (chat.contextId) query.set('contextId', chat.contextId);
+        query.set('since', String(since));
+        try {
+          const res = await apiFetch('/api/v1/webui/task-feed?' + query.toString(), {
+            method: 'GET',
+          });
+          const data = await res.json();
+          if (data && typeof data.taskId === 'string' && data.taskId) {
+            chat.taskId = data.taskId;
+          }
+          if (data && typeof data.contextId === 'string' && data.contextId) {
+            chat.contextId = data.contextId;
+          }
+          if (data && Number.isFinite(data.latestSeq)) {
+            lastTaskFeedSeqByChatId[key] = Number(data.latestSeq);
+          }
+          const chunks = Array.isArray(data && data.chunks) ? data.chunks : [];
+          chunks.forEach((chunk) => {
+            if (!chunk || typeof chunk !== 'object') return;
+            const text = typeof chunk.text === 'string' ? chunk.text : '';
+            if (!text) return;
+            appendAssistantText(text, chat.id);
+          });
+        } catch {
+          // best-effort fallback only
+        }
+      }
+
+      function handleEvent(event, chatId, stopOnInputRequired = true, expectedTaskId = '') {
+        if (!event) return true;
+        if (event.error) {
+          const message =
+            (event.error && typeof event.error.message === 'string' && event.error.message) ||
+            'Unknown stream error';
+          addMessage('system', 'Stream error: ' + message, chatId);
+          return false;
+        }
+        if (!event.result) return true;
         const result = event.result;
         if (result.kind === 'task' && result.id) {
+          if (expectedTaskId && result.id !== expectedTaskId) {
+            // Ignore unrelated task announcements on this stream rather than
+            // aborting the active resume flow for the expected task.
+            logActivity(
+              'Stream',
+              'Ignoring unrelated task ' + result.id + ' (expecting ' + expectedTaskId + ')',
+              chatId,
+            );
+            return true;
+          }
           const chat = chatId ? getChatById(chatId) : currentChat();
           if (chat) {
             chat.taskId = result.id;
+            if (result.contextId && typeof result.contextId === 'string') {
+              chat.contextId = result.contextId;
+            }
             logActivity('Task', 'Created ' + result.id, chatId);
             saveState();
           }
-          return;
+          return true;
         }
         if (result.kind === 'status-update') {
+          const coderKind =
+            result.metadata &&
+            result.metadata.coderAgent &&
+            typeof result.metadata.coderAgent.kind === 'string'
+              ? result.metadata.coderAgent.kind
+              : '';
+          const statusState = result.status && result.status.state ? result.status.state : '';
+          if (result.taskId && typeof result.taskId === 'string') {
+            const chat = chatId ? getChatById(chatId) : currentChat();
+            if (chat) chat.taskId = result.taskId;
+          }
+          if (result.contextId && typeof result.contextId === 'string') {
+            const chat = chatId ? getChatById(chatId) : currentChat();
+            if (chat) chat.contextId = result.contextId;
+          }
           const parts = result.status && result.status.message && result.status.message.parts;
-          if (Array.isArray(parts)) {
-            parts.forEach((part) => {
-              if (part.kind === 'text' && part.text) {
-                appendAssistantText(part.text, chatId);
-              }
-            });
-          } else if (result.status && result.status.state) {
+          const approvalsChanged = processToolCallStatusParts(
+            parts,
+            chatId,
+            result.taskId,
+            result.contextId,
+          );
+          const hasChunks = appendPartsToChat(parts, chatId);
+          if (approvalsChanged && state.activeChatId === chatId) {
+            renderMessages();
+          }
+          if (!hasChunks && result.status && result.status.state) {
             logActivity('Status', result.status.state, chatId);
           }
+          if (coderKind === 'tool-call-confirmation') {
+            const approvals = Array.isArray(pendingApprovalsByChatId[chatId])
+              ? pendingApprovalsByChatId[chatId]
+              : [];
+            if (approvals.length === 0) {
+              // Fallback: infer approval card directly from the incoming payload.
+              const fallbackChat = chatId ? getChatById(chatId) : null;
+              if (Array.isArray(parts)) {
+                parts.forEach((part) => {
+                  if (!part || part.kind !== 'data' || !part.data || typeof part.data !== 'object') return;
+                  const data = part.data;
+                  const request = data.request && typeof data.request === 'object' ? data.request : {};
+                  const callId =
+                    (typeof request.callId === 'string' && request.callId) ||
+                    (typeof request.call_id === 'string' && request.call_id) ||
+                    (typeof data.callId === 'string' && data.callId) ||
+                    (typeof data.call_id === 'string' && data.call_id) ||
+                    '';
+                  if (!callId) return;
+                  const toolName =
+                    (typeof request.name === 'string' && request.name) ||
+                    (typeof data.name === 'string' && data.name) ||
+                    'Tool call';
+                  upsertPendingApproval(chatId, {
+                    callId,
+                    name: toolName,
+                    taskId: result.taskId || (fallbackChat && fallbackChat.taskId ? fallbackChat.taskId : ''),
+                    contextId:
+                      result.contextId || (fallbackChat && fallbackChat.contextId ? fallbackChat.contextId : ''),
+                  });
+                });
+              }
+            }
+            const refreshedApprovals = Array.isArray(pendingApprovalsByChatId[chatId])
+              ? pendingApprovalsByChatId[chatId]
+              : [];
+            if (refreshedApprovals.length === 0) {
+              // Fallback for streams that miss structured tool parts.
+              void syncPendingApprovals(chatId);
+              addMessage('system', 'Tool approval is required for this action.', chatId);
+            } else if (state.activeChatId === chatId) {
+              renderMessages();
+            }
+          }
+          if (result.final) {
+            const pendingApprovals = Array.isArray(pendingApprovalsByChatId[chatId])
+              ? pendingApprovalsByChatId[chatId]
+              : [];
+            const hasSubmittingApproval = pendingApprovals.some((item) => item && item.submitting);
+            if (statusState === 'completed' || statusState === 'failed' || statusState === 'canceled') {
+              return false;
+            }
+            if (statusState === 'input-required' && chatId) {
+              // Always refresh pending approvals on final input-required, including
+              // post-approval resume streams where stopOnInputRequired is false.
+              void syncPendingApprovals(chatId);
+            }
+            if (
+              stopOnInputRequired &&
+              statusState === 'input-required' &&
+              !hasSubmittingApproval
+            ) {
+              return false;
+            }
+          }
+        } else if (result.kind === 'artifact-update') {
+          appendPartsToChat(result.artifact && result.artifact.parts, chatId);
         } else if (result.kind && String(result.kind).includes('tool')) {
           const denialReason = extractPolicyDenialReason(result);
           if (denialReason) {
@@ -2369,6 +3087,7 @@ const WEB_UI_SCRIPT = `
             logActivity('Tool', String(result.kind), chatId);
           }
         }
+        return true;
       }
 
       async function createSession() {
@@ -2481,7 +3200,7 @@ const WEB_UI_SCRIPT = `
         const chat = currentChat();
         const text = promptInput.value.trim();
         const attachments = pendingAttachments.slice();
-        if (!session || !chat || (!text && attachments.length === 0)) return;
+        if (!session || !chat || (!text && attachments.length === 0) || activeStreamingChatId) return;
         promptInput.value = '';
         pendingAttachments = [];
         renderAttachmentStrip();
@@ -2504,20 +3223,27 @@ const WEB_UI_SCRIPT = `
         const contextualText = buildContextualPrompt(chat, promptText);
         const request = buildRpcRequest(session, contextualText, chat.taskId, attachments);
         activeStreamingChatId = chat.id;
-        const res = await fetch('/', {
-          method: 'POST',
-          headers: buildHeaders(session),
-          body: JSON.stringify(request),
-        });
-        if (!res.ok) {
-          addMessage('system', 'Request failed: ' + res.status, chat.id);
-          activeStreamingChatId = '';
-          return;
-        }
-        await readSse(res, (event) => handleEvent(event, chat.id));
-        endStreaming(chat.id);
-        if (activeStreamingChatId === chat.id) {
-          activeStreamingChatId = '';
+        render();
+        try {
+          const res = await fetch('/', {
+            method: 'POST',
+            headers: buildHeaders(session),
+            body: JSON.stringify(request),
+          });
+          if (!res.ok) {
+            addMessage('system', 'Request failed: ' + res.status, chat.id);
+            return;
+          }
+          await readSse(res, (event) => handleEvent(event, chat.id, true));
+        } catch (err) {
+          const message = err && err.message ? String(err.message) : 'Unknown error';
+          addMessage('system', 'Request failed: ' + message, chat.id);
+        } finally {
+          endStreaming(chat.id);
+          if (activeStreamingChatId === chat.id) {
+            activeStreamingChatId = '';
+          }
+          render();
         }
       }
 
@@ -2526,8 +3252,33 @@ const WEB_UI_SCRIPT = `
         if (!session) return;
         const chat = createChat();
         session.chats.unshift(chat);
+        pendingApprovalsByChatId[chat.id] = [];
+        lastTaskFeedSeqByChatId[chat.id] = -1;
         state.activeChatId = chat.id;
         addMessage('system', 'Started a new chat.');
+        render();
+        saveState();
+      }
+
+      function deleteChat(chatId) {
+        const session = currentSession();
+        if (!session || !chatId) return;
+        const chat = session.chats.find((item) => item.id === chatId);
+        if (!chat) return;
+
+        session.chats = session.chats.filter((item) => item.id !== chatId);
+        if (session.chats.length === 0) {
+          const replacement = createChat();
+          session.chats = [replacement];
+          state.activeChatId = replacement.id;
+        } else if (state.activeChatId === chatId) {
+          state.activeChatId = session.chats[0].id;
+        }
+        if (activeStreamingChatId === chatId) {
+          activeStreamingChatId = '';
+        }
+        delete pendingApprovalsByChatId[chatId];
+        delete lastTaskFeedSeqByChatId[chatId];
         render();
         saveState();
       }
@@ -2537,6 +3288,7 @@ const WEB_UI_SCRIPT = `
         if (!chat) return;
         chat.messages = [];
         chat.activity = [];
+        pendingApprovalsByChatId[chat.id] = [];
         render();
         saveState();
       }
@@ -2954,6 +3706,10 @@ const WEB_UI_SCRIPT = `
         }
       });
 
+      if (desktopMode && autoExecToggle && !autoExecToggle.checked) {
+        autoExecToggle.checked = true;
+      }
+
       on(shareBtn, 'click', () => shareCurrentChat());
       on(shareNowBtn, 'click', () => shareCurrentChat());
 
@@ -3258,6 +4014,35 @@ const WEB_UI_SCRIPT = `
 
       renderAttachmentStrip();
       render();
+
+      // Even after a stream ends, keep fetching pending approvals so cards
+      // appear as soon as backend asks for permissions.
+      setInterval(() => {
+        const session = currentSession();
+        const chat = currentChat();
+        if (!session || !chat) return;
+        if (!chat.taskId && !chat.contextId) return;
+        void syncPendingApprovals(chat.id);
+      }, 1500);
+
+      setInterval(() => {
+        const session = currentSession();
+        const chat = currentChat();
+        if (!session || !chat) return;
+        const approvals = Array.isArray(pendingApprovalsByChatId[chat.id])
+          ? pendingApprovalsByChatId[chat.id]
+          : [];
+        if (approvals.length > 0) return;
+        void syncPendingApprovalsGlobal();
+      }, 2000);
+
+      setInterval(() => {
+        const session = currentSession();
+        const chat = currentChat();
+        if (!session || !chat) return;
+        if (!chat.taskId && !chat.contextId) return;
+        void syncTaskFeed(chat.id);
+      }, 1200);
 `
 
 const WEB_UI_MENU_BAR = `

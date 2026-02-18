@@ -575,6 +575,128 @@ export async function createApp() {
       }
     });
 
+    expressApp.post('/api/v1/webui/tool-approval', async (req, res) => {
+      try {
+        const taskId =
+          typeof req.body?.taskId === 'string' ? req.body.taskId.trim() : '';
+        const contextId =
+          typeof req.body?.contextId === 'string'
+            ? req.body.contextId.trim()
+            : '';
+        const callId =
+          typeof req.body?.callId === 'string' ? req.body.callId.trim() : '';
+        const outcome =
+          typeof req.body?.outcome === 'string' ? req.body.outcome.trim() : '';
+        const newContent =
+          typeof req.body?.newContent === 'string' ? req.body.newContent : undefined;
+
+        if (!taskId || !callId || !outcome) {
+          return res.status(400).json({ error: 'taskId, callId, and outcome are required' });
+        }
+
+        logger.info(
+          `[WebUI] Tool approval request: task=${taskId}, context=${contextId || 'n/a'}, callId=${callId}, outcome=${outcome}`,
+        );
+
+        const approvalResult = await agentExecutor.confirmToolCallResolved(
+          taskId,
+          callId,
+          outcome,
+          newContent,
+          contextId || undefined,
+        );
+        if (!approvalResult.accepted) {
+          logger.warn(
+            `[WebUI] Tool approval rejected: task=${taskId}, context=${contextId || 'n/a'}, callId=${callId}, outcome=${outcome}`,
+          );
+          return res.status(409).json({ error: 'Tool approval not accepted for this task/call' });
+        }
+        logger.info(
+          `[WebUI] Tool approval accepted: task=${approvalResult.taskId || taskId}, context=${approvalResult.contextId || contextId || 'n/a'}, callId=${callId}, outcome=${outcome}`,
+        );
+        return res.status(200).json({
+          accepted: true,
+          taskId: approvalResult.taskId || taskId,
+          contextId: approvalResult.contextId || contextId || '',
+        });
+      } catch (error) {
+        logger.error('[WebUI] Failed to submit tool approval', error);
+        return res.status(500).json({ error: 'Failed to submit tool approval' });
+      }
+    });
+
+    expressApp.get('/api/v1/webui/pending-approvals', async (req, res) => {
+      try {
+        const taskId =
+          typeof req.query?.['taskId'] === 'string'
+            ? req.query['taskId'].trim()
+            : '';
+        const contextId =
+          typeof req.query?.['contextId'] === 'string'
+            ? req.query['contextId'].trim()
+            : '';
+        if (!taskId && !contextId) {
+          return res
+            .status(400)
+            .json({ error: 'taskId or contextId is required' });
+        }
+        const pending = agentExecutor.getPendingApprovals(taskId, contextId || undefined);
+        if (!pending) {
+          return res.status(404).json({ error: 'Task not found' });
+        }
+        return res.status(200).json(pending);
+      } catch (error) {
+        logger.error('[WebUI] Failed to read pending approvals', error);
+        return res.status(500).json({ error: 'Failed to read pending approvals' });
+      }
+    });
+
+    expressApp.get('/api/v1/webui/pending-approvals/all', async (_req, res) => {
+      try {
+        return res.status(200).json({
+          tasks: agentExecutor.getAllPendingApprovals(),
+        });
+      } catch (error) {
+        logger.error('[WebUI] Failed to read all pending approvals', error);
+        return res.status(500).json({ error: 'Failed to read all pending approvals' });
+      }
+    });
+
+    expressApp.get('/api/v1/webui/task-feed', async (req, res) => {
+      try {
+        const taskId =
+          typeof req.query?.['taskId'] === 'string'
+            ? req.query['taskId'].trim()
+            : '';
+        const contextId =
+          typeof req.query?.['contextId'] === 'string'
+            ? req.query['contextId'].trim()
+            : '';
+        const sinceRaw =
+          typeof req.query?.['since'] === 'string'
+            ? req.query['since'].trim()
+            : '';
+        const sinceSeq = sinceRaw ? Number(sinceRaw) : -1;
+        if (!taskId && !contextId) {
+          return res
+            .status(400)
+            .json({ error: 'taskId or contextId is required' });
+        }
+        const feed = agentExecutor.getTaskTextFeed(
+          taskId,
+          contextId || undefined,
+          Number.isFinite(sinceSeq) ? sinceSeq : -1,
+        );
+        if (!feed) {
+          return res.status(404).json({ error: 'Task not found' });
+        }
+        return res.status(200).json(feed);
+      } catch (error) {
+        logger.error('[WebUI] Failed to read task feed', error);
+        return res.status(500).json({ error: 'Failed to read task feed' });
+      }
+    });
+
     expressApp.get('/api/v1/webui/content/:type/:id', async (req, res) => {
       try {
         const type = req.params.type;

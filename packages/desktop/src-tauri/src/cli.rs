@@ -23,6 +23,28 @@ fn sidecar_available(app: &tauri::AppHandle) -> bool {
     get_sidecar_path(app).exists()
 }
 
+fn server_candidate_roots() -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+
+    if let Ok(cwd) = std::env::current_dir() {
+        roots.push(cwd);
+    }
+
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    roots.push(manifest_dir.clone());
+    if let Some(parent) = manifest_dir.parent() {
+        roots.push(parent.to_path_buf());
+        if let Some(grand_parent) = parent.parent() {
+            roots.push(grand_parent.to_path_buf());
+            if let Some(great_grand_parent) = grand_parent.parent() {
+                roots.push(great_grand_parent.to_path_buf());
+            }
+        }
+    }
+
+    roots
+}
+
 pub fn create_command(app: &tauri::AppHandle, args: &str) -> Command {
     let state_dir = app
         .path()
@@ -85,29 +107,21 @@ pub fn create_command(app: &tauri::AppHandle, args: &str) -> Command {
 }
 
 fn find_local_server_entrypoint() -> Option<PathBuf> {
-    let cwd = std::env::current_dir().ok()?;
-    let candidates = [
-        cwd.join("packages/a2a-server/dist/src/http/server.js"),
-        cwd.join("../packages/a2a-server/dist/src/http/server.js"),
-        cwd.join("../../packages/a2a-server/dist/src/http/server.js"),
-        cwd.join("a2a-server/dist/src/http/server.js"),
-        cwd.join("../a2a-server/dist/src/http/server.js"),
-        cwd.join("../../a2a-server/dist/src/http/server.js"),
-    ];
+    let mut candidates = Vec::new();
+    for root in server_candidate_roots() {
+        candidates.push(root.join("packages/a2a-server/dist/src/http/server.js"));
+        candidates.push(root.join("a2a-server/dist/src/http/server.js"));
+    }
 
     candidates.into_iter().find(|path| path.exists())
 }
 
 fn find_local_server_source() -> Option<PathBuf> {
-    let cwd = std::env::current_dir().ok()?;
-    let candidates = [
-        cwd.join("packages/a2a-server/src/http/server.ts"),
-        cwd.join("../packages/a2a-server/src/http/server.ts"),
-        cwd.join("../../packages/a2a-server/src/http/server.ts"),
-        cwd.join("a2a-server/src/http/server.ts"),
-        cwd.join("../a2a-server/src/http/server.ts"),
-        cwd.join("../../a2a-server/src/http/server.ts"),
-    ];
+    let mut candidates = Vec::new();
+    for root in server_candidate_roots() {
+        candidates.push(root.join("packages/a2a-server/src/http/server.ts"));
+        candidates.push(root.join("a2a-server/src/http/server.ts"));
+    }
 
     candidates.into_iter().find(|path| path.exists())
 }
@@ -129,6 +143,7 @@ pub fn create_server_command(
         ("PAPERT_WEB_UI_ENABLED", "1".to_string()),
         ("PAPERT_WEB_UI_ALLOW_EMPTY_TOKEN", "1".to_string()),
         ("PAPERT_WEB_UI_DESKTOP_MODE", "1".to_string()),
+        ("PAPERT_YOLO_MODE", "true".to_string()),
         ("PAPERT_REMOTE_SERVER_TOKEN", "".to_string()),
         ("PAPERT_REMOTE_SESSION_TTL_MS", "43200000".to_string()),
         ("PAPERT_REMOTE_DOCS_ENABLED", "0".to_string()),
@@ -171,6 +186,10 @@ pub fn create_server_command(
     }
 
     if let Some(entrypoint) = find_local_server_entrypoint() {
+        eprintln!(
+            "[desktop] Using local a2a-server dist entrypoint: {}",
+            entrypoint.display()
+        );
         let node = std::env::var("PAPERT_NODE_BINARY").unwrap_or_else(|_| "node".to_string());
         let mut cmd = app.shell().command(node);
         cmd = cmd.arg(entrypoint.to_string_lossy().to_string());
@@ -182,6 +201,10 @@ pub fn create_server_command(
     }
 
     if let Some(entrypoint) = find_local_server_source() {
+        eprintln!(
+            "[desktop] Using local a2a-server source entrypoint: {}",
+            entrypoint.display()
+        );
         let node = std::env::var("PAPERT_NODE_BINARY").unwrap_or_else(|_| "node".to_string());
         let mut cmd = app.shell().command(node);
         cmd = cmd.args([
@@ -197,6 +220,7 @@ pub fn create_server_command(
     }
 
     let args = format!("web --host {hostname} --port {port}");
+    eprintln!("[desktop] Falling back to external 'papert web' command");
     let mut cmd = create_command(app, &args);
     cmd = cmd.current_dir(workspace_root);
     for (key, value) in envs.drain(..) {

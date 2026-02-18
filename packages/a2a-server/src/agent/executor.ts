@@ -162,6 +162,178 @@ export class CoderAgentExecutor implements AgentExecutor {
     return Array.from(this.tasks.values());
   }
 
+  async confirmToolCall(
+    taskId: string,
+    callId: string,
+    outcome: string,
+    newContent?: string,
+    contextId?: string,
+  ): Promise<boolean> {
+    const result = await this.confirmToolCallResolved(
+      taskId,
+      callId,
+      outcome,
+      newContent,
+      contextId,
+    );
+    return result.accepted;
+  }
+
+  async confirmToolCallResolved(
+    taskId: string,
+    callId: string,
+    outcome: string,
+    newContent?: string,
+    contextId?: string,
+  ): Promise<{ accepted: boolean; taskId?: string; contextId?: string }> {
+    const attempt = async (candidate: TaskWrapper | undefined, source: string) => {
+      if (!candidate) return { accepted: false };
+      const accepted = await candidate.task.handleToolConfirmation(
+        callId,
+        outcome,
+        newContent,
+      );
+      if (accepted) {
+        logger.info(
+          `[CoderAgentExecutor] confirmToolCall: accepted via ${source} (task=${candidate.task.id}, context=${candidate.task.contextId}, callId=${callId}, outcome=${outcome}).`,
+        );
+        return {
+          accepted: true,
+          taskId: candidate.task.id,
+          contextId: candidate.task.contextId,
+        };
+      }
+      return { accepted: false };
+    };
+
+    const directWrapper = this.tasks.get(taskId);
+    if (!directWrapper) {
+      logger.warn(
+        `[CoderAgentExecutor] confirmToolCall: task ${taskId} not found in memory. Trying fallbacks.`,
+      );
+    } else {
+      const accepted = await attempt(directWrapper, 'direct-task-id');
+      if (accepted.accepted) return accepted;
+      logger.warn(
+        `[CoderAgentExecutor] confirmToolCall: direct task ${taskId} did not accept confirmation for callId=${callId}. Trying fallbacks.`,
+      );
+    }
+
+    const candidates = Array.from(this.tasks.values());
+    if (contextId) {
+      const byContext = candidates.filter((wrapper) => wrapper.task.contextId === contextId);
+      for (const wrapper of byContext) {
+        const accepted = await attempt(wrapper, 'context-id');
+        if (accepted.accepted) return accepted;
+      }
+    }
+
+    for (const wrapper of candidates) {
+      if (!wrapper.task.hasPendingToolConfirmation(callId)) continue;
+      const accepted = await attempt(wrapper, 'global-call-id-match');
+      if (accepted.accepted) return accepted;
+    }
+
+    const singlePending = candidates.filter(
+      (wrapper) => wrapper.task.getPendingToolConfirmationCount() === 1,
+    );
+    if (singlePending.length === 1) {
+      const accepted = await attempt(singlePending[0], 'single-pending-global-fallback');
+      if (accepted.accepted) {
+        return accepted;
+      }
+    }
+
+    logger.warn(
+      `[CoderAgentExecutor] confirmToolCall: no matching pending tool confirmation found (task=${taskId}, context=${contextId || 'n/a'}, callId=${callId}, outcome=${outcome}).`,
+    );
+    return { accepted: false };
+  }
+
+  getPendingApprovals(taskId: string, contextId?: string): {
+    taskId: string;
+    contextId: string;
+    approvals: Array<{ callId: string; name: string }>;
+  } | null {
+    const direct = this.tasks.get(taskId);
+    if (direct) {
+      const directApprovals = direct.task.getPendingApprovalsSummary();
+      if (directApprovals.length > 0 || !contextId) {
+        return {
+          taskId: direct.task.id,
+          contextId: direct.task.contextId,
+          approvals: directApprovals,
+        };
+      }
+    }
+    if (contextId) {
+      const byContext = Array.from(this.tasks.values()).find(
+        (wrapper) => wrapper.task.contextId === contextId,
+      );
+      if (byContext) {
+        return {
+          taskId: byContext.task.id,
+          contextId: byContext.task.contextId,
+          approvals: byContext.task.getPendingApprovalsSummary(),
+        };
+      }
+    }
+    return null;
+  }
+
+  getAllPendingApprovals(): Array<{
+    taskId: string;
+    contextId: string;
+    approvals: Array<{ callId: string; name: string }>;
+  }> {
+    const result: Array<{
+      taskId: string;
+      contextId: string;
+      approvals: Array<{ callId: string; name: string }>;
+    }> = [];
+    for (const wrapper of this.tasks.values()) {
+      const approvals = wrapper.task.getPendingApprovalsSummary();
+      if (approvals.length === 0) continue;
+      result.push({
+        taskId: wrapper.task.id,
+        contextId: wrapper.task.contextId,
+        approvals,
+      });
+    }
+    return result;
+  }
+
+  getTaskTextFeed(
+    taskId: string,
+    contextId?: string,
+    sinceSeq = -1,
+  ): {
+    taskId: string;
+    contextId: string;
+    state: string;
+    latestSeq: number;
+    chunks: Array<{ seq: number; text: string; ts: string }>;
+  } | null {
+    const resolveWrapper = () => {
+      const direct = this.tasks.get(taskId);
+      if (direct) return direct;
+      if (!contextId) return undefined;
+      return Array.from(this.tasks.values()).find(
+        (wrapper) => wrapper.task.contextId === contextId,
+      );
+    };
+    const wrapper = resolveWrapper();
+    if (!wrapper) return null;
+    const { latestSeq, chunks } = wrapper.task.getOutputChunksSince(sinceSeq);
+    return {
+      taskId: wrapper.task.id,
+      contextId: wrapper.task.contextId,
+      state: wrapper.task.taskState,
+      latestSeq,
+      chunks,
+    };
+  }
+
   cancelTask = async (
     taskId: string,
     eventBus: ExecutionEventBus,

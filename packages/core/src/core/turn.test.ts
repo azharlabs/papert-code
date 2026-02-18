@@ -182,6 +182,56 @@ describe('Turn', () => {
       expect(turn.getDebugResponses().length).toBe(1);
     });
 
+    it('should parse minimax textual tool calls into tool_call_request events', async () => {
+      const mockResponseStream = (async function* () {
+        yield {
+          type: StreamEventType.CHUNK,
+          value: {
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text:
+                        '<think>Planning</think>\n' +
+                        '[tool_call: glob]\n' +
+                        '<parameter name="path">/tmp/project/src</parameter>\n' +
+                        '<parameter name="pattern">**/*.{tsx,css}</parameter>\n' +
+                        '</invoke>\n' +
+                        '</minimax:tool_call>',
+                    },
+                  ],
+                },
+                finishReason: 'STOP',
+              },
+            ],
+          } as GenerateContentResponse,
+        };
+      })();
+      mockSendMessageStream.mockResolvedValue(mockResponseStream);
+
+      const events = [];
+      for await (const event of turn.run(
+        'test-model',
+        [{ text: 'Find files' }],
+        new AbortController().signal,
+      )) {
+        events.push(event);
+      }
+
+      const toolEvent = events.find(
+        (e) => e.type === GeminiEventType.ToolCallRequest,
+      ) as ServerGeminiToolCallRequestEvent | undefined;
+      expect(toolEvent).toBeDefined();
+      expect(toolEvent?.value).toMatchObject({
+        name: 'glob',
+        args: {
+          path: '/tmp/project/src',
+          pattern: '**/*.{tsx,css}',
+        },
+      });
+    });
+
     it('should yield UserCancelled event if signal is aborted', async () => {
       const abortController = new AbortController();
       const mockResponseStream = (async function* () {
