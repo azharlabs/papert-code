@@ -93,7 +93,7 @@ Slash commands provide meta-level control over the CLI itself.
 ### Built-in Commands
 
 - **`/bug`**
-  - **Description:** File an issue about Papert Code. By default, the issue is filed within the GitHub repository for Papert Code. The string you enter after `/bug` will become the headline for the bug being filed. The default `/bug` behavior can be modified using the `advanced.bugCommand` setting in your `.papert/settings.json` files.
+  - **Description:** File an issue about Papert Code. By default, the issue is filed within the GitHub repository for Papert Code. The string you enter after `/bug` becomes the issue title. The command also writes a sanitized local diagnostics bundle to `.papert/bug-report-bundles/` so you can attach reproducible context. The default URL behavior can be customized with the `advanced.bugCommand` setting in your `.papert/settings.json` files.
 
 - **`/clear`** (aliases: `reset`, `new`)
   - **Description:** Clear conversation history and free up context by starting a fresh session. Also clears the terminal output and scrollback within the CLI.

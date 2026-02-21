@@ -6,6 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import open from 'open';
+import * as fs from 'node:fs/promises';
 import { bugCommand } from './bugCommand.js';
 import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
 import { GIT_COMMIT_INFO } from '../../generated/git-commit.js';
@@ -14,6 +15,21 @@ import * as systemInfoUtils from '../../utils/systemInfo.js';
 
 // Mock dependencies
 vi.mock('open');
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>();
+  const mkdir = vi.fn();
+  const writeFile = vi.fn();
+  return {
+    ...actual,
+    mkdir,
+    writeFile,
+    default: {
+      ...actual,
+      mkdir,
+      writeFile,
+    },
+  };
+});
 vi.mock('../../utils/systemInfo.js');
 
 describe('bugCommand', () => {
@@ -36,6 +52,8 @@ describe('bugCommand', () => {
           ? GIT_COMMIT_INFO
           : undefined,
     });
+    vi.mocked(fs.mkdir).mockResolvedValue(undefined);
+    vi.mocked(fs.writeFile).mockResolvedValue(undefined);
     vi.stubEnv('SANDBOX', 'papert-test');
   });
 
@@ -176,5 +194,68 @@ ${gitCommitLine}* **Model:** papert3-coder-plus
       encodeURIComponent(expectedInfo);
 
     expect(open).toHaveBeenCalledWith(expectedUrl);
+  });
+
+  it('should write a sanitized diagnostics bundle for reproduction', async () => {
+    vi.stubEnv('OPENAI_API_KEY', 'sk-secret-value');
+    vi.stubEnv('HTTPS_PROXY', 'https://user:password@example.com:8443');
+
+    const mockContext = createMockCommandContext({
+      services: {
+        config: {
+          getTargetDir: () => '/workspace/project',
+          getBugCommand: () => undefined,
+          getModel: () => 'papert3-coder-plus',
+          getApprovalMode: () => 'default',
+          getSandbox: () => ({ command: 'docker' }),
+          getOutputFormat: () => 'text',
+          getInputFormat: () => 'text',
+        },
+      },
+    });
+
+    if (!bugCommand.action) throw new Error('Action is not defined');
+    await bugCommand.action(mockContext, 'sanitization bug');
+
+    expect(fs.mkdir).toHaveBeenCalledWith(
+      '/workspace/project/.papert/bug-report-bundles',
+      { recursive: true },
+    );
+
+    const writeCall = vi.mocked(fs.writeFile).mock.calls[0];
+    expect(writeCall?.[0]).toContain(
+      '/workspace/project/.papert/bug-report-bundles/bug-repro-',
+    );
+
+    const payload = JSON.parse(String(writeCall?.[1]));
+    expect(payload.systemInfo.sessionId).toBe('test-ses...');
+    expect(payload.environment.OPENAI_API_KEY).toBe('[REDACTED]');
+    expect(payload.environment.HTTPS_PROXY).toContain('redacted:redacted');
+  });
+
+  it('should continue and open issue URL when diagnostics bundle writing fails', async () => {
+    vi.mocked(fs.writeFile).mockRejectedValue(new Error('disk full'));
+    const mockContext = createMockCommandContext({
+      services: {
+        config: {
+          getTargetDir: () => '/workspace/project',
+          getBugCommand: () => undefined,
+        },
+      },
+    });
+
+    if (!bugCommand.action) throw new Error('Action is not defined');
+    await bugCommand.action(mockContext, 'bundle fail');
+
+    expect(open).toHaveBeenCalledOnce();
+    expect(mockContext.ui.addItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'error',
+        text: expect.stringContaining(
+          'Could not create local diagnostics bundle: disk full',
+        ),
+      }),
+      expect.any(Number),
+    );
   });
 });
