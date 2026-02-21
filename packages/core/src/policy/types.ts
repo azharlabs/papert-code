@@ -81,10 +81,22 @@ export interface SafetyCheckerRule {
 }
 
 export interface PolicyRule {
+  /**
+   * Tool matcher. Supports exact names (e.g. "read_file") and
+   * wildcard patterns using "*" (e.g. "run_*" or "*__*").
+   */
   toolName?: string;
   argsPattern?: RegExp;
   decision: PolicyDecision;
   priority?: number;
+  reason?: string;
+}
+
+export type PermissionDslDecision = 'allow' | 'ask' | 'deny';
+
+export interface PermissionDslRule {
+  decision: PermissionDslDecision;
+  tool: string;
   reason?: string;
 }
 
@@ -109,6 +121,7 @@ export interface PolicySettings {
   tools?: {
     exclude?: string[];
     allowed?: string[];
+    permissions?: Array<string | PermissionDslRule>;
   };
   mcpServers?: Record<string, { trust?: boolean }>;
 }

@@ -67,4 +67,51 @@ describe('PolicyEngine.getDecisionReason', () => {
       'Interactive confirmation is disabled in non-interactive mode',
     );
   });
+
+  it('supports wildcard tool matching', () => {
+    const engine = new PolicyEngine({
+      rules: [
+        {
+          toolName: 'run_*',
+          decision: PolicyDecision.DENY,
+          reason: 'All run_* tools are blocked in this environment',
+        },
+      ],
+    });
+
+    const details = engine.getDecisionDetails(
+      { name: 'run_shell_command', args: { command: 'echo ok' } },
+      undefined,
+    );
+
+    expect(details.decision).toBe(PolicyDecision.DENY);
+    expect(details.reason).toBe('All run_* tools are blocked in this environment');
+  });
+
+  it('uses last-match-wins when multiple rules match', () => {
+    const engine = new PolicyEngine({
+      rules: [
+        {
+          toolName: 'run_shell_command',
+          decision: PolicyDecision.DENY,
+          reason: 'default shell deny',
+          priority: 1,
+        },
+        {
+          toolName: 'run_shell_command',
+          decision: PolicyDecision.ALLOW,
+          reason: 'last override allow',
+          priority: 5,
+        },
+      ],
+    });
+
+    const details = engine.getDecisionDetails(
+      { name: 'run_shell_command', args: { command: 'git status' } },
+      undefined,
+    );
+
+    expect(details.decision).toBe(PolicyDecision.ALLOW);
+    expect(details.reason).toBeUndefined();
+  });
 });

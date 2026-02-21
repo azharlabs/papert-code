@@ -18,10 +18,13 @@ export class PolicyEngine {
   private readonly defaultDecision: PolicyDecision;
   private readonly nonInteractive: boolean;
   private readonly allowHooks: boolean;
+  private readonly wildcardRegexCache = new Map<string, RegExp>();
 
   constructor(config: PolicyEngineConfig = {}) {
-    this.rules = (config.rules ?? []).sort(
-      (a, b) => (b.priority ?? 0) - (a.priority ?? 0),
+    // Last-match wins: rules are evaluated in ascending priority order and
+    // the last matching rule becomes authoritative.
+    this.rules = [...(config.rules ?? [])].sort(
+      (a, b) => (a.priority ?? 0) - (b.priority ?? 0),
     );
     this.defaultDecision = config.defaultDecision ?? PolicyDecision.ASK_USER;
     this.nonInteractive = config.nonInteractive ?? false;
@@ -51,9 +54,12 @@ export class PolicyEngine {
         ? stableStringify(toolCall.args)
         : undefined;
 
-    const matchedRule = this.rules.find((rule) =>
-      this.ruleMatches(rule, toolCall.name, stringifiedArgs, serverName),
-    );
+    let matchedRule: PolicyRule | undefined;
+    for (const rule of this.rules) {
+      if (this.ruleMatches(rule, toolCall.name, stringifiedArgs, serverName)) {
+        matchedRule = rule;
+      }
+    }
 
     if (matchedRule) {
       const decision = this.applyNonInteractiveMode(matchedRule.decision);
@@ -104,7 +110,7 @@ export class PolicyEngine {
 
   addRule(rule: PolicyRule): void {
     this.rules.push(rule);
-    this.rules.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+    this.rules.sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
   }
 
   getRules(): readonly PolicyRule[] {
@@ -117,18 +123,11 @@ export class PolicyEngine {
     stringifiedArgs: string | undefined,
     serverName: string | undefined,
   ): boolean {
-    if (rule.toolName) {
-      if (rule.toolName.endsWith('__*')) {
-        const prefix = rule.toolName.slice(0, -3);
-        if (serverName && serverName !== prefix) {
-          return false;
-        }
-        if (!toolName?.startsWith(`${prefix}__`)) {
-          return false;
-        }
-      } else if (rule.toolName !== toolName) {
-        return false;
-      }
+    if (
+      rule.toolName &&
+      !this.matchesToolPattern(rule.toolName, toolName, serverName)
+    ) {
+      return false;
     }
 
     if (rule.argsPattern && stringifiedArgs) {
@@ -136,6 +135,43 @@ export class PolicyEngine {
     }
 
     return !rule.argsPattern;
+  }
+
+  private matchesToolPattern(
+    pattern: string,
+    toolName: string | undefined,
+    serverName: string | undefined,
+  ): boolean {
+    if (!toolName) {
+      return false;
+    }
+
+    if (!pattern.includes('*')) {
+      return pattern === toolName;
+    }
+
+    if (pattern.endsWith('__*') && serverName) {
+      const serverPrefix = pattern.slice(0, -3);
+      if (serverName !== serverPrefix) {
+        return false;
+      }
+    }
+
+    return this.getWildcardRegex(pattern).test(toolName);
+  }
+
+  private getWildcardRegex(pattern: string): RegExp {
+    const cached = this.wildcardRegexCache.get(pattern);
+    if (cached) {
+      return cached;
+    }
+
+    const escaped = pattern
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*/g, '.*');
+    const compiled = new RegExp(`^${escaped}$`);
+    this.wildcardRegexCache.set(pattern, compiled);
+    return compiled;
   }
 
   private applyNonInteractiveMode(decision: PolicyDecision): PolicyDecision {

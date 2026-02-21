@@ -279,6 +279,14 @@ Settings are organized into categories. All settings should be placed within the
   - **Description:** A list of tool names that will bypass the confirmation dialog. This is useful for tools that you trust and use frequently. For example, `["run_shell_command(git)", "run_shell_command(npm test)"]` will skip the confirmation dialog to run any `git` and `npm test` commands. See [Shell Tool command restrictions](../tools/shell.md#command-restrictions) for details on prefix matching, command chaining, etc.
   - **Default:** `undefined`
 
+- **`tools.permissions`** (array of strings):
+  - **Description:** Permission DSL rules with explicit actions and wildcard matching. Format: `"allow|ask|deny <tool-pattern>"`. Rules are evaluated with **last-match-wins** semantics.
+  - **Examples:**
+    - `"deny run_*"`
+    - `"allow read_*"`
+    - `"ask run_shell_command"`
+  - **Default:** `undefined`
+
 - **`tools.approvalMode`** (string):
   - **Description:** Sets the default approval mode for tool usage. Accepted values are:
     - `plan`: Analyze only, do not modify files or execute commands.

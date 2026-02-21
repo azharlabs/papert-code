@@ -18,6 +18,8 @@ import {
   type PolicyRule,
   type ApprovalMode,
   type PolicySettings,
+  type PermissionDslDecision,
+  type PermissionDslRule,
 } from './types.js';
 import { loadPoliciesFromToml } from './toml-loader.js';
 
@@ -32,6 +34,68 @@ export const SYSTEM_POLICIES_DIR = path.join(
   Storage.getGlobalPapertDir(),
   'system-policies',
 );
+
+function toPolicyDecision(
+  decision: PermissionDslDecision,
+): PolicyDecision {
+  if (decision === 'allow') {
+    return PolicyDecision.ALLOW;
+  }
+  if (decision === 'deny') {
+    return PolicyDecision.DENY;
+  }
+  return PolicyDecision.ASK_USER;
+}
+
+function parsePermissionDslString(
+  entry: string,
+): { decision: PolicyDecision; toolName: string } | null {
+  const match = entry.trim().match(/^(allow|ask|deny)\s+(.+)$/i);
+  if (!match) {
+    return null;
+  }
+  const [, decisionKeyword, toolPattern] = match;
+  const normalizedToolPattern = toolPattern.trim();
+  if (!normalizedToolPattern) {
+    return null;
+  }
+  return {
+    decision: toPolicyDecision(
+      decisionKeyword.toLowerCase() as PermissionDslDecision,
+    ),
+    toolName: normalizedToolPattern,
+  };
+}
+
+function parsePermissionDslEntry(
+  entry: string | PermissionDslRule,
+): PolicyRule | null {
+  if (typeof entry === 'string') {
+    const parsed = parsePermissionDslString(entry);
+    if (!parsed) {
+      return null;
+    }
+    return {
+      toolName: parsed.toolName,
+      decision: parsed.decision,
+    };
+  }
+
+  if (!entry || typeof entry.tool !== 'string') {
+    return null;
+  }
+
+  const toolName = entry.tool.trim();
+  if (!toolName) {
+    return null;
+  }
+
+  return {
+    toolName,
+    decision: toPolicyDecision(entry.decision),
+    reason: entry.reason,
+  };
+}
 
 export function getPolicyDirectories(defaultPoliciesDir?: string): string[] {
   const dirs = [];
@@ -125,6 +189,19 @@ export function createPolicyEngineConfig(
         });
       }
     }
+  }
+
+  if (settings.tools?.permissions) {
+    const parsedPermissionRules = settings.tools.permissions
+      .map((entry) => parsePermissionDslEntry(entry))
+      .filter((rule): rule is PolicyRule => !!rule);
+
+    parsedPermissionRules.forEach((rule, index) => {
+      rules.push({
+        ...rule,
+        priority: 2.95 + index / 1000,
+      });
+    });
   }
 
   return {

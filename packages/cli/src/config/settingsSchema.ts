@@ -1038,6 +1038,19 @@ const SETTINGS_SCHEMA = {
           type: 'string',
         },
       },
+      permissions: {
+        type: 'array',
+        label: 'Permission Rules',
+        category: 'Advanced',
+        requiresRestart: true,
+        default: undefined as string[] | undefined,
+        description:
+          'Permission DSL rules in the form "allow|ask|deny <tool-pattern>". Supports "*" wildcards and last-match-wins evaluation.',
+        showInDialog: false,
+        items: {
+          type: 'string',
+        },
+      },
       exclude: {
         type: 'array',
         label: 'Exclude Tools',
