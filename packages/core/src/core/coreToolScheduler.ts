@@ -49,6 +49,7 @@ import levenshtein from 'fast-levenshtein';
 import { getPlanModeSystemReminder } from './prompts.js';
 import { ShellToolInvocation } from '../tools/shell.js';
 import { stableStringify } from '../policy/stable-stringify.js';
+import { PolicyDecision } from '../policy/types.js';
 
 export type ValidatingToolCall = {
   status: 'validating';
@@ -723,6 +724,39 @@ export class CoreToolScheduler {
               ),
               durationMs: 0,
             };
+          }
+
+          const policyEngine = this.config.getPolicyEngine?.();
+          if (policyEngine) {
+            const workspaceDirs = this.config
+              .getWorkspaceContext?.()
+              .getDirectories?.();
+            const policyDetails = policyEngine.getDecisionDetails(
+              { name: reqInfo.name, args: reqInfo.args },
+              undefined,
+              {
+                cwd: this.config.getTargetDir?.(),
+                workspaces: Array.isArray(workspaceDirs)
+                  ? workspaceDirs
+                  : undefined,
+                agentName: reqInfo.agentName,
+              },
+            );
+            if (policyDetails.decision === PolicyDecision.DENY) {
+              const permissionErrorMessage =
+                policyDetails.reason ??
+                `Papert Code requires permission to use "${reqInfo.name}", but that permission was declined.`;
+              return {
+                status: 'error',
+                request: reqInfo,
+                response: createErrorResponse(
+                  reqInfo,
+                  new Error(permissionErrorMessage),
+                  ToolErrorType.EXECUTION_DENIED,
+                ),
+                durationMs: 0,
+              };
+            }
           }
 
           // Check if the tool is excluded due to permissions/environment restrictions

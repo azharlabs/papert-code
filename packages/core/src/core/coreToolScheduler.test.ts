@@ -38,6 +38,7 @@ import {
   MOCK_TOOL_SHOULD_CONFIRM_EXECUTE,
 } from '../test-utils/mock-tool.js';
 import { ToolErrorType } from '../tools/tool-error.js';
+import { PolicyDecision } from '../policy/types.js';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 vi.mock('fs/promises', () => ({
@@ -230,6 +231,7 @@ describe('CoreToolScheduler', () => {
       getTruncateToolOutputThreshold: () =>
         DEFAULT_TRUNCATE_TOOL_OUTPUT_THRESHOLD,
       getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES,
+      getEnableToolOutputTruncation: () => false,
       getToolRegistry: () => mockToolRegistry,
       getUseSmartEdit: () => false,
       getUseModelRouter: () => false,
@@ -299,6 +301,142 @@ describe('CoreToolScheduler', () => {
         'Doom-loop protection blocked repeated identical tool call',
       );
     }
+  });
+
+  it('applies agent-scoped policy overrides during scheduling', async () => {
+    const mockTool = new MockTool({ name: 'run_shell_command' });
+    const mockToolRegistry = {
+      getTool: () => mockTool,
+      getFunctionDeclarations: () => [],
+      tools: new Map(),
+      discovery: {},
+      registerTool: () => { },
+      getToolByName: () => mockTool,
+      getToolByDisplayName: () => mockTool,
+      getTools: () => [],
+      discoverTools: async () => { },
+      getAllTools: () => [],
+      getToolsByServer: () => [],
+    } as unknown as ToolRegistry;
+
+    const policyCheck = vi.fn(
+      (
+        _toolCall: { name?: string; args?: unknown },
+        _serverName: string | undefined,
+        context?: { agentName?: string },
+      ) => {
+        if (context?.agentName === 'build-agent') {
+          return {
+            decision: PolicyDecision.DENY,
+            reason: 'build-agent policy denied this tool',
+          };
+        }
+        return { decision: PolicyDecision.ALLOW };
+      },
+    );
+
+    const onAllToolCallsComplete = vi.fn();
+    const mockConfig = {
+      getSessionId: () => 'test-session-id',
+      getUsageStatisticsEnabled: () => true,
+      getDebugMode: () => false,
+      getApprovalMode: () => ApprovalMode.YOLO,
+      getAllowedTools: () => [],
+      getContentGeneratorConfig: () => ({
+        model: 'test-model',
+        authType: 'oauth-personal',
+      }),
+      getShellExecutionConfig: () => ({
+        terminalWidth: 90,
+        terminalHeight: 30,
+      }),
+      storage: {
+        getProjectTempDir: () => '/tmp',
+      },
+      getTruncateToolOutputThreshold: () =>
+        DEFAULT_TRUNCATE_TOOL_OUTPUT_THRESHOLD,
+      getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES,
+      getEnableToolOutputTruncation: () => false,
+      getToolRegistry: () => mockToolRegistry,
+      getPolicyEngine: () => ({ getDecisionDetails: policyCheck }),
+      getTargetDir: () => '/repo',
+      getWorkspaceContext: () => ({
+        getDirectories: () => ['/repo'],
+      }),
+      getUseSmartEdit: () => false,
+      getUseModelRouter: () => false,
+      getGeminiClient: () => null,
+      getModel: () => 'test-model',
+      getChatRecordingService: () => undefined,
+      getEnableHooks: () => false,
+      getMessageBus: () => undefined,
+      getPluginSystem: () => undefined,
+      isInteractive: () => true,
+      getIdeMode: () => false,
+      getExperimentalZedIntegration: () => false,
+      getInputFormat: () => 'text',
+      getActiveModel: () => 'test-model',
+    } as unknown as Config;
+
+    const scheduler = new CoreToolScheduler({
+      config: mockConfig,
+      onAllToolCallsComplete,
+      onToolCallsUpdate: vi.fn(),
+      getPreferredEditor: () => 'vscode',
+      onEditorClose: vi.fn(),
+    });
+
+    const signal = new AbortController().signal;
+    await scheduler.schedule(
+      [
+        {
+          callId: 'policy-allow',
+          name: 'run_shell_command',
+          args: { command: 'git status' },
+          isClientInitiated: false,
+          prompt_id: 'prompt-policy',
+          agentName: 'review-agent',
+        },
+      ],
+      signal,
+    );
+    await scheduler.schedule(
+      [
+        {
+          callId: 'policy-deny',
+          name: 'run_shell_command',
+          args: { command: 'git status' },
+          isClientInitiated: false,
+          prompt_id: 'prompt-policy',
+          agentName: 'build-agent',
+        },
+      ],
+      signal,
+    );
+
+    const completedCalls = onAllToolCallsComplete.mock.calls.flatMap(
+      (call) => (call[0] as ToolCall[]) ?? [],
+    );
+    const allowCall = completedCalls.find(
+      (call) => call.request.callId === 'policy-allow',
+    );
+    const denyCall = completedCalls.find(
+      (call) => call.request.callId === 'policy-deny',
+    );
+    expect(allowCall?.status).toBe('success');
+    expect(denyCall?.status).toBe('error');
+    if (denyCall?.status === 'error') {
+      expect(denyCall.response.errorType).toBe(ToolErrorType.EXECUTION_DENIED);
+      expect(String(denyCall.response.resultDisplay)).toContain(
+        'build-agent policy denied this tool',
+      );
+    }
+
+    expect(policyCheck).toHaveBeenCalledWith(
+      { name: 'run_shell_command', args: { command: 'git status' } },
+      undefined,
+      expect.objectContaining({ agentName: 'build-agent' }),
+    );
   });
 
   it('should cancel a tool call if the signal is aborted before confirmation', async () => {

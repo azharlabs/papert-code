@@ -290,6 +290,13 @@ Settings are organized into categories. All settings should be placed within the
     - `"deny external_directory"`
   - **Default:** `undefined`
 
+- **`tools.agentPermissions`** (object):
+  - **Description:** Per-agent permission overrides that merge over `tools.permissions` for matching agent names. Each key is an agent name and each value is an array of Permission DSL rules.
+  - **Examples:**
+    - `{ "build-agent": ["allow run_shell_command(git status)", "deny run_shell_command(rm -rf)"] }`
+    - `{ "review-agent": ["deny write_file", "allow read_*"] }`
+  - **Default:** `undefined`
+
 - **`tools.approvalMode`** (string):
   - **Description:** Sets the default approval mode for tool usage. Accepted values are:
     - `plan`: Analyze only, do not modify files or execute commands.

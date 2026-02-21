@@ -98,6 +98,11 @@ export interface PolicyRule {
    */
   permissionClass?: 'external_directory';
   argsPattern?: RegExp;
+  /**
+   * Optional agent scope matcher. When set, the rule only applies to tool
+   * calls executed by the named agent/subagent.
+   */
+  agentName?: string;
   decision: PolicyDecision;
   priority?: number;
   reason?: string;
@@ -110,6 +115,7 @@ export interface PermissionDslRule {
   tool: string;
   commandPrefix?: string | string[];
   permissionClass?: 'external_directory';
+  agentName?: string;
   reason?: string;
 }
 
@@ -141,6 +147,7 @@ export interface PolicySettings {
     exclude?: string[];
     allowed?: string[];
     permissions?: Array<string | PermissionDslRule>;
+    agentPermissions?: Record<string, Array<string | PermissionDslRule>>;
   };
   mcpServers?: Record<string, { trust?: boolean }>;
 }

@@ -725,6 +725,7 @@ export class SubAgentScope {
         args,
         isClientInitiated: true,
         prompt_id: promptId,
+        agentName: this.name,
         response_id: responseId,
       };
 

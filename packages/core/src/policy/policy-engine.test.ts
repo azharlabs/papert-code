@@ -168,4 +168,42 @@ describe('PolicyEngine.getDecisionReason', () => {
     expect(externalAccess.decision).toBe(PolicyDecision.DENY);
     expect(externalAccess.reason).toBe('Out-of-workspace file access is blocked');
   });
+
+  it('supports agent-scoped permission rules', () => {
+    const engine = new PolicyEngine({
+      rules: [
+        {
+          toolName: 'run_shell_command',
+          decision: PolicyDecision.DENY,
+          priority: 1,
+        },
+        {
+          toolName: 'run_shell_command',
+          commandPrefix: 'git status',
+          decision: PolicyDecision.ALLOW,
+          agentName: 'build-agent',
+          priority: 2,
+        },
+      ],
+    });
+
+    const withoutAgent = engine.getDecisionDetails(
+      { name: 'run_shell_command', args: { command: 'git status --short' } },
+      undefined,
+    );
+    const otherAgent = engine.getDecisionDetails(
+      { name: 'run_shell_command', args: { command: 'git status --short' } },
+      undefined,
+      { agentName: 'review-agent' },
+    );
+    const buildAgent = engine.getDecisionDetails(
+      { name: 'run_shell_command', args: { command: 'git status --short' } },
+      undefined,
+      { agentName: 'build-agent' },
+    );
+
+    expect(withoutAgent.decision).toBe(PolicyDecision.DENY);
+    expect(otherAgent.decision).toBe(PolicyDecision.DENY);
+    expect(buildAgent.decision).toBe(PolicyDecision.ALLOW);
+  });
 });

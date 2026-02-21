@@ -1051,6 +1051,22 @@ const SETTINGS_SCHEMA = {
           type: 'string',
         },
       },
+      agentPermissions: {
+        type: 'object',
+        label: 'Agent Permission Rules',
+        category: 'Advanced',
+        requiresRestart: true,
+        default: undefined as Record<string, string[]> | undefined,
+        description:
+          'Per-agent permission overrides. Keys are agent names and values are Permission DSL rule arrays. Agent rules are merged over global tools.permissions rules for matching agents.',
+        showInDialog: false,
+        additionalProperties: {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+        },
+      },
       exclude: {
         type: 'array',
         label: 'Exclude Tools',

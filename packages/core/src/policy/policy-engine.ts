@@ -74,6 +74,7 @@ export class PolicyEngine {
           serverName,
           commandValue,
           externalDirectoryAccess,
+          context?.agentName,
         )
       ) {
         matchedRule = rule;
@@ -143,7 +144,20 @@ export class PolicyEngine {
     serverName: string | undefined,
     commandValue: string | undefined,
     externalDirectoryAccess: boolean,
+    contextAgentName?: string,
   ): boolean {
+    if (rule.agentName) {
+      if (!contextAgentName) {
+        return false;
+      }
+      if (
+        rule.agentName.trim().toLowerCase() !==
+        contextAgentName.trim().toLowerCase()
+      ) {
+        return false;
+      }
+    }
+
     if (
       rule.toolName &&
       !this.matchesToolPattern(rule.toolName, toolName, serverName)
@@ -337,6 +351,9 @@ export class PolicyEngine {
     }
     if (rule.permissionClass) {
       parts.push(`permissionClass=${rule.permissionClass}`);
+    }
+    if (rule.agentName) {
+      parts.push(`agentName=${rule.agentName}`);
     }
 
     return parts.length > 0

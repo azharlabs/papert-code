@@ -89,6 +89,7 @@ function parsePermissionDslString(
 
 function parsePermissionDslEntry(
   entry: string | PermissionDslRule,
+  forcedAgentName?: string,
 ): PolicyRule | null {
   if (typeof entry === 'string') {
     const parsed = parsePermissionDslString(entry);
@@ -104,6 +105,7 @@ function parsePermissionDslEntry(
       ...(parsed.permissionClass
         ? { permissionClass: parsed.permissionClass }
         : {}),
+      ...(forcedAgentName ? { agentName: forcedAgentName } : {}),
     };
   }
 
@@ -122,6 +124,9 @@ function parsePermissionDslEntry(
     ...(entry.commandPrefix ? { commandPrefix: entry.commandPrefix } : {}),
     ...(entry.permissionClass
       ? { permissionClass: entry.permissionClass }
+      : {}),
+    ...(forcedAgentName || entry.agentName
+      ? { agentName: forcedAgentName ?? entry.agentName }
       : {}),
     reason: entry.reason,
   };
@@ -232,6 +237,33 @@ export function createPolicyEngineConfig(
         priority: 2.95 + index / 1000,
       });
     });
+  }
+
+  if (settings.tools?.agentPermissions) {
+    let agentRuleOffset = 0;
+    for (const [agentName, permissions] of Object.entries(
+      settings.tools.agentPermissions,
+    )) {
+      const normalizedAgentName = agentName.trim();
+      if (!normalizedAgentName || !Array.isArray(permissions)) {
+        continue;
+      }
+
+      const parsedAgentRules = permissions
+        .map((entry) => parsePermissionDslEntry(entry, normalizedAgentName))
+        .filter((rule): rule is PolicyRule => !!rule);
+
+      parsedAgentRules.forEach((rule, index) => {
+        rules.push({
+          ...rule,
+          // Agent-scoped permission rules intentionally evaluate after global
+          // rules so they can override behavior for that specific agent.
+          priority: 2.98 + (agentRuleOffset + index) / 1000,
+        });
+      });
+
+      agentRuleOffset += parsedAgentRules.length;
+    }
   }
 
   return {

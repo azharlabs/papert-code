@@ -124,4 +124,34 @@ describe('createPolicyEngineConfig permission DSL', () => {
 
     expect(details.decision).toBe(PolicyDecision.DENY);
   });
+
+  it('merges per-agent permission overrides over global rules', () => {
+    const config = createPolicyEngineConfig(
+      {
+        tools: {
+          permissions: ['deny run_shell_command'],
+          agentPermissions: {
+            'build-agent': ['allow run_shell_command(git status)'],
+          },
+        },
+      },
+      ApprovalMode.DEFAULT,
+      '/tmp/nonexistent-core-policy-dir',
+    );
+
+    const engine = new PolicyEngine(config);
+
+    const globalDetails = engine.getDecisionDetails(
+      { name: 'run_shell_command', args: { command: 'git status --short' } },
+      undefined,
+    );
+    const agentDetails = engine.getDecisionDetails(
+      { name: 'run_shell_command', args: { command: 'git status --short' } },
+      undefined,
+      { agentName: 'build-agent' },
+    );
+
+    expect(globalDetails.decision).toBe(PolicyDecision.DENY);
+    expect(agentDetails.decision).toBe(PolicyDecision.ALLOW);
+  });
 });
