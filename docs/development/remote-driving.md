@@ -39,7 +39,7 @@ export PAPERT_REMOTE_SESSION_TTL_MS=300000
 export CODER_AGENT_PORT=41242
 export PAPERT_REMOTE_DOCS_ENABLED=1
 export PAPERT_SHARE_PUBLIC_URL_BASE=http://localhost:41242
-papert server --host 0.0.0.0 --port 41242 --docs
+papert server --host 127.0.0.1 --port 41242 --docs
 ```
 
 ## Swagger/OpenAPI docs
@@ -202,8 +202,10 @@ Notes:
 
 Remote driving is currently surfaced via two terminal commands:
 
-- `papert server`
+- `papert server` / `papert serve`
+- `papert web`
 - `papert connect <url> --token <serverToken>`
+- `papert attach <url> --server-token <serverToken>`
 
 See `docs/cli/remote-driving.md` for user-facing details.
 

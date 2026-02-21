@@ -19,9 +19,75 @@ export const __resetSpawnForAttach = (): void => {
 
 export const __testSpawn = (): typeof childProcessSpawn => spawnImpl;
 
+type RemoteSessionResponse = {
+  sessionId: string;
+  token: string;
+};
+
+function isLoopbackHost(hostname: string): boolean {
+  const normalized = hostname.trim().toLowerCase();
+  return (
+    normalized === 'localhost' ||
+    normalized === '127.0.0.1' ||
+    normalized === '::1' ||
+    normalized === '0.0.0.0'
+  );
+}
+
+function normalizeDaemonUrl(rawUrl: string): URL {
+  try {
+    return new URL(rawUrl);
+  } catch {
+    throw new Error(`Invalid daemon URL: "${rawUrl}"`);
+  }
+}
+
+async function createRemoteSession(
+  daemonUrl: URL,
+  serverToken: string,
+): Promise<RemoteSessionResponse> {
+  const headers: Record<string, string> = {};
+  if (serverToken.trim().length > 0) {
+    headers['authorization'] = `Bearer ${serverToken.trim()}`;
+  }
+
+  const res = await fetch(new URL('/api/v1/sessions', daemonUrl), {
+    method: 'POST',
+    headers,
+  });
+  if (!res.ok) {
+    let details = '';
+    try {
+      const body = (await res.json()) as { error?: string };
+      if (typeof body?.error === 'string' && body.error.length > 0) {
+        details = `: ${body.error}`;
+      }
+    } catch {
+      // Ignore malformed body.
+    }
+    throw new Error(
+      `Failed to create remote session: ${res.status} ${res.statusText}${details}`,
+    );
+  }
+  const parsed = (await res.json()) as Partial<RemoteSessionResponse>;
+  if (
+    typeof parsed.sessionId !== 'string' ||
+    parsed.sessionId.length === 0 ||
+    typeof parsed.token !== 'string' ||
+    parsed.token.length === 0
+  ) {
+    throw new Error('Remote daemon returned an invalid session response.');
+  }
+  return {
+    sessionId: parsed.sessionId,
+    token: parsed.token,
+  };
+}
+
 export const attachCommand: CommandModule = {
   command: 'attach <url>',
-  describe: 'Attach the CLI to an existing remote session.',
+  describe:
+    'Attach to an existing remote session, or create one with --server-token.',
   builder: (yargs) =>
     yargs
       .positional('url', {
@@ -32,18 +98,67 @@ export const attachCommand: CommandModule = {
       .option('session-id', {
         type: 'string',
         description: 'Existing remote session id.',
-        demandOption: true,
       })
       .option('session-token', {
         type: 'string',
         description: 'Existing remote session token.',
-        demandOption: true,
+      })
+      .option('server-token', {
+        type: 'string',
+        description:
+          'Server token used to create a new remote session before attaching.',
+      })
+      .option('allow-insecure-http', {
+        type: 'boolean',
+        description:
+          'Allow attaching over plain HTTP for non-local daemon hosts (insecure).',
+        default: false,
       })
       .version(false),
   handler: async (argv) => {
-    const url = String(argv['url']);
-    const sessionId = String(argv['session-id']);
-    const sessionToken = String(argv['session-token']);
+    const daemonUrl = normalizeDaemonUrl(String(argv['url']));
+    const sessionIdArg =
+      typeof argv['session-id'] === 'string' ? argv['session-id'].trim() : '';
+    const sessionTokenArg =
+      typeof argv['session-token'] === 'string'
+        ? argv['session-token'].trim()
+        : '';
+    const serverTokenArg =
+      typeof argv['server-token'] === 'string'
+        ? argv['server-token'].trim()
+        : '';
+
+    const hasSessionId = sessionIdArg.length > 0;
+    const hasSessionToken = sessionTokenArg.length > 0;
+    const hasServerToken = serverTokenArg.length > 0;
+
+    if (hasSessionId !== hasSessionToken) {
+      throw new Error(
+        'Both --session-id and --session-token are required together.',
+      );
+    }
+    if ((hasSessionId && hasServerToken) || (!hasSessionId && !hasServerToken)) {
+      throw new Error(
+        'Provide either (--session-id + --session-token) or --server-token.',
+      );
+    }
+    if (
+      daemonUrl.protocol === 'http:' &&
+      !Boolean(argv['allow-insecure-http']) &&
+      !isLoopbackHost(daemonUrl.hostname)
+    ) {
+      throw new Error(
+        'Refusing insecure HTTP attach to a non-local host. Use HTTPS or pass --allow-insecure-http.',
+      );
+    }
+
+    let sessionId = sessionIdArg;
+    let sessionToken = sessionTokenArg;
+    if (!hasSessionId) {
+      const created = await createRemoteSession(daemonUrl, serverTokenArg);
+      sessionId = created.sessionId;
+      sessionToken = created.token;
+    }
 
     const child = __testSpawn()(
       process.execPath,
@@ -55,7 +170,7 @@ export const attachCommand: CommandModule = {
         stdio: 'inherit',
         env: {
           ...process.env,
-          PAPERT_REMOTE_URL: url,
+          PAPERT_REMOTE_URL: daemonUrl.toString(),
           PAPERT_REMOTE_SESSION_ID: sessionId,
           PAPERT_REMOTE_SESSION_TOKEN: sessionToken,
         },

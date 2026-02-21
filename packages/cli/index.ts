@@ -7,8 +7,8 @@
  */
 
 function isServerCommand(argv: string[]): boolean {
-  // Support: `papert server ...` and `node dist/index.js server ...`
-  return argv.includes('server');
+  // Support: `papert server ...`, `papert serve ...`, and dist variants.
+  return argv.includes('server') || argv.includes('serve');
 }
 
 function isFatalErrorLike(
@@ -55,6 +55,7 @@ async function mainEntrypoint() {
       host: hostRaw,
       'session-ttl-ms': ttlRaw ? Number(ttlRaw) : undefined,
       docs: hasFlag('--docs'),
+      'allow-empty-token': hasFlag('--allow-empty-token'),
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

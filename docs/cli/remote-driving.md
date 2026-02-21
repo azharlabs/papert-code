@@ -10,12 +10,12 @@ This is useful when:
 
 > Note: This feature is new and currently has limitations. See [Limitations](#limitations).
 
-## Start a daemon (`papert server`)
+## Start a daemon (`papert server` / `papert serve`)
 
 Run a daemon that exposes Papert Code over HTTP:
 
 ```bash
-papert server --host 0.0.0.0 --port 41242
+papert server --port 41242
 ```
 
 ### Web UI quick profile (local)
@@ -29,7 +29,7 @@ export PAPERT_REMOTE_SESSION_TTL_MS=300000
 export CODER_AGENT_PORT=41242
 export PAPERT_REMOTE_DOCS_ENABLED=1
 export PAPERT_SHARE_PUBLIC_URL_BASE=http://localhost:41242
-papert server --host 0.0.0.0 --port 41242 --docs
+papert server --host 127.0.0.1 --port 41242 --docs
 ```
 
 Then open:
@@ -44,9 +44,10 @@ By default, `papert server`:
 
 ### Options
 
-- `--host <host>`: Host interface to bind to (default: `0.0.0.0`).
+- `--host <host>`: Host interface to bind to (default: `127.0.0.1`).
 - `--port <port>`: Port to bind to (default: `41242`).
 - `--token <token>`: Server token required by clients to create a remote session.
+- `--allow-empty-token`: Allow session creation without a server token (insecure/local-only).
 - `--session-ttl-ms <ms>`: Remote session lease duration in milliseconds.
 - `--docs`: Enable Swagger/OpenAPI docs (default: disabled). When enabled:
   - Docs UI is served at `/docs`
@@ -70,6 +71,23 @@ papert connect http://HOST:41242 --token <serverToken>
 ```
 
 This starts a CLI session that runs against the remote daemon.
+
+## Attach to an existing/new remote session (`papert attach`)
+
+Attach using an existing session:
+
+```bash
+papert attach http://HOST:41242 --session-id <sessionId> --session-token <sessionToken>
+```
+
+Or create a new session during attach:
+
+```bash
+papert attach http://HOST:41242 --server-token <serverToken>
+```
+
+For security, `attach` refuses plain HTTP to non-local hosts unless you pass
+`--allow-insecure-http`.
 
 ## Authentication model (high level)
 

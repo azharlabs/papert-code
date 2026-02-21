@@ -5,11 +5,39 @@
  */
 
 import type { CommandModule } from 'yargs';
-import { spawn } from 'node:child_process';
+import { spawn as childProcessSpawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { randomBytes } from 'node:crypto';
+
+let spawnImpl: typeof childProcessSpawn = childProcessSpawn;
+
+export const __setSpawnForServer = (
+  spawn: typeof childProcessSpawn,
+): void => {
+  spawnImpl = spawn;
+};
+
+export const __resetSpawnForServer = (): void => {
+  spawnImpl = childProcessSpawn;
+};
+
+export const __testSpawnForServer = (): typeof childProcessSpawn => spawnImpl;
+
+function resolveServerToken(
+  tokenArg: unknown,
+  allowEmptyToken: boolean,
+): string {
+  if (typeof tokenArg === 'string' && tokenArg.trim().length > 0) {
+    return tokenArg.trim();
+  }
+  if (allowEmptyToken) {
+    return '';
+  }
+  return randomBytes(24).toString('base64url');
+}
 
 function resolveA2aServerEntrypoint(): string | undefined {
   const candidates: string[] = [];
@@ -72,7 +100,7 @@ function resolveA2aServerEntrypoint(): string | undefined {
 }
 
 export const serverCommand: CommandModule = {
-  command: 'server',
+  command: 'server|serve',
   describe: 'Run Papert Code daemon (remote driving server).',
   builder: (yargs) =>
     yargs
@@ -94,7 +122,13 @@ export const serverCommand: CommandModule = {
       .option('host', {
         type: 'string',
         description: 'Host to bind to.',
-        default: '0.0.0.0',
+        default: '127.0.0.1',
+      })
+      .option('allow-empty-token', {
+        type: 'boolean',
+        description:
+          'Allow creating remote sessions without a server token (insecure, local-only).',
+        default: false,
       })
       .option('docs', {
         type: 'boolean',
@@ -103,29 +137,45 @@ export const serverCommand: CommandModule = {
       })
       .version(false),
   handler: async (argv) => {
-    const token =
-      typeof argv['token'] === 'string' && argv['token'].trim().length > 0
-        ? argv['token'].trim()
-        : undefined;
+    const allowEmptyToken = Boolean(argv['allow-empty-token']);
+    const token = resolveServerToken(argv['token'], allowEmptyToken);
+    const bindHost = String(argv['host'] ?? '127.0.0.1');
+    const port = Number(argv['port'] ?? 41242);
+    const connectHost =
+      bindHost === '0.0.0.0' || bindHost === '::' ? '127.0.0.1' : bindHost;
+    const connectUrl = `http://${connectHost}:${port}`;
 
     const env = {
       ...process.env,
       PAPERT_REMOTE_ENABLED: '1',
-      PAPERT_REMOTE_SERVER_TOKEN: token ?? '',
+      PAPERT_REMOTE_SERVER_TOKEN: token,
       PAPERT_REMOTE_SESSION_TTL_MS: String(argv['session-ttl-ms'] ?? 60_000),
       PAPERT_REMOTE_DOCS_ENABLED: argv['docs'] ? '1' : '0',
-      CODER_AGENT_PORT: String(argv['port'] ?? 41242),
-      CODER_AGENT_HOST: String(argv['host'] ?? '0.0.0.0'),
+      CODER_AGENT_PORT: String(port),
+      CODER_AGENT_HOST: bindHost,
     };
 
-    // Spawn the a2a server binary. This keeps the daemon implementation in one place.
-    const url = `http://127.0.0.1:${Number(argv['port'] ?? 41242)}`;
     console.error(
       `[papert] starting a2a server\n` +
-        `  url:   ${url}\n` +
+        `  bind:  ${bindHost}:${port}\n` +
+        `  url:   ${connectUrl}\n` +
         `  port:  ${env.CODER_AGENT_PORT}\n` +
         `  token: ${env.PAPERT_REMOTE_SERVER_TOKEN}\n` +
         `  cmd:   papert-a2a-server`
+    );
+    if (allowEmptyToken) {
+      console.error(
+        '[papert] warning: --allow-empty-token disables server-token auth for session creation',
+      );
+    }
+    if (!allowEmptyToken && typeof argv['token'] !== 'string') {
+      console.error('[papert] generated ephemeral server token for this run');
+    }
+    console.error(
+      `[papert] connect: papert connect ${connectUrl} --token ${token}`,
+    );
+    console.error(
+      `[papert] attach:  papert attach ${connectUrl} --server-token ${token}`,
     );
 
     const localServerEntrypoint = resolveA2aServerEntrypoint();
@@ -146,7 +196,7 @@ export const serverCommand: CommandModule = {
 
     let child;
     try {
-      child = spawn(spawnCommand.command, spawnCommand.args, {
+      child = __testSpawnForServer()(spawnCommand.command, spawnCommand.args, {
         stdio: 'inherit',
         env,
       });
