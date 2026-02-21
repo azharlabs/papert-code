@@ -38,9 +38,15 @@ You can find token limits for each provider's models in their documentation.
 
 ## Model fallback
 
-Papert Code includes a model fallback mechanism to ensure that you can continue to use the CLI even if the default model is rate-limited.
+Papert Code includes a provider-agnostic model availability state machine to keep sessions resilient when model calls fail.
 
-If you are using the default "pro" model and the CLI detects that you are being rate-limited, it automatically switches to the "flash" model for the current session. This allows you to continue working without interruption.
+The runtime now classifies failures into:
+
+- `terminal` failures: hard failures that should not be retried immediately
+- `transient` failures: temporary failures that may recover automatically
+- `sticky_retry` failures: failures where one retry is allowed per turn before skipping the model
+
+Availability transitions are applied consistently through fallback handling, and transient states are reset on turn boundaries while terminal states remain until the model is explicitly marked healthy (for example, after a successful call or model switch).
 
 ## File discovery service
 

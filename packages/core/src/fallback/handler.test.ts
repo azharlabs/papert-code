@@ -56,6 +56,9 @@ const createMockConfig = (overrides: Partial<Config> = {}): Config =>
     ]),
     getModelAvailabilityService: vi.fn().mockReturnValue({
       isFeaturePolicyAllow: vi.fn().mockReturnValue(true),
+      markTransient: vi.fn(),
+      markRetryOncePerTurn: vi.fn(),
+      markTerminal: vi.fn(),
       selectFirstAvailable: vi.fn().mockImplementation((models: string[]) => {
         if (models.includes(FALLBACK_MODEL)) {
           return { selectedModel: FALLBACK_MODEL };
@@ -88,15 +91,20 @@ describe('handleFallback', () => {
     consoleErrorSpy.mockRestore();
   });
 
-  it('should return null immediately if authType is not OAuth', async () => {
+  it('supports policy-driven fallback for API key auth', async () => {
+    mockHandler.mockResolvedValue('retry');
     const result = await handleFallback(
       mockConfig,
       MOCK_PRO_MODEL,
       AUTH_API_KEY,
     );
-    expect(result).toBeNull();
-    expect(mockHandler).not.toHaveBeenCalled();
-    expect(mockConfig.setFallbackMode).not.toHaveBeenCalled();
+    expect(result).toBe(true);
+    expect(mockHandler).toHaveBeenCalledWith(
+      MOCK_PRO_MODEL,
+      FALLBACK_MODEL,
+      undefined,
+    );
+    expect(mockConfig.setActiveModel).toHaveBeenCalledWith(FALLBACK_MODEL);
   });
 
   it('should return null if the failed model is already the fallback model', async () => {
@@ -187,9 +195,8 @@ describe('handleFallback', () => {
       AUTH_OAUTH,
     );
 
-    // No additional fallback action is taken while already in fallback mode.
-    expect(result).toBeNull();
-    // But should not mutate state or log telemetry again
+    // Retry still succeeds but should not re-toggle fallback mode/telemetry.
+    expect(result).toBe(true);
     expect(activeFallbackConfig.setFallbackMode).not.toHaveBeenCalled();
     expect(logFlashFallback).not.toHaveBeenCalled();
   });

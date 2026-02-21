@@ -42,9 +42,29 @@ describe('ModelAvailabilityService', () => {
     });
   });
 
+  it('tracks transient failures and clears them on turn reset', () => {
+    service.markTransient(model);
+    expect(service.snapshot(model)).toEqual({
+      available: false,
+      reason: 'transient_failure',
+    });
+
+    service.resetTurn();
+    expect(service.snapshot(model)).toEqual({ available: true });
+  });
+
   it('does not override terminal failure with sticky failure', () => {
     service.markTerminal(model, 'quota');
     service.markRetryOncePerTurn(model);
+    expect(service.snapshot(model)).toEqual({
+      available: false,
+      reason: 'quota',
+    });
+  });
+
+  it('does not override terminal failure with transient failure', () => {
+    service.markTerminal(model, 'quota');
+    service.markTransient(model);
     expect(service.snapshot(model)).toEqual({
       available: false,
       reason: 'quota',

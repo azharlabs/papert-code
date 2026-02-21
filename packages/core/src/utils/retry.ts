@@ -211,7 +211,7 @@ export async function retryWithBackoff<T>(
         classifiedError instanceof TerminalQuotaError ||
         classifiedError instanceof ModelNotFoundError
       ) {
-        if (onPersistent429 && authType !== AuthType.PAPERT_OAUTH) {
+        if (onPersistent429) {
           try {
             const fallbackModel = await onPersistent429(
               authType,
@@ -235,7 +235,7 @@ export async function retryWithBackoff<T>(
 
       if (classifiedError instanceof RetryableQuotaError || is500) {
         if (attempt >= maxAttempts) {
-          if (onPersistent429 && authType !== AuthType.PAPERT_OAUTH) {
+          if (onPersistent429) {
             try {
               const fallbackModel = await onPersistent429(
                 authType,

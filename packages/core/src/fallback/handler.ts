@@ -27,9 +27,12 @@ export async function handleFallback(
   authType?: string,
   error?: unknown,
 ): Promise<string | boolean | null> {
-  // Handle Papert OAuth errors separately.
+  // Handle Papert OAuth errors separately when we can produce an explicit action.
   if (authType === AuthType.PAPERT_OAUTH) {
-    return handlePapertOAuthError(error);
+    const papertResult = await handlePapertOAuthError(error);
+    if (papertResult) {
+      return papertResult;
+    }
   }
 
   return handlePolicyDrivenFallback(config, failedModel, authType, error);
@@ -44,10 +47,6 @@ async function handlePolicyDrivenFallback(
   authType?: string,
   error?: unknown,
 ): Promise<string | boolean | null> {
-  if (authType !== AuthType.LOGIN_WITH_GOOGLE) {
-    return null;
-  }
-
   const chain = resolvePolicyChain(config);
   const { failedPolicy, candidates } = buildFallbackPolicyContext(
     chain,
@@ -63,6 +62,7 @@ async function handlePolicyDrivenFallback(
 
   let fallbackModel: string;
   if (!candidates.length) {
+    applyAvailabilityTransition(getAvailabilityContext, failureKind);
     return null;
   } else {
     const selection = availability.selectFirstAvailable(
@@ -81,6 +81,7 @@ async function handlePolicyDrivenFallback(
       selectedFallbackModel === failedModel ||
       !selectedPolicy
     ) {
+      applyAvailabilityTransition(getAvailabilityContext, failureKind);
       return null;
     }
 

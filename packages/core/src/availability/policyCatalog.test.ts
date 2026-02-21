@@ -31,13 +31,13 @@ describe('policyCatalog', () => {
   it('marks preview transients as sticky retries', () => {
     const [previewPolicy] = getModelPolicyChain({ previewEnabled: true });
     expect(previewPolicy.model).toBe(PREVIEW_GEMINI_MODEL);
-    expect(previewPolicy.stateTransitions.transient).toBe('terminal');
+    expect(previewPolicy.stateTransitions.transient).toBe('sticky_retry');
   });
 
   it('applies default actions and state transitions for unspecified kinds', () => {
     const [previewPolicy] = getModelPolicyChain({ previewEnabled: true });
     expect(previewPolicy.stateTransitions.not_found).toBe('terminal');
-    expect(previewPolicy.stateTransitions.unknown).toBe('terminal');
+    expect(previewPolicy.stateTransitions.unknown).toBe('transient');
     expect(previewPolicy.actions.unknown).toBe('prompt');
   });
 
@@ -88,6 +88,7 @@ describe('policyCatalog', () => {
     expect(policy.actions.terminal).toBe('prompt');
     expect(policy.actions.unknown).toBe('prompt');
     expect(policy.stateTransitions.terminal).toBe('terminal');
-    expect(policy.stateTransitions.unknown).toBe('terminal');
+    expect(policy.stateTransitions.transient).toBe('sticky_retry');
+    expect(policy.stateTransitions.unknown).toBe('transient');
   });
 });

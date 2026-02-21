@@ -9,6 +9,7 @@ import {
   resolvePolicyChain,
   buildFallbackPolicyContext,
   applyModelSelection,
+  applyAvailabilityTransition,
 } from './policyHelpers.js';
 import { createDefaultPolicy } from './policyCatalog.js';
 import type { Config } from '../config/config.js';
@@ -219,6 +220,30 @@ describe('policyHelpers', () => {
         'gemini-pro',
       );
       expect(result.maxAttempts).toBe(1);
+    });
+  });
+
+  describe('applyAvailabilityTransition', () => {
+    it('marks model transient when policy transition is transient', () => {
+      const markTransient = vi.fn();
+      const context = {
+        service: {
+          markTransient,
+          markTerminal: vi.fn(),
+          markRetryOncePerTurn: vi.fn(),
+        },
+        policy: {
+          model: 'test-model',
+          actions: {},
+          stateTransitions: {
+            unknown: 'transient' as const,
+          },
+        },
+      };
+
+      applyAvailabilityTransition(() => context as any, 'unknown');
+
+      expect(markTransient).toHaveBeenCalledWith('test-model');
     });
   });
 });

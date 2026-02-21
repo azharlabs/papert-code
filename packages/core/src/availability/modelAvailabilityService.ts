@@ -7,17 +7,20 @@
 export type ModelId = string;
 
 type TerminalUnavailabilityReason = 'quota' | 'capacity';
-export type TurnUnavailabilityReason = 'retry_once_per_turn';
+export type TurnUnavailabilityReason =
+  | 'retry_once_per_turn'
+  | 'transient_failure';
 
 export type UnavailabilityReason =
   | TerminalUnavailabilityReason
   | TurnUnavailabilityReason
   | 'unknown';
 
-export type ModelHealthStatus = 'terminal' | 'sticky_retry';
+export type ModelHealthStatus = 'terminal' | 'transient' | 'sticky_retry';
 
 type HealthState =
   | { status: 'terminal'; reason: TerminalUnavailabilityReason }
+  | { status: 'transient'; reason: 'transient_failure' }
   | {
     status: 'sticky_retry';
     reason: TurnUnavailabilityReason;
@@ -73,6 +76,19 @@ export class ModelAvailabilityService {
     });
   }
 
+  markTransient(model: ModelId) {
+    const currentState = this.health.get(model);
+    // Do not override a terminal failure with a transient one.
+    if (currentState?.status === 'terminal') {
+      return;
+    }
+
+    this.setState(model, {
+      status: 'transient',
+      reason: 'transient_failure',
+    });
+  }
+
   consumeStickyAttempt(model: ModelId) {
     const state = this.health.get(model);
     if (state?.status === 'sticky_retry') {
@@ -88,6 +104,10 @@ export class ModelAvailabilityService {
     }
 
     if (state.status === 'terminal') {
+      return { available: false, reason: state.reason };
+    }
+
+    if (state.status === 'transient') {
       return { available: false, reason: state.reason };
     }
 
@@ -117,6 +137,9 @@ export class ModelAvailabilityService {
 
   resetTurn() {
     for (const [model, state] of this.health.entries()) {
+      if (state.status === 'transient') {
+        this.clearState(model);
+      }
       if (state.status === 'sticky_retry') {
         this.setState(model, { ...state, consumed: false });
       }

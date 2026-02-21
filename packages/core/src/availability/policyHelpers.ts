@@ -19,7 +19,6 @@ import {
   getModelPolicyChain,
 } from './policyCatalog.js';
 import {
-  DEFAULT_GEMINI_MODEL,
   DEFAULT_GEMINI_MODEL_AUTO,
   PREVIEW_GEMINI_MODEL_AUTO,
   resolveModel,
@@ -148,7 +147,7 @@ export function selectModelForAvailability(
   if (selection.selectedModel) return selection;
 
   const backupModel =
-    chain.find((p) => p.isLastResort)?.model ?? DEFAULT_GEMINI_MODEL;
+    chain.find((p) => p.isLastResort)?.model ?? resolveModel(requestedModel);
 
   return { selectedModel: backupModel, skipped: [] };
 }
@@ -209,6 +208,8 @@ export function applyAvailabilityTransition(
       context.policy.model,
       failureKind === 'terminal' ? 'quota' : 'capacity',
     );
+  } else if (transition === 'transient') {
+    context.service.markTransient(context.policy.model);
   } else if (transition === 'sticky_retry') {
     context.service.markRetryOncePerTurn(context.policy.model);
   }
