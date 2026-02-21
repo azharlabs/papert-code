@@ -103,4 +103,25 @@ describe('createPolicyEngineConfig permission DSL', () => {
       ),
     ).toBe(PolicyDecision.ASK_USER);
   });
+
+  it('parses external_directory permission class rules', () => {
+    const config = createPolicyEngineConfig(
+      {
+        tools: {
+          permissions: ['deny external_directory'],
+        },
+      },
+      ApprovalMode.DEFAULT,
+      '/tmp/nonexistent-core-policy-dir',
+    );
+
+    const engine = new PolicyEngine(config);
+    const details = engine.getDecisionDetails(
+      { name: 'read_file', args: { file_path: '../private.key' } },
+      undefined,
+      { cwd: '/repo', workspaces: ['/repo'] },
+    );
+
+    expect(details.decision).toBe(PolicyDecision.DENY);
+  });
 });

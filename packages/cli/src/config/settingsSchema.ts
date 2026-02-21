@@ -1045,7 +1045,7 @@ const SETTINGS_SCHEMA = {
         requiresRestart: true,
         default: undefined as string[] | undefined,
         description:
-          'Permission DSL rules in the form "allow|ask|deny <tool-pattern>" or "allow|ask|deny run_shell_command(<command-prefix>)". Supports "*" wildcards and last-match-wins evaluation.',
+          'Permission DSL rules in the form "allow|ask|deny <tool-pattern>" or "allow|ask|deny run_shell_command(<command-prefix>)". Supports "*" wildcards, the "external_directory" permission class, and last-match-wins evaluation.',
         showInDialog: false,
         items: {
           type: 'string',

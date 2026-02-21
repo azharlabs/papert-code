@@ -91,6 +91,12 @@ export interface PolicyRule {
    * a "command" string (e.g. run_shell_command).
    */
   commandPrefix?: string | string[];
+  /**
+   * Optional permission class matcher.
+   * "external_directory" matches tool calls that reference paths outside of
+   * the current workspace roots.
+   */
+  permissionClass?: 'external_directory';
   argsPattern?: RegExp;
   decision: PolicyDecision;
   priority?: number;
@@ -103,7 +109,14 @@ export interface PermissionDslRule {
   decision: PermissionDslDecision;
   tool: string;
   commandPrefix?: string | string[];
+  permissionClass?: 'external_directory';
   reason?: string;
+}
+
+export interface PolicyEvaluationContext {
+  cwd?: string;
+  workspaces?: string[];
+  agentName?: string;
 }
 
 export interface HookExecutionContext {

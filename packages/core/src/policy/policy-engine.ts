@@ -4,11 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import path from 'node:path';
 import {
   PolicyDecision,
   type PolicyEngineConfig,
   type PolicyRule,
   type HookExecutionContext,
+  type PolicyEvaluationContext,
 } from './types.js';
 import { stableStringify } from './stable-stringify.js';
 import { debugLogger } from '../utils/debugLogger.js';
@@ -34,22 +36,29 @@ export class PolicyEngine {
   check(
     toolCall: { name?: string; args?: unknown },
     serverName: string | undefined,
+    context?: PolicyEvaluationContext,
   ): PolicyDecision {
-    return this.getDecisionDetails(toolCall, serverName).decision;
+    return this.getDecisionDetails(toolCall, serverName, context).decision;
   }
 
   getDecisionReason(
     toolCall: { name?: string; args?: unknown },
     serverName: string | undefined,
+    context?: PolicyEvaluationContext,
   ): string | undefined {
-    return this.getDecisionDetails(toolCall, serverName).reason;
+    return this.getDecisionDetails(toolCall, serverName, context).reason;
   }
 
   getDecisionDetails(
     toolCall: { name?: string; args?: unknown },
     serverName: string | undefined,
+    context?: PolicyEvaluationContext,
   ): { decision: PolicyDecision; reason?: string } {
     const commandValue = this.extractCommandValue(toolCall.args);
+    const externalDirectoryAccess = this.checkExternalDirectoryAccess(
+      toolCall.args,
+      context,
+    );
     const stringifiedArgs =
       toolCall.args && this.rules.some((rule) => rule.argsPattern)
         ? stableStringify(toolCall.args)
@@ -64,6 +73,7 @@ export class PolicyEngine {
           stringifiedArgs,
           serverName,
           commandValue,
+          externalDirectoryAccess,
         )
       ) {
         matchedRule = rule;
@@ -132,6 +142,7 @@ export class PolicyEngine {
     stringifiedArgs: string | undefined,
     serverName: string | undefined,
     commandValue: string | undefined,
+    externalDirectoryAccess: boolean,
   ): boolean {
     if (
       rule.toolName &&
@@ -151,6 +162,12 @@ export class PolicyEngine {
         this.matchesCommandPrefix(commandValue, prefix),
       );
       if (!matchedPrefix) {
+        return false;
+      }
+    }
+
+    if (rule.permissionClass === 'external_directory') {
+      if (!externalDirectoryAccess) {
         return false;
       }
     }
@@ -208,6 +225,74 @@ export class PolicyEngine {
     return command === prefix || command.startsWith(`${prefix} `);
   }
 
+  private checkExternalDirectoryAccess(
+    args: unknown,
+    context?: PolicyEvaluationContext,
+  ): boolean {
+    const candidatePaths = this.collectPathCandidates(args);
+    if (candidatePaths.length === 0) {
+      return false;
+    }
+
+    const cwd = context?.cwd ?? process.cwd();
+    const workspaceRoots = [cwd, ...(context?.workspaces ?? [])]
+      .filter((value): value is string => typeof value === 'string' && value.length > 0)
+      .map((value) => path.resolve(value));
+
+    return candidatePaths.some((candidatePath) => {
+      const resolvedPath = path.resolve(cwd, candidatePath);
+      return !workspaceRoots.some((workspaceRoot) =>
+        this.isPathInsideWorkspace(resolvedPath, workspaceRoot),
+      );
+    });
+  }
+
+  private collectPathCandidates(
+    args: unknown,
+    prefix = '',
+  ): string[] {
+    if (!args || typeof args !== 'object') {
+      return [];
+    }
+
+    const pathCandidates: string[] = [];
+    const entries = Object.entries(args as Record<string, unknown>);
+    for (const [key, value] of entries) {
+      const fullKey = prefix ? `${prefix}.${key}` : key;
+      const lowerKey = key.toLowerCase();
+      const looksLikePathKey =
+        lowerKey.includes('path') ||
+        lowerKey.includes('file') ||
+        lowerKey.includes('directory') ||
+        lowerKey === 'source' ||
+        lowerKey === 'destination';
+
+      if (typeof value === 'string') {
+        if (looksLikePathKey) {
+          pathCandidates.push(value);
+        }
+        continue;
+      }
+
+      if (typeof value === 'object' && value !== null) {
+        pathCandidates.push(...this.collectPathCandidates(value, fullKey));
+      }
+    }
+
+    return pathCandidates;
+  }
+
+  private isPathInsideWorkspace(
+    resolvedPath: string,
+    workspaceRoot: string,
+  ): boolean {
+    const relative = path.relative(workspaceRoot, resolvedPath);
+    return (
+      relative === '' ||
+      (!relative.startsWith('..') && !path.isAbsolute(relative))
+    );
+  }
+
   private getWildcardRegex(pattern: string): RegExp {
     const cached = this.wildcardRegexCache.get(pattern);
     if (cached) {
@@ -249,6 +334,9 @@ export class PolicyEngine {
         ? rule.commandPrefix.join('|')
         : rule.commandPrefix;
       parts.push(`commandPrefix=${prefixes}`);
+    }
+    if (rule.permissionClass) {
+      parts.push(`permissionClass=${rule.permissionClass}`);
     }
 
     return parts.length > 0

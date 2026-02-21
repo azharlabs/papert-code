@@ -140,4 +140,32 @@ describe('PolicyEngine.getDecisionReason', () => {
     expect(denied.reason).toBe('Dangerous delete command blocked');
     expect(allowed.decision).toBe(PolicyDecision.ASK_USER);
   });
+
+  it('supports external_directory permission class', () => {
+    const engine = new PolicyEngine({
+      rules: [
+        {
+          toolName: '*',
+          permissionClass: 'external_directory',
+          decision: PolicyDecision.DENY,
+          reason: 'Out-of-workspace file access is blocked',
+        },
+      ],
+    });
+
+    const workspaceAccess = engine.getDecisionDetails(
+      { name: 'read_file', args: { file_path: './src/app.ts' } },
+      undefined,
+      { cwd: '/repo', workspaces: ['/repo'] },
+    );
+    const externalAccess = engine.getDecisionDetails(
+      { name: 'read_file', args: { file_path: '../secrets.txt' } },
+      undefined,
+      { cwd: '/repo', workspaces: ['/repo'] },
+    );
+
+    expect(workspaceAccess.decision).toBe(PolicyDecision.ASK_USER);
+    expect(externalAccess.decision).toBe(PolicyDecision.DENY);
+    expect(externalAccess.reason).toBe('Out-of-workspace file access is blocked');
+  });
 });

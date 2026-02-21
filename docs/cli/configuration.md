@@ -280,13 +280,14 @@ Settings are organized into categories. All settings should be placed within the
   - **Default:** `undefined`
 
 - **`tools.permissions`** (array of strings):
-  - **Description:** Permission DSL rules with explicit actions and wildcard matching. Format: `"allow|ask|deny <tool-pattern>"`. Rules are evaluated with **last-match-wins** semantics.
+  - **Description:** Permission DSL rules with explicit actions and wildcard matching. Format: `"allow|ask|deny <tool-pattern>"`. Rules are evaluated with **last-match-wins** semantics. The special class `external_directory` matches tool calls that reference paths outside workspace roots.
   - **Examples:**
     - `"deny run_*"`
     - `"allow read_*"`
     - `"ask run_shell_command"`
     - `"deny run_shell_command(rm -rf)"`
     - `"allow run_shell_command(git status)"`
+    - `"deny external_directory"`
   - **Default:** `undefined`
 
 - **`tools.approvalMode`** (string):

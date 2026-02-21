@@ -53,6 +53,7 @@ function parsePermissionDslString(
   decision: PolicyDecision;
   toolName: string;
   commandPrefix?: string;
+  permissionClass?: 'external_directory';
 } | null {
   const match = entry.trim().match(/^(allow|ask|deny)\s+([^\s(]+)(?:\((.+)\))?$/i);
   if (!match) {
@@ -65,6 +66,15 @@ function parsePermissionDslString(
   }
 
   const normalizedCommandPrefix = commandPrefix?.trim();
+  if (normalizedToolPattern === 'external_directory') {
+    return {
+      decision: toPolicyDecision(
+        decisionKeyword.toLowerCase() as PermissionDslDecision,
+      ),
+      toolName: '*',
+      permissionClass: 'external_directory',
+    };
+  }
 
   return {
     decision: toPolicyDecision(
@@ -91,6 +101,9 @@ function parsePermissionDslEntry(
       ...(parsed.commandPrefix
         ? { commandPrefix: parsed.commandPrefix }
         : {}),
+      ...(parsed.permissionClass
+        ? { permissionClass: parsed.permissionClass }
+        : {}),
     };
   }
 
@@ -107,6 +120,9 @@ function parsePermissionDslEntry(
     toolName,
     decision: toPolicyDecision(entry.decision),
     ...(entry.commandPrefix ? { commandPrefix: entry.commandPrefix } : {}),
+    ...(entry.permissionClass
+      ? { permissionClass: entry.permissionClass }
+      : {}),
     reason: entry.reason,
   };
 }
