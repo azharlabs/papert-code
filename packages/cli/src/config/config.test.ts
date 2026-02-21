@@ -21,6 +21,7 @@ import * as ServerConfig from '@papert-code/papert-code-core';
 import { isWorkspaceTrusted } from './trustedFolders.js';
 import { ExtensionEnablementManager } from './extensions/extensionEnablement.js';
 import { getDefaultMcpServers } from './defaultMcpServers.js';
+import { loadCustomModes } from '../modes/customModes.js';
 
 vi.mock('./trustedFolders.js', () => ({
   isWorkspaceTrusted: vi
@@ -109,6 +110,10 @@ vi.mock('@papert-code/papert-code-core', async () => {
     },
   };
 });
+
+vi.mock('../modes/customModes.js', () => ({
+  loadCustomModes: vi.fn().mockResolvedValue([]),
+}));
 
 describe('parseArguments', () => {
   const originalArgv = process.argv;
@@ -3074,6 +3079,7 @@ describe('loadCliConfig approval mode', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(os.homedir).mockReturnValue('/mock/home/user');
+    vi.mocked(loadCustomModes).mockResolvedValue([]);
     vi.stubEnv('GEMINI_API_KEY', 'test-api-key');
     process.argv = ['node', 'script.js']; // Reset argv for each test
     vi.mocked(isWorkspaceTrusted).mockReturnValue(true);
@@ -3252,6 +3258,52 @@ describe('loadCliConfig approval mode', () => {
       argv,
     );
     expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.PLAN);
+  });
+
+  it('should apply custom markdown mode from settings when approval flags are not provided', async () => {
+    vi.mocked(loadCustomModes).mockResolvedValue([
+      {
+        name: 'ship-fast',
+        description: 'Custom mode',
+        approvalMode: ServerConfig.ApprovalMode.AUTO_EDIT,
+        source: 'project',
+        filePath: '/repo/.papert/modes/ship-fast.md',
+      },
+    ]);
+    process.argv = ['node', 'script.js'];
+    const argv = await parseArguments({} as Settings);
+    const settings: Settings = { tools: { customMode: 'ship-fast' } };
+    const config = await loadCliConfig(
+      settings,
+      [],
+      new ExtensionEnablementManager(
+        ExtensionStorage.getUserExtensionsDir(),
+        argv.extensions,
+      ),
+      argv,
+    );
+    expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.AUTO_EDIT);
+  });
+
+  it('should throw when configured custom markdown mode is missing', async () => {
+    vi.mocked(loadCustomModes).mockResolvedValue([]);
+    process.argv = ['node', 'script.js'];
+    const argv = await parseArguments({} as Settings);
+    const settings: Settings = { tools: { customMode: 'missing-mode' } };
+
+    await expect(
+      loadCliConfig(
+        settings,
+        [],
+        new ExtensionEnablementManager(
+          ExtensionStorage.getUserExtensionsDir(),
+          argv.extensions,
+        ),
+        argv,
+      ),
+    ).rejects.toThrow(
+      'Configured custom mode "missing-mode" was not found in .papert/modes or ~/.papert/modes.',
+    );
   });
 
   it('should throw when approval mode in settings is invalid', async () => {

@@ -313,6 +313,10 @@ Settings are organized into categories. All settings should be placed within the
     - `review`: Read-oriented review profile (`approvalMode=default`, mutating tools gated).
   - **Default:** `undefined`
 
+- **`tools.customMode`** (string):
+  - **Description:** Selects a markdown-defined custom mode loaded from `.papert/modes/` (project) or `~/.papert/modes/` (user). Custom mode files use YAML frontmatter with `name`, `description`, and `approvalMode`.
+  - **Default:** `undefined`
+
 - **`tools.discoveryCommand`** (string):
   - **Description:** Command to run for tool discovery.
   - **Default:** `undefined`

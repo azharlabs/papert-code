@@ -11,21 +11,30 @@ import { SettingScope, type LoadedSettings } from '../../config/settings.js';
 import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
 import type { CommandContext } from './types.js';
 import { modeCommand } from './modeCommand.js';
+import { loadCustomModes } from '../../modes/customModes.js';
+
+vi.mock('../../modes/customModes.js', () => ({
+  loadCustomModes: vi.fn().mockResolvedValue([]),
+}));
 
 describe('modeCommand', () => {
   let mockContext: CommandContext;
   const setModeProfile = vi.fn();
+  const setApprovalMode = vi.fn();
   const setValue = vi.fn();
 
   beforeEach(() => {
     setModeProfile.mockReset();
+    setApprovalMode.mockReset();
     setValue.mockReset();
+    vi.mocked(loadCustomModes).mockResolvedValue([]);
     mockContext = createMockCommandContext({
       services: {
         config: {
           getModeProfile: () => undefined,
           getApprovalMode: () => ApprovalMode.DEFAULT,
           setModeProfile,
+          setApprovalMode,
         } as unknown as Config,
         settings: {
           merged: {},
@@ -92,5 +101,26 @@ describe('modeCommand', () => {
     const completions = await modeCommand.completion?.(mockContext, 're');
     expect(completions).toContain('review');
   });
-});
 
+  it('switches to markdown-defined custom mode by applying approval mode', async () => {
+    vi.mocked(loadCustomModes).mockResolvedValue([
+      {
+        name: 'ship-fast',
+        description: 'Custom mode',
+        approvalMode: ApprovalMode.AUTO_EDIT,
+        source: 'project',
+        filePath: '/tmp/project/.papert/modes/ship-fast.md',
+      },
+    ]);
+
+    const result = await modeCommand.action?.(mockContext, 'ship-fast');
+    expect(setModeProfile).toHaveBeenCalledWith(undefined);
+    expect(setApprovalMode).toHaveBeenCalledWith(ApprovalMode.AUTO_EDIT);
+    expect(result).toEqual(
+      expect.objectContaining({
+        type: 'message',
+        messageType: 'info',
+      }),
+    );
+  });
+});

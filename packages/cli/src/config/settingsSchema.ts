@@ -1111,6 +1111,16 @@ const SETTINGS_SCHEMA = {
           { value: 'review', label: 'Review' },
         ],
       },
+      customMode: {
+        type: 'string',
+        label: 'Custom Mode',
+        category: 'Tools',
+        requiresRestart: false,
+        default: undefined as string | undefined,
+        description:
+          'Name of a markdown-defined custom mode loaded from .papert/modes (project) or ~/.papert/modes (user).',
+        showInDialog: false,
+      },
       discoveryCommand: {
         type: 'string',
         label: 'Tool Discovery Command',

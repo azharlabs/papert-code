@@ -291,12 +291,14 @@ Slash commands provide meta-level control over the CLI itself.
     - `/approval-mode yolo --user` (persist YOLO mode for this user across projects)
 
 - **`/mode`**
-  - **Description:** Switch high-level mode profiles (`build`, `plan`, `review`) with immediate tool-gating updates.
-  - **Usage:** `/mode [build|plan|review] [--project|--user]`
+  - **Description:** Switch high-level mode profiles (`build`, `plan`, `review`) or markdown-defined custom modes with immediate tool-gating updates.
+  - **Usage:** `/mode [build|plan|review|<custom-mode>] [--project|--user]`
   - **Behavior:**
     - No args prints current profile and available profiles.
     - Setting a profile hot-switches the current session immediately.
     - Optional scope flags persist to settings.
+    - Custom modes are discovered from Markdown files in `.papert/modes/` and `~/.papert/modes/`.
+      - Required frontmatter keys: `name`, `description`, `approvalMode`.
   - **Examples:**
     - `/mode build`
     - `/mode plan --project`

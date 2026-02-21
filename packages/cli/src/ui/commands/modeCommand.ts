@@ -6,6 +6,7 @@
 
 import { ApprovalMode } from '@papert-code/papert-code-core';
 import { SettingScope } from '../../config/settings.js';
+import { loadCustomModes } from '../../modes/customModes.js';
 import type {
   CommandContext,
   SlashCommand,
@@ -36,8 +37,12 @@ const MODE_PROFILE_INFO: Record<
   },
 };
 
+function isBuiltInModeProfile(value: string): value is ModeProfileName {
+  return value === 'build' || value === 'plan' || value === 'review';
+}
+
 function parseModeArgs(rawArgs: string): {
-  profile?: ModeProfileName;
+  profile?: string;
   scope?: SettingScope;
   error?: string;
 } {
@@ -90,24 +95,16 @@ function parseModeArgs(rawArgs: string): {
     return { scope };
   }
 
-  if (
-    profileArg !== 'build' &&
-    profileArg !== 'plan' &&
-    profileArg !== 'review'
-  ) {
-    return {
-      error:
-        'Unknown mode profile. Valid profiles: build, plan, review',
-    };
-  }
-
   return {
-    profile: profileArg as ModeProfileName,
+    profile: profileArg,
     scope,
   };
 }
 
-function formatModeSummary(context: CommandContext): string {
+function formatModeSummary(
+  context: CommandContext,
+  customModes: Awaited<ReturnType<typeof loadCustomModes>>,
+): string {
   const config = context.services.config;
   const currentProfile = config?.getModeProfile?.();
   const currentApprovalMode = config?.getApprovalMode?.();
@@ -121,6 +118,16 @@ function formatModeSummary(context: CommandContext): string {
       ([profileId, profile]) =>
         `- ${profileId}: ${profile.description} (approval-mode=${profile.approvalMode})`,
     ),
+    ...(customModes.length > 0
+      ? [
+          '',
+          'Custom markdown profiles:',
+          ...customModes.map(
+            (mode) =>
+              `- ${mode.name}: ${mode.description} (approval-mode=${mode.approvalMode}, source=${mode.source})`,
+          ),
+        ]
+      : []),
     '',
     'Usage:',
     '- /mode',
@@ -158,20 +165,59 @@ export const modeCommand: SlashCommand = {
       };
     }
 
+    const workingDir =
+      config.getWorkingDir?.() ??
+      config.getTargetDir?.() ??
+      process.cwd();
+    let customModes: Awaited<ReturnType<typeof loadCustomModes>>;
+    try {
+      customModes = await loadCustomModes(workingDir);
+    } catch (error) {
+      return {
+        type: 'message',
+        messageType: 'error',
+        content:
+          error instanceof Error
+            ? error.message
+            : 'Failed to load custom markdown modes.',
+      };
+    }
+
     if (!parsed.profile) {
       return {
         type: 'message',
         messageType: 'info',
-        content: formatModeSummary(context),
+        content: formatModeSummary(context, customModes),
       };
     }
 
-    const profileInfo = MODE_PROFILE_INFO[parsed.profile];
+    const builtInProfile = isBuiltInModeProfile(parsed.profile)
+      ? parsed.profile
+      : undefined;
+    const customMode = builtInProfile
+      ? undefined
+      : customModes.find((mode) => mode.name === parsed.profile);
+    if (!builtInProfile && !customMode) {
+      return {
+        type: 'message',
+        messageType: 'error',
+        content:
+          'Unknown mode profile. Valid built-in profiles: build, plan, review. Use /mode to list custom markdown profiles.',
+      };
+    }
+
+    const approvalMode = builtInProfile
+      ? MODE_PROFILE_INFO[builtInProfile].approvalMode
+      : customMode!.approvalMode;
+
     try {
-      if (typeof config.setModeProfile === 'function') {
-        config.setModeProfile(parsed.profile);
+      if (builtInProfile && typeof config.setModeProfile === 'function') {
+        config.setModeProfile(builtInProfile);
       } else if (typeof config.setApprovalMode === 'function') {
-        config.setApprovalMode(profileInfo.approvalMode);
+        if (typeof config.setModeProfile === 'function') {
+          config.setModeProfile(undefined);
+        }
+        config.setApprovalMode(approvalMode);
       } else {
         return {
           type: 'message',
@@ -194,14 +240,32 @@ export const modeCommand: SlashCommand = {
     if (parsed.scope) {
       context.services.settings.setValue(
         parsed.scope,
-        'tools.modeProfile',
-        parsed.profile,
-      );
-      context.services.settings.setValue(
-        parsed.scope,
         'tools.approvalMode',
-        profileInfo.approvalMode,
+        approvalMode,
       );
+      if (builtInProfile) {
+        context.services.settings.setValue(
+          parsed.scope,
+          'tools.modeProfile',
+          builtInProfile,
+        );
+        context.services.settings.setValue(
+          parsed.scope,
+          'tools.customMode',
+          undefined,
+        );
+      } else {
+        context.services.settings.setValue(
+          parsed.scope,
+          'tools.customMode',
+          customMode!.name,
+        );
+        context.services.settings.setValue(
+          parsed.scope,
+          'tools.modeProfile',
+          undefined,
+        );
+      }
       persistenceMessage =
         parsed.scope === SettingScope.Workspace
           ? 'Saved to workspace settings.'
@@ -211,11 +275,28 @@ export const modeCommand: SlashCommand = {
     return {
       type: 'message',
       messageType: 'info',
-      content: `Mode profile switched to "${parsed.profile}" (approval-mode=${profileInfo.approvalMode}). ${persistenceMessage}`,
+      content: `Mode profile switched to "${parsed.profile}" (approval-mode=${approvalMode}). ${persistenceMessage}`,
     };
   },
-  completion: async (_context, partialArg) => {
-    const candidates = ['build', 'plan', 'review', '--project', '--user'];
+  completion: async (context, partialArg) => {
+    const workingDir =
+      context.services.config?.getWorkingDir?.() ??
+      context.services.config?.getTargetDir?.() ??
+      process.cwd();
+    let customModes: Awaited<ReturnType<typeof loadCustomModes>> = [];
+    try {
+      customModes = await loadCustomModes(workingDir);
+    } catch {
+      // ignore completion errors for optional custom modes
+    }
+    const candidates = [
+      'build',
+      'plan',
+      'review',
+      ...customModes.map((mode) => mode.name),
+      '--project',
+      '--user',
+    ];
     return candidates.filter((candidate) => candidate.startsWith(partialArg));
   },
 };

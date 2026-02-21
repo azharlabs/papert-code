@@ -72,6 +72,7 @@ import type { ExtensionEnablementManager } from './extensions/extensionEnablemen
 import { SkillEnablementManager } from './skills/skillEnablement.js';
 import { buildWebSearchConfig } from './webSearch.js';
 import { createPolicyEngineConfig } from './policy.js';
+import { loadCustomModes } from '../modes/customModes.js';
 
 // Simple console logger for now - replace with actual logger if available
 const logger = {
@@ -918,6 +919,21 @@ export async function loadCliConfig(
     modeProfile = parseModeProfileValue(settings.tools.modeProfile);
     if (!argv.approvalMode && !argv.yolo) {
       approvalMode = MODE_PROFILE_APPROVAL_MODE[modeProfile];
+    }
+  }
+
+  const customModeName = settings.tools?.customMode?.trim();
+  if (customModeName) {
+    const customModes = await loadCustomModes(cwd);
+    const customMode = customModes.find((mode) => mode.name === customModeName);
+    if (!customMode) {
+      throw new Error(
+        `Configured custom mode "${customModeName}" was not found in .papert/modes or ~/.papert/modes.`,
+      );
+    }
+    if (!argv.approvalMode && !argv.yolo) {
+      approvalMode = customMode.approvalMode;
+      modeProfile = undefined;
     }
   }
 
