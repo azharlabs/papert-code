@@ -39,6 +39,15 @@ import { getWebUiHtml } from './webUi.js';
 import { ShareStore } from './shareStore.js';
 import { Storage } from '@papert-code/papert-code-core';
 import { REMOTE_CONTROL_OPENAPI_SPEC } from './openapi.js';
+import {
+  applyReleaseChannelTransition,
+  evaluateReleaseChannelTransition,
+  getReleaseChannelGateStatus,
+  getReleaseChannelSoakConfig,
+  normalizeReleaseChannel,
+  parseReleaseChannelState,
+  serializeReleaseChannelState,
+} from './releaseChannelGates.js';
 
 type CommandResponse = {
   name: string;
@@ -499,10 +508,17 @@ export async function createApp() {
           mcps: mcps.map((mcp) => mcp.name),
         };
         const general = (settings['general'] || {}) as Record<string, unknown>;
-        const releaseChannel =
-          typeof general['releaseChannel'] === 'string'
-            ? general['releaseChannel']
-            : 'stable';
+        const releaseChannel = normalizeReleaseChannel(general['releaseChannel']);
+        const parsedReleaseChannelState = parseReleaseChannelState(
+          general,
+          releaseChannel,
+        );
+        const releaseChannelSoakConfig = getReleaseChannelSoakConfig();
+        const releaseChannelGate = getReleaseChannelGateStatus(
+          releaseChannel,
+          parsedReleaseChannelState.state,
+          releaseChannelSoakConfig,
+        );
 
         const checkpointDir = path.join(workspaceRoot, '.gemini', 'checkpoints');
         const checkpointFiles = await listFiles(checkpointDir, '.json');
@@ -557,6 +573,7 @@ export async function createApp() {
           targets,
           rewindPoints: validRewindPoints,
           releaseChannel,
+          releaseChannelGate,
         });
       } catch (error) {
         logger.error('[WebUI] Failed to build catalog', error);
@@ -753,12 +770,46 @@ export async function createApp() {
 
     expressApp.put('/api/v1/webui/release-channel', async (req, res) => {
       try {
-        const requested = String(req.body?.releaseChannel || '').trim();
-        if (!['stable', 'preview', 'nightly'].includes(requested)) {
+        const requestedRaw = String(req.body?.releaseChannel || '').trim();
+        if (!['stable', 'preview', 'nightly'].includes(requestedRaw)) {
           return res.status(400).json({ error: 'Invalid release channel' });
         }
+
+        const requested = normalizeReleaseChannel(requestedRaw);
         const settings = await readJson(settingsPath, {} as Record<string, unknown>);
         const general = (settings['general'] || {}) as Record<string, unknown>;
+        const current = normalizeReleaseChannel(general['releaseChannel']);
+        const now = new Date();
+        const parsedState = parseReleaseChannelState(general, current, now);
+        const soakConfig = getReleaseChannelSoakConfig();
+        const gateResult = evaluateReleaseChannelTransition(
+          current,
+          requested,
+          parsedState.state,
+          soakConfig,
+          now,
+        );
+
+        if (!gateResult.allowed) {
+          // Persist baseline state so soak timing starts consistently.
+          general['releaseChannelState'] = serializeReleaseChannelState(
+            parsedState.state,
+          );
+          settings['general'] = general;
+          await writeJson(settingsPath, settings);
+          return res.status(400).json({
+            error: gateResult.message ?? 'Release channel promotion gate failed.',
+            code: gateResult.code,
+            currentChannel: current,
+            requestedChannel: requested,
+            requiredSoakMs: gateResult.requiredSoakMs,
+            soakElapsedMs: gateResult.soakElapsedMs,
+            soakRemainingMs: gateResult.soakRemainingMs,
+          });
+        }
+
+        const nextState = applyReleaseChannelTransition(parsedState.state, requested, now);
+        general['releaseChannelState'] = serializeReleaseChannelState(nextState);
         general['releaseChannel'] = requested;
         settings['general'] = general;
         await writeJson(settingsPath, settings);

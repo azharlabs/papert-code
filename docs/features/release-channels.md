@@ -30,6 +30,24 @@ Allowed values:
 - `preview`: checks `preview`, then falls back to `latest`
 - `nightly`: checks `nightly`, then `preview`, then `latest`
 
+## Promotion gates
+
+Release-channel promotion toward stability is gated:
+
+- `nightly -> preview` only
+- `preview -> stable` only
+- direct `nightly -> stable` promotion is rejected
+
+Each promotion step also requires a soak window:
+
+- nightly soak (before preview): default `24h`
+- preview soak (before stable): default `72h`
+
+Soak windows can be overridden in server environments:
+
+- `PAPERT_RELEASE_CHANNEL_SOAK_NIGHTLY_MS`
+- `PAPERT_RELEASE_CHANNEL_SOAK_PREVIEW_MS`
+
 ## Selection behavior
 
 - The updater compares all candidates available for your selected channel.

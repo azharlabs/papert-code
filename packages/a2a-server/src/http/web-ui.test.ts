@@ -121,4 +121,70 @@ describe('Web UI', () => {
       'nightly',
     );
   });
+
+  it('PUT /api/v1/webui/release-channel blocks nightly -> stable promotion', async () => {
+    const sessionRes = await requestApp(app, {
+      method: 'POST',
+      path: '/api/v1/sessions',
+      headers: { authorization: 'Bearer server-secret' },
+    });
+    expect(sessionRes.status).toBe(201);
+    const body = sessionRes.body as { sessionId: string; token: string };
+
+    const toNightly = await requestApp(app, {
+      method: 'PUT',
+      path: '/api/v1/webui/release-channel',
+      headers: {
+        authorization: `Bearer ${body.token}`,
+        'x-papert-session-id': body.sessionId,
+      },
+      body: { releaseChannel: 'nightly' },
+    });
+    expect(toNightly.status).toBe(204);
+
+    const toStable = await requestApp(app, {
+      method: 'PUT',
+      path: '/api/v1/webui/release-channel',
+      headers: {
+        authorization: `Bearer ${body.token}`,
+        'x-papert-session-id': body.sessionId,
+      },
+      body: { releaseChannel: 'stable' },
+    });
+    expect(toStable.status).toBe(400);
+    expect((toStable.body as { code: string }).code).toBe('promotion_order');
+  });
+
+  it('PUT /api/v1/webui/release-channel enforces nightly soak before preview', async () => {
+    const sessionRes = await requestApp(app, {
+      method: 'POST',
+      path: '/api/v1/sessions',
+      headers: { authorization: 'Bearer server-secret' },
+    });
+    expect(sessionRes.status).toBe(201);
+    const body = sessionRes.body as { sessionId: string; token: string };
+
+    const toNightly = await requestApp(app, {
+      method: 'PUT',
+      path: '/api/v1/webui/release-channel',
+      headers: {
+        authorization: `Bearer ${body.token}`,
+        'x-papert-session-id': body.sessionId,
+      },
+      body: { releaseChannel: 'nightly' },
+    });
+    expect(toNightly.status).toBe(204);
+
+    const toPreview = await requestApp(app, {
+      method: 'PUT',
+      path: '/api/v1/webui/release-channel',
+      headers: {
+        authorization: `Bearer ${body.token}`,
+        'x-papert-session-id': body.sessionId,
+      },
+      body: { releaseChannel: 'preview' },
+    });
+    expect(toPreview.status).toBe(400);
+    expect((toPreview.body as { code: string }).code).toBe('soak_not_met');
+  });
 });

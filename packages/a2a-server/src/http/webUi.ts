@@ -3780,12 +3780,18 @@ const WEB_UI_SCRIPT = `
           body: JSON.stringify({ releaseChannel: selected }),
         })
           .then(() => fetchCatalog())
-          .catch((err) =>
-            addMessage(
-              'system',
-              'Release channel update failed: ' + err.message,
-            ),
-          );
+          .catch((err) => {
+            let message = err && err.message ? String(err.message) : 'Request failed';
+            try {
+              const parsed = JSON.parse(message);
+              if (parsed && typeof parsed.error === 'string') {
+                message = parsed.error;
+              }
+            } catch {
+              // Keep fallback message text.
+            }
+            addMessage('system', 'Release channel update failed: ' + message);
+          });
       });
 
       on(scheduleForm, 'submit', (event) => {

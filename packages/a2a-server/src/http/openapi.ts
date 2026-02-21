@@ -105,6 +105,28 @@ export const REMOTE_CONTROL_OPENAPI_SPEC = {
                       type: 'string',
                       enum: ['stable', 'preview', 'nightly'],
                     },
+                    releaseChannelGate: {
+                      type: 'object',
+                      properties: {
+                        current: {
+                          type: 'string',
+                          enum: ['stable', 'preview', 'nightly'],
+                        },
+                        nextPromotionTarget: {
+                          oneOf: [
+                            {
+                              type: 'string',
+                              enum: ['stable', 'preview', 'nightly'],
+                            },
+                            { type: 'null' },
+                          ],
+                        },
+                        readyForPromotion: { type: 'boolean' },
+                        requiredSoakMs: { type: 'number' },
+                        soakElapsedMs: { type: 'number' },
+                        soakRemainingMs: { type: 'number' },
+                      },
+                    },
                   },
                 },
               },
@@ -145,7 +167,7 @@ export const REMOTE_CONTROL_OPENAPI_SPEC = {
         responses: {
           '204': { description: 'Updated' },
           '400': {
-            description: 'Invalid release channel',
+            description: 'Invalid release channel or promotion gate blocked',
             content: {
               'application/json': {
                 schema: { $ref: '#/components/schemas/ErrorResponse' },
