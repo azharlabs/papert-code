@@ -72,6 +72,15 @@ Papert Code supports several built-in commands to help you manage your session, 
   - **Usage:** `papert config explain [key] [--json]`
   - **Behavior:** Explains merged settings using precedence `system-defaults < user < workspace < system` (workspace values only when trusted).
 
+- **`papert auth`**
+  - **Description:** Run auth diagnostics and switch auth mode quickly.
+  - **Usage:**
+    - `papert auth diagnose [--json]`
+    - `papert auth use <oauth|api-key|enterprise>`
+  - **Behavior:**
+    - `diagnose` reports selected/enforced/effective auth mode and environment readiness.
+    - `use` updates auth selection for fast switching between OAuth, API key, and enterprise-style enforced OpenAI mode.
+
 - **`papert schedule`**
   - **Description:** Manage scheduled Papert prompts, cron jobs, heartbeats, and webhooks.
   - **Usage:** `papert schedule <add|heartbeat|update|list|status|start|run|runs|remove|enable|disable|guide|webhook>`

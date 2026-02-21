@@ -18,6 +18,7 @@
 - Split CI into dedicated lanes for CLI, SDK, and sandbox integration suites.
 - Published a cleaned architecture boundary guide across `core`, `cli`, `sdk`, `web` (`a2a-server`), and `desktop`.
 - Added `papert config explain` to inspect effective config values with per-key precedence/source attribution.
+- Added `papert auth diagnose` and `papert auth use <oauth|api-key|enterprise>` for faster auth diagnostics and switching.
 - Added release channel selector and status surfacing in the web UI.
 - Hardened A2A OpenAPI contracts for web UI authentication paths.
 - Added terminal benchmark evaluation matrix and summary artifacts in CI.
