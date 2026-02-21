@@ -6,6 +6,7 @@
 - Added web rewind panel with checkpoint catalog support.
 - Added richer MCP diagnostics with transport probing.
 - Fixed non-interactive control-plane MCP routing by enabling `mcp_message` and `mcp_server_status` dispatch and advertising `can_handle_mcp_message`.
+- Exposed MCP operations on `ControlService` (`getMcpClient`, `listServers`) and added non-interactive control service coverage.
 - Canonicalized `PAPERT_*` environment variables for sandboxing, telemetry, and relaunch controls while keeping `GEMINI_*` aliases with deprecation warnings.
 - Added `papert migrate --from-gemini` to rewrite legacy `GEMINI_*` env variable names in project config files.
 - Added a provider-agnostic model availability state machine with explicit `terminal`, `transient`, and `sticky_retry` transitions.

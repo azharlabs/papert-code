@@ -259,6 +259,24 @@ export class MCPController extends BaseController {
   }
 
   /**
+   * Public API wrapper for lazy MCP client initialization.
+   */
+  async getMcpClient(
+    serverName: string,
+  ): Promise<{ client: Client; config: MCPServerConfig }> {
+    return this.getOrCreateMcpClient(serverName);
+  }
+
+  /**
+   * Public API helper returning all known SDK + CLI MCP server names.
+   */
+  listServerNames(): string[] {
+    const sdkServers = Array.from(this.context.sdkMcpServers);
+    const cliServers = Array.from(this.context.mcpClients.keys());
+    return [...new Set([...sdkServers, ...cliServers])];
+  }
+
+  /**
    * Cleanup MCP clients
    */
   override cleanup(): void {

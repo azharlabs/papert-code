@@ -32,7 +32,7 @@ import type {
   PermissionServiceAPI,
   SystemServiceAPI,
   SchedulerServiceAPI,
-  // McpServiceAPI,
+  McpServiceAPI,
   // HookServiceAPI,
 } from './types/serviceAPIs.js';
 
@@ -116,45 +116,13 @@ export class ControlService {
    * Handles Model Context Protocol server interactions.
    * Delegates to the shared MCPController instance.
    */
-  // get mcp(): McpServiceAPI {
-  //   return {
-  //     /**
-  //      * Get or create MCP client for a server (lazy initialization)
-  //      *
-  //      * Returns existing client or creates new connection.
-  //      *
-  //      * @param serverName - Name of the MCP server
-  //      * @returns Promise with client and config
-  //      */
-  //     getMcpClient: async (serverName: string) => {
-  //       // MCPController has a private method getOrCreateMcpClient
-  //       // We need to expose it via the API
-  //       // For now, throw error as placeholder
-  //       // The actual implementation will be added when we update MCPController
-  //       throw new Error(
-  //         `getMcpClient not yet implemented in ControlService. Server: ${serverName}`,
-  //       );
-  //     },
-  //
-  //     /**
-  //      * List all available MCP servers
-  //      *
-  //      * Returns names of configured/connected MCP servers.
-  //      *
-  //      * @returns Array of server names
-  //      */
-  //     listServers: () => {
-  //       // Get servers from context
-  //       const sdkServers = Array.from(
-  //         this.dispatcher.mcpController['context'].sdkMcpServers,
-  //       );
-  //       const cliServers = Array.from(
-  //         this.dispatcher.mcpController['context'].mcpClients.keys(),
-  //       );
-  //       return [...new Set([...sdkServers, ...cliServers])];
-  //     },
-  //   };
-  // }
+  get mcp(): McpServiceAPI {
+    const controller = this.dispatcher.mcpController;
+    return {
+      getMcpClient: controller.getMcpClient.bind(controller),
+      listServers: controller.listServerNames.bind(controller),
+    };
+  }
 
   /**
    * Hook Domain API
