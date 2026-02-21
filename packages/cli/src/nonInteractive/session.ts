@@ -104,6 +104,9 @@ export class Session {
       const existingSessionId = process.env['PAPERT_REMOTE_SESSION_ID'];
       const existingSessionToken = process.env['PAPERT_REMOTE_SESSION_TOKEN'];
       const maybeRemoteToken = process.env['PAPERT_REMOTE_TOKEN'];
+      const allowInsecureHttp =
+        process.env['PAPERT_REMOTE_ALLOW_INSECURE_HTTP'] === '1' ||
+        process.env['PAPERT_REMOTE_ALLOW_INSECURE_HTTP'] === 'true';
 
       if (maybeRemoteUrl && existingSessionId && existingSessionToken) {
         this.config.updateCredentials({
@@ -116,15 +119,11 @@ export class Session {
 
         await this.config.refreshAuth(AuthType.USE_OPENAI);
       } else if (maybeRemoteUrl && maybeRemoteToken) {
-        const control = await createRemoteControlService({
+        const remote = await createRemoteControlService({
           baseUrl: maybeRemoteUrl,
           serverToken: maybeRemoteToken,
+          allowInsecureHttp,
         });
-
-        const remote = (control as unknown as { remote?: { baseUrl: string; sessionId: string; token: string } }).remote;
-        if (!remote) {
-          throw new Error('Remote control service did not return remote session details');
-        }
 
         // Override credentials so core uses OpenAIContentGenerator against the daemon.
         // The daemon expects:

@@ -37,8 +37,8 @@ describe('createRemoteControlService', () => {
       }),
     );
 
-    expect((control as unknown as any).remote).toEqual({
-      baseUrl: 'http://localhost:41242',
+    expect(control).toEqual({
+      baseUrl: 'http://localhost:41242/',
       sessionId: 'sid-1',
       token: 'sess-token-1',
     });
@@ -57,5 +57,37 @@ describe('createRemoteControlService', () => {
         serverToken: 'bad-token',
       }),
     ).rejects.toThrow(/Failed to create remote session/);
+  });
+
+  it('rejects insecure non-local HTTP by default', async () => {
+    await expect(
+      createRemoteControlService({
+        baseUrl: 'http://remote.example:41242',
+        serverToken: 'token-1',
+      }),
+    ).rejects.toThrow(
+      /Refusing insecure HTTP connect to a non-local host/,
+    );
+  });
+
+  it('allows insecure non-local HTTP when explicitly requested', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: async () => ({ sessionId: 'sid-2', token: 'sess-token-2' }),
+    } as unknown as Response);
+
+    const session = await createRemoteControlService({
+      baseUrl: 'http://remote.example:41242',
+      serverToken: 'token-1',
+      allowInsecureHttp: true,
+    });
+
+    expect(session).toEqual({
+      baseUrl: 'http://remote.example:41242/',
+      sessionId: 'sid-2',
+      token: 'sess-token-2',
+    });
   });
 });

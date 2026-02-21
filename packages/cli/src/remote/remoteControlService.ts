@@ -4,11 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ControlService } from '../nonInteractive/control/ControlService.js';
-
 export type RemoteControlServiceOptions = {
   baseUrl: string;
   serverToken: string;
+  allowInsecureHttp?: boolean;
 };
 
 type SessionResponse = {
@@ -16,10 +15,47 @@ type SessionResponse = {
   token: string;
 };
 
+export type RemoteSessionInfo = {
+  baseUrl: string;
+  sessionId: string;
+  token: string;
+};
+
+function isLoopbackHost(hostname: string): boolean {
+  const normalized = hostname.trim().toLowerCase();
+  return (
+    normalized === 'localhost' ||
+    normalized === '127.0.0.1' ||
+    normalized === '::1' ||
+    normalized === '0.0.0.0'
+  );
+}
+
+function normalizeDaemonUrl(rawUrl: string): URL {
+  try {
+    return new URL(rawUrl);
+  } catch {
+    throw new Error(`Invalid daemon URL: "${rawUrl}"`);
+  }
+}
+
 export async function createRemoteControlService(
   options: RemoteControlServiceOptions,
-): Promise<ControlService> {
-  const res = await fetch(new URL('/api/v1/sessions', options.baseUrl), {
+): Promise<RemoteSessionInfo> {
+  const daemonUrl = normalizeDaemonUrl(options.baseUrl);
+  const allowInsecureHttp = options.allowInsecureHttp ?? false;
+
+  if (
+    daemonUrl.protocol === 'http:' &&
+    !allowInsecureHttp &&
+    !isLoopbackHost(daemonUrl.hostname)
+  ) {
+    throw new Error(
+      'Refusing insecure HTTP connect to a non-local host. Use HTTPS or pass --allow-insecure-http.',
+    );
+  }
+
+  const res = await fetch(new URL('/api/v1/sessions', daemonUrl), {
     method: 'POST',
     headers: {
       authorization: `Bearer ${options.serverToken}`,
@@ -32,17 +68,9 @@ export async function createRemoteControlService(
 
   const session = (await res.json()) as SessionResponse;
 
-  // Minimal ControlService implementation for stream-json mode.
-  // It injects remote session headers into tool calls that use fetch.
-  // (Full remote tool approval routing is a follow-up.)
   return {
-    permission: {
-      getToolCallUpdateCallback: () => undefined,
-    },
-    remote: {
-      baseUrl: options.baseUrl,
-      sessionId: session.sessionId,
-      token: session.token,
-    },
-  } as unknown as ControlService;
+    baseUrl: daemonUrl.toString(),
+    sessionId: session.sessionId,
+    token: session.token,
+  };
 }

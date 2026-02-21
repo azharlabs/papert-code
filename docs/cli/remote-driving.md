@@ -72,6 +72,9 @@ papert connect http://HOST:41242 --token <serverToken>
 
 This starts a CLI session that runs against the remote daemon.
 
+For security, `connect` refuses plain HTTP to non-local hosts unless you pass
+`--allow-insecure-http`.
+
 ## Attach to an existing/new remote session (`papert attach`)
 
 Attach using an existing session:

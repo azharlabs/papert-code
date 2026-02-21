@@ -5,7 +5,39 @@
  */
 
 import type { CommandModule } from 'yargs';
-import { spawn } from 'node:child_process';
+import { spawn as childProcessSpawn } from 'node:child_process';
+
+let spawnImpl: typeof childProcessSpawn = childProcessSpawn;
+
+export const __setSpawnForConnect = (
+  spawn: typeof childProcessSpawn,
+): void => {
+  spawnImpl = spawn;
+};
+
+export const __resetSpawnForConnect = (): void => {
+  spawnImpl = childProcessSpawn;
+};
+
+export const __testSpawnForConnect = (): typeof childProcessSpawn => spawnImpl;
+
+function isLoopbackHost(hostname: string): boolean {
+  const normalized = hostname.trim().toLowerCase();
+  return (
+    normalized === 'localhost' ||
+    normalized === '127.0.0.1' ||
+    normalized === '::1' ||
+    normalized === '0.0.0.0'
+  );
+}
+
+function normalizeDaemonUrl(rawUrl: string): URL {
+  try {
+    return new URL(rawUrl);
+  } catch {
+    throw new Error(`Invalid daemon URL: "${rawUrl}"`);
+  }
+}
 
 export const connectCommand: CommandModule = {
   command: 'connect <url>',
@@ -22,14 +54,31 @@ export const connectCommand: CommandModule = {
         description: 'Server token required to create a remote session.',
         demandOption: true,
       })
+      .option('allow-insecure-http', {
+        type: 'boolean',
+        description:
+          'Allow connecting over plain HTTP for non-local daemon hosts (insecure).',
+        default: false,
+      })
       .version(false),
   handler: async (argv) => {
-    const url = String(argv['url']);
+    const daemonUrl = normalizeDaemonUrl(String(argv['url']));
     const token = String(argv['token']);
+    const allowInsecureHttp = Boolean(argv['allow-insecure-http']);
+
+    if (
+      daemonUrl.protocol === 'http:' &&
+      !allowInsecureHttp &&
+      !isLoopbackHost(daemonUrl.hostname)
+    ) {
+      throw new Error(
+        'Refusing insecure HTTP connect to a non-local host. Use HTTPS or pass --allow-insecure-http.',
+      );
+    }
 
     // Launch the local Interactive TUI, but route all model/tool calls to the
     // remote daemon by passing remote session parameters via env.
-    const child = spawn(
+    const child = __testSpawnForConnect()(
       process.execPath,
       [
         // run the current CLI entrypoint
@@ -39,8 +88,9 @@ export const connectCommand: CommandModule = {
         stdio: 'inherit',
         env: {
           ...process.env,
-          PAPERT_REMOTE_URL: url,
+          PAPERT_REMOTE_URL: daemonUrl.toString(),
           PAPERT_REMOTE_TOKEN: token,
+          PAPERT_REMOTE_ALLOW_INSECURE_HTTP: allowInsecureHttp ? '1' : '0',
         },
       },
     );
