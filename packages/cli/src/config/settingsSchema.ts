@@ -53,6 +53,8 @@ export interface SettingCollectionDefinition {
   type: SettingsType;
   description?: string;
   properties?: SettingsSchema;
+  /** Array item schema */
+  items?: SettingCollectionDefinition;
   /** Enum type options  */
   options?: readonly SettingEnumOption[];
   /**
