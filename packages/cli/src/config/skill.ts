@@ -176,6 +176,26 @@ export function loadUserSkills(): Skill[] {
   return Array.from(uniqueSkills.values());
 }
 
+export function getDiscoverableSkills(
+  workspaceDir: string = process.cwd(),
+): Skill[] {
+  const userSkills = loadUserSkills();
+  const workspaceSkills = getWorkspaceSkills(workspaceDir);
+
+  const skillsByName = new Map(
+    userSkills.map((skill) => [skill.config.name, skill]),
+  );
+  for (const skill of workspaceSkills) {
+    if (!skillsByName.has(skill.config.name)) {
+      skillsByName.set(skill.config.name, skill);
+    }
+  }
+
+  return Array.from(skillsByName.values()).sort((a, b) =>
+    a.config.name.localeCompare(b.config.name),
+  );
+}
+
 export function loadSkillsFromDir(dir: string, workspaceDir?: string): Skill[] {
   if (!fs.existsSync(dir)) {
     return [];

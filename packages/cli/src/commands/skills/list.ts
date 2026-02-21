@@ -6,8 +6,7 @@
 
 import type { CommandModule } from 'yargs';
 import {
-  getWorkspaceSkills,
-  loadUserSkills,
+  getDiscoverableSkills,
   SkillStorage,
   toOutputString,
 } from '../../config/skill.js';
@@ -17,17 +16,7 @@ import { SkillEnablementManager } from '../../config/skills/skillEnablement.js';
 export async function handleList() {
   try {
     const workspaceDir = process.cwd();
-    const userSkills = loadUserSkills();
-    const workspaceSkills = getWorkspaceSkills(workspaceDir);
-    const skillsByName = new Map(
-      userSkills.map((skill) => [skill.config.name, skill]),
-    );
-    for (const skill of workspaceSkills) {
-      if (!skillsByName.has(skill.config.name)) {
-        skillsByName.set(skill.config.name, skill);
-      }
-    }
-    const skills = Array.from(skillsByName.values());
+    const skills = getDiscoverableSkills(workspaceDir);
 
     if (skills.length === 0) {
       console.log('No skills installed.');

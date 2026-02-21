@@ -7,12 +7,18 @@
 import { Box, Text } from 'ink';
 import { useUIState } from '../../contexts/UIStateContext.js';
 import { SkillUpdateState } from '../../state/skills.js';
+import { getDiscoverableSkills } from '../../../config/skill.js';
 
 export const SkillsList = () => {
   const { commandContext, skillsUpdateState } = useUIState();
-  const allSkills = commandContext.services.config!.getSkills();
+  const config = commandContext.services.config;
+  const workspaceDir = config?.getWorkingDir() ?? process.cwd();
+  const discoverableSkills = getDiscoverableSkills(workspaceDir);
+  const activeSkillNames = new Set(
+    (config?.getSkills() ?? []).map((skill) => skill.name),
+  );
 
-  if (allSkills.length === 0) {
+  if (discoverableSkills.length === 0) {
     return <Text>No skills installed.</Text>;
   }
 
@@ -20,9 +26,11 @@ export const SkillsList = () => {
     <Box flexDirection="column" marginTop={1} marginBottom={1}>
       <Text>Installed skills:</Text>
       <Box flexDirection="column" paddingLeft={2}>
-        {allSkills.map((skill) => {
-          const state = skillsUpdateState.get(skill.name);
-          const activeString = skill.isActive ? 'active' : 'disabled';
+        {discoverableSkills.map((skill) => {
+          const state = skillsUpdateState.get(skill.config.name);
+          const activeString = activeSkillNames.has(skill.config.name)
+            ? 'active'
+            : 'disabled';
 
           let stateColor = 'gray';
           const stateText = state || 'unknown state';
@@ -49,9 +57,9 @@ export const SkillsList = () => {
           }
 
           return (
-            <Box key={skill.name}>
+            <Box key={skill.config.name}>
               <Text>
-                <Text color="cyan">{`${skill.name} (v${skill.version})`}</Text>
+                <Text color="cyan">{`${skill.config.name} (v${skill.config.version})`}</Text>
                 {` - ${activeString}`}
                 {<Text color={stateColor}>{` (${stateText})`}</Text>}
               </Text>
