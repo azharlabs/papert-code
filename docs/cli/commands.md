@@ -43,6 +43,7 @@ Do not edit manually. Run `npm run docs:commands:sync` to refresh.
 - `/skills`
 - `/stats`
 - `/summary`
+- `/team`
 - `/terminal-setup`
 - `/theme`
 - `/tools`
@@ -59,6 +60,11 @@ Papert Code supports several built-in commands to help you manage your session, 
 - **Terminal commands** are invoked as `papert <command>` (for example, `papert server` and `papert connect`). See [Remote Driving](./remote-driving.md).
 
 ## Terminal commands (`papert <command>`)
+
+- **`papert migrate`**
+  - **Description:** Migrate legacy Gemini naming in project config files to Papert naming.
+  - **Usage:** `papert migrate --from-gemini [--dry-run]`
+  - **Behavior:** Rewrites legacy `GEMINI_*` env variable names found in `.env`, `.papert/.env`, `.papert/settings*.json`, `.papert/hooks.json`, and `.github/workflows/*.yml` to their canonical `PAPERT_*` equivalents.
 
 - **`papert schedule`**
   - **Description:** Manage scheduled Papert prompts, cron jobs, heartbeats, and webhooks.

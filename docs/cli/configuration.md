@@ -575,6 +575,7 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
   - Alternative to the `sandbox` setting in `settings.json`.
   - Accepts `true`, `false`, `docker`, `podman`, or a custom command string.
 - Legacy `GEMINI_*` environment variables for telemetry and sandboxing are still supported for compatibility, but deprecated.
+  - To auto-rewrite project config references, run `papert migrate --from-gemini` (or preview with `papert migrate --from-gemini --dry-run`).
 - **`SEATBELT_PROFILE`** (macOS specific):
   - Switches the Seatbelt (`sandbox-exec`) profile on macOS.
   - `permissive-open`: (Default) Restricts writes to the project folder (and a few other folders, see `packages/cli/src/utils/sandbox-macos-permissive-open.sb`) but allows other operations.

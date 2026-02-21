@@ -35,6 +35,7 @@ import {
 import { extensionsCommand } from '../commands/extensions.js';
 import { skillsCommand } from '../commands/skills.js';
 import { hooksCommand } from '../commands/hooks.js';
+import { migrateCommand } from '../commands/migrate.js';
 import { serverCommand } from '../commands/server.js';
 import { connectCommand } from '../commands/connect.js';
 import { webCommand } from '../commands/web.js';
@@ -614,6 +615,7 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
   if (settings?.tools?.enableHooks) {
     yargsInstance.command(hooksCommand);
   }
+  yargsInstance.command(migrateCommand);
 
   yargsInstance.command(serverCommand);
   yargsInstance.command(connectCommand);
@@ -654,6 +656,7 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
       cmd === 'extensions' ||
       cmd === 'skills' ||
       cmd === 'hooks' ||
+      cmd === 'migrate' ||
       cmd === 'web' ||
       cmd === 'attach' ||
       (cmd === 'schedule' && !isLongRunningSchedule)
