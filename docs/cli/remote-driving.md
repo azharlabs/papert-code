@@ -122,6 +122,16 @@ Each request can include an optional `cwd` to target a specific project store.
 
 See `packages/sdk-typescript/src/types/protocol.ts` for the request schema.
 
+## MCP control (remote protocol)
+
+Remote control clients can also use MCP control subtypes:
+
+- `mcp_message` to route JSON-RPC traffic to configured MCP servers
+- `mcp_server_status` to inspect currently connected/available servers
+
+These routes are advertised through the initialize capabilities response with
+`can_handle_mcp_message: true`.
+
 ### Control-plane sample client
 
 This example sends a scheduler request over the control protocol using the SDK transport.

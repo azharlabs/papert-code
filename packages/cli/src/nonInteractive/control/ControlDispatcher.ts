@@ -29,7 +29,7 @@ import type { IPendingRequestRegistry } from './controllers/baseController.js';
 import { SystemController } from './controllers/systemController.js';
 import { PermissionController } from './controllers/permissionController.js';
 import { SchedulerController } from './controllers/schedulerController.js';
-// import { MCPController } from './controllers/mcpController.js';
+import { MCPController } from './controllers/mcpController.js';
 // import { HookController } from './controllers/hookController.js';
 import type {
   CLIControlRequest,
@@ -68,7 +68,7 @@ export class ControlDispatcher implements IPendingRequestRegistry {
   readonly systemController: SystemController;
   readonly permissionController: PermissionController;
   readonly schedulerController: SchedulerController;
-  // readonly mcpController: MCPController;
+  readonly mcpController: MCPController;
   // readonly hookController: HookController;
 
   // Central pending request registries
@@ -96,7 +96,7 @@ export class ControlDispatcher implements IPendingRequestRegistry {
       this,
       'SchedulerController',
     );
-    // this.mcpController = new MCPController(context, this, 'MCPController');
+    this.mcpController = new MCPController(context, this, 'MCPController');
     // this.hookController = new HookController(context, this, 'HookController');
 
     // Listen for main abort signal
@@ -240,7 +240,7 @@ export class ControlDispatcher implements IPendingRequestRegistry {
     this.systemController.cleanup();
     this.permissionController.cleanup();
     this.schedulerController.cleanup();
-    // this.mcpController.cleanup();
+    this.mcpController.cleanup();
     // this.hookController.cleanup();
   }
 
@@ -326,9 +326,9 @@ export class ControlDispatcher implements IPendingRequestRegistry {
       case 'scheduler_stop':
         return this.schedulerController;
 
-      // case 'mcp_message':
-      // case 'mcp_server_status':
-      //   return this.mcpController;
+      case 'mcp_message':
+      case 'mcp_server_status':
+        return this.mcpController;
 
       // case 'hook_callback':
       //   return this.hookController;

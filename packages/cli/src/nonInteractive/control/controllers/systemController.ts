@@ -143,8 +143,7 @@ export class SystemController extends BaseController {
       can_set_permission_mode:
         typeof this.context.config.setApprovalMode === 'function',
       can_set_model: typeof this.context.config.setModel === 'function',
-      /* TODO: sdkMcpServers support */
-      can_handle_mcp_message: false,
+      can_handle_mcp_message: true,
     };
 
     return capabilities;

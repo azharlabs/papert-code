@@ -8,6 +8,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ControlDispatcher } from './ControlDispatcher.js';
 import type { IControlContext } from './ControlContext.js';
 import type { SystemController } from './controllers/systemController.js';
+import type { MCPController } from './controllers/mcpController.js';
 import type { StreamJsonOutputAdapter } from '../io/StreamJsonOutputAdapter.js';
 import type {
   CLIControlRequest,
@@ -16,6 +17,8 @@ import type {
   ControlRequestPayload,
   CLIControlInitializeRequest,
   CLIControlInterruptRequest,
+  CLIControlMcpMessageRequest,
+  CLIControlMcpStatusRequest,
   CLIControlSetModelRequest,
   CLIControlSupportedCommandsRequest,
 } from '../types.js';
@@ -56,14 +59,26 @@ function createMockSystemController() {
   } as unknown as SystemController;
 }
 
+/**
+ * Creates a mock MCP controller for testing
+ */
+function createMockMcpController() {
+  return {
+    handleRequest: vi.fn(),
+    cleanup: vi.fn(),
+  } as unknown as MCPController;
+}
+
 describe('ControlDispatcher', () => {
   let dispatcher: ControlDispatcher;
   let mockContext: IControlContext;
   let mockSystemController: SystemController;
+  let mockMcpController: MCPController;
 
   beforeEach(() => {
     mockContext = createMockContext();
     mockSystemController = createMockSystemController();
+    mockMcpController = createMockMcpController();
 
     // Mock SystemController constructor
     vi.doMock('./controllers/systemController.js', () => ({
@@ -75,6 +90,8 @@ describe('ControlDispatcher', () => {
     (
       dispatcher as unknown as { systemController: SystemController }
     ).systemController = mockSystemController;
+    (dispatcher as unknown as { mcpController: MCPController }).mcpController =
+      mockMcpController;
   });
 
   describe('constructor', () => {
@@ -236,6 +253,79 @@ describe('ControlDispatcher', () => {
         response: {
           subtype: 'success',
           request_id: 'req-4',
+          response: mockResponse,
+        },
+      });
+    });
+
+    it('should route mcp_message request to MCP controller', async () => {
+      const request: CLIControlRequest = {
+        type: 'control_request',
+        request_id: 'req-4b',
+        request: {
+          subtype: 'mcp_message',
+          server_name: 'test-server',
+          message: {
+            jsonrpc: '2.0',
+            method: 'tools/list',
+            id: 1,
+          },
+        } as CLIControlMcpMessageRequest,
+      };
+
+      const mockResponse = {
+        subtype: 'mcp_message',
+        mcp_response: {
+          jsonrpc: '2.0',
+          id: 1,
+          result: { tools: [] },
+        },
+      };
+
+      vi.mocked(mockMcpController.handleRequest).mockResolvedValue(mockResponse);
+
+      await dispatcher.dispatch(request);
+
+      expect(mockMcpController.handleRequest).toHaveBeenCalledWith(
+        request.request,
+        'req-4b',
+      );
+      expect(mockContext.streamJson.send).toHaveBeenCalledWith({
+        type: 'control_response',
+        response: {
+          subtype: 'success',
+          request_id: 'req-4b',
+          response: mockResponse,
+        },
+      });
+    });
+
+    it('should route mcp_server_status request to MCP controller', async () => {
+      const request: CLIControlRequest = {
+        type: 'control_request',
+        request_id: 'req-4c',
+        request: {
+          subtype: 'mcp_server_status',
+        } as CLIControlMcpStatusRequest,
+      };
+
+      const mockResponse = {
+        sdkServer: 'connected',
+      };
+
+      vi.mocked(mockMcpController.handleRequest).mockResolvedValue(mockResponse);
+
+      await dispatcher.dispatch(request);
+
+      expect(mockMcpController.handleRequest).toHaveBeenCalledWith(
+        request.request,
+        'req-4c',
+      );
+      expect(mockContext.streamJson.send).toHaveBeenCalledWith({
+        type: 'control_response',
+        response: {
+          subtype: 'success',
+          request_id: 'req-4c',
           response: mockResponse,
         },
       });
@@ -717,10 +807,12 @@ describe('ControlDispatcher', () => {
 
     it('should cleanup all controllers', () => {
       vi.mocked(mockSystemController.cleanup).mockImplementation(() => { });
+      vi.mocked(mockMcpController.cleanup).mockImplementation(() => { });
 
       dispatcher.shutdown();
 
       expect(mockSystemController.cleanup).toHaveBeenCalled();
+      expect(mockMcpController.cleanup).toHaveBeenCalled();
     });
 
     it('should log shutdown in debug mode', () => {
