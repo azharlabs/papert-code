@@ -36,8 +36,12 @@ import { Stream } from '../utils/Stream.js';
 import { serializeJsonLine } from '../utils/jsonLines.js';
 import { AbortError } from '../types/errors.js';
 import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
-import type { SdkControlServerTransport } from '../mcp/SdkControlServerTransport.js';
+import {
+  createSdkControlServerTransport,
+  type SdkControlServerTransport,
+} from '../mcp/SdkControlServerTransport.js';
 import { ControlRequestType } from '../types/protocol.js';
+import type { MCPServerConfig } from '../types/protocol.js';
 
 interface PendingControlRequest {
   resolve: (response: Record<string, unknown> | null) => void;
@@ -125,12 +129,12 @@ export class Query implements AsyncIterable<SDKMessage> {
     try {
       logger.debug('Initializing Query');
 
-      const sdkMcpServerNames = Array.from(this.sdkMcpTransports.keys());
+      await this.initializeSdkMcpServers();
+      const sdkMcpServers = this.buildSdkMcpInitializePayload();
 
       await this.sendControlRequest(ControlRequestType.INITIALIZE, {
         hooks: null,
-        sdkMcpServers:
-          sdkMcpServerNames.length > 0 ? sdkMcpServerNames : undefined,
+        sdkMcpServers,
         mcpServers: this.options.mcpServers,
         agents: this.options.agents,
       });
@@ -139,6 +143,61 @@ export class Query implements AsyncIterable<SDKMessage> {
       logger.error('Initialization error:', error);
       throw error;
     }
+  }
+
+  private async initializeSdkMcpServers(): Promise<void> {
+    if (!this.options.sdkMcpServers) {
+      return;
+    }
+
+    for (const [serverName, serverConfig] of Object.entries(
+      this.options.sdkMcpServers,
+    )) {
+      if (!serverName.trim()) {
+        throw new Error('sdkMcpServers contains an empty server name');
+      }
+      if (this.sdkMcpTransports.has(serverName)) {
+        continue;
+      }
+
+      const transport = createSdkControlServerTransport({
+        serverName,
+        sendToQuery: async () => {
+          // Responses to CLI-originated MCP requests are returned via control responses.
+        },
+      });
+
+      try {
+        await transport.start();
+        await serverConfig.connect(transport);
+        this.sdkMcpTransports.set(serverName, transport);
+      } catch (error) {
+        try {
+          await transport.close();
+        } catch {
+          // Ignore cleanup failures and surface original setup error.
+        }
+        throw new Error(
+          `Failed to initialize SDK MCP server '${serverName}': ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    }
+  }
+
+  private buildSdkMcpInitializePayload():
+    | Record<string, MCPServerConfig>
+    | undefined {
+    if (this.sdkMcpTransports.size === 0) {
+      return undefined;
+    }
+
+    const payload: Record<string, MCPServerConfig> = {};
+    for (const serverName of this.sdkMcpTransports.keys()) {
+      payload[serverName] = {};
+    }
+    return payload;
   }
 
   private startMessageRouter(): void {

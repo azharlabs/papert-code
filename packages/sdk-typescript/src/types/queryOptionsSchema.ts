@@ -52,6 +52,7 @@ export const QueryOptionsSchema = z
       })
       .optional(),
     mcpServers: z.record(z.string(), ExternalMcpServerConfigSchema).optional(),
+    sdkMcpServers: z.record(z.string(), SdkMcpServerConfigSchema).optional(),
     abortController: z.instanceof(AbortController).optional(),
     debug: z.boolean().optional(),
     stderr: z

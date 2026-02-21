@@ -5,6 +5,8 @@ export { createClient, PapertClient, PapertClientSession } from './client.js';
 export { SdkLogger } from './utils/logger.js';
 export { createPapertAgent } from './agent.js';
 export { HttpSseTransport } from './transport/HttpSseTransport.js';
+export { createSdkMcpServer } from './mcp/createSdkMcpServer.js';
+export { tool } from './mcp/tool.js';
 export {
   REMOTE_CONTROL_OPENAPI_CONTRACT_ID,
   REMOTE_CONTROL_OPENAPI_CONTRACT_VERSION,
@@ -71,6 +73,7 @@ export type {
   PermissionMode,
   CanUseTool,
   PermissionResult,
+  ToolDefinition,
   ExternalMcpServerConfig,
   SdkMcpServerConfig,
 } from './types/types.js';

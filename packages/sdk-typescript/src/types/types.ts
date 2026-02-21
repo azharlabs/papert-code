@@ -195,6 +195,13 @@ export interface QueryOptions {
   mcpServers?: Record<string, ExternalMcpServerConfig>;
 
   /**
+   * SDK-embedded MCP servers that run inside the host process.
+   * Each entry is connected through the control plane and can respond to
+   * `mcp_message` requests from the CLI.
+   */
+  sdkMcpServers?: Record<string, SdkMcpServerConfig>;
+
+  /**
    * AbortController to cancel the query session.
    * Call abortController.abort() to terminate the session and cleanup resources.
    * Remember to handle the AbortError when the session is aborted.

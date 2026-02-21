@@ -81,6 +81,24 @@ function createControlCancel(requestId: string): ControlCancelRequest {
   };
 }
 
+function findControlResponse(
+  messages: unknown[],
+  requestId: string,
+): CLIControlResponse | undefined {
+  return messages.find(
+    (item) =>
+      typeof item === "object" &&
+      item !== null &&
+      "type" in item &&
+      item.type === "control_response" &&
+      "response" in item &&
+      typeof item.response === "object" &&
+      item.response !== null &&
+      "request_id" in item.response &&
+      item.response.request_id === requestId,
+  ) as CLIControlResponse | undefined;
+}
+
 describe("Query integration behavior", () => {
   it("sends initialize payload with agents and mcp servers", async () => {
     const transport = new MockTransport();
@@ -297,6 +315,133 @@ describe("Query integration behavior", () => {
 
     await vi.waitFor(() => {
       expect(canUseTool).toHaveBeenCalled();
+    });
+
+    await query.close();
+  });
+
+  it("initializes sdkMcpServers and resolves mcp_message requests", async () => {
+    const transport = new MockTransport();
+    const connect = vi.fn().mockImplementation(async (sdkTransport: unknown) => {
+      const typedTransport = sdkTransport as {
+        onmessage?: (message: { id?: string | number | null; method?: string }) => void;
+        send: (message: Record<string, unknown>) => Promise<void>;
+      };
+
+      typedTransport.onmessage = (message) => {
+        void typedTransport.send({
+          jsonrpc: "2.0",
+          id: message.id ?? null,
+          result: {
+            ok: true,
+            method: message.method ?? null,
+          },
+        });
+      };
+    });
+
+    const query = new Query(transport, {
+      cwd: "/repo",
+      sdkMcpServers: {
+        local: { connect },
+      },
+    });
+
+    const initialize = (await vi.waitFor(() => {
+      const message = transport.getLastWrittenMessage() as CLIControlRequest | null;
+      expect(message).toBeTruthy();
+      return message as CLIControlRequest;
+    })) as CLIControlRequest;
+
+    expect(initialize.request.subtype).toBe("initialize");
+    expect(initialize.request.sdkMcpServers).toEqual({
+      local: {},
+    });
+
+    transport.simulateMessage(createControlResponse(initialize.request_id, true, {}));
+    await query.initialized;
+
+    const mcpRequest: CLIControlRequest = {
+      type: "control_request",
+      request_id: "mcp-1",
+      request: {
+        subtype: "mcp_message",
+        server_name: "local",
+        message: {
+          jsonrpc: "2.0",
+          id: 1,
+          method: "tools/list",
+        },
+      },
+    };
+
+    transport.simulateMessage(mcpRequest);
+
+    await vi.waitFor(() => {
+      const response = findControlResponse(transport.getAllWrittenMessages(), "mcp-1");
+      expect(response?.response.subtype).toBe("success");
+      if (!response || response.response.subtype !== "success") {
+        return;
+      }
+      expect(response.response.response).toMatchObject({
+        mcp_response: {
+          jsonrpc: "2.0",
+          id: 1,
+          result: {
+            ok: true,
+            method: "tools/list",
+          },
+        },
+      });
+    });
+
+    expect(connect).toHaveBeenCalledTimes(1);
+    await query.close();
+  });
+
+  it("returns control errors for mcp_message requests to unknown sdk mcp servers", async () => {
+    const transport = new MockTransport();
+    const query = new Query(transport, {
+      cwd: "/repo",
+    });
+
+    const initialize = (await vi.waitFor(() => {
+      const message = transport.getLastWrittenMessage() as CLIControlRequest | null;
+      expect(message).toBeTruthy();
+      return message as CLIControlRequest;
+    })) as CLIControlRequest;
+
+    transport.simulateMessage(createControlResponse(initialize.request_id, true, {}));
+    await query.initialized;
+
+    const mcpRequest: CLIControlRequest = {
+      type: "control_request",
+      request_id: "mcp-missing",
+      request: {
+        subtype: "mcp_message",
+        server_name: "missing",
+        message: {
+          jsonrpc: "2.0",
+          id: 11,
+          method: "tools/list",
+        },
+      },
+    };
+
+    transport.simulateMessage(mcpRequest);
+
+    await vi.waitFor(() => {
+      const response = findControlResponse(
+        transport.getAllWrittenMessages(),
+        "mcp-missing",
+      );
+      expect(response?.response.subtype).toBe("error");
+      if (!response || response.response.subtype !== "error") {
+        return;
+      }
+      expect(String(response.response.error)).toContain(
+        "not found in SDK-embedded servers",
+      );
     });
 
     await query.close();

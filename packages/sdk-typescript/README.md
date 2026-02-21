@@ -361,6 +361,34 @@ const result = query({
 });
 ```
 
+### With SDK-Embedded MCP Servers
+
+```typescript
+import { query, createSdkMcpServer, tool } from '@papert-code/sdk-typescript';
+
+const localServer = createSdkMcpServer('local-tools', '1.0.0', [
+  tool(
+    'echo_text',
+    'Echo text back from host process',
+    {
+      type: 'object',
+      properties: { text: { type: 'string' } },
+      required: ['text'],
+    },
+    async (input: { text: string }) => ({ echoed: input.text }),
+  ),
+]);
+
+const result = query({
+  prompt: 'Call the local echo_text tool',
+  options: {
+    sdkMcpServers: {
+      'local-tools': localServer,
+    },
+  },
+});
+```
+
 ### Abort a Query
 
 ```typescript
