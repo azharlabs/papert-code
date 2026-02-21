@@ -13,6 +13,7 @@ Do not edit manually. Run `npm run docs:commands:sync` to refresh.
 - `/chat`
 - `/clear`
 - `/compress`
+- `/config`
 - `/copy`
 - `/corgi`
 - `/directory`
@@ -28,6 +29,7 @@ Do not edit manually. Run `npm run docs:commands:sync` to refresh.
 - `/lsp`
 - `/mcp`
 - `/memory`
+- `/migrate`
 - `/mode`
 - `/model`
 - `/permissions`
@@ -277,6 +279,21 @@ Slash commands provide meta-level control over the CLI itself.
 
 - **`/auth`**
   - **Description:** Open a dialog that lets you change the authentication method.
+
+- **`/config`**
+  - **Description:** Inspect effective runtime configuration and precedence sources directly from the active session.
+  - **Usage:** `/config explain [key] [--json]`
+  - **Examples:**
+    - `/config explain`
+    - `/config explain tools.permissions`
+    - `/config explain tools.permissions --json`
+
+- **`/migrate`**
+  - **Description:** Run legacy Gemini naming migration from within the interactive CLI.
+  - **Usage:** `/migrate --from-gemini [--dry-run]`
+  - **Examples:**
+    - `/migrate --from-gemini --dry-run`
+    - `/migrate --from-gemini`
 
 - **`/approval-mode`**
   - **Description:** Change the approval mode for tool usage.

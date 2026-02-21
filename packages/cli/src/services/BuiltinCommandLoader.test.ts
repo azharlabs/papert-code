@@ -72,6 +72,20 @@ vi.mock('../ui/commands/extensionsCommand.js', () => ({
 vi.mock('../ui/commands/helpCommand.js', () => ({ helpCommand: {} }));
 vi.mock('../ui/commands/githubCommand.js', () => ({ githubCommand: {} }));
 vi.mock('../ui/commands/memoryCommand.js', () => ({ memoryCommand: {} }));
+vi.mock('../ui/commands/migrateCommand.js', () => ({
+  migrateCommand: {
+    name: 'migrate',
+    description: 'Migrate command',
+    kind: 'built-in',
+  },
+}));
+vi.mock('../ui/commands/configCommand.js', () => ({
+  configCommand: {
+    name: 'config',
+    description: 'Config command',
+    kind: 'built-in',
+  },
+}));
 vi.mock('../ui/commands/modelCommand.js', () => ({
   modelCommand: { name: 'model' },
 }));
@@ -185,6 +199,12 @@ describe('BuiltinCommandLoader', () => {
 
     const teamCmd = commands.find((c) => c.name === 'team');
     expect(teamCmd).toBeDefined();
+
+    const configCmd = commands.find((c) => c.name === 'config');
+    expect(configCmd).toBeDefined();
+
+    const migrateCmd = commands.find((c) => c.name === 'migrate');
+    expect(migrateCmd).toBeDefined();
   });
 
   it('should include permissions command when folder trust is enabled', async () => {

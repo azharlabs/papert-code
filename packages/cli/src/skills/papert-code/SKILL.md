@@ -357,6 +357,28 @@ npx -y @modelcontextprotocol/server-postgres
 /settings
 ```
 
+### Config introspection and migration
+
+```bash
+# Show effective config and source precedence
+/config explain
+
+# Show one key
+/config explain model.name
+
+# JSON output for automation/scripts
+/config explain --json
+
+# Migrate legacy Gemini naming to Papert naming
+/migrate --from-gemini --dry-run
+/migrate --from-gemini
+```
+
+Notes:
+- `PAPERT_*` env vars are canonical.
+- `GEMINI_*` aliases are deprecated and should be migrated.
+- Run dry-run first, then apply migration, then verify with `/config explain`.
+
 ### Common settings
 
 ```json
@@ -509,6 +531,8 @@ Inside `papert` sessions:
 - `/extensions detail <name>`
 - `/schedule panel`
 - `/settings`
+- `/config explain [key] [--json]`
+- `/migrate --from-gemini [--dry-run]`
 
 ## Troubleshooting
 
