@@ -500,6 +500,33 @@ describe('parseArguments', () => {
     const argv = await parseArguments({} as Settings);
     expect(argv.extensions).toEqual(['ext1', 'ext2']);
   });
+
+  it('should reject using --continue with --resume together', async () => {
+    process.argv = ['node', 'script.js', '--continue', '--resume', 'session-1'];
+
+    const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called');
+    });
+    const mockConsoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => { });
+
+    await expect(parseArguments({} as Settings)).rejects.toThrow(
+      'process.exit called',
+    );
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining('Cannot use both --continue and --resume'),
+    );
+
+    mockExit.mockRestore();
+    mockConsoleError.mockRestore();
+  });
+
+  it('should parse --resume without ID as an empty string for session picker flow', async () => {
+    process.argv = ['node', 'script.js', '--resume'];
+    const argv = await parseArguments({} as Settings);
+    expect(argv.resume).toBe('');
+  });
 });
 
 describe('loadCliConfig', () => {
@@ -515,6 +542,20 @@ describe('loadCliConfig', () => {
     process.argv = originalArgv;
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
+  });
+
+  const resumedSessionFixture = (
+    sessionId: string,
+  ): ServerConfig.ResumedSessionData => ({
+    conversation: {
+      sessionId,
+      projectHash: 'project-hash',
+      startTime: new Date(0).toISOString(),
+      lastUpdated: new Date(0).toISOString(),
+      messages: [],
+    },
+    filePath: `/tmp/${sessionId}.jsonl`,
+    lastCompletedUuid: null,
   });
 
   it('should propagate stream-json formats to config', async () => {
@@ -574,6 +615,113 @@ describe('loadCliConfig', () => {
       argv,
     );
     expect(config.getShowMemoryUsage()).toBe(false);
+  });
+
+  it('should resume the latest session when --continue is used', async () => {
+    process.argv = ['node', 'script.js', '--continue'];
+    const argv = await parseArguments({} as Settings);
+    const sessionData = resumedSessionFixture(
+      '11111111-1111-4111-8111-111111111111',
+    );
+    const loadLastSessionSpy = vi
+      .spyOn(ServerConfig.SessionService.prototype, 'loadLastSession')
+      .mockResolvedValue(sessionData);
+
+    const config = await loadCliConfig(
+      {},
+      [],
+      new ExtensionEnablementManager(
+        ExtensionStorage.getUserExtensionsDir(),
+        argv.extensions,
+      ),
+      argv,
+    );
+
+    expect(loadLastSessionSpy).toHaveBeenCalledOnce();
+    expect(config.getSessionId()).toBe(sessionData.conversation.sessionId);
+    expect(config.getResumedSessionData()).toEqual(sessionData);
+  });
+
+  it('should continue safely with a fresh session when --continue has no saved sessions', async () => {
+    process.argv = ['node', 'script.js', '--continue'];
+    const argv = await parseArguments({} as Settings);
+    const loadLastSessionSpy = vi
+      .spyOn(ServerConfig.SessionService.prototype, 'loadLastSession')
+      .mockResolvedValue(undefined);
+
+    const config = await loadCliConfig(
+      {},
+      [],
+      new ExtensionEnablementManager(
+        ExtensionStorage.getUserExtensionsDir(),
+        argv.extensions,
+      ),
+      argv,
+    );
+
+    expect(loadLastSessionSpy).toHaveBeenCalledOnce();
+    expect(config.getResumedSessionData()).toBeUndefined();
+    expect(config.getSessionId()).toBeTruthy();
+  });
+
+  it('should resume a specific session when --resume <id> is provided', async () => {
+    const resumeId = '22222222-2222-4222-8222-222222222222';
+    process.argv = ['node', 'script.js', '--resume', resumeId];
+    const argv = await parseArguments({} as Settings);
+    const sessionData = resumedSessionFixture(resumeId);
+    const loadSessionSpy = vi
+      .spyOn(ServerConfig.SessionService.prototype, 'loadSession')
+      .mockResolvedValue(sessionData);
+
+    const config = await loadCliConfig(
+      {},
+      [],
+      new ExtensionEnablementManager(
+        ExtensionStorage.getUserExtensionsDir(),
+        argv.extensions,
+      ),
+      argv,
+    );
+
+    expect(loadSessionSpy).toHaveBeenCalledWith(resumeId);
+    expect(config.getSessionId()).toBe(resumeId);
+    expect(config.getResumedSessionData()).toEqual(sessionData);
+  });
+
+  it('should exit with a clear message when --resume points to a missing session', async () => {
+    const resumeId = 'missing-session-id';
+    process.argv = ['node', 'script.js', '--resume', resumeId];
+    const argv = await parseArguments({} as Settings);
+    vi.spyOn(ServerConfig.SessionService.prototype, 'loadSession').mockResolvedValue(
+      undefined,
+    );
+
+    const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called');
+    });
+    const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => { });
+
+    await expect(
+      loadCliConfig(
+        {},
+        [],
+        new ExtensionEnablementManager(
+          ExtensionStorage.getUserExtensionsDir(),
+          argv.extensions,
+        ),
+        argv,
+      ),
+    ).rejects.toThrow('process.exit called');
+
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining(`No saved session found with ID ${resumeId}`),
+    );
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining('papert --resume'),
+    );
+
+    mockExit.mockRestore();
+    mockConsoleLog.mockRestore();
   });
 
   it('should load project hooks from hooks/hooks.json when present', async () => {
