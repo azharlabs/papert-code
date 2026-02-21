@@ -13,6 +13,7 @@ This section covers internals, deployment, testing, and project operations for P
 
 - [Integration Tests](./integration-tests.md)
 - [Command Docs Parity](./command-doc-parity.md)
+- [Parity Task Matrix](./parity-task-matrix.md)
 
 ## Contribution Workflows
 
