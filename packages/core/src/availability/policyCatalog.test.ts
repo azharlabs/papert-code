@@ -7,6 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   createDefaultPolicy,
+  createSingleModelChain,
   getModelPolicyChain,
   validateModelPolicyChain,
 } from './policyCatalog.js';
@@ -16,16 +17,23 @@ import {
 } from '../config/models.js';
 
 describe('policyCatalog', () => {
+  const countLastResort = (chain: ReturnType<typeof getModelPolicyChain>) =>
+    chain.filter((policy) => policy.isLastResort).length;
+
   it('returns preview chain when preview enabled', () => {
     const chain = getModelPolicyChain({ previewEnabled: true });
     expect(chain[0]?.model).toBe(PREVIEW_GEMINI_MODEL);
     expect(chain).toHaveLength(2);
+    expect(countLastResort(chain)).toBe(1);
+    expect(chain[1]?.isLastResort).toBe(true);
   });
 
   it('returns default chain when preview disabled', () => {
     const chain = getModelPolicyChain({ previewEnabled: false });
     expect(chain[0]?.model).toBe(DEFAULT_GEMINI_MODEL);
     expect(chain).toHaveLength(2);
+    expect(countLastResort(chain)).toBe(1);
+    expect(chain[1]?.isLastResort).toBe(true);
   });
 
   it('marks preview transients as sticky retries', () => {
@@ -90,5 +98,12 @@ describe('policyCatalog', () => {
     expect(policy.stateTransitions.terminal).toBe('terminal');
     expect(policy.stateTransitions.transient).toBe('sticky_retry');
     expect(policy.stateTransitions.unknown).toBe('transient');
+  });
+
+  it('createSingleModelChain always marks exactly one last-resort model', () => {
+    const chain = createSingleModelChain('single');
+    expect(chain).toHaveLength(1);
+    expect(countLastResort(chain)).toBe(1);
+    expect(chain[0]?.isLastResort).toBe(true);
   });
 });

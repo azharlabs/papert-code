@@ -41,6 +41,10 @@ const createMockConfig = (overrides: Partial<Config> = {}): Config =>
 
 describe('policyHelpers', () => {
   describe('resolvePolicyChain', () => {
+    const countLastResort = (
+      chain: ReturnType<typeof resolvePolicyChain>,
+    ): number => chain.filter((policy) => policy.isLastResort).length;
+
     it('returns a single-model chain for a custom model', () => {
       const config = createMockConfig({
         getModel: () => 'custom-model',
@@ -48,6 +52,7 @@ describe('policyHelpers', () => {
       const chain = resolvePolicyChain(config);
       expect(chain).toHaveLength(1);
       expect(chain[0]?.model).toBe('custom-model');
+      expect(countLastResort(chain)).toBe(1);
     });
 
     it('leaves catalog order untouched when active model already present', () => {
@@ -68,6 +73,7 @@ describe('policyHelpers', () => {
       expect(chain).toHaveLength(2);
       expect(chain[0]?.model).toBe('gemini-2.5-pro');
       expect(chain[1]?.model).toBe('gemini-2.5-flash');
+      expect(countLastResort(chain)).toBe(1);
     });
 
     it('starts chain from preferredModel when model is "auto"', () => {
@@ -77,6 +83,7 @@ describe('policyHelpers', () => {
       const chain = resolvePolicyChain(config, 'gemini-2.5-flash');
       expect(chain).toHaveLength(1);
       expect(chain[0]?.model).toBe('gemini-2.5-flash');
+      expect(countLastResort(chain)).toBe(1);
     });
 
     it('wraps around the chain when wrapsAround is true', () => {
@@ -87,6 +94,7 @@ describe('policyHelpers', () => {
       expect(chain).toHaveLength(2);
       expect(chain[0]?.model).toBe('gemini-2.5-flash');
       expect(chain[1]?.model).toBe('gemini-2.5-pro');
+      expect(countLastResort(chain)).toBe(1);
     });
   });
 

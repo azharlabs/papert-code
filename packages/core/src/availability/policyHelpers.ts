@@ -17,6 +17,7 @@ import {
   createDefaultPolicy,
   createSingleModelChain,
   getModelPolicyChain,
+  validateModelPolicyChain,
 } from './policyCatalog.js';
 import {
   DEFAULT_GEMINI_MODEL_AUTO,
@@ -56,6 +57,8 @@ export function resolvePolicyChain(
   } else {
     chain = createSingleModelChain(modelFromConfig);
   }
+
+  validateModelPolicyChain(chain);
 
   const activeModel = resolveModel(modelFromConfig);
 
