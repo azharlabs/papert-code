@@ -86,6 +86,7 @@ vi.mock('../ui/commands/teamCommand.js', () => ({
   teamCommand: { name: 'team', description: 'Team command', kind: 'built-in' },
 }));
 vi.mock('../ui/commands/setupGithubCommand.js', () => ({ setupGithubCommand: {} }));
+vi.mock('../ui/commands/sandboxCommand.js', () => ({ sandboxCommand: {} }));
 vi.mock('../ui/commands/mcpCommand.js', () => ({
   mcpCommand: {
     name: 'mcp',

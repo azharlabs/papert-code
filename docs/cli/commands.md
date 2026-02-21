@@ -36,6 +36,7 @@ Do not edit manually. Run `npm run docs:commands:sync` to refresh.
 - `/restore`
 - `/resume`
 - `/rewind`
+- `/sandbox`
 - `/schedule`
 - `/settings`
 - `/setup-github`
@@ -228,6 +229,16 @@ Slash commands provide meta-level control over the CLI itself.
     - Legacy checkpoints (without integrity metadata) require `--allow-legacy`.
     - On confirmation, restores the same state as `/restore` (conversation history and file state when available).
   - **Note:** Only available when checkpointing is enabled.
+
+- **`/sandbox`**
+  - **Description:** Run sandbox self-diagnostics and print environment/runtime checks.
+  - **Usage:** `/sandbox [diagnose]`
+  - **Includes:**
+    - sandbox profile and active mode
+    - declared and runtime mount visibility
+    - proxy/network-related environment status
+    - UID/GID identity information
+    - key tool availability (`docker`, `podman`, `sandbox-exec`, `git`, `node`, `npm`)
 
 - **`/settings`**
   - **Description:** Open the settings editor to view and modify Papert Code settings.

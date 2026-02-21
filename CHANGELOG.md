@@ -12,6 +12,7 @@
 - Standardized policy/tool deny reason surfacing across TUI tool status, web event handling, SDK stream control replies, and headless JSON `permission_denials`.
 - Hardened checkpoint restore/rewind by adding checkpoint integrity envelopes and verification before applying state rollback.
 - Improved `/rewind` UX with richer metadata previews and a legacy-checkpoint safety gate (`--allow-legacy`) before confirmation.
+- Added `/sandbox` self-diagnostics for profiles, mounts, network/proxy status, UID/GID identity, and tool availability checks.
 - Added release channel selector and status surfacing in the web UI.
 - Hardened A2A OpenAPI contracts for web UI authentication paths.
 - Added terminal benchmark evaluation matrix and summary artifacts in CI.

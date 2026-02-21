@@ -36,6 +36,7 @@ import { resumeCommand } from '../ui/commands/resumeCommand.js';
 import { quitCommand, quitConfirmCommand } from '../ui/commands/quitCommand.js';
 import { rewindCommand } from '../ui/commands/rewindCommand.js';
 import { restoreCommand } from '../ui/commands/restoreCommand.js';
+import { sandboxCommand } from '../ui/commands/sandboxCommand.js';
 import { settingsCommand } from '../ui/commands/settingsCommand.js';
 import { statsCommand } from '../ui/commands/statsCommand.js';
 import { summaryCommand } from '../ui/commands/summaryCommand.js';
@@ -96,6 +97,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       quitConfirmCommand,
       rewindCommand(this.config),
       restoreCommand(this.config),
+      sandboxCommand,
       statsCommand,
       summaryCommand,
       shareCommand,
