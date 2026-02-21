@@ -31,6 +31,17 @@ This is the recommended way for end-users to install Papert Code. It involves do
   npx @papert-code/papert-code
   ```
 
+#### Post-install health checks
+
+During installation, `@papert-code/papert-code-core` runs a post-install diagnostic that:
+
+- validates Node.js runtime compatibility (Node.js 20+ recommended)
+- verifies bundled ripgrep availability and executable permissions when present
+- falls back to system `rg` checks when bundled ripgrep is unavailable
+- prints platform-specific recovery guidance instead of failing installation
+
+If you see warnings, use the printed platform guidance and then re-run your install command.
+
 ---
 
 ### 2. Running in a sandbox (Docker/Podman)
