@@ -22,6 +22,7 @@
 - Added `papert config explain` to inspect effective config values with per-key precedence/source attribution.
 - Added `papert auth diagnose` and `papert auth use <oauth|api-key|enterprise>` for faster auth diagnostics and switching.
 - Expanded TypeScript SDK integration coverage for multi-agent + MCP + permission/abort behavior and wired `sdkMcpServers` into Query initialization and MCP request routing.
+- Stabilized TypeScript SDK builds by adding DOM libs to `tsconfig.build.json`, eliminating `HeadersInit` d.ts bundle fallback errors.
 - Added release channel selector and status surfacing in the web UI.
 - Hardened A2A OpenAPI contracts for web UI authentication paths.
 - Added terminal benchmark evaluation matrix and summary artifacts in CI.
