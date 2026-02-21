@@ -100,7 +100,7 @@ npm run test --workspace packages/a2a-server -- src/http/web-ui.test.ts
 npm run test --workspace packages/a2a-server -- src/http/openapi.test.ts src/http/openapi.disabled.test.ts src/http/openapi.contract.test.ts
 
 # script-level guardrails
-npm run test:scripts -- command-doc-parity perf-budgets bundle-budgets
+npm run test:scripts -- command-doc-parity deflake-integration perf-budgets bundle-budgets
 ```
 
 ### Eval suite checks
@@ -130,6 +130,12 @@ npx vitest run integration-tests/terminal-bench/scripts/summarize-results.test.t
   - source perf budgets (`npm run perf:check`)
   - bundle budgets (`npm run bundle:check`)
 - Uploads artifact: `perf-guardrail-summary`
+
+### Integration deflake
+
+- File: `.github/workflows/integration-deflake.yml`
+- Runs retry-based integration suites (`sandbox:none` and `terminal-bench`)
+- Generates flaky-signature reports (`.json` + `.md`) and uploads artifacts
 
 ## Troubleshooting matrix
 
