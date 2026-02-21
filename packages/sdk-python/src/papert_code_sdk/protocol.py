@@ -115,6 +115,8 @@ class SDKResultMessage(BaseModel):
     # Subtype-specific fields
     result: Optional[str] = None
     error: Optional[Dict[str, Any]] = None
+    structured_output: Optional[Any] = None
+    structured_output_meta: Optional[Dict[str, Any]] = None
 
     model_config = {"extra": "allow"}
 

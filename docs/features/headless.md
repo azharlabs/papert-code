@@ -14,6 +14,7 @@ scripting, automation, CI/CD pipelines, and building AI-powered tools.
     - [Text Output (Default)](#text-output-default)
     - [JSON Output](#json-output)
       - [Example Usage](#example-usage)
+      - [Structured Output Mode](#structured-output-mode)
     - [Stream-JSON Output](#stream-json-output)
     - [Input Format](#input-format)
     - [File Redirection](#file-redirection)
@@ -165,6 +166,29 @@ Output (at end of execution):
 ]
 ```
 
+#### Structured Output Mode
+
+You can enforce a JSON schema for the final headless result and get typed
+structured-output errors when parsing/validation fails.
+
+```bash
+papert -p "Extract name and role" \
+  --output-format json \
+  --structured-output-schema '{"type":"object","properties":{"name":{"type":"string"},"role":{"type":"string"}},"required":["name","role"]}' \
+  --structured-output-retries 2
+```
+
+When successful, the `result` message includes:
+
+- `structured_output`: the validated JSON object
+- `structured_output_meta`: conversion metadata (`source`, `attempts`)
+
+When schema normalization fails, the `result.error` payload includes:
+
+- `type: "structured_output_error"`
+- `code`: one of `schema_parse_error`, `schema_validation_error`, `generation_failed`, `max_retries_exceeded`
+- `attempts` and optional `last_validation_error`
+
 ### Stream-JSON Output
 
 Stream-JSON format emits JSON messages immediately as they occur during execution, enabling real-time monitoring. This format uses line-delimited JSON where each message is a complete JSON object on a single line.
@@ -228,6 +252,9 @@ Key command-line options for headless usage:
 | `--output-format`, `-o`      | Specify output format (text, json, stream-json)     | `papert -p "query" --output-format json`                                   |
 | `--input-format`             | Specify input format (text, stream-json)            | `papert --input-format text --output-format stream-json`                   |
 | `--include-partial-messages` | Include partial messages in stream-json output      | `papert -p "query" --output-format stream-json --include-partial-messages` |
+| `--structured-output-schema` | Inline JSON schema for structured result validation | `papert -p "query" --output-format json --structured-output-schema '{...}'` |
+| `--structured-output-schema-file` | Load JSON schema from file for structured output | `papert -p "query" --output-format json --structured-output-schema-file ./schema.json` |
+| `--structured-output-retries` | Structured-output regeneration attempts             | `papert -p "query" --output-format json --structured-output-schema '{...}' --structured-output-retries 3` |
 | `--debug`, `-d`              | Enable debug mode                                   | `papert -p "query" --debug`                                                |
 | `--all-files`, `-a`          | Include all files in context                        | `papert -p "query" --all-files`                                            |
 | `--include-directories`      | Include additional directories                      | `papert -p "query" --include-directories src,docs`                         |

@@ -28,6 +28,10 @@ import type { JsonOutputAdapterInterface } from './nonInteractive/io/BaseJsonOut
 import { JsonOutputAdapter } from './nonInteractive/io/JsonOutputAdapter.js';
 import { StreamJsonOutputAdapter } from './nonInteractive/io/StreamJsonOutputAdapter.js';
 import type { ControlService } from './nonInteractive/control/ControlService.js';
+import {
+  resolveStructuredOutput,
+  StructuredOutputError,
+} from './nonInteractive/structuredOutput.js';
 
 import { handleSlashCommand } from './nonInteractiveCliCommands.js';
 import { handleAtCommand } from './ui/hooks/atCommandProcessor.js';
@@ -74,6 +78,24 @@ export async function runNonInteractive(
     // Create output adapter based on format
     let adapter: JsonOutputAdapterInterface | undefined;
     const outputFormat = config.getOutputFormat();
+    const structuredOutputSettings =
+      typeof (
+        config as unknown as {
+          getStructuredOutput?: () => {
+            schema: Record<string, unknown>;
+            retries?: number;
+          };
+        }
+      ).getStructuredOutput === 'function'
+        ? (
+          config as unknown as {
+            getStructuredOutput: () => {
+              schema: Record<string, unknown>;
+              retries?: number;
+            };
+          }
+        ).getStructuredOutput()
+        : undefined;
 
     if (options.adapter) {
       adapter = options.adapter;
@@ -83,6 +105,12 @@ export async function runNonInteractive(
       adapter = new StreamJsonOutputAdapter(
         config,
         config.getIncludePartialMessages(),
+      );
+    }
+
+    if (structuredOutputSettings && !adapter) {
+      throw new FatalInputError(
+        'Structured output mode requires --output-format json or --output-format stream-json.',
       );
     }
 
@@ -185,6 +213,7 @@ export async function runNonInteractive(
         }
 
         const toolCallRequests: ToolCallRequestInfo[] = [];
+        let assistantText = '';
         const apiStartTime = Date.now();
         const responseStream = geminiClient.sendMessageStream(
           currentMessages[0]?.parts || [],
@@ -200,6 +229,10 @@ export async function runNonInteractive(
         for await (const event of responseStream) {
           if (abortController.signal.aborted) {
             handleCancellationError(config);
+          }
+
+          if (event.type === GeminiEventType.Content) {
+            assistantText += event.value;
           }
 
           if (adapter) {
@@ -305,6 +338,23 @@ export async function runNonInteractive(
         } else {
           // For JSON and STREAM_JSON modes, compute usage from metrics
           if (adapter) {
+            let structuredResult:
+              | {
+                value: unknown;
+                source: 'assistant_json' | 'llm_generation';
+                attempts: number;
+              }
+              | undefined;
+            if (structuredOutputSettings) {
+              structuredResult = await resolveStructuredOutput(
+                config,
+                structuredOutputSettings,
+                assistantText,
+                abortController.signal,
+                prompt_id,
+              );
+            }
+
             const metrics = uiTelemetryService.getMetrics();
             const usage = computeUsageFromMetrics(metrics);
             // Get stats for JSON format output
@@ -317,8 +367,18 @@ export async function runNonInteractive(
               durationMs: Date.now() - startTime,
               apiDurationMs: totalApiDurationMs,
               numTurns: turnCount,
+              summary: structuredResult
+                ? JSON.stringify(structuredResult.value)
+                : undefined,
               usage,
               stats,
+              structuredOutput: structuredResult?.value,
+              structuredOutputMeta: structuredResult
+                ? {
+                  source: structuredResult.source,
+                  attempts: structuredResult.attempts,
+                }
+                : undefined,
             });
           } else {
             // Text output mode - no usage needed
@@ -338,12 +398,27 @@ export async function runNonInteractive(
           outputFormat === OutputFormat.JSON
             ? uiTelemetryService.getMetrics()
             : undefined;
+        const structuredError =
+          error instanceof StructuredOutputError
+            ? {
+              type: 'structured_output_error',
+              code: error.code,
+              attempts: error.attempts,
+              ...(error.lastValidationError
+                ? {
+                  last_validation_error: error.lastValidationError,
+                }
+                : {}),
+            }
+            : undefined;
         adapter.emitResult({
           isError: true,
           durationMs: Date.now() - startTime,
           apiDurationMs: totalApiDurationMs,
           numTurns: turnCount,
           errorMessage: message,
+          errorType: structuredError?.type,
+          errorDetails: structuredError,
           usage,
           stats,
         });

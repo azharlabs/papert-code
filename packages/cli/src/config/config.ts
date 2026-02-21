@@ -215,6 +215,9 @@ export interface CliArgs {
   inputFormat?: string | undefined;
   outputFormat: string | undefined;
   includePartialMessages?: boolean;
+  structuredOutputSchema?: string | undefined;
+  structuredOutputSchemaFile?: string | undefined;
+  structuredOutputRetries?: number | undefined;
   /** Resume the most recent session for the current project */
   continue: boolean | undefined;
   /** Resume a specific session by its ID */
@@ -239,6 +242,29 @@ function normalizeOutputFormat(
     return OutputFormat.JSON;
   }
   return OutputFormat.TEXT;
+}
+
+function parseStructuredOutputSchema(rawSchema: string): Record<string, unknown> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawSchema);
+  } catch (error) {
+    throw new FatalConfigError(
+      `Invalid JSON schema provided via --structured-output-schema: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
+  if (
+    typeof parsed !== 'object' ||
+    parsed === null ||
+    Array.isArray(parsed)
+  ) {
+    throw new FatalConfigError(
+      'Structured output schema must be a JSON object.',
+    );
+  }
+
+  return parsed as Record<string, unknown>;
 }
 
 export async function parseArguments(settings: Settings): Promise<CliArgs> {
@@ -523,6 +549,21 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
             'Include partial assistant messages when using stream-json output.',
           default: false,
         })
+        .option('structured-output-schema', {
+          type: 'string',
+          description:
+            'JSON schema (inline JSON string) used to validate structured output in headless mode.',
+        })
+        .option('structured-output-schema-file', {
+          type: 'string',
+          description:
+            'Path to a JSON schema file used to validate structured output in headless mode.',
+        })
+        .option('structured-output-retries', {
+          type: 'number',
+          description:
+            'Number of structured-output regeneration attempts when assistant output does not match schema.',
+        })
         .option('continue', {
           type: 'boolean',
           description:
@@ -622,6 +663,27 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
             argv['outputFormat'] !== OutputFormat.STREAM_JSON
           ) {
             return '--input-format stream-json requires --output-format stream-json';
+          }
+          if (
+            argv['structuredOutputSchema'] &&
+            argv['structuredOutputSchemaFile']
+          ) {
+            return 'Cannot use both --structured-output-schema and --structured-output-schema-file together.';
+          }
+          if (
+            argv['structuredOutputRetries'] !== undefined &&
+            argv['structuredOutputRetries'] !== null
+          ) {
+            const retries = Number(argv['structuredOutputRetries']);
+            if (!Number.isInteger(retries) || retries < 0) {
+              return '--structured-output-retries must be a non-negative integer';
+            }
+            if (
+              !argv['structuredOutputSchema'] &&
+              !argv['structuredOutputSchemaFile']
+            ) {
+              return '--structured-output-retries requires --structured-output-schema or --structured-output-schema-file';
+            }
           }
           if (argv['continue'] && argv['resume']) {
             return 'Cannot use both --continue and --resume together. Use --continue to resume the latest session, or --resume <sessionId> to resume a specific session.';
@@ -901,6 +963,54 @@ export async function loadCliConfig(
         : OutputFormat.TEXT
       : (outputFormat as OutputFormat);
   const includePartialMessages = Boolean(argv.includePartialMessages);
+  const structuredOutputSchemaInline = argv.structuredOutputSchema?.trim();
+  const structuredOutputSchemaFile = argv.structuredOutputSchemaFile?.trim();
+
+  let structuredOutputSchema: Record<string, unknown> | undefined;
+  if (structuredOutputSchemaInline && structuredOutputSchemaFile) {
+    throw new FatalConfigError(
+      'Cannot use both --structured-output-schema and --structured-output-schema-file together.',
+    );
+  }
+
+  if (structuredOutputSchemaInline) {
+    structuredOutputSchema = parseStructuredOutputSchema(
+      structuredOutputSchemaInline,
+    );
+  } else if (structuredOutputSchemaFile) {
+    const resolvedSchemaPath = resolvePath(structuredOutputSchemaFile);
+    let schemaRaw = '';
+    try {
+      schemaRaw = fs.readFileSync(resolvedSchemaPath, 'utf8');
+    } catch (error) {
+      throw new FatalConfigError(
+        `Failed to read structured output schema file at ${resolvedSchemaPath}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    structuredOutputSchema = parseStructuredOutputSchema(schemaRaw);
+  }
+
+  if (structuredOutputSchema) {
+    if (
+      outputFormat !== OutputFormat.JSON &&
+      outputFormat !== OutputFormat.STREAM_JSON
+    ) {
+      throw new FatalConfigError(
+        '--structured-output-schema requires --output-format json or --output-format stream-json.',
+      );
+    }
+  } else if (
+    argv.structuredOutputRetries !== undefined &&
+    argv.structuredOutputRetries !== null
+  ) {
+    throw new FatalConfigError(
+      '--structured-output-retries requires --structured-output-schema or --structured-output-schema-file.',
+    );
+  }
+
+  const structuredOutputRetries = structuredOutputSchema
+    ? (argv.structuredOutputRetries ?? 2)
+    : undefined;
 
   // Determine approval mode with backward compatibility
   let approvalMode: ApprovalMode;
@@ -1124,7 +1234,7 @@ export async function loadCliConfig(
     }
   }
 
-  return new Config({
+  const config = new Config({
     sessionId,
     sessionData,
     embeddingModel: DEFAULT_PAPERT_EMBEDDING_MODEL,
@@ -1233,6 +1343,12 @@ export async function loadCliConfig(
     output: {
       format: outputSettingsFormat,
     },
+    structuredOutput: structuredOutputSchema
+      ? {
+        schema: structuredOutputSchema,
+        retries: structuredOutputRetries,
+      }
+      : undefined,
     formatter: mapFormatterSettings(settings.tools?.formatter),
     enableHooks: settings.tools?.enableHooks ?? false,
     enablePlugins: settings.enablePlugins ?? false,
@@ -1243,6 +1359,23 @@ export async function loadCliConfig(
     hooks: settings.hooks || {},
     projectHooks: projectHooks || hooksFromHooksJson || {},
   });
+
+  if (structuredOutputSchema) {
+    const structuredOutput = {
+      schema: structuredOutputSchema,
+      retries: structuredOutputRetries ?? 2,
+    };
+    (
+      config as unknown as {
+        getStructuredOutput: () => {
+          schema: Record<string, unknown>;
+          retries: number;
+        };
+      }
+    ).getStructuredOutput = () => structuredOutput;
+  }
+
+  return config;
 }
 
 function allowedMcpServers(

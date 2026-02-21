@@ -146,6 +146,11 @@ export interface SDKResultMessageSuccess {
   usage: ExtendedUsage;
   modelUsage?: Record<string, ModelUsage>;
   permission_denials: CLIPermissionDenial[];
+  structured_output?: unknown;
+  structured_output_meta?: {
+    source: 'assistant_json' | 'llm_generation';
+    attempts: number;
+  };
   [key: string]: unknown;
 }
 
@@ -163,7 +168,10 @@ export interface SDKResultMessageError {
   permission_denials: CLIPermissionDenial[];
   error?: {
     type?: string;
+    code?: string;
     message: string;
+    attempts?: number;
+    last_validation_error?: string;
     [key: string]: unknown;
   };
   [key: string]: unknown;

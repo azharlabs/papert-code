@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import * as fs from 'node:fs';
 import {
   ShellTool,
   EditTool,
@@ -439,6 +440,87 @@ describe('parseArguments', () => {
     expect(argv.outputFormat).toBe('stream-json');
     expect(argv.inputFormat).toBe('stream-json');
     expect(argv.includePartialMessages).toBe(true);
+  });
+
+  it('should parse structured output flags', async () => {
+    process.argv = [
+      'node',
+      'script.js',
+      '--output-format',
+      'json',
+      '--structured-output-schema',
+      '{"type":"object","properties":{"name":{"type":"string"}}}',
+      '--structured-output-retries',
+      '3',
+    ];
+
+    const argv = await parseArguments({} as Settings);
+
+    expect(argv.outputFormat).toBe('json');
+    expect(argv.structuredOutputSchema).toBe(
+      '{"type":"object","properties":{"name":{"type":"string"}}}',
+    );
+    expect(argv.structuredOutputRetries).toBe(3);
+  });
+
+  it('should reject structured-output-retries without a schema', async () => {
+    process.argv = [
+      'node',
+      'script.js',
+      '--structured-output-retries',
+      '2',
+    ];
+
+    const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called');
+    });
+    const mockConsoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => { });
+
+    await expect(parseArguments({} as Settings)).rejects.toThrow(
+      'process.exit called',
+    );
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '--structured-output-retries requires --structured-output-schema or --structured-output-schema-file',
+      ),
+    );
+
+    mockExit.mockRestore();
+    mockConsoleError.mockRestore();
+  });
+
+  it('should reject using inline schema and schema file together', async () => {
+    process.argv = [
+      'node',
+      'script.js',
+      '--output-format',
+      'json',
+      '--structured-output-schema',
+      '{"type":"object"}',
+      '--structured-output-schema-file',
+      './schema.json',
+    ];
+
+    const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called');
+    });
+    const mockConsoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => { });
+
+    await expect(parseArguments({} as Settings)).rejects.toThrow(
+      'process.exit called',
+    );
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Cannot use both --structured-output-schema and --structured-output-schema-file together.',
+      ),
+    );
+
+    mockExit.mockRestore();
+    mockConsoleError.mockRestore();
   });
 
   it('should allow --approval-mode without --yolo', async () => {
@@ -3600,6 +3682,105 @@ describe('Output format', () => {
     );
     mockExit.mockRestore();
     mockConsoleError.mockRestore();
+  });
+
+  it('should pass structured output schema and retries into config', async () => {
+    process.argv = [
+      'node',
+      'script.js',
+      '--output-format',
+      'json',
+      '--structured-output-schema',
+      '{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}',
+      '--structured-output-retries',
+      '4',
+    ];
+    const argv = await parseArguments({} as Settings);
+    const config = await loadCliConfig(
+      {},
+      [],
+      new ExtensionEnablementManager(
+        ExtensionStorage.getUserExtensionsDir(),
+        argv.extensions,
+      ),
+      argv,
+    );
+
+    expect(config.getStructuredOutput()).toEqual({
+      schema: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+        },
+        required: ['name'],
+      },
+      retries: 4,
+    });
+  });
+
+  it('should load structured output schema from a file path', async () => {
+    const readFileSpy = vi
+      .spyOn(fs, 'readFileSync')
+      .mockReturnValue(
+        '{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}',
+      );
+
+    process.argv = [
+      'node',
+      'script.js',
+      '--output-format',
+      'json',
+      '--structured-output-schema-file',
+      './structured-schema.json',
+    ];
+    const argv = await parseArguments({} as Settings);
+    const config = await loadCliConfig(
+      {},
+      [],
+      new ExtensionEnablementManager(
+        ExtensionStorage.getUserExtensionsDir(),
+        argv.extensions,
+      ),
+      argv,
+    );
+
+    expect(readFileSpy).toHaveBeenCalled();
+    expect(config.getStructuredOutput()).toEqual({
+      schema: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+        },
+        required: ['name'],
+      },
+      retries: 2,
+    });
+
+    readFileSpy.mockRestore();
+  });
+
+  it('should reject structured output schema when output format is text', async () => {
+    process.argv = [
+      'node',
+      'script.js',
+      '--structured-output-schema',
+      '{"type":"object"}',
+    ];
+    const argv = await parseArguments({} as Settings);
+
+    await expect(
+      loadCliConfig(
+        {},
+        [],
+        new ExtensionEnablementManager(
+          ExtensionStorage.getUserExtensionsDir(),
+          argv.extensions,
+        ),
+        argv,
+      ),
+    ).rejects.toThrow(
+      '--structured-output-schema requires --output-format json or --output-format stream-json.',
+    );
   });
 });
 

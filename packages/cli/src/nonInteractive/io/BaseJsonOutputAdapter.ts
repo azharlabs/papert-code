@@ -57,12 +57,19 @@ export interface MessageState {
 export interface ResultOptions {
   readonly isError: boolean;
   readonly errorMessage?: string;
+  readonly errorType?: string;
+  readonly errorDetails?: Record<string, unknown>;
   readonly durationMs: number;
   readonly apiDurationMs: number;
   readonly numTurns: number;
   readonly usage?: ExtendedUsage;
   readonly stats?: SessionMetrics;
   readonly summary?: string;
+  readonly structuredOutput?: unknown;
+  readonly structuredOutputMeta?: {
+    source: 'assistant_json' | 'llm_generation';
+    attempts: number;
+  };
   readonly subtype?: string;
 }
 
@@ -1071,6 +1078,13 @@ export abstract class BaseJsonOutputAdapter {
 
     if (options.isError) {
       const errorMessage = options.errorMessage ?? 'Unknown error';
+      const errorPayload: NonNullable<CLIResultMessageError['error']> = {
+        ...(options.errorType ? { type: options.errorType } : {}),
+        message: errorMessage,
+      };
+      if (options.errorDetails) {
+        Object.assign(errorPayload, options.errorDetails);
+      }
       return {
         type: 'result',
         subtype:
@@ -1084,7 +1098,7 @@ export abstract class BaseJsonOutputAdapter {
         num_turns: options.numTurns,
         usage,
         permission_denials: [...this.permissionDenials],
-        error: { message: errorMessage },
+        error: errorPayload,
       };
     } else {
       const success: CLIResultMessageSuccess & { stats?: SessionMetrics } = {
@@ -1104,6 +1118,12 @@ export abstract class BaseJsonOutputAdapter {
 
       if (options.stats) {
         success.stats = options.stats;
+      }
+      if (options.structuredOutput !== undefined) {
+        success.structured_output = options.structuredOutput;
+      }
+      if (options.structuredOutputMeta) {
+        success.structured_output_meta = options.structuredOutputMeta;
       }
 
       return success;

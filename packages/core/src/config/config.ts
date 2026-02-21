@@ -249,8 +249,14 @@ export interface TelemetrySettings {
   useCollector?: boolean;
 }
 
+export interface StructuredOutputSettings {
+  schema: Record<string, unknown>;
+  retries?: number;
+}
+
 export interface OutputSettings {
   format?: OutputFormat;
+  structured?: StructuredOutputSettings;
 }
 
 export interface GitCoAuthorSettings {
@@ -420,6 +426,7 @@ export interface ConfigParameters {
   eventEmitter?: EventEmitter;
   useSmartEdit?: boolean;
   output?: OutputSettings;
+  structuredOutput?: StructuredOutputSettings;
   inputFormat?: InputFormat;
   outputFormat?: OutputFormat;
   skipStartupContext?: boolean;
@@ -464,6 +471,32 @@ function normalizeConfigOutputFormat(
   }
 }
 
+function normalizeStructuredOutputSettings(
+  settings: StructuredOutputSettings | undefined,
+): StructuredOutputSettings | undefined {
+  if (!settings) {
+    return undefined;
+  }
+  if (
+    typeof settings.schema !== 'object' ||
+    settings.schema === null ||
+    Array.isArray(settings.schema)
+  ) {
+    return undefined;
+  }
+
+  const retriesRaw = settings.retries ?? 2;
+  const retries =
+    Number.isFinite(retriesRaw) && retriesRaw >= 0
+      ? Math.floor(retriesRaw)
+      : 2;
+
+  return {
+    schema: structuredClone(settings.schema),
+    retries,
+  };
+}
+
 export class Config {
   private sessionId: string;
   private sessionData?: ResumedSessionData;
@@ -485,6 +518,7 @@ export class Config {
   private readonly debugMode: boolean;
   private readonly inputFormat: InputFormat;
   private readonly outputFormat: OutputFormat;
+  private readonly structuredOutput: StructuredOutputSettings | undefined;
   private readonly includePartialMessages: boolean;
   private readonly question: string | undefined;
   private readonly fullContext: boolean;
@@ -626,6 +660,9 @@ export class Config {
       params.outputFormat ?? params.output?.format,
     );
     this.outputFormat = normalizedOutputFormat ?? OutputFormat.TEXT;
+    this.structuredOutput = normalizeStructuredOutputSettings(
+      params.structuredOutput ?? params.output?.structured,
+    );
     this.includePartialMessages = params.includePartialMessages ?? false;
     this.question = params.question;
     this.fullContext = params.fullContext ?? false;
@@ -1757,6 +1794,16 @@ export class Config {
 
   getOutputFormat(): OutputFormat {
     return this.outputFormat;
+  }
+
+  getStructuredOutput(): StructuredOutputSettings | undefined {
+    if (!this.structuredOutput) {
+      return undefined;
+    }
+    return {
+      schema: structuredClone(this.structuredOutput.schema),
+      retries: this.structuredOutput.retries,
+    };
   }
 
   async getGitService(): Promise<GitService> {

@@ -664,6 +664,19 @@ Arguments passed directly when running the CLI can override other configurations
   - **Default:** `false`
   - **Requirement:** Requires `--output-format stream-json` to be set.
   - **Note:** See [Headless Mode](../features/headless.md) for detailed information about stream events.
+- **`--structured-output-schema <json>`**:
+  - **Description:** Inline JSON schema used to validate and normalize headless output into a structured object.
+  - **Requirement:** Requires `--output-format json` or `--output-format stream-json`.
+  - **Constraint:** Cannot be used together with `--structured-output-schema-file`.
+- **`--structured-output-schema-file <path>`**:
+  - **Description:** Path to a JSON schema file used for structured headless output validation.
+  - **Requirement:** Requires `--output-format json` or `--output-format stream-json`.
+  - **Constraint:** Cannot be used together with `--structured-output-schema`.
+- **`--structured-output-retries <n>`**:
+  - **Description:** Number of regeneration attempts when assistant output does not parse/validate against the structured schema.
+  - **Default:** `2` (when structured output schema is configured).
+  - **Requirement:** Requires `--structured-output-schema` or `--structured-output-schema-file`.
+  - **Values:** Non-negative integer.
 - **`--sandbox`** (**`-s`**):
   - Enables sandbox mode for this session.
 - **`--sandbox-image`**:

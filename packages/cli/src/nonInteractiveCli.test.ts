@@ -117,6 +117,9 @@ describe('runNonInteractive', () => {
       initialize: vi.fn().mockResolvedValue(undefined),
       getApprovalMode: vi.fn().mockReturnValue(ApprovalMode.DEFAULT),
       getGeminiClient: vi.fn().mockReturnValue(mockGeminiClient),
+      getBaseLlmClient: vi.fn().mockReturnValue({
+        generateJson: vi.fn(),
+      }),
       getToolRegistry: vi.fn().mockReturnValue(mockToolRegistry),
       getMaxSessionTurns: vi.fn().mockReturnValue(10),
       getProjectRoot: vi.fn().mockReturnValue('/test/project'),
@@ -131,6 +134,7 @@ describe('runNonInteractive', () => {
       getContentGeneratorConfig: vi.fn().mockReturnValue({}),
       getDebugMode: vi.fn().mockReturnValue(false),
       getOutputFormat: vi.fn().mockReturnValue('text'),
+      getStructuredOutput: vi.fn().mockReturnValue(undefined),
       getFolderTrustFeature: vi.fn().mockReturnValue(false),
       getFolderTrust: vi.fn().mockReturnValue(false),
       getIncludePartialMessages: vi.fn().mockReturnValue(false),
@@ -550,6 +554,114 @@ describe('runNonInteractive', () => {
     // Get the actual metrics that were used
     const actualMetrics = vi.mocked(uiTelemetryService.getMetrics)();
     expect(resultMessage?.stats).toEqual(actualMetrics);
+  });
+
+  it('should emit structured_output when schema validation succeeds', async () => {
+    const events: ServerGeminiStreamEvent[] = [
+      { type: GeminiEventType.Content, value: '{"name":"papert"}' },
+      {
+        type: GeminiEventType.Finished,
+        value: { reason: undefined, usageMetadata: { totalTokenCount: 10 } },
+      },
+    ];
+    mockGeminiClient.sendMessageStream.mockReturnValue(
+      createStreamFromEvents(events),
+    );
+    (mockConfig.getOutputFormat as Mock).mockReturnValue(OutputFormat.JSON);
+    (mockConfig.getStructuredOutput as Mock).mockReturnValue({
+      schema: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+        },
+        required: ['name'],
+        additionalProperties: false,
+      },
+      retries: 1,
+    });
+    setupMetricsMock();
+
+    await runNonInteractive(
+      mockConfig,
+      mockSettings,
+      'Test structured output',
+      'prompt-id-structured-ok',
+    );
+
+    const outputCalls = processStdoutSpy.mock.calls.filter(
+      (call) => typeof call[0] === 'string',
+    );
+    expect(outputCalls.length).toBeGreaterThan(0);
+    const lastOutput = outputCalls[outputCalls.length - 1][0];
+    const parsed = JSON.parse(lastOutput);
+    expect(Array.isArray(parsed)).toBe(true);
+    const resultMessage = parsed.find(
+      (msg: unknown) =>
+        typeof msg === 'object' &&
+        msg !== null &&
+        'type' in msg &&
+        msg.type === 'result',
+    );
+    expect(resultMessage?.result).toBe('{"name":"papert"}');
+    expect(resultMessage?.structured_output).toEqual({ name: 'papert' });
+    expect(resultMessage?.structured_output_meta).toEqual({
+      source: 'assistant_json',
+      attempts: 0,
+    });
+  });
+
+  it('should emit typed structured output errors when validation fails', async () => {
+    const events: ServerGeminiStreamEvent[] = [
+      { type: GeminiEventType.Content, value: '{"count":1}' },
+      {
+        type: GeminiEventType.Finished,
+        value: { reason: undefined, usageMetadata: { totalTokenCount: 10 } },
+      },
+    ];
+    mockGeminiClient.sendMessageStream.mockReturnValue(
+      createStreamFromEvents(events),
+    );
+    (mockConfig.getOutputFormat as Mock).mockReturnValue(OutputFormat.JSON);
+    (mockConfig.getStructuredOutput as Mock).mockReturnValue({
+      schema: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+        },
+        required: ['name'],
+        additionalProperties: false,
+      },
+      retries: 0,
+    });
+    setupMetricsMock();
+
+    await expect(
+      runNonInteractive(
+        mockConfig,
+        mockSettings,
+        'Test structured output error',
+        'prompt-id-structured-error',
+      ),
+    ).rejects.toThrow('process.exit(1) called');
+
+    const outputCalls = processStdoutSpy.mock.calls.filter(
+      (call) => typeof call[0] === 'string',
+    );
+    expect(outputCalls.length).toBeGreaterThan(0);
+    const lastOutput = outputCalls[outputCalls.length - 1][0];
+    const parsed = JSON.parse(lastOutput);
+    expect(Array.isArray(parsed)).toBe(true);
+    const resultMessage = parsed.find(
+      (msg: unknown) =>
+        typeof msg === 'object' &&
+        msg !== null &&
+        'type' in msg &&
+        msg.type === 'result',
+    );
+    expect(resultMessage?.is_error).toBe(true);
+    expect(resultMessage?.error?.type).toBe('structured_output_error');
+    expect(resultMessage?.error?.code).toBe('schema_validation_error');
+    expect(resultMessage?.error?.attempts).toBe(0);
   });
 
   it('should write JSON output with stats for tool-only commands (no text response)', async () => {
