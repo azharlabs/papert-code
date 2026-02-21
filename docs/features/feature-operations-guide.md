@@ -115,6 +115,14 @@ npx vitest run integration-tests/terminal-bench/scripts/summarize-results.test.t
 
 ## CI workflows
 
+### Split CI lanes
+
+- File: `.github/workflows/ci-lanes.yml`
+- Independent jobs:
+  - `cli-lane` (CLI typecheck + tests)
+  - `sdk-lane` (TypeScript + Python SDK tests)
+  - `sandbox-integration-lane` (integration tests under `PAPERT_SANDBOX=false`)
+
 ### Terminal-bench eval matrix
 
 - File: `.github/workflows/terminal-bench-evals.yml`
