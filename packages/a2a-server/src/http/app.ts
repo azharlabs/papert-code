@@ -28,7 +28,7 @@ import { loadConfig, loadEnvironment, setTargetDir } from '../config/config.js';
 import { loadSettings } from '../config/settings.js';
 import { loadExtensions } from '../config/extension.js';
 import { commandRegistry } from '../commands/command-registry.js';
-import { debugLogger } from '@papert-code/papert-code-core';
+import { debugLogger, parseCheckpointContent } from '@papert-code/papert-code-core';
 import type { Command, CommandArgument } from '../commands/types.js';
 import { GitService } from '@papert-code/papert-code-core';
 import { RemoteSessionStore, type RemoteAuthConfig } from './remoteAuth.js';
@@ -514,16 +514,20 @@ export async function createApp() {
             let toolName = 'unknown';
             let restoreType = 'chat-only';
             try {
-              const parsed = JSON.parse(await readText(fullPath)) as Record<string, unknown>;
-              const toolCall = parsed['toolCall'] as Record<string, unknown> | undefined;
-              if (typeof toolCall?.['name'] === 'string') {
-                toolName = toolCall['name'] as string;
+              const parsed = parseCheckpointContent(await readText(fullPath));
+              if (!parsed.success) {
+                return null;
               }
-              if (typeof parsed['commitHash'] === 'string' && parsed['commitHash']) {
+              const checkpoint = parsed.checkpoint.data;
+              if (typeof checkpoint.toolCall.name === 'string') {
+                toolName = checkpoint.toolCall.name;
+              }
+              if (typeof checkpoint.commitHash === 'string' && checkpoint.commitHash) {
                 restoreType = 'file+chat';
               }
             } catch {
               // Keep fallback values for malformed checkpoints.
+              return null;
             }
             return {
               id,
@@ -535,7 +539,11 @@ export async function createApp() {
             };
           }),
         );
-        rewindPoints.sort((a, b) => b.updatedAt - a.updatedAt);
+        const validRewindPoints = rewindPoints.filter(
+          (value): value is NonNullable<(typeof rewindPoints)[number]> =>
+            value !== null,
+        );
+        validRewindPoints.sort((a, b) => b.updatedAt - a.updatedAt);
 
         return res.status(200).json({
           agents,
@@ -547,7 +555,7 @@ export async function createApp() {
           mcps,
           schedules,
           targets,
-          rewindPoints,
+          rewindPoints: validRewindPoints,
           releaseChannel,
         });
       } catch (error) {

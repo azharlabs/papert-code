@@ -6,7 +6,7 @@
 
 import {
   getCheckpointInfoList,
-  getToolCallDataSchema,
+  parseCheckpointContent,
   isNodeError,
   type ToolCallData,
   type GitService,
@@ -72,22 +72,25 @@ export class RestoreCommand implements Command {
         throw error;
       }
 
-      const toolCallData = JSON.parse(data);
-      const ToolCallDataSchema = getToolCallDataSchema();
-      const parseResult = ToolCallDataSchema.safeParse(toolCallData);
-
-      if (!parseResult.success) {
+      const parsedCheckpoint = parseCheckpointContent(data);
+      if (!parsedCheckpoint.success) {
         return {
           name: this.name,
           data: {
             type: 'message',
             messageType: 'error',
-            content: 'Checkpoint file is invalid or corrupted.',
+            content: formatCheckpointErrorMessage(
+              selectedFile,
+              parsedCheckpoint.error.code,
+            ),
           },
         };
       }
 
-      const restoreResultGenerator = performRestore(parseResult.data, gitService);
+      const restoreResultGenerator = performRestore(
+        parsedCheckpoint.checkpoint.data,
+        gitService,
+      );
       const restoreResult: unknown[] = [];
       for await (const result of restoreResultGenerator) {
         restoreResult.push(result);
@@ -107,6 +110,21 @@ export class RestoreCommand implements Command {
         },
       };
     }
+  }
+}
+
+function formatCheckpointErrorMessage(
+  checkpointName: string,
+  code: 'invalid_json' | 'invalid_checkpoint' | 'integrity_mismatch',
+): string {
+  switch (code) {
+    case 'integrity_mismatch':
+      return `Checkpoint integrity check failed for '${checkpointName}'. The checkpoint may be corrupted or tampered with.`;
+    case 'invalid_json':
+      return `Checkpoint '${checkpointName}' contains invalid JSON.`;
+    case 'invalid_checkpoint':
+    default:
+      return `Checkpoint '${checkpointName}' is invalid or corrupted.`;
   }
 }
 

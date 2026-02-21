@@ -12,7 +12,26 @@ import {
   type SlashCommandActionReturn,
   CommandKind,
 } from './types.js';
-import type { Config } from '@papert-code/papert-code-core';
+import {
+  parseCheckpointContent,
+  type Config,
+} from '@papert-code/papert-code-core';
+import type { HistoryItem } from '../types.js';
+
+function formatCheckpointErrorMessage(
+  checkpointName: string,
+  code: 'invalid_json' | 'invalid_checkpoint' | 'integrity_mismatch',
+): string {
+  switch (code) {
+    case 'integrity_mismatch':
+      return `Checkpoint integrity check failed for '${checkpointName}'. The checkpoint may be corrupted or tampered with.`;
+    case 'invalid_json':
+      return `Checkpoint '${checkpointName}' contains invalid JSON.`;
+    case 'invalid_checkpoint':
+    default:
+      return `Checkpoint '${checkpointName}' is invalid or corrupted.`;
+  }
+}
 
 async function restoreAction(
   context: CommandContext,
@@ -73,8 +92,34 @@ async function restoreAction(
     }
 
     const filePath = path.join(checkpointDir, selectedFile);
-    const data = await fs.readFile(filePath, 'utf-8');
-    const toolCallData = JSON.parse(data);
+    const rawData = await fs.readFile(filePath, 'utf-8');
+    const parsedCheckpoint = parseCheckpointContent<
+      HistoryItem[],
+      Record<string, unknown>
+    >(rawData);
+
+    if (!parsedCheckpoint.success) {
+      return {
+        type: 'message',
+        messageType: 'error',
+        content: formatCheckpointErrorMessage(
+          selectedFile,
+          parsedCheckpoint.error.code,
+        ),
+      };
+    }
+
+    const toolCallData = parsedCheckpoint.checkpoint.data;
+
+    if (!parsedCheckpoint.checkpoint.integrityVerified) {
+      addItem(
+        {
+          type: 'info',
+          text: 'Restoring a legacy checkpoint without integrity metadata.',
+        },
+        Date.now(),
+      );
+    }
 
     if (toolCallData.history) {
       if (!loadHistory) {

@@ -12,7 +12,11 @@ import * as path from 'node:path';
 import { rewindCommand } from './rewindCommand.js';
 import { type CommandContext } from './types.js';
 import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
-import type { Config, GitService } from '@papert-code/papert-code-core';
+import {
+  serializeCheckpointData,
+  type Config,
+  type GitService,
+} from '@papert-code/papert-code-core';
 
 describe('rewindCommand', () => {
   let mockContext: CommandContext;
@@ -80,7 +84,9 @@ describe('rewindCommand', () => {
   it('lists available rewind points when no args are provided', async () => {
     await fs.writeFile(
       path.join(checkpointsDir, 'cp-1.json'),
-      JSON.stringify({ toolCall: { name: 'run_shell_command', args: 'ls' } }),
+      JSON.stringify({
+        toolCall: { name: 'run_shell_command', args: { command: 'ls' } },
+      }),
     );
 
     const command = rewindCommand(mockConfig);
@@ -99,7 +105,7 @@ describe('rewindCommand', () => {
       path.join(checkpointsDir, 'cp-1.json'),
       JSON.stringify({
         commitHash: 'abc123',
-        toolCall: { name: 'run_shell_command', args: 'ls' },
+        toolCall: { name: 'run_shell_command', args: { command: 'ls' } },
       }),
     );
 
@@ -121,7 +127,7 @@ describe('rewindCommand', () => {
         history: [{ type: 'user', text: 'do a thing' }],
         clientHistory: [{ role: 'user', parts: [{ text: 'do a thing' }] }],
         commitHash: 'abc123',
-        toolCall: { name: 'run_shell_command', args: 'ls' },
+        toolCall: { name: 'run_shell_command', args: { command: 'ls' } },
       }),
     );
 
@@ -133,7 +139,7 @@ describe('rewindCommand', () => {
     expect(result).toEqual({
       type: 'tool',
       toolName: 'run_shell_command',
-      toolArgs: 'ls',
+      toolArgs: { command: 'ls' },
     });
     expect(mockGitService.restoreProjectFromSnapshot).toHaveBeenCalledWith(
       'abc123',
@@ -150,6 +156,45 @@ describe('rewindCommand', () => {
       type: 'message',
       messageType: 'error',
       content: 'Rewind point not found: missing',
+    });
+  });
+
+  it('returns integrity errors for tampered rewind points', async () => {
+    const toolCallData = {
+      toolCall: { name: 'run_shell_command', args: { command: 'ls' } },
+    };
+    const serialized = serializeCheckpointData(toolCallData);
+    const parsed = JSON.parse(serialized) as {
+      data: { toolCall: { name: string; args: { command: string } } };
+    };
+    parsed.data.toolCall.name = 'write_file';
+    await fs.writeFile(
+      path.join(checkpointsDir, 'cp-1.json'),
+      JSON.stringify(parsed),
+    );
+
+    const command = rewindCommand(mockConfig);
+    const result = await command?.action?.(mockContext, 'cp-1');
+
+    expect(result).toEqual({
+      type: 'message',
+      messageType: 'error',
+      content:
+        "Checkpoint integrity check failed for 'cp-1'. The checkpoint may be corrupted or tampered with.",
+    });
+  });
+
+  it('surfaces error when only unusable rewind points exist', async () => {
+    await fs.writeFile(path.join(checkpointsDir, 'cp-1.json'), 'not-json');
+
+    const command = rewindCommand(mockConfig);
+    const result = await command?.action?.(mockContext, '');
+
+    expect(result).toEqual({
+      type: 'message',
+      messageType: 'error',
+      content:
+        'No usable rewind points found. Existing checkpoint files appear invalid or corrupted.',
     });
   });
 });

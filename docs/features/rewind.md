@@ -48,6 +48,8 @@ After confirmation, `/rewind` restores the same payload as `/restore`:
 
 This reduces accidental rollbacks compared with direct restore usage and is intended as the default user-facing rollback command.
 
+`/rewind` also performs checkpoint integrity verification before confirmation and restore. Corrupted or tampered checkpoints are rejected.
+
 ## Choosing between `/rewind` and `/restore`
 
 Use `/rewind` when:
@@ -81,6 +83,17 @@ Cause:
 Action:
 
 - run `/rewind` without args to list valid IDs
+
+### Checkpoint integrity check failed
+
+Cause:
+
+- checkpoint contents were corrupted or modified after creation
+
+Action:
+
+- choose a different rewind point
+- if needed, recreate the checkpoint by rerunning the relevant tool call
 
 ### Files did not roll back
 

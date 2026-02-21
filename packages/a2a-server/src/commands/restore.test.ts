@@ -7,7 +7,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { RestoreCommand, ListCheckpointsCommand } from './restore.js';
 import type { CommandContext } from './types.js';
-import type { Config } from '@papert-code/papert-code-core';
+import {
+  serializeCheckpointData,
+  type Config,
+} from '@papert-code/papert-code-core';
 import { createMockConfig } from '../utils/testing_utils.js';
 
 beforeEach(() => {
@@ -105,9 +108,39 @@ describe('RestoreCommand', () => {
     const command = new RestoreCommand();
     mockFs.readFile.mockResolvedValue('invalid json');
     const result = await command.execute(mockContext, ['checkpoint1.json']);
-    expect((result.data as { content: string }).content).toContain(
-      'An unexpected error occurred during restore.',
-    );
+    expect(result.data).toEqual({
+      type: 'message',
+      messageType: 'error',
+      content: "Checkpoint 'checkpoint1.json' contains invalid JSON.",
+    });
+  });
+
+  it('rejects checkpoints with integrity mismatches', async () => {
+    const mockContext = {
+      config: createMockConfig() as Config,
+      git: {},
+    } as CommandContext;
+    const command = new RestoreCommand();
+    const serialized = serializeCheckpointData({
+      toolCall: {
+        name: 'test-tool',
+        args: {},
+      },
+    });
+    const parsed = JSON.parse(serialized) as {
+      data: { toolCall: { name: string; args: Record<string, unknown> } };
+    };
+    parsed.data.toolCall.name = 'different-tool';
+    mockFs.readFile.mockResolvedValue(JSON.stringify(parsed));
+
+    const result = await command.execute(mockContext, ['checkpoint1.json']);
+
+    expect(result.data).toEqual({
+      type: 'message',
+      messageType: 'error',
+      content:
+        "Checkpoint integrity check failed for 'checkpoint1.json'. The checkpoint may be corrupted or tampered with.",
+    });
   });
 
   it('returns git service missing error when commitHash exists but git is unavailable', async () => {

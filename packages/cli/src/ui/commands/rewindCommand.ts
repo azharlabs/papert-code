@@ -8,7 +8,11 @@ import * as fs from 'node:fs/promises';
 import path from 'node:path';
 import React from 'react';
 import { Text } from 'ink';
-import type { Config } from '@papert-code/papert-code-core';
+import {
+  isNodeError,
+  parseCheckpointContent,
+  type Config,
+} from '@papert-code/papert-code-core';
 import {
   type CommandContext,
   type SlashCommand,
@@ -23,26 +27,60 @@ type CheckpointPreview = {
   hasFileRestore: boolean;
 };
 
+type CheckpointPreviewResult =
+  | { kind: 'ok'; preview: CheckpointPreview }
+  | { kind: 'missing' }
+  | {
+      kind: 'invalid';
+      code: 'invalid_json' | 'invalid_checkpoint' | 'integrity_mismatch';
+    }
+  | { kind: 'error' };
+
+function formatCheckpointErrorMessage(
+  checkpointName: string,
+  code: 'invalid_json' | 'invalid_checkpoint' | 'integrity_mismatch',
+): string {
+  switch (code) {
+    case 'integrity_mismatch':
+      return `Checkpoint integrity check failed for '${checkpointName}'. The checkpoint may be corrupted or tampered with.`;
+    case 'invalid_json':
+      return `Checkpoint '${checkpointName}' contains invalid JSON.`;
+    case 'invalid_checkpoint':
+    default:
+      return `Checkpoint '${checkpointName}' is invalid or corrupted.`;
+  }
+}
+
 async function readCheckpointPreview(
   checkpointDir: string,
   checkpointName: string,
-): Promise<CheckpointPreview | null> {
+): Promise<CheckpointPreviewResult> {
+  const filePath = path.join(checkpointDir, `${checkpointName}.json`);
+  let raw: string;
   try {
-    const filePath = path.join(checkpointDir, `${checkpointName}.json`);
-    const raw = await fs.readFile(filePath, 'utf8');
-    const parsed = JSON.parse(raw);
-
-    return {
-      checkpoint: checkpointName,
-      toolName:
-        typeof parsed?.toolCall?.name === 'string'
-          ? parsed.toolCall.name
-          : 'unknown',
-      hasFileRestore: typeof parsed?.commitHash === 'string' && parsed.commitHash.length > 0,
-    };
-  } catch (_error) {
-    return null;
+    raw = await fs.readFile(filePath, 'utf8');
+  } catch (error) {
+    if (isNodeError(error) && error.code === 'ENOENT') {
+      return { kind: 'missing' };
+    }
+    return { kind: 'error' };
   }
+
+  const parsedCheckpoint = parseCheckpointContent(raw);
+  if (!parsedCheckpoint.success) {
+    return { kind: 'invalid', code: parsedCheckpoint.error.code };
+  }
+
+  return {
+    kind: 'ok',
+    preview: {
+      checkpoint: checkpointName,
+      toolName: parsedCheckpoint.checkpoint.data.toolCall.name,
+      hasFileRestore:
+        typeof parsedCheckpoint.checkpoint.data.commitHash === 'string' &&
+        parsedCheckpoint.checkpoint.data.commitHash.length > 0,
+    },
+  };
 }
 
 async function listCheckpointNames(checkpointDir: string): Promise<string[]> {
@@ -104,11 +142,27 @@ async function rewindAction(
     );
 
     const lines = previews
-      .filter((preview): preview is CheckpointPreview => preview !== null)
-      .map((preview) => {
+      .filter(
+        (
+          preview,
+        ): preview is {
+          kind: 'ok';
+          preview: CheckpointPreview;
+        } => preview.kind === 'ok',
+      )
+      .map(({ preview }) => {
         const restoreLabel = preview.hasFileRestore ? 'file+chat restore' : 'chat restore';
         return `- ${preview.checkpoint} (${preview.toolName}, ${restoreLabel})`;
       });
+
+    if (lines.length === 0) {
+      return {
+        type: 'message',
+        messageType: 'error',
+        content:
+          'No usable rewind points found. Existing checkpoint files appear invalid or corrupted.',
+      };
+    }
 
     return {
       type: 'message',
@@ -119,14 +173,33 @@ async function rewindAction(
     };
   }
 
-  const preview = await readCheckpointPreview(checkpointDir, checkpointName);
-  if (!preview) {
+  const previewResult = await readCheckpointPreview(checkpointDir, checkpointName);
+
+  if (previewResult.kind === 'missing') {
     return {
       type: 'message',
       messageType: 'error',
       content: `Rewind point not found: ${checkpointName}`,
     };
   }
+
+  if (previewResult.kind === 'invalid') {
+    return {
+      type: 'message',
+      messageType: 'error',
+      content: formatCheckpointErrorMessage(checkpointName, previewResult.code),
+    };
+  }
+
+  if (previewResult.kind === 'error') {
+    return {
+      type: 'message',
+      messageType: 'error',
+      content: `Could not load rewind point: ${checkpointName}`,
+    };
+  }
+
+  const preview = previewResult.preview;
 
   if (!context.overwriteConfirmed) {
     const restoreLabel = preview.hasFileRestore

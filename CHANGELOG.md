@@ -10,6 +10,7 @@
 - Added a provider-agnostic model availability state machine with explicit `terminal`, `transient`, and `sticky_retry` transitions.
 - Tightened model policy-chain validation coverage to enforce exactly one `isLastResort` model in resolved chains.
 - Standardized policy/tool deny reason surfacing across TUI tool status, web event handling, SDK stream control replies, and headless JSON `permission_denials`.
+- Hardened checkpoint restore/rewind by adding checkpoint integrity envelopes and verification before applying state rollback.
 - Added release channel selector and status surfacing in the web UI.
 - Hardened A2A OpenAPI contracts for web UI authentication paths.
 - Added terminal benchmark evaluation matrix and summary artifacts in CI.

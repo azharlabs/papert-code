@@ -27,6 +27,7 @@ The Web UI now includes a dedicated **Rewind** view for checkpoint restore workf
 - Endpoint: `GET /api/v1/webui/catalog`
 - Added payload: `rewindPoints[]`
 - Checkpoint lookup path: `<workspace>/.gemini/checkpoints/*.json`
+- Catalog entries include only valid checkpoints that pass parse + integrity checks.
 
 ## Troubleshooting
 

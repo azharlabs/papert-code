@@ -18,6 +18,14 @@ If you want to undo the change or simply go back, you can use the `/restore` com
 
 All checkpoint data, including the Git snapshot and conversation history, is stored locally on your machine. The Git snapshot is stored in the shadow repository while the conversation history and tool calls are saved in a JSON file in your project's temporary directory, typically located at `~/.papert/tmp/<project_hash>/checkpoints`.
 
+## Checkpoint Integrity
+
+New checkpoints include an integrity envelope with a SHA-256 hash over checkpoint contents.
+
+- `/restore` and `/rewind` verify this hash before applying any state changes.
+- If integrity verification fails, restore is blocked with an explicit corruption/tampering error.
+- Legacy checkpoints (without integrity metadata) are still restorable for backward compatibility.
+
 ## Enabling the Feature
 
 The Checkpointing feature is disabled by default. To enable it, you can either use a command-line flag or edit your `settings.json` file.
