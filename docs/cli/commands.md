@@ -28,6 +28,7 @@ Do not edit manually. Run `npm run docs:commands:sync` to refresh.
 - `/lsp`
 - `/mcp`
 - `/memory`
+- `/mode`
 - `/model`
 - `/permissions`
 - `/plugins`
@@ -288,6 +289,18 @@ Slash commands provide meta-level control over the CLI itself.
   - **Examples:**
     - `/approval-mode plan --project` (persist plan mode for this project)
     - `/approval-mode yolo --user` (persist YOLO mode for this user across projects)
+
+- **`/mode`**
+  - **Description:** Switch high-level mode profiles (`build`, `plan`, `review`) with immediate tool-gating updates.
+  - **Usage:** `/mode [build|plan|review] [--project|--user]`
+  - **Behavior:**
+    - No args prints current profile and available profiles.
+    - Setting a profile hot-switches the current session immediately.
+    - Optional scope flags persist to settings.
+  - **Examples:**
+    - `/mode build`
+    - `/mode plan --project`
+    - `/mode review --user`
 
 - **`/about`**
   - **Description:** Show version info. Please share this information when filing issues.

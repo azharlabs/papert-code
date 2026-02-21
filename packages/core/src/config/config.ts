@@ -181,6 +181,47 @@ export const APPROVAL_MODE_INFO: Record<ApprovalMode, ApprovalModeInfo> = {
   },
 };
 
+export type ModeProfileName = 'build' | 'plan' | 'review';
+
+export interface ModeProfileInfo {
+  id: ModeProfileName;
+  name: string;
+  description: string;
+  approvalMode: ApprovalMode;
+}
+
+export const MODE_PROFILE_INFO: Record<ModeProfileName, ModeProfileInfo> = {
+  build: {
+    id: 'build',
+    name: 'Build',
+    description:
+      'Implementation mode that enables coding and shell workflows with minimal friction.',
+    approvalMode: ApprovalMode.AUTO_EDIT,
+  },
+  plan: {
+    id: 'plan',
+    name: 'Plan',
+    description:
+      'Planning mode that keeps the session focused on analysis before changes.',
+    approvalMode: ApprovalMode.PLAN,
+  },
+  review: {
+    id: 'review',
+    name: 'Review',
+    description:
+      'Review mode that keeps tool usage read-oriented for audits and code review.',
+    approvalMode: ApprovalMode.DEFAULT,
+  },
+};
+
+export function isModeProfileName(
+  value: string | undefined,
+): value is ModeProfileName {
+  return (
+    !!value && Object.prototype.hasOwnProperty.call(MODE_PROFILE_INFO, value)
+  );
+}
+
 export interface AccessibilitySettings {
   disableLoadingPhrases?: boolean;
   screenReader?: boolean;
@@ -391,6 +432,7 @@ export interface ConfigParameters {
   projectHooks?: { [K in HookEventName]?: HookDefinition[] } & {
     disabled?: string[];
   };
+  modeProfile?: ModeProfileName;
   enablePlugins?: boolean;
   plugins?: string[];
   enableNpmPlugins?: boolean;
@@ -459,6 +501,7 @@ export class Config {
   private geminiMdFileCount: number;
   private readonly contextFileName: string | string[] | undefined;
   private approvalMode: ApprovalMode;
+  private modeProfile: ModeProfileName | undefined;
   private readonly showMemoryUsage: boolean;
   private readonly accessibility: AccessibilitySettings;
   private readonly telemetrySettings: TelemetrySettings;
@@ -599,6 +642,7 @@ export class Config {
     this.geminiMdFileCount = params.geminiMdFileCount ?? 0;
     this.contextFileName = params.contextFileName;
     this.approvalMode = params.approvalMode ?? ApprovalMode.DEFAULT;
+    this.modeProfile = params.modeProfile;
     this.showMemoryUsage = params.showMemoryUsage ?? false;
     this.accessibility = params.accessibility ?? {};
     this.telemetrySettings = {
@@ -661,6 +705,9 @@ export class Config {
     this.trustedFolder = params.trustedFolder;
     this.skipLoopDetection = params.skipLoopDetection ?? false;
     this.skipStartupContext = params.skipStartupContext ?? false;
+    if (this.modeProfile) {
+      this.setApprovalMode(MODE_PROFILE_INFO[this.modeProfile].approvalMode);
+    }
 
     // Web search
     this.webSearch = params.webSearch;
@@ -1208,6 +1255,24 @@ export class Config {
       );
     }
     this.approvalMode = mode;
+    if (
+      this.modeProfile &&
+      MODE_PROFILE_INFO[this.modeProfile].approvalMode !== mode
+    ) {
+      this.modeProfile = undefined;
+    }
+  }
+
+  getModeProfile(): ModeProfileName | undefined {
+    return this.modeProfile;
+  }
+
+  setModeProfile(modeProfile: ModeProfileName | undefined): void {
+    this.modeProfile = modeProfile;
+    if (!modeProfile) {
+      return;
+    }
+    this.setApprovalMode(MODE_PROFILE_INFO[modeProfile].approvalMode);
   }
 
   getShowMemoryUsage(): boolean {

@@ -1096,6 +1096,21 @@ const SETTINGS_SCHEMA = {
           { value: ApprovalMode.YOLO, label: 'YOLO' },
         ],
       },
+      modeProfile: {
+        type: 'enum',
+        label: 'Mode Profile',
+        category: 'Tools',
+        requiresRestart: false,
+        default: undefined as 'build' | 'plan' | 'review' | undefined,
+        description:
+          'High-level operating profile. build enables implementation workflows, plan focuses on analysis, and review enforces read-oriented tool gating.',
+        showInDialog: true,
+        options: [
+          { value: 'build', label: 'Build' },
+          { value: 'plan', label: 'Plan' },
+          { value: 'review', label: 'Review' },
+        ],
+      },
       discoveryCommand: {
         type: 'string',
         label: 'Tool Discovery Command',

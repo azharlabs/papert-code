@@ -1002,6 +1002,30 @@ describe('setApprovalMode with folder trust', () => {
     expect(() => config.setApprovalMode(ApprovalMode.PLAN)).not.toThrow();
   });
 
+  it('should set approval mode when switching mode profile', () => {
+    const config = new Config(baseParams);
+    vi.spyOn(config, 'isTrustedFolder').mockReturnValue(true);
+
+    config.setModeProfile('build');
+    expect(config.getModeProfile()).toBe('build');
+    expect(config.getApprovalMode()).toBe(ApprovalMode.AUTO_EDIT);
+
+    config.setModeProfile('plan');
+    expect(config.getModeProfile()).toBe('plan');
+    expect(config.getApprovalMode()).toBe(ApprovalMode.PLAN);
+  });
+
+  it('should clear active mode profile when approval mode is changed manually', () => {
+    const config = new Config(baseParams);
+    vi.spyOn(config, 'isTrustedFolder').mockReturnValue(true);
+
+    config.setModeProfile('review');
+    expect(config.getModeProfile()).toBe('review');
+
+    config.setApprovalMode(ApprovalMode.YOLO);
+    expect(config.getModeProfile()).toBeUndefined();
+  });
+
   describe('registerCoreTools', () => {
     beforeEach(() => {
       vi.clearAllMocks();

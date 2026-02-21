@@ -439,6 +439,146 @@ describe('CoreToolScheduler', () => {
     );
   });
 
+  it('enforces review mode profile tool gating for mutating tools', async () => {
+    const baseConfig = {
+      getSessionId: () => 'test-session-id',
+      getUsageStatisticsEnabled: () => true,
+      getDebugMode: () => false,
+      getApprovalMode: () => ApprovalMode.AUTO_EDIT,
+      setApprovalMode: vi.fn(),
+      getAllowedTools: () => [],
+      getContentGeneratorConfig: () => ({
+        model: 'test-model',
+        authType: 'oauth-personal',
+      }),
+      getShellExecutionConfig: () => ({
+        terminalWidth: 90,
+        terminalHeight: 30,
+      }),
+      storage: {
+        getProjectTempDir: () => '/tmp',
+      },
+      getTruncateToolOutputThreshold: () =>
+        DEFAULT_TRUNCATE_TOOL_OUTPUT_THRESHOLD,
+      getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES,
+      getEnableToolOutputTruncation: () => false,
+      getUseSmartEdit: () => false,
+      getUseModelRouter: () => false,
+      getGeminiClient: () => null,
+      getModel: () => 'test-model',
+      getChatRecordingService: () => undefined,
+      getEnableHooks: () => false,
+      getMessageBus: () => undefined,
+      getPluginSystem: () => undefined,
+      isInteractive: () => true,
+      getIdeMode: () => false,
+      getExperimentalZedIntegration: () => false,
+      getInputFormat: () => 'text',
+      getActiveModel: () => 'test-model',
+    };
+
+    const reviewConfig = {
+      ...baseConfig,
+      getModeProfile: () => 'review' as const,
+    } as unknown as Config;
+    const reviewTool = new TestApprovalTool(reviewConfig);
+    const reviewToolRegistry = {
+      getTool: () => reviewTool,
+      getFunctionDeclarations: () => [],
+      tools: new Map(),
+      discovery: {},
+      registerTool: () => { },
+      getToolByName: () => reviewTool,
+      getToolByDisplayName: () => reviewTool,
+      getTools: () => [],
+      discoverTools: async () => { },
+      getAllTools: () => [],
+      getToolsByServer: () => [],
+    } as unknown as ToolRegistry;
+    (reviewConfig as unknown as { getToolRegistry: () => ToolRegistry })
+      .getToolRegistry = () => reviewToolRegistry;
+
+    const reviewComplete = vi.fn();
+    const reviewScheduler = new CoreToolScheduler({
+      config: reviewConfig,
+      onAllToolCallsComplete: reviewComplete,
+      onToolCallsUpdate: vi.fn(),
+      getPreferredEditor: () => 'vscode',
+      onEditorClose: vi.fn(),
+    });
+    const signal = new AbortController().signal;
+    await reviewScheduler.schedule(
+      [
+        {
+          callId: 'review-blocked',
+          name: TestApprovalTool.Name,
+          args: { id: '1' },
+          isClientInitiated: false,
+          prompt_id: 'prompt-review-mode',
+        },
+      ],
+      signal,
+    );
+
+    const reviewCall = reviewComplete.mock.calls.at(-1)?.[0]?.[0] as
+      | ToolCall
+      | undefined;
+    expect(reviewCall?.status).toBe('error');
+    if (reviewCall?.status === 'error') {
+      expect(reviewCall.response.errorType).toBe(ToolErrorType.EXECUTION_DENIED);
+      expect(String(reviewCall.response.resultDisplay)).toContain(
+        'Mode profile "review" blocked mutating tool',
+      );
+    }
+
+    const buildConfig = {
+      ...baseConfig,
+      getModeProfile: () => 'build' as const,
+    } as unknown as Config;
+    const buildTool = new TestApprovalTool(buildConfig);
+    const buildToolRegistry = {
+      getTool: () => buildTool,
+      getFunctionDeclarations: () => [],
+      tools: new Map(),
+      discovery: {},
+      registerTool: () => { },
+      getToolByName: () => buildTool,
+      getToolByDisplayName: () => buildTool,
+      getTools: () => [],
+      discoverTools: async () => { },
+      getAllTools: () => [],
+      getToolsByServer: () => [],
+    } as unknown as ToolRegistry;
+    (buildConfig as unknown as { getToolRegistry: () => ToolRegistry })
+      .getToolRegistry = () => buildToolRegistry;
+
+    const buildComplete = vi.fn();
+    const buildScheduler = new CoreToolScheduler({
+      config: buildConfig,
+      onAllToolCallsComplete: buildComplete,
+      onToolCallsUpdate: vi.fn(),
+      getPreferredEditor: () => 'vscode',
+      onEditorClose: vi.fn(),
+    });
+    await buildScheduler.schedule(
+      [
+        {
+          callId: 'build-allowed',
+          name: TestApprovalTool.Name,
+          args: { id: '2' },
+          isClientInitiated: false,
+          prompt_id: 'prompt-review-mode',
+        },
+      ],
+      signal,
+    );
+
+    const buildCall = buildComplete.mock.calls.at(-1)?.[0]?.[0] as
+      | ToolCall
+      | undefined;
+    expect(buildCall?.status).toBe('success');
+  });
+
   it('should cancel a tool call if the signal is aborted before confirmation', async () => {
     const mockTool = new MockTool({
       name: 'mockTool',

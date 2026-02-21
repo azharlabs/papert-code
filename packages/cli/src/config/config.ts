@@ -117,6 +117,17 @@ const VALID_APPROVAL_MODE_VALUES = [
   'yolo',
 ] as const;
 
+type ModeProfileName = 'build' | 'plan' | 'review';
+
+const MODE_PROFILE_APPROVAL_MODE: Record<ModeProfileName, ApprovalMode> = {
+  build: ApprovalMode.AUTO_EDIT,
+  plan: ApprovalMode.PLAN,
+  review: ApprovalMode.DEFAULT,
+};
+
+const VALID_MODE_PROFILE_VALUES = Object.keys(MODE_PROFILE_APPROVAL_MODE) as
+  readonly ModeProfileName[];
+
 function formatApprovalModeError(value: string): Error {
   return new Error(
     `Invalid approval mode: ${value}. Valid values are: ${VALID_APPROVAL_MODE_VALUES.join(
@@ -141,6 +152,16 @@ function parseApprovalModeValue(value: string): ApprovalMode {
     default:
       throw formatApprovalModeError(value);
   }
+}
+
+function parseModeProfileValue(value: string): ModeProfileName {
+  const normalized = value.trim().toLowerCase();
+  if (VALID_MODE_PROFILE_VALUES.includes(normalized as ModeProfileName)) {
+    return normalized as ModeProfileName;
+  }
+  throw new Error(
+    `Invalid mode profile: ${value}. Valid values are: ${VALID_MODE_PROFILE_VALUES.join(', ')}`,
+  );
 }
 
 export interface CliArgs {
@@ -892,6 +913,18 @@ export async function loadCliConfig(
     approvalMode = ApprovalMode.DEFAULT;
   }
 
+  let modeProfile: ModeProfileName | undefined;
+  if (settings.tools?.modeProfile) {
+    modeProfile = parseModeProfileValue(settings.tools.modeProfile);
+    if (!argv.approvalMode && !argv.yolo) {
+      approvalMode = MODE_PROFILE_APPROVAL_MODE[modeProfile];
+    }
+  }
+
+  if (modeProfile && (argv.approvalMode || argv.yolo)) {
+    modeProfile = undefined;
+  }
+
   // Force approval mode to default if the folder is not trusted.
   if (
     !trustedFolder &&
@@ -902,6 +935,12 @@ export async function loadCliConfig(
       `Approval mode overridden to "default" because the current folder is not trusted.`,
     );
     approvalMode = ApprovalMode.DEFAULT;
+    if (modeProfile === 'build') {
+      logger.warn(
+        'Mode profile "build" disabled because the current folder is not trusted.',
+      );
+      modeProfile = undefined;
+    }
   }
 
   let telemetrySettings;
@@ -1093,6 +1132,7 @@ export async function loadCliConfig(
     geminiMdFileCount: fileCount,
     contextFileName,
     approvalMode,
+    modeProfile,
     showMemoryUsage:
       argv.showMemoryUsage || settings.ui?.showMemoryUsage || false,
     accessibility: {

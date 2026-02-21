@@ -305,6 +305,14 @@ Settings are organized into categories. All settings should be placed within the
     - `yolo`: Automatically approve all tool calls.
   - **Default:** `default`
 
+- **`tools.modeProfile`** (string):
+  - **Description:** Sets a high-level operating profile that also hot-switches tool gating behavior.
+  - **Accepted values:**
+    - `build`: Implementation-focused profile (`approvalMode=auto-edit`).
+    - `plan`: Planning-focused profile (`approvalMode=plan`).
+    - `review`: Read-oriented review profile (`approvalMode=default`, mutating tools gated).
+  - **Default:** `undefined`
+
 - **`tools.discoveryCommand`** (string):
   - **Description:** Command to run for tool discovery.
   - **Default:** `undefined`

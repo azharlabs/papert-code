@@ -3222,6 +3222,38 @@ describe('loadCliConfig approval mode', () => {
     expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.AUTO_EDIT);
   });
 
+  it('should apply mode profile from settings when approval flags are not provided', async () => {
+    process.argv = ['node', 'script.js'];
+    const argv = await parseArguments({} as Settings);
+    const settings: Settings = { tools: { modeProfile: 'review' } };
+    const config = await loadCliConfig(
+      settings,
+      [],
+      new ExtensionEnablementManager(
+        ExtensionStorage.getUserExtensionsDir(),
+        argv.extensions,
+      ),
+      argv,
+    );
+    expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.DEFAULT);
+  });
+
+  it('should ignore mode profile when explicit approval mode flag is provided', async () => {
+    process.argv = ['node', 'script.js', '--approval-mode', 'plan'];
+    const argv = await parseArguments({} as Settings);
+    const settings: Settings = { tools: { modeProfile: 'build' } };
+    const config = await loadCliConfig(
+      settings,
+      [],
+      new ExtensionEnablementManager(
+        ExtensionStorage.getUserExtensionsDir(),
+        argv.extensions,
+      ),
+      argv,
+    );
+    expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.PLAN);
+  });
+
   it('should throw when approval mode in settings is invalid', async () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments({} as Settings);

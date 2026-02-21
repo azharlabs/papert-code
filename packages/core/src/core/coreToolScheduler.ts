@@ -29,6 +29,7 @@ import {
   logToolOutputTruncated,
   ToolOutputTruncatedEvent,
   InputFormat,
+  Kind,
 } from '../index.js';
 import type { Part, PartListUnion } from '@google/genai';
 import { supportsMultimodalFunctionResponse } from '../config/models.js';
@@ -802,6 +803,23 @@ export class CoreToolScheduler {
             };
           }
 
+          const modeProfileBlockReason = this.getModeProfileBlockReason(
+            reqInfo,
+            toolInstance,
+          );
+          if (modeProfileBlockReason) {
+            return {
+              status: 'error',
+              request: reqInfo,
+              response: createErrorResponse(
+                reqInfo,
+                new Error(modeProfileBlockReason),
+                ToolErrorType.EXECUTION_DENIED,
+              ),
+              durationMs: 0,
+            };
+          }
+
           const invocationOrError = this.buildInvocation(
             toolInstance,
             reqInfo.args,
@@ -1347,6 +1365,41 @@ export class CoreToolScheduler {
     }
 
     return `Doom-loop protection blocked repeated identical tool call "${request.name}" after ${this.doomLoopRunLength} consecutive attempts in the same prompt.`;
+  }
+
+  private getModeProfileBlockReason(
+    request: ToolCallRequestInfo,
+    tool: AnyDeclarativeTool,
+  ): string | undefined {
+    const modeProfile = this.config.getModeProfile?.();
+    if (!modeProfile || modeProfile === 'build') {
+      return undefined;
+    }
+
+    const isMutatingTool =
+      tool.kind === Kind.Edit ||
+      tool.kind === Kind.Delete ||
+      tool.kind === Kind.Move ||
+      tool.kind === Kind.Execute;
+
+    if (
+      modeProfile === 'plan' &&
+      isMutatingTool &&
+      request.name !== 'exit_plan_mode'
+    ) {
+      return `Mode profile "${modeProfile}" blocked mutating tool "${request.name}". Switch to "/mode build" before making changes.`;
+    }
+
+    if (modeProfile === 'review') {
+      if (request.name === 'task') {
+        return 'Mode profile "review" blocks the "task" tool to prevent delegated writes/execution.';
+      }
+      if (isMutatingTool) {
+        return `Mode profile "${modeProfile}" blocked mutating tool "${request.name}". Switch to "/mode build" before making changes.`;
+      }
+    }
+
+    return undefined;
   }
 
   private async checkAndNotifyCompletion(): Promise<void> {
