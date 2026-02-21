@@ -50,6 +50,7 @@ export interface CLIPermissionDenial {
   tool_name: string;
   tool_use_id: string;
   tool_input: unknown;
+  reason?: string;
 }
 
 /**

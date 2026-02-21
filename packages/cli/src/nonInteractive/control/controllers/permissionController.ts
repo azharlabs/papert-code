@@ -425,6 +425,8 @@ export class PermissionController extends BaseController {
         const cancelMessage =
           typeof payload['message'] === 'string'
             ? payload['message']
+            : typeof payload['reason'] === 'string'
+              ? payload['reason']
             : undefined;
 
         await toolCall.confirmationDetails.onConfirm(

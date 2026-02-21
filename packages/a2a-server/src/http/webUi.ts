@@ -2514,13 +2514,35 @@ const WEB_UI_SCRIPT = `
 
       function extractPolicyDenialReason(result) {
         if (!result) return '';
-        const maybeReason =
-          (typeof result.reason === 'string' && result.reason) ||
-          (typeof result.error?.message === 'string' && result.error.message) ||
-          '';
+        const reasonCandidates = [];
+        const pushReason = (value) => {
+          if (typeof value === 'string' && value.trim()) {
+            reasonCandidates.push(value.trim());
+          }
+        };
+
+        pushReason(result.reason);
+        pushReason(result.error?.message);
 
         const statusParts = result.status?.message?.parts;
         if (Array.isArray(statusParts)) {
+          const dataPart = statusParts.find(
+            (part) => part && part.kind === 'data' && part.data && typeof part.data === 'object',
+          );
+          if (dataPart && dataPart.data && typeof dataPart.data === 'object') {
+            const toolData = dataPart.data;
+            pushReason(toolData.reason);
+            if (toolData.response && typeof toolData.response === 'object') {
+              pushReason(toolData.response.reason);
+              pushReason(toolData.response.resultDisplay);
+              pushReason(toolData.response.error?.message);
+              const denials = toolData.response.permission_denials;
+              if (Array.isArray(denials)) {
+                denials.forEach((denial) => pushReason(denial && denial.reason));
+              }
+            }
+          }
+
           const denialPart = statusParts
             .filter((part) => part && part.kind === 'text' && typeof part.text === 'string')
             .map((part) => part.text)
@@ -2530,8 +2552,17 @@ const WEB_UI_SCRIPT = `
           }
         }
 
-        if (maybeReason && /denied|policy/i.test(maybeReason)) {
-          return maybeReason;
+        if (Array.isArray(result.permission_denials)) {
+          result.permission_denials.forEach((denial) =>
+            pushReason(denial && denial.reason),
+          );
+        }
+
+        const explicitDenyReason = reasonCandidates.find((text) =>
+          /denied|policy|declined|blocked|forbidden/i.test(text),
+        );
+        if (explicitDenyReason) {
+          return explicitDenyReason;
         }
 
         return '';

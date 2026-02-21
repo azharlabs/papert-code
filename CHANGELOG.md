@@ -9,7 +9,7 @@
 - Added `papert migrate --from-gemini` to rewrite legacy `GEMINI_*` env variable names in project config files.
 - Added a provider-agnostic model availability state machine with explicit `terminal`, `transient`, and `sticky_retry` transitions.
 - Tightened model policy-chain validation coverage to enforce exactly one `isLastResort` model in resolved chains.
-- Added policy deny reason surfacing in the web event stream.
+- Standardized policy/tool deny reason surfacing across TUI tool status, web event handling, SDK stream control replies, and headless JSON `permission_denials`.
 - Added release channel selector and status surfacing in the web UI.
 - Hardened A2A OpenAPI contracts for web UI authentication paths.
 - Added terminal benchmark evaluation matrix and summary artifacts in CI.

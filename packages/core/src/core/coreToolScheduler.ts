@@ -273,6 +273,7 @@ const createErrorResponse = (
   ],
   resultDisplay: error.message,
   errorType,
+  reason: error.message,
   contentLength: error.message.length,
 });
 
@@ -506,9 +507,9 @@ export class CoreToolScheduler {
             tool: toolInstance,
             invocation,
             status: 'cancelled',
-            response: {
-              callId: currentCall.request.callId,
-              responseParts: [
+              response: {
+                callId: currentCall.request.callId,
+                responseParts: [
                 {
                   functionResponse: {
                     id: currentCall.request.callId,
@@ -518,12 +519,13 @@ export class CoreToolScheduler {
                     },
                   },
                 },
-              ],
-              resultDisplay,
-              error: undefined,
-              errorType: undefined,
-              contentLength: errorMessage.length,
-            },
+                ],
+                resultDisplay: resultDisplay ?? String(auxiliaryData),
+                error: undefined,
+                errorType: undefined,
+                reason: String(auxiliaryData),
+                contentLength: errorMessage.length,
+              },
             durationMs,
             outcome,
           } as CancelledToolCall;

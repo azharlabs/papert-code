@@ -564,6 +564,7 @@ describe('Query', () => {
           if (response?.response.subtype === 'success') {
             expect(response.response.response).toMatchObject({
               behavior: 'deny',
+              reason: expect.any(String),
             });
           }
         },
@@ -592,6 +593,7 @@ describe('Query', () => {
         if (response?.response.subtype === 'success') {
           expect(response.response.response).toMatchObject({
             behavior: 'deny',
+            reason: expect.stringContaining('Permission check failed:'),
           });
         }
       });
@@ -653,6 +655,7 @@ describe('Query', () => {
           expect(response.response.response).toMatchObject({
             behavior: 'deny',
             message: 'Denied by user',
+            reason: 'Denied by user',
             interrupt: true,
           });
         }

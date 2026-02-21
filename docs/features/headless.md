@@ -152,7 +152,15 @@ Output (at end of execution):
     "is_error": false,
     "duration_ms": 1234,
     "result": "The capital of France is Paris.",
-    "usage": {...}
+    "usage": {...},
+    "permission_denials": [
+      {
+        "tool_name": "write_file",
+        "tool_use_id": "call_123",
+        "tool_input": {"file_path": "secret.txt"},
+        "reason": "Denied by workspace policy"
+      }
+    ]
   }
 ]
 ```

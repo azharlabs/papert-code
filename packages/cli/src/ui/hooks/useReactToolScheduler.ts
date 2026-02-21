@@ -253,14 +253,16 @@ export function mapToDisplay(
           return {
             ...baseDisplayProperties,
             status: mapCoreStatusToDisplayStatus(trackedCall.status),
-            resultDisplay: trackedCall.response.resultDisplay,
+            resultDisplay:
+              trackedCall.response.resultDisplay ?? trackedCall.response.reason,
             confirmationDetails: undefined,
           };
         case 'cancelled':
           return {
             ...baseDisplayProperties,
             status: mapCoreStatusToDisplayStatus(trackedCall.status),
-            resultDisplay: trackedCall.response.resultDisplay,
+            resultDisplay:
+              trackedCall.response.resultDisplay ?? trackedCall.response.reason,
             confirmationDetails: undefined,
           };
         case 'awaiting_approval':

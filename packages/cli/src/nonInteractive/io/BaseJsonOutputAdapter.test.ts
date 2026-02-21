@@ -7,6 +7,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   GeminiEventType,
+  ToolErrorType,
   type Config,
   type ServerGeminiStreamEvent,
   type ToolCallRequestInfo,
@@ -999,6 +1000,42 @@ describe('BaseJsonOutputAdapter', () => {
       if (message.type === 'user') {
         expect(message.parent_tool_use_id).toBe('parent-tool-1');
       }
+    });
+
+    it('should record execution-denied permission denial reason', () => {
+      const request = {
+        callId: 'tool-denied-1',
+        name: 'write_file',
+        args: { file_path: 'secret.txt' },
+        isClientInitiated: false,
+        prompt_id: 'prompt-1',
+      };
+      const response = {
+        callId: 'tool-denied-1',
+        responseParts: [],
+        resultDisplay: undefined,
+        error: new Error('Denied by test policy'),
+        errorType: ToolErrorType.EXECUTION_DENIED,
+        reason: 'Denied by test policy',
+      };
+
+      adapter.emitToolResult(request, response);
+
+      const result = adapter.exposeBuildResultMessage({
+        isError: false,
+        durationMs: 100,
+        apiDurationMs: 50,
+        numTurns: 1,
+      });
+
+      expect(result.permission_denials).toEqual([
+        {
+          tool_name: 'write_file',
+          tool_use_id: 'tool-denied-1',
+          tool_input: { file_path: 'secret.txt' },
+          reason: 'Denied by test policy',
+        },
+      ]);
     });
   });
 

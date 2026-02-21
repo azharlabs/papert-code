@@ -117,6 +117,7 @@ export interface ToolCallResponseInfo {
   resultDisplay: ToolResultDisplay | undefined;
   error: Error | undefined;
   errorType: ToolErrorType | undefined;
+  reason?: string;
   outputFile?: string | undefined;
   contentLength?: number;
 }

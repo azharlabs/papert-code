@@ -690,6 +690,22 @@ describe('mapToDisplay', () => {
         expectedDescription: JSON.stringify(baseRequest.args),
       },
       {
+        name: 'error falls back to reason when resultDisplay is empty',
+        status: 'error',
+        extraProps: {
+          response: {
+            ...baseResponse,
+            resultDisplay: undefined,
+            error: undefined,
+            reason: 'Denied by policy',
+          },
+        },
+        expectedStatus: ToolCallStatus.Error,
+        expectedResultDisplay: 'Denied by policy',
+        expectedName: baseRequest.name,
+        expectedDescription: JSON.stringify(baseRequest.args),
+      },
+      {
         name: 'cancelled',
         status: 'cancelled',
         extraProps: {
@@ -702,6 +718,23 @@ describe('mapToDisplay', () => {
         },
         expectedStatus: ToolCallStatus.Canceled,
         expectedResultDisplay: 'Cancelled display',
+        expectedName: baseTool.displayName,
+        expectedDescription: baseInvocation.getDescription(),
+      },
+      {
+        name: 'cancelled falls back to reason when resultDisplay is empty',
+        status: 'cancelled',
+        extraProps: {
+          tool: baseTool,
+          invocation: baseInvocation,
+          response: {
+            ...baseResponse,
+            resultDisplay: undefined,
+            reason: 'Denied by workspace policy',
+          },
+        },
+        expectedStatus: ToolCallStatus.Canceled,
+        expectedResultDisplay: 'Denied by workspace policy',
         expectedName: baseTool.displayName,
         expectedDescription: baseInvocation.getDescription(),
       },

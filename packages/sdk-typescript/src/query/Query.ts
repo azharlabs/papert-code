@@ -302,9 +302,11 @@ export class Query implements AsyncIterable<SDKMessage> {
           updatedInput: result.updatedInput ?? toolInput,
         };
       } else {
+        const denyReason = result.message ?? 'Denied';
         return {
           behavior: 'deny',
-          message: result.message ?? 'Denied',
+          message: denyReason,
+          reason: denyReason,
           ...(result.interrupt !== undefined
             ? { interrupt: result.interrupt }
             : {}),
@@ -325,6 +327,7 @@ export class Query implements AsyncIterable<SDKMessage> {
       return {
         behavior: 'deny',
         message: `Permission check failed: ${errorMessage}`,
+        reason: `Permission check failed: ${errorMessage}`,
       };
     }
   }

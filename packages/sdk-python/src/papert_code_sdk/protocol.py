@@ -22,6 +22,7 @@ class CLIPermissionDenial(BaseModel):
     tool_name: str
     tool_use_id: str
     tool_input: Any
+    reason: Optional[str] = None
 
 class PermissionSuggestion(BaseModel):
     type: Literal["allow", "deny", "modify"]

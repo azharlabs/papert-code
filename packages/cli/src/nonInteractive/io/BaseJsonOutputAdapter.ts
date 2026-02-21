@@ -992,14 +992,17 @@ export abstract class BaseJsonOutputAdapter {
     const hasError = Boolean(response.error) || Boolean(responsePartsError);
 
     // Track permission denials (execution denied errors)
-    if (
-      response.error &&
-      response.errorType === ToolErrorType.EXECUTION_DENIED
-    ) {
+    if (response.errorType === ToolErrorType.EXECUTION_DENIED) {
+      const denialReason =
+        response.reason ??
+        response.error?.message ??
+        responsePartsError ??
+        toolResultContent(response);
       const denial: CLIPermissionDenial = {
         tool_name: request.name,
         tool_use_id: request.callId,
         tool_input: request.args,
+        ...(denialReason ? { reason: denialReason } : {}),
       };
       this.permissionDenials.push(denial);
     }
