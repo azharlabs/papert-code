@@ -59,14 +59,17 @@ What it does:
 
 ## CI integration
 
-Parity check is part of `lint:ci`:
+Parity check is enforced in two places:
 
 ```bash
+npm run docs:commands:check
 npm run lint:ci
 ```
 
 Current behavior:
 
+- the dedicated CLI lane (`.github/workflows/ci-lanes.yml`) runs `docs:commands:check`
+- `lint:ci` also runs `docs:commands:check` as a guardrail for local/PR validation
 - CI fails when command index is out of sync
 - fix by running `npm run docs:commands:sync` and committing the resulting doc change
 

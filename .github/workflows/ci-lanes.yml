@@ -28,6 +28,9 @@ jobs:
       - name: Typecheck CLI
         run: npm run typecheck --workspace packages/cli
 
+      - name: Verify command catalog parity
+        run: npm run docs:commands:check
+
       - name: Test CLI
         run: npm run test --workspace packages/cli -- --coverage.enabled=false
 
