@@ -62,4 +62,45 @@ describe('createPolicyEngineConfig permission DSL', () => {
 
     expect(details.decision).toBe(PolicyDecision.ASK_USER);
   });
+
+  it('parses shell command-prefix permission rules', () => {
+    const config = createPolicyEngineConfig(
+      {
+        tools: {
+          permissions: [
+            'deny run_shell_command(rm -rf)',
+            'allow run_shell_command(git status)',
+          ],
+        },
+      },
+      ApprovalMode.DEFAULT,
+      '/tmp/nonexistent-core-policy-dir',
+    );
+
+    const engine = new PolicyEngine(config);
+
+    expect(
+      engine.check(
+        { name: 'run_shell_command', args: { command: 'rm -rf /tmp/data' } },
+        undefined,
+      ),
+    ).toBe(PolicyDecision.DENY);
+
+    expect(
+      engine.check(
+        {
+          name: 'run_shell_command',
+          args: { command: 'git status --short' },
+        },
+        undefined,
+      ),
+    ).toBe(PolicyDecision.ALLOW);
+
+    expect(
+      engine.check(
+        { name: 'run_shell_command', args: { command: 'git commit -m test' } },
+        undefined,
+      ),
+    ).toBe(PolicyDecision.ASK_USER);
+  });
 });

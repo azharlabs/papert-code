@@ -49,21 +49,31 @@ function toPolicyDecision(
 
 function parsePermissionDslString(
   entry: string,
-): { decision: PolicyDecision; toolName: string } | null {
-  const match = entry.trim().match(/^(allow|ask|deny)\s+(.+)$/i);
+): {
+  decision: PolicyDecision;
+  toolName: string;
+  commandPrefix?: string;
+} | null {
+  const match = entry.trim().match(/^(allow|ask|deny)\s+([^\s(]+)(?:\((.+)\))?$/i);
   if (!match) {
     return null;
   }
-  const [, decisionKeyword, toolPattern] = match;
+  const [, decisionKeyword, toolPattern, commandPrefix] = match;
   const normalizedToolPattern = toolPattern.trim();
   if (!normalizedToolPattern) {
     return null;
   }
+
+  const normalizedCommandPrefix = commandPrefix?.trim();
+
   return {
     decision: toPolicyDecision(
       decisionKeyword.toLowerCase() as PermissionDslDecision,
     ),
     toolName: normalizedToolPattern,
+    ...(normalizedCommandPrefix
+      ? { commandPrefix: normalizedCommandPrefix }
+      : {}),
   };
 }
 
@@ -78,6 +88,9 @@ function parsePermissionDslEntry(
     return {
       toolName: parsed.toolName,
       decision: parsed.decision,
+      ...(parsed.commandPrefix
+        ? { commandPrefix: parsed.commandPrefix }
+        : {}),
     };
   }
 
@@ -93,6 +106,7 @@ function parsePermissionDslEntry(
   return {
     toolName,
     decision: toPolicyDecision(entry.decision),
+    ...(entry.commandPrefix ? { commandPrefix: entry.commandPrefix } : {}),
     reason: entry.reason,
   };
 }

@@ -86,6 +86,11 @@ export interface PolicyRule {
    * wildcard patterns using "*" (e.g. "run_*" or "*__*").
    */
   toolName?: string;
+  /**
+   * Optional shell command prefix matcher(s). Applies when tool args include
+   * a "command" string (e.g. run_shell_command).
+   */
+  commandPrefix?: string | string[];
   argsPattern?: RegExp;
   decision: PolicyDecision;
   priority?: number;
@@ -97,6 +102,7 @@ export type PermissionDslDecision = 'allow' | 'ask' | 'deny';
 export interface PermissionDslRule {
   decision: PermissionDslDecision;
   tool: string;
+  commandPrefix?: string | string[];
   reason?: string;
 }
 

@@ -114,4 +114,30 @@ describe('PolicyEngine.getDecisionReason', () => {
     expect(details.decision).toBe(PolicyDecision.ALLOW);
     expect(details.reason).toBeUndefined();
   });
+
+  it('supports shell command-prefix rule matching', () => {
+    const engine = new PolicyEngine({
+      rules: [
+        {
+          toolName: 'run_shell_command',
+          commandPrefix: 'rm -rf',
+          decision: PolicyDecision.DENY,
+          reason: 'Dangerous delete command blocked',
+        },
+      ],
+    });
+
+    const denied = engine.getDecisionDetails(
+      { name: 'run_shell_command', args: { command: 'rm -rf /tmp/cache' } },
+      undefined,
+    );
+    const allowed = engine.getDecisionDetails(
+      { name: 'run_shell_command', args: { command: 'git status' } },
+      undefined,
+    );
+
+    expect(denied.decision).toBe(PolicyDecision.DENY);
+    expect(denied.reason).toBe('Dangerous delete command blocked');
+    expect(allowed.decision).toBe(PolicyDecision.ASK_USER);
+  });
 });

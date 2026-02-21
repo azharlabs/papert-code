@@ -49,6 +49,7 @@ export class PolicyEngine {
     toolCall: { name?: string; args?: unknown },
     serverName: string | undefined,
   ): { decision: PolicyDecision; reason?: string } {
+    const commandValue = this.extractCommandValue(toolCall.args);
     const stringifiedArgs =
       toolCall.args && this.rules.some((rule) => rule.argsPattern)
         ? stableStringify(toolCall.args)
@@ -56,7 +57,15 @@ export class PolicyEngine {
 
     let matchedRule: PolicyRule | undefined;
     for (const rule of this.rules) {
-      if (this.ruleMatches(rule, toolCall.name, stringifiedArgs, serverName)) {
+      if (
+        this.ruleMatches(
+          rule,
+          toolCall.name,
+          stringifiedArgs,
+          serverName,
+          commandValue,
+        )
+      ) {
         matchedRule = rule;
       }
     }
@@ -122,12 +131,28 @@ export class PolicyEngine {
     toolName: string | undefined,
     stringifiedArgs: string | undefined,
     serverName: string | undefined,
+    commandValue: string | undefined,
   ): boolean {
     if (
       rule.toolName &&
       !this.matchesToolPattern(rule.toolName, toolName, serverName)
     ) {
       return false;
+    }
+
+    if (rule.commandPrefix) {
+      if (!commandValue) {
+        return false;
+      }
+      const prefixes = Array.isArray(rule.commandPrefix)
+        ? rule.commandPrefix
+        : [rule.commandPrefix];
+      const matchedPrefix = prefixes.some((prefix) =>
+        this.matchesCommandPrefix(commandValue, prefix),
+      );
+      if (!matchedPrefix) {
+        return false;
+      }
     }
 
     if (rule.argsPattern && stringifiedArgs) {
@@ -158,6 +183,29 @@ export class PolicyEngine {
     }
 
     return this.getWildcardRegex(pattern).test(toolName);
+  }
+
+  private extractCommandValue(args: unknown): string | undefined {
+    if (!args || typeof args !== 'object') {
+      return undefined;
+    }
+    const command = (args as Record<string, unknown>)['command'];
+    return typeof command === 'string' ? command : undefined;
+  }
+
+  private matchesCommandPrefix(command: string, prefix: string): boolean {
+    if (!prefix) {
+      return false;
+    }
+
+    if (prefix.includes('*')) {
+      const escaped = prefix
+        .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*/g, '.*');
+      return new RegExp(`^${escaped}(?:\\s|$)`).test(command);
+    }
+
+    return command === prefix || command.startsWith(`${prefix} `);
   }
 
   private getWildcardRegex(pattern: string): RegExp {
@@ -195,6 +243,12 @@ export class PolicyEngine {
     }
     if (typeof rule.priority === 'number') {
       parts.push(`priority=${rule.priority}`);
+    }
+    if (rule.commandPrefix) {
+      const prefixes = Array.isArray(rule.commandPrefix)
+        ? rule.commandPrefix.join('|')
+        : rule.commandPrefix;
+      parts.push(`commandPrefix=${prefixes}`);
     }
 
     return parts.length > 0

@@ -285,6 +285,8 @@ Settings are organized into categories. All settings should be placed within the
     - `"deny run_*"`
     - `"allow read_*"`
     - `"ask run_shell_command"`
+    - `"deny run_shell_command(rm -rf)"`
+    - `"allow run_shell_command(git status)"`
   - **Default:** `undefined`
 
 - **`tools.approvalMode`** (string):
