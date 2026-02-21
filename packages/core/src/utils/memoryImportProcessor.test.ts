@@ -439,6 +439,68 @@ describe('memoryImportProcessor', () => {
       expect(result.content).toBe(content);
     });
 
+    it('should not treat @mentions as import paths', async () => {
+      const content =
+        'Use --assignee @me and mention @reviewer in chat updates.';
+      const projectRoot = testPath('test', 'project');
+      const basePath = testPath(projectRoot, 'skills');
+
+      const result = await processImports(
+        content,
+        basePath,
+        true,
+        undefined,
+        projectRoot,
+      );
+
+      expect(result.content).toBe(content);
+      expect(mockedFs.access).not.toHaveBeenCalled();
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should not treat npm-style handles as import paths', async () => {
+      const content = 'Install with npm i -g @steipete/oracle before use.';
+      const projectRoot = testPath('test', 'project');
+      const basePath = testPath(projectRoot, 'skills');
+
+      const result = await processImports(
+        content,
+        basePath,
+        true,
+        undefined,
+        projectRoot,
+      );
+
+      expect(result.content).toBe(content);
+      expect(mockedFs.access).not.toHaveBeenCalled();
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it('should still treat @README.md as an import path', async () => {
+      const content = 'Please read @README.md before proceeding.';
+      const projectRoot = testPath('test', 'project');
+      const basePath = testPath(projectRoot, 'skills');
+      const importedContent = '# Readme';
+
+      mockedFs.access.mockResolvedValue(undefined);
+      mockedFs.readFile.mockResolvedValue(importedContent);
+
+      const result = await processImports(
+        content,
+        basePath,
+        true,
+        undefined,
+        projectRoot,
+      );
+
+      expect(result.content).toContain('<!-- Imported from: README.md -->');
+      expect(result.content).toContain(importedContent);
+      expect(mockedFs.readFile).toHaveBeenCalledWith(
+        path.resolve(basePath, 'README.md'),
+        'utf-8',
+      );
+    });
+
     it('should not import when @ is inside an inline code block', async () => {
       const content =
         'We should not ` @import` when the symbol is inside an inline code string.';

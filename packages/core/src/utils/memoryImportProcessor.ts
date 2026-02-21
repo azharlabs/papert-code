@@ -118,13 +118,7 @@ function findImports(
     // Extract the path (everything after @)
     const importPath = content.slice(i + 1, j);
 
-    // Basic validation (starts with ./ or / or letter)
-    if (
-      importPath.length > 0 &&
-      (importPath[0] === '.' ||
-        importPath[0] === '/' ||
-        isLetter(importPath[0]))
-    ) {
+    if (isLikelyImportPath(importPath)) {
       imports.push({
         start: i,
         _end: j,
@@ -148,6 +142,26 @@ function isLetter(char: string): boolean {
     (code >= 65 && code <= 90) || // A-Z
     (code >= 97 && code <= 122)
   ); // a-z
+}
+
+function isLikelyImportPath(importPath: string): boolean {
+  if (importPath.length === 0) {
+    return false;
+  }
+
+  if (importPath[0] === '.' || importPath[0] === '/') {
+    return true;
+  }
+
+  if (!isLetter(importPath[0])) {
+    return false;
+  }
+
+  // Avoid treating handles (e.g., @me, @alice) as file imports while keeping
+  // support for forms like @README.md and @docs/guide.md.
+  // Require a file-like suffix segment to avoid false positives like
+  // npm scopes/handles (e.g., @steipete/oracle).
+  return importPath.includes('.');
 }
 
 function findCodeRegions(content: string): Array<[number, number]> {

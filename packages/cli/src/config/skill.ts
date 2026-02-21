@@ -439,6 +439,16 @@ function parseYamlBlock(
       continue;
     }
 
+    const flowCollection = parseYamlFlowCollection(lines, i, indentLevel);
+    if (flowCollection != null) {
+      // Allow nested flow-style objects/lists when this block value starts with
+      // "{ ... }" or "[ ... ]", which is common in third-party skill metadata.
+      if (i === startIndex && !hasArrayItems && Object.keys(obj).length === 0) {
+        return flowCollection;
+      }
+      throw new Error(`Unexpected flow collection line: ${trimmed}`);
+    }
+
     const separatorIndex = trimmed.indexOf(':');
     if (separatorIndex === -1) {
       throw new Error(`Invalid frontmatter line: ${trimmed}`);
@@ -468,6 +478,85 @@ function parseYamlBlock(
   return { value: hasArrayItems ? arr : obj, nextIndex: i };
 }
 
+function parseYamlFlowCollection(
+  lines: string[],
+  startIndex: number,
+  indentLevel: number,
+): { value: unknown; nextIndex: number } | null {
+  const firstLine = lines[startIndex];
+  if (!firstLine) {
+    return null;
+  }
+
+  if (getIndent(firstLine) !== indentLevel) {
+    return null;
+  }
+
+  const firstTrimmed = firstLine.trim();
+  const startsWithFlow =
+    firstTrimmed.startsWith('{') || firstTrimmed.startsWith('[');
+  if (!startsWithFlow) {
+    return null;
+  }
+
+  const flowLines: string[] = [];
+  let braceDepth = 0;
+  let bracketDepth = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let escaped = false;
+
+  for (let i = startIndex; i < lines.length; i++) {
+    const rawLine = lines[i];
+    flowLines.push(rawLine.trim());
+
+    for (const ch of rawLine) {
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+
+      if ((inSingleQuote || inDoubleQuote) && ch === '\\') {
+        escaped = true;
+        continue;
+      }
+
+      if (!inDoubleQuote && ch === "'") {
+        inSingleQuote = !inSingleQuote;
+        continue;
+      }
+
+      if (!inSingleQuote && ch === '"') {
+        inDoubleQuote = !inDoubleQuote;
+        continue;
+      }
+
+      if (inSingleQuote || inDoubleQuote) {
+        continue;
+      }
+
+      if (ch === '{') {
+        braceDepth += 1;
+      } else if (ch === '}') {
+        braceDepth = Math.max(0, braceDepth - 1);
+      } else if (ch === '[') {
+        bracketDepth += 1;
+      } else if (ch === ']') {
+        bracketDepth = Math.max(0, bracketDepth - 1);
+      }
+    }
+
+    if (!inSingleQuote && !inDoubleQuote && braceDepth === 0 && bracketDepth === 0) {
+      return {
+        value: parseYamlScalar(flowLines.join('\n')),
+        nextIndex: i + 1,
+      };
+    }
+  }
+
+  throw new Error(`Unterminated flow collection starting at: ${firstTrimmed}`);
+}
+
 function findNextIndent(lines: string[], startIndex: number): number | null {
   for (let i = startIndex; i < lines.length; i++) {
     if (lines[i].trim().length === 0 || lines[i].trim().startsWith('#')) {
@@ -484,10 +573,15 @@ function parseYamlScalar(value: string): unknown {
   }
 
   if (value.startsWith('{') || value.startsWith('[')) {
+    const withoutTrailingCommas = value.replace(/,\s*([}\]])/g, '$1');
     try {
       return JSON.parse(value);
     } catch {
-      return value;
+      try {
+        return JSON.parse(withoutTrailingCommas);
+      } catch {
+        return value;
+      }
     }
   }
 
