@@ -80,6 +80,33 @@ const logger = {
   error: (...args: any[]) => console.error('[ERROR]', ...args),
 };
 
+function buildTelemetryEnv(): Record<string, string | undefined> {
+  return {
+    ...(process.env as Record<string, string | undefined>),
+    GEMINI_TELEMETRY_ENABLED:
+      process.env['PAPERT_TELEMETRY_ENABLED'] ??
+      process.env['GEMINI_TELEMETRY_ENABLED'],
+    GEMINI_TELEMETRY_TARGET:
+      process.env['PAPERT_TELEMETRY_TARGET'] ??
+      process.env['GEMINI_TELEMETRY_TARGET'],
+    GEMINI_TELEMETRY_OTLP_ENDPOINT:
+      process.env['PAPERT_TELEMETRY_OTLP_ENDPOINT'] ??
+      process.env['GEMINI_TELEMETRY_OTLP_ENDPOINT'],
+    GEMINI_TELEMETRY_OTLP_PROTOCOL:
+      process.env['PAPERT_TELEMETRY_OTLP_PROTOCOL'] ??
+      process.env['GEMINI_TELEMETRY_OTLP_PROTOCOL'],
+    GEMINI_TELEMETRY_LOG_PROMPTS:
+      process.env['PAPERT_TELEMETRY_LOG_PROMPTS'] ??
+      process.env['GEMINI_TELEMETRY_LOG_PROMPTS'],
+    GEMINI_TELEMETRY_OUTFILE:
+      process.env['PAPERT_TELEMETRY_OUTFILE'] ??
+      process.env['GEMINI_TELEMETRY_OUTFILE'],
+    GEMINI_TELEMETRY_USE_COLLECTOR:
+      process.env['PAPERT_TELEMETRY_USE_COLLECTOR'] ??
+      process.env['GEMINI_TELEMETRY_USE_COLLECTOR'],
+  };
+}
+
 const VALID_APPROVAL_MODE_VALUES = [
   'plan',
   'default',
@@ -874,7 +901,7 @@ export async function loadCliConfig(
   try {
     telemetrySettings = await resolveTelemetrySettings({
       argv,
-      env: process.env as unknown as Record<string, string | undefined>,
+      env: buildTelemetryEnv(),
       settings: settings.telemetry,
     });
   } catch (err) {

@@ -550,30 +550,31 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
   - Specifies the default OPENAI model to use.
   - Overrides the hardcoded default
   - Example: `export OPENAI_MODEL="papert3-coder-plus"`
-- **`GEMINI_TELEMETRY_ENABLED`**:
+- **`PAPERT_TELEMETRY_ENABLED`**:
   - Set to `true` or `1` to enable telemetry. Any other value is treated as disabling it.
   - Overrides the `telemetry.enabled` setting.
-- **`GEMINI_TELEMETRY_TARGET`**:
+- **`PAPERT_TELEMETRY_TARGET`**:
   - Sets the telemetry target (`local` or `gcp`).
   - Overrides the `telemetry.target` setting.
-- **`GEMINI_TELEMETRY_OTLP_ENDPOINT`**:
+- **`PAPERT_TELEMETRY_OTLP_ENDPOINT`**:
   - Sets the OTLP endpoint for telemetry.
   - Overrides the `telemetry.otlpEndpoint` setting.
-- **`GEMINI_TELEMETRY_OTLP_PROTOCOL`**:
+- **`PAPERT_TELEMETRY_OTLP_PROTOCOL`**:
   - Sets the OTLP protocol (`grpc` or `http`).
   - Overrides the `telemetry.otlpProtocol` setting.
-- **`GEMINI_TELEMETRY_LOG_PROMPTS`**:
+- **`PAPERT_TELEMETRY_LOG_PROMPTS`**:
   - Set to `true` or `1` to enable or disable logging of user prompts. Any other value is treated as disabling it.
   - Overrides the `telemetry.logPrompts` setting.
-- **`GEMINI_TELEMETRY_OUTFILE`**:
+- **`PAPERT_TELEMETRY_OUTFILE`**:
   - Sets the file path to write telemetry to when the target is `local`.
   - Overrides the `telemetry.outfile` setting.
-- **`GEMINI_TELEMETRY_USE_COLLECTOR`**:
+- **`PAPERT_TELEMETRY_USE_COLLECTOR`**:
   - Set to `true` or `1` to enable or disable using an external OTLP collector. Any other value is treated as disabling it.
   - Overrides the `telemetry.useCollector` setting.
-- **`GEMINI_SANDBOX`**:
+- **`PAPERT_SANDBOX`**:
   - Alternative to the `sandbox` setting in `settings.json`.
   - Accepts `true`, `false`, `docker`, `podman`, or a custom command string.
+- Legacy `GEMINI_*` environment variables for telemetry and sandboxing are still supported for compatibility, but deprecated.
 - **`SEATBELT_PROFILE`** (macOS specific):
   - Switches the Seatbelt (`sandbox-exec`) profile on macOS.
   - `permissive-open`: (Default) Restricts writes to the project folder (and a few other folders, see `packages/cli/src/utils/sandbox-macos-permissive-open.sb`) but allows other operations.
@@ -764,7 +765,7 @@ Papert Code can execute potentially unsafe operations (like shell commands and f
 Sandboxing is disabled by default, but you can enable it in a few ways:
 
 - Using `--sandbox` or `-s` flag.
-- Setting `GEMINI_SANDBOX` environment variable.
+- Setting `PAPERT_SANDBOX` environment variable.
 - Sandbox is enabled when using `--yolo` or `--approval-mode=yolo` by default.
 
 By default, it uses a pre-built `papert-code-sandbox` Docker image.

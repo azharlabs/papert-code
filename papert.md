@@ -187,11 +187,11 @@ Security rules for this repo:
 Papert Code supports sandboxing:
 
 - **macOS Seatbelt** via `sandbox-exec` with built-in profiles.
-- **Container sandbox** via Docker/Podman when `GEMINI_SANDBOX` is enabled.
+- **Container sandbox** via Docker/Podman when `PAPERT_SANDBOX` is enabled.
 
 Common knobs (see docs for full details):
 
-- `GEMINI_SANDBOX=true|docker|podman|<command>`
+- `PAPERT_SANDBOX=true|docker|podman|<command>`
 - `SEATBELT_PROFILE=restrictive-closed` (or other built-in profiles)
 
 When running commands that modify the system outside the repo, prefer enabling sandboxing.

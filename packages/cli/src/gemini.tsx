@@ -63,6 +63,7 @@ import { computeWindowTitle } from './utils/windowTitle.js';
 import { validateNonInteractiveAuth } from './validateNonInterActiveAuth.js';
 import { showResumeSessionPicker } from './ui/components/ResumeSessionPicker.js';
 import { hasDeferredCommand, runDeferredCommand } from './deferred.js';
+import { resolveEnvAlias } from './utils/envAliases.js';
 
 export function validateDnsResolutionOrder(
   order: string | undefined,
@@ -96,7 +97,7 @@ function getNodeMemoryArgs(isDebugMode: boolean): string[] {
     );
   }
 
-  if (process.env['GEMINI_CLI_NO_RELAUNCH']) {
+  if (resolveEnvAlias('PAPERT_CLI_NO_RELAUNCH', 'GEMINI_CLI_NO_RELAUNCH')) {
     return [];
   }
 

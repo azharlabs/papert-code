@@ -8,6 +8,34 @@ import type { TelemetrySettings } from '../config/config.js';
 import { FatalConfigError } from '../utils/errors.js';
 import { TelemetryTarget } from './index.js';
 
+const warnedLegacyEnvVars = new Set<string>();
+
+function warnLegacyEnvVar(legacyName: string, canonicalName: string): void {
+  if (warnedLegacyEnvVars.has(legacyName)) {
+    return;
+  }
+  warnedLegacyEnvVars.add(legacyName);
+  console.warn(
+    `[DEPRECATION] Environment variable ${legacyName} is deprecated. Use ${canonicalName} instead.`,
+  );
+}
+
+function resolveEnvAlias(
+  env: Record<string, string | undefined>,
+  canonicalName: string,
+  legacyName: string,
+): string | undefined {
+  const canonicalValue = env[canonicalName];
+  if (canonicalValue !== undefined) {
+    return canonicalValue;
+  }
+  const legacyValue = env[legacyName];
+  if (legacyValue !== undefined) {
+    warnLegacyEnvVar(legacyName, canonicalName);
+  }
+  return legacyValue;
+}
+
 /**
  * Parse a boolean environment flag. Accepts 'true'/'1' as true.
  */
@@ -57,12 +85,18 @@ export async function resolveTelemetrySettings(options: {
 
   const enabled =
     argv.telemetry ??
-    parseBooleanEnvFlag(env['GEMINI_TELEMETRY_ENABLED']) ??
+    parseBooleanEnvFlag(
+      resolveEnvAlias(
+        env,
+        'PAPERT_TELEMETRY_ENABLED',
+        'GEMINI_TELEMETRY_ENABLED',
+      ),
+    ) ??
     settings.enabled;
 
   const rawTarget =
     (argv.telemetryTarget as string | TelemetryTarget | undefined) ??
-    env['GEMINI_TELEMETRY_TARGET'] ??
+    resolveEnvAlias(env, 'PAPERT_TELEMETRY_TARGET', 'GEMINI_TELEMETRY_TARGET') ??
     (settings.target as string | TelemetryTarget | undefined);
   const target = parseTelemetryTargetValue(rawTarget);
   if (rawTarget !== undefined && target === undefined) {
@@ -75,13 +109,21 @@ export async function resolveTelemetrySettings(options: {
 
   const otlpEndpoint =
     argv.telemetryOtlpEndpoint ??
-    env['GEMINI_TELEMETRY_OTLP_ENDPOINT'] ??
+    resolveEnvAlias(
+      env,
+      'PAPERT_TELEMETRY_OTLP_ENDPOINT',
+      'GEMINI_TELEMETRY_OTLP_ENDPOINT',
+    ) ??
     env['OTEL_EXPORTER_OTLP_ENDPOINT'] ??
     settings.otlpEndpoint;
 
   const rawProtocol =
     (argv.telemetryOtlpProtocol as string | undefined) ??
-    env['GEMINI_TELEMETRY_OTLP_PROTOCOL'] ??
+    resolveEnvAlias(
+      env,
+      'PAPERT_TELEMETRY_OTLP_PROTOCOL',
+      'GEMINI_TELEMETRY_OTLP_PROTOCOL',
+    ) ??
     settings.otlpProtocol;
   const otlpProtocol = (['grpc', 'http'] as const).find(
     (p) => p === rawProtocol,
@@ -96,16 +138,32 @@ export async function resolveTelemetrySettings(options: {
 
   const logPrompts =
     argv.telemetryLogPrompts ??
-    parseBooleanEnvFlag(env['GEMINI_TELEMETRY_LOG_PROMPTS']) ??
+    parseBooleanEnvFlag(
+      resolveEnvAlias(
+        env,
+        'PAPERT_TELEMETRY_LOG_PROMPTS',
+        'GEMINI_TELEMETRY_LOG_PROMPTS',
+      ),
+    ) ??
     settings.logPrompts;
 
   const outfile =
     argv.telemetryOutfile ??
-    env['GEMINI_TELEMETRY_OUTFILE'] ??
+    resolveEnvAlias(
+      env,
+      'PAPERT_TELEMETRY_OUTFILE',
+      'GEMINI_TELEMETRY_OUTFILE',
+    ) ??
     settings.outfile;
 
   const useCollector =
-    parseBooleanEnvFlag(env['GEMINI_TELEMETRY_USE_COLLECTOR']) ??
+    parseBooleanEnvFlag(
+      resolveEnvAlias(
+        env,
+        'PAPERT_TELEMETRY_USE_COLLECTOR',
+        'GEMINI_TELEMETRY_USE_COLLECTOR',
+      ),
+    ) ??
     settings.useCollector;
 
   return {
@@ -117,4 +175,11 @@ export async function resolveTelemetrySettings(options: {
     outfile,
     useCollector,
   };
+}
+
+/**
+ * FOR TESTING PURPOSES ONLY.
+ */
+export function resetTelemetryEnvAliasWarningsForTesting(): void {
+  warnedLegacyEnvVars.clear();
 }

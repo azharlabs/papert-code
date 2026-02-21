@@ -446,7 +446,7 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
   - Specifies the default OPENAI model to use.
   - Overrides the hardcoded default
   - Example: `export OPENAI_MODEL="papert3-coder-plus"`
-- **`GEMINI_SANDBOX`**:
+- **`PAPERT_SANDBOX`**:
   - Alternative to the `sandbox` setting in `settings.json`.
   - Accepts `true`, `false`, `docker`, `podman`, or a custom command string.
 - **`SEATBELT_PROFILE`** (macOS specific):
@@ -616,7 +616,7 @@ Papert Code can execute potentially unsafe operations (like shell commands and f
 Sandboxing is disabled by default, but you can enable it in a few ways:
 
 - Using `--sandbox` or `-s` flag.
-- Setting `GEMINI_SANDBOX` environment variable.
+- Setting `PAPERT_SANDBOX` environment variable.
 - Sandbox is enabled when using `--yolo` or `--approval-mode=yolo` by default.
 
 By default, it uses a pre-built `papert-code-sandbox` Docker image.

@@ -161,9 +161,9 @@ describe('Trusted Folders Loading', () => {
     expect(errors[0].message).toContain('Unexpected token');
   });
 
-  it('should use GEMINI_CLI_TRUSTED_FOLDERS_PATH env var if set', () => {
+  it('should use PAPERT_CLI_TRUSTED_FOLDERS_PATH env var if set', () => {
     const customPath = '/custom/path/to/trusted_folders.json';
-    process.env['GEMINI_CLI_TRUSTED_FOLDERS_PATH'] = customPath;
+    process.env['PAPERT_CLI_TRUSTED_FOLDERS_PATH'] = customPath;
 
     (mockFsExistsSync as Mock).mockImplementation((p) => p === customPath);
     const userContent = {
@@ -182,6 +182,30 @@ describe('Trusted Folders Loading', () => {
       },
     ]);
     expect(errors).toEqual([]);
+
+    delete process.env['PAPERT_CLI_TRUSTED_FOLDERS_PATH'];
+  });
+
+  it('should support legacy GEMINI_CLI_TRUSTED_FOLDERS_PATH env var', () => {
+    const customPath = '/custom/path/to/trusted_folders.json';
+    process.env['GEMINI_CLI_TRUSTED_FOLDERS_PATH'] = customPath;
+
+    (mockFsExistsSync as Mock).mockImplementation((p) => p === customPath);
+    const userContent = {
+      '/legacy/path': TrustLevel.TRUST_FOLDER,
+    };
+    (fs.readFileSync as Mock).mockImplementation((p) => {
+      if (p === customPath) return JSON.stringify(userContent);
+      return '{}';
+    });
+
+    const { rules } = loadTrustedFolders();
+    expect(rules).toEqual([
+      {
+        path: '/legacy/path',
+        trustLevel: TrustLevel.TRUST_FOLDER,
+      },
+    ]);
 
     delete process.env['GEMINI_CLI_TRUSTED_FOLDERS_PATH'];
   });

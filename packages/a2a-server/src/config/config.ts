@@ -36,6 +36,26 @@ const OPENAI_BASE_URL_ENV = 'OPENAI_BASE_URL';
 const PAPERT_OAUTH_ENV = 'PAPERT_OAUTH';
 const GEMINI_API_KEY_ENV = 'GEMINI_API_KEY';
 
+const warnedLegacyEnvVars = new Set<string>();
+
+function resolveEnvAlias(
+  canonicalName: string,
+  legacyName: string,
+): string | undefined {
+  const canonicalValue = process.env[canonicalName];
+  if (canonicalValue !== undefined) {
+    return canonicalValue;
+  }
+  const legacyValue = process.env[legacyName];
+  if (legacyValue !== undefined && !warnedLegacyEnvVars.has(legacyName)) {
+    warnedLegacyEnvVars.add(legacyName);
+    logger.warn(
+      `[DEPRECATION] Environment variable ${legacyName} is deprecated. Use ${canonicalName} instead.`,
+    );
+  }
+  return legacyValue;
+}
+
 export async function loadConfig(
   settings: Settings,
   extensions: PapertCLIExtension[],
@@ -125,7 +145,7 @@ export async function loadConfig(
     showMemoryUsage: settings.showMemoryUsage || false,
     approvalMode:
       process.env['PAPERT_YOLO_MODE'] === 'true' ||
-        process.env['GEMINI_YOLO_MODE'] === 'true'
+        resolveEnvAlias('PAPERT_YOLO_MODE', 'GEMINI_YOLO_MODE') === 'true'
         ? ApprovalMode.YOLO
         : ApprovalMode.DEFAULT,
     mcpServers: settings.mcpServers,

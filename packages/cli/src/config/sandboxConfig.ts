@@ -9,6 +9,7 @@ import { FatalSandboxError } from '@papert-code/papert-code-core';
 import commandExists from 'command-exists';
 import * as os from 'node:os';
 import { getPackageJson } from '../utils/package.js';
+import { resolveEnvAlias } from '../utils/envAliases.js';
 import type { Settings } from './settings.js';
 
 // This is a stripped-down version of the CliArgs interface from config.ts
@@ -38,7 +39,8 @@ function getSandboxCommand(
 
   // note environment variable takes precedence over argument (from command line or settings)
   const environmentConfiguredSandbox =
-    process.env['GEMINI_SANDBOX']?.toLowerCase().trim() ?? '';
+    resolveEnvAlias('PAPERT_SANDBOX', 'GEMINI_SANDBOX')?.toLowerCase().trim() ??
+    '';
   sandbox =
     environmentConfiguredSandbox?.length > 0
       ? environmentConfiguredSandbox
@@ -63,7 +65,7 @@ function getSandboxCommand(
       return sandbox;
     }
     throw new FatalSandboxError(
-      `Missing sandbox command '${sandbox}' (from GEMINI_SANDBOX)`,
+      `Missing sandbox command '${sandbox}' (from PAPERT_SANDBOX)`,
     );
   }
 
@@ -80,8 +82,8 @@ function getSandboxCommand(
   // throw an error if user requested sandbox but no command was found
   if (sandbox === true) {
     throw new FatalSandboxError(
-      'GEMINI_SANDBOX is true but failed to determine command for sandbox; ' +
-      'install docker or podman or specify command in GEMINI_SANDBOX',
+      'PAPERT_SANDBOX is true but failed to determine command for sandbox; ' +
+      'install docker or podman or specify command in PAPERT_SANDBOX',
     );
   }
 
@@ -98,7 +100,7 @@ export async function loadSandboxConfig(
   const packageJson = await getPackageJson();
   const image =
     argv.sandboxImage ??
-    process.env['GEMINI_SANDBOX_IMAGE'] ??
+    resolveEnvAlias('PAPERT_SANDBOX_IMAGE', 'GEMINI_SANDBOX_IMAGE') ??
     packageJson?.config?.sandboxImageUri;
 
   return command && image ? { command, image } : undefined;

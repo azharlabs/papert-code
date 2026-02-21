@@ -115,6 +115,7 @@ describe('relaunchAppInChildProcess', () => {
     vi.clearAllMocks();
 
     process.env = { ...originalEnv };
+    delete process.env['PAPERT_CLI_NO_RELAUNCH'];
     delete process.env['GEMINI_CLI_NO_RELAUNCH'];
 
     process.execArgv = [...originalExecArgv];
@@ -145,8 +146,17 @@ describe('relaunchAppInChildProcess', () => {
     stdinResumeSpy.mockRestore();
   });
 
-  describe('when GEMINI_CLI_NO_RELAUNCH is set', () => {
+  describe('when PAPERT_CLI_NO_RELAUNCH is set', () => {
     it('should return early without spawning a child process', async () => {
+      process.env['PAPERT_CLI_NO_RELAUNCH'] = 'true';
+
+      await relaunchAppInChildProcess(['--test'], ['--verbose']);
+
+      expect(mockedSpawn).not.toHaveBeenCalled();
+      expect(processExitSpy).not.toHaveBeenCalled();
+    });
+
+    it('should support legacy GEMINI_CLI_NO_RELAUNCH', async () => {
       process.env['GEMINI_CLI_NO_RELAUNCH'] = 'true';
 
       await relaunchAppInChildProcess(['--test'], ['--verbose']);
@@ -156,8 +166,9 @@ describe('relaunchAppInChildProcess', () => {
     });
   });
 
-  describe('when GEMINI_CLI_NO_RELAUNCH is not set', () => {
+  describe('when PAPERT_CLI_NO_RELAUNCH is not set', () => {
     beforeEach(() => {
+      delete process.env['PAPERT_CLI_NO_RELAUNCH'];
       delete process.env['GEMINI_CLI_NO_RELAUNCH'];
     });
 

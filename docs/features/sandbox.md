@@ -50,7 +50,7 @@ Cross-platform sandboxing with complete process isolation.
 papert -s -p "analyze the code structure"
 
 # Use environment variable
-export GEMINI_SANDBOX=true
+export PAPERT_SANDBOX=true
 papert -p "run the test suite"
 
 # Configure in settings.json
@@ -66,7 +66,7 @@ papert -p "run the test suite"
 ### Enable sandboxing (in order of precedence)
 
 1. **Command flag**: `-s` or `--sandbox`
-2. **Environment variable**: `GEMINI_SANDBOX=true|docker|podman|sandbox-exec`
+2. **Environment variable**: `PAPERT_SANDBOX=true|docker|podman|sandbox-exec`
 3. **Settings file**: `"sandbox": true` in the `tools` object of your `settings.json` file (e.g., `{"tools": {"sandbox": true}}`).
 
 ### macOS Seatbelt profiles

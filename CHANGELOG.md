@@ -5,6 +5,7 @@
 - Added dynamic web command catalog loading from `listCommands`.
 - Added web rewind panel with checkpoint catalog support.
 - Added richer MCP diagnostics with transport probing.
+- Canonicalized `PAPERT_*` environment variables for sandboxing, telemetry, and relaunch controls while keeping `GEMINI_*` aliases with deprecation warnings.
 - Added policy deny reason surfacing in the web event stream.
 - Added release channel selector and status surfacing in the web UI.
 - Hardened A2A OpenAPI contracts for web UI authentication paths.

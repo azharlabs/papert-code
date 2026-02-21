@@ -32,27 +32,44 @@ const argv = yargs(hideBin(process.argv)).option('q', {
   default: false,
 }).argv;
 
-let geminiSandbox = process.env.GEMINI_SANDBOX;
+const warnedLegacyEnvVars = new Set();
 
-if (!geminiSandbox) {
+const resolveEnvAlias = (canonicalName, legacyName) => {
+  const canonicalValue = process.env[canonicalName];
+  if (canonicalValue !== undefined) {
+    return canonicalValue;
+  }
+  const legacyValue = process.env[legacyName];
+  if (legacyValue !== undefined && !warnedLegacyEnvVars.has(legacyName)) {
+    warnedLegacyEnvVars.add(legacyName);
+    console.warn(
+      `[DEPRECATION] Environment variable ${legacyName} is deprecated. Use ${canonicalName} instead.`,
+    );
+  }
+  return legacyValue;
+};
+
+let configuredSandbox = resolveEnvAlias('PAPERT_SANDBOX', 'GEMINI_SANDBOX');
+
+if (!configuredSandbox) {
   const userSettingsFile = join(os.homedir(), '.papert', 'settings.json');
   if (existsSync(userSettingsFile)) {
     const settings = JSON.parse(
       stripJsonComments(readFileSync(userSettingsFile, 'utf-8')),
     );
     if (settings.sandbox) {
-      geminiSandbox = settings.sandbox;
+      configuredSandbox = settings.sandbox;
     }
   }
 }
 
-if (!geminiSandbox) {
+if (!configuredSandbox) {
   let currentDir = process.cwd();
   while (true) {
-    const geminiEnv = join(currentDir, '.papert', '.env');
+    const papertEnv = join(currentDir, '.papert', '.env');
     const regularEnv = join(currentDir, '.env');
-    if (existsSync(geminiEnv)) {
-      dotenv.config({ path: geminiEnv, quiet: true });
+    if (existsSync(papertEnv)) {
+      dotenv.config({ path: papertEnv, quiet: true });
       break;
     } else if (existsSync(regularEnv)) {
       dotenv.config({ path: regularEnv, quiet: true });
@@ -64,10 +81,10 @@ if (!geminiSandbox) {
     }
     currentDir = parentDir;
   }
-  geminiSandbox = process.env.GEMINI_SANDBOX;
+  configuredSandbox = resolveEnvAlias('PAPERT_SANDBOX', 'GEMINI_SANDBOX');
 }
 
-geminiSandbox = (geminiSandbox || '').toLowerCase();
+configuredSandbox = (configuredSandbox || '').toLowerCase();
 
 const commandExists = (cmd) => {
   const checkCommand = os.platform() === 'win32' ? 'where' : 'command -v';
@@ -88,23 +105,26 @@ const commandExists = (cmd) => {
 };
 
 let command = '';
-if (['1', 'true'].includes(geminiSandbox)) {
+if (['1', 'true'].includes(configuredSandbox)) {
   if (commandExists('docker')) {
     command = 'docker';
   } else if (commandExists('podman')) {
     command = 'podman';
   } else {
     console.error(
-      'ERROR: install docker or podman or specify command in GEMINI_SANDBOX',
+      'ERROR: install docker or podman or specify command in PAPERT_SANDBOX',
     );
     process.exit(1);
   }
-} else if (geminiSandbox && !['0', 'false'].includes(geminiSandbox)) {
-  if (commandExists(geminiSandbox)) {
-    command = geminiSandbox;
+} else if (
+  configuredSandbox &&
+  !['0', 'false'].includes(configuredSandbox)
+) {
+  if (commandExists(configuredSandbox)) {
+    command = configuredSandbox;
   } else {
     console.error(
-      `ERROR: missing sandbox command '${geminiSandbox}' (from GEMINI_SANDBOX)`,
+      `ERROR: missing sandbox command '${configuredSandbox}' (from PAPERT_SANDBOX)`,
     );
     process.exit(1);
   }

@@ -67,7 +67,8 @@ const env = {
 if (process.env.DEBUG) {
   // If this is not set, the debugger will pause on the outer process rather
   // than the relaunched process making it harder to debug.
-  env.GEMINI_CLI_NO_RELAUNCH = 'true';
+  env.PAPERT_CLI_NO_RELAUNCH = 'true';
+  env.GEMINI_CLI_NO_RELAUNCH = 'true'; // legacy compatibility
 }
 // Use process.cwd() to inherit the working directory from launch.json cwd setting
 // This allows debugging from a specific directory (e.g., .todo)

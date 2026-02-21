@@ -31,6 +31,23 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import cliPkgJson from '../packages/cli/package.json' with { type: 'json' };
 
+const warnedLegacyEnvVars = new Set();
+
+function resolveEnvAlias(canonicalName, legacyName) {
+  const canonicalValue = process.env[canonicalName];
+  if (canonicalValue !== undefined) {
+    return canonicalValue;
+  }
+  const legacyValue = process.env[legacyName];
+  if (legacyValue !== undefined && !warnedLegacyEnvVars.has(legacyName)) {
+    warnedLegacyEnvVars.add(legacyName);
+    console.warn(
+      `[DEPRECATION] Environment variable ${legacyName} is deprecated. Use ${canonicalName} instead.`,
+    );
+  }
+  return legacyValue;
+}
+
 const argv = yargs(hideBin(process.argv))
   .option('s', {
     alias: 'skip-npm-install-build',
@@ -81,7 +98,7 @@ const dockerFile = argv.f;
 
 if (!image.length) {
   console.warn(
-    'No default image tag specified in gemini-cli/packages/cli/package.json',
+    'No default image tag specified in papert-code/packages/cli/package.json',
   );
 }
 
@@ -157,7 +174,8 @@ function buildImage(imageName, dockerfile) {
   ).version;
 
   const imageTag =
-    process.env.GEMINI_SANDBOX_IMAGE_TAG || imageName.split(':')[1];
+    resolveEnvAlias('PAPERT_SANDBOX_IMAGE_TAG', 'GEMINI_SANDBOX_IMAGE_TAG') ||
+    imageName.split(':')[1];
   const finalImageName = `${imageName.split(':')[0]}:${imageTag}`;
 
   try {

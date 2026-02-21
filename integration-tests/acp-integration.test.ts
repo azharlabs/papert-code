@@ -15,9 +15,10 @@ const REQUEST_TIMEOUT_MS = 60_000;
 const INITIAL_PROMPT = 'Create a quick note (smoke test).';
 const RESUME_PROMPT = 'Continue the note after reload.';
 const LIST_SIZE = 5;
+const SANDBOX_ENV =
+  process.env['PAPERT_SANDBOX'] ?? process.env['GEMINI_SANDBOX'];
 const IS_SANDBOX =
-  process.env['GEMINI_SANDBOX'] &&
-  process.env['GEMINI_SANDBOX']!.toLowerCase() !== 'false';
+  SANDBOX_ENV && SANDBOX_ENV.toLowerCase() !== 'false';
 
 type PendingRequest = {
   resolve: (value: unknown) => void;

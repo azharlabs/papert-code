@@ -102,6 +102,7 @@ vi.mock('./config/sandboxConfig.js', () => ({
 
 describe('gemini.tsx main function', () => {
   let originalEnvGeminiSandbox: string | undefined;
+  let originalEnvPapertSandbox: string | undefined;
   let originalEnvSandbox: string | undefined;
   let initialUnhandledRejectionListeners: NodeJS.UnhandledRejectionListener[] =
     [];
@@ -109,7 +110,9 @@ describe('gemini.tsx main function', () => {
   beforeEach(() => {
     // Store and clear sandbox-related env variables to ensure a consistent test environment
     originalEnvGeminiSandbox = process.env['GEMINI_SANDBOX'];
+    originalEnvPapertSandbox = process.env['PAPERT_SANDBOX'];
     originalEnvSandbox = process.env['SANDBOX'];
+    delete process.env['PAPERT_SANDBOX'];
     delete process.env['GEMINI_SANDBOX'];
     delete process.env['SANDBOX'];
 
@@ -119,6 +122,11 @@ describe('gemini.tsx main function', () => {
 
   afterEach(() => {
     // Restore original env variables
+    if (originalEnvPapertSandbox !== undefined) {
+      process.env['PAPERT_SANDBOX'] = originalEnvPapertSandbox;
+    } else {
+      delete process.env['PAPERT_SANDBOX'];
+    }
     if (originalEnvGeminiSandbox !== undefined) {
       process.env['GEMINI_SANDBOX'] = originalEnvGeminiSandbox;
     } else {
@@ -402,8 +410,11 @@ describe('gemini.tsx main function kitty protocol', () => {
 
   beforeEach(() => {
     // Set no relaunch in tests since process spawning causing issues in tests
-    originalEnvNoRelaunch = process.env['GEMINI_CLI_NO_RELAUNCH'];
-    process.env['GEMINI_CLI_NO_RELAUNCH'] = 'true';
+    originalEnvNoRelaunch =
+      process.env['PAPERT_CLI_NO_RELAUNCH'] ??
+      process.env['GEMINI_CLI_NO_RELAUNCH'];
+    process.env['PAPERT_CLI_NO_RELAUNCH'] = 'true';
+    delete process.env['GEMINI_CLI_NO_RELAUNCH'];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!(process.stdin as any).setRawMode) {
@@ -425,8 +436,9 @@ describe('gemini.tsx main function kitty protocol', () => {
   afterEach(() => {
     // Restore original env variables
     if (originalEnvNoRelaunch !== undefined) {
-      process.env['GEMINI_CLI_NO_RELAUNCH'] = originalEnvNoRelaunch;
+      process.env['PAPERT_CLI_NO_RELAUNCH'] = originalEnvNoRelaunch;
     } else {
+      delete process.env['PAPERT_CLI_NO_RELAUNCH'];
       delete process.env['GEMINI_CLI_NO_RELAUNCH'];
     }
   });

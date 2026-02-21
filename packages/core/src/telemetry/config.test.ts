@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   parseBooleanEnvFlag,
   parseTelemetryTargetValue,
+  resetTelemetryEnvAliasWarningsForTesting,
   resolveTelemetrySettings,
 } from './config.js';
 import { TelemetryTarget } from './index.js';
@@ -54,6 +55,10 @@ describe('telemetry/config helpers', () => {
   });
 
   describe('resolveTelemetrySettings', () => {
+    beforeEach(() => {
+      resetTelemetryEnvAliasWarningsForTesting();
+    });
+
     it('falls back to settings when no argv/env provided', async () => {
       const settings = {
         enabled: false,
@@ -79,13 +84,13 @@ describe('telemetry/config helpers', () => {
         useCollector: false,
       };
       const env = {
-        GEMINI_TELEMETRY_ENABLED: '1',
-        GEMINI_TELEMETRY_TARGET: 'gcp',
-        GEMINI_TELEMETRY_OTLP_ENDPOINT: 'http://env:4317',
-        GEMINI_TELEMETRY_OTLP_PROTOCOL: 'http',
-        GEMINI_TELEMETRY_LOG_PROMPTS: 'true',
-        GEMINI_TELEMETRY_OUTFILE: 'env.log',
-        GEMINI_TELEMETRY_USE_COLLECTOR: 'true',
+        PAPERT_TELEMETRY_ENABLED: '1',
+        PAPERT_TELEMETRY_TARGET: 'gcp',
+        PAPERT_TELEMETRY_OTLP_ENDPOINT: 'http://env:4317',
+        PAPERT_TELEMETRY_OTLP_PROTOCOL: 'http',
+        PAPERT_TELEMETRY_LOG_PROMPTS: 'true',
+        PAPERT_TELEMETRY_OUTFILE: 'env.log',
+        PAPERT_TELEMETRY_USE_COLLECTOR: 'true',
       } as Record<string, string>;
       const argv = {
         telemetry: false,
@@ -123,7 +128,7 @@ describe('telemetry/config helpers', () => {
       });
     });
 
-    it('falls back to OTEL_EXPORTER_OTLP_ENDPOINT when GEMINI var is missing', async () => {
+    it('falls back to OTEL_EXPORTER_OTLP_ENDPOINT when PAPERT var is missing', async () => {
       const settings = {};
       const env = {
         OTEL_EXPORTER_OTLP_ENDPOINT: 'http://otel:4317',
@@ -133,7 +138,7 @@ describe('telemetry/config helpers', () => {
     });
 
     it('throws on unknown protocol values', async () => {
-      const env = { GEMINI_TELEMETRY_OTLP_PROTOCOL: 'unknown' } as Record<
+      const env = { PAPERT_TELEMETRY_OTLP_PROTOCOL: 'unknown' } as Record<
         string,
         string
       >;
@@ -143,12 +148,30 @@ describe('telemetry/config helpers', () => {
     });
 
     it('throws on unknown target values', async () => {
-      const env = { GEMINI_TELEMETRY_TARGET: 'unknown' } as Record<
+      const env = { PAPERT_TELEMETRY_TARGET: 'unknown' } as Record<
         string,
         string
       >;
       await expect(resolveTelemetrySettings({ env })).rejects.toThrow(
         /Invalid telemetry target/i,
+      );
+    });
+
+    it('supports legacy GEMINI_* telemetry env names with deprecation warning', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+      const env = {
+        GEMINI_TELEMETRY_ENABLED: '1',
+        GEMINI_TELEMETRY_TARGET: 'gcp',
+      } as Record<string, string>;
+
+      const resolved = await resolveTelemetrySettings({ env });
+      expect(resolved.enabled).toBe(true);
+      expect(resolved.target).toBe(TelemetryTarget.GCP);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('GEMINI_TELEMETRY_ENABLED'),
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('GEMINI_TELEMETRY_TARGET'),
       );
     });
   });

@@ -56,6 +56,8 @@ describe('loadConfig checkpointing guard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env['PAPERT_OAUTH'] = '1';
+    delete process.env['PAPERT_YOLO_MODE'];
+    delete process.env['GEMINI_YOLO_MODE'];
     delete process.env['CUSTOM_IGNORE_FILE_PATHS'];
   });
 
@@ -126,6 +128,32 @@ describe('loadConfig checkpointing guard', () => {
         fileFiltering: expect.objectContaining({
           respectPapertIgnore: false,
         }),
+      }),
+    );
+  });
+
+  it('uses YOLO approval mode when PAPERT_YOLO_MODE is true', async () => {
+    mockVerifyGitAvailability.mockResolvedValue(true);
+    process.env['PAPERT_YOLO_MODE'] = 'true';
+
+    await loadConfig({}, [], 'task-id');
+
+    expect(mockConfigCtor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        approvalMode: 'yolo',
+      }),
+    );
+  });
+
+  it('supports legacy GEMINI_YOLO_MODE when PAPERT_YOLO_MODE is not set', async () => {
+    mockVerifyGitAvailability.mockResolvedValue(true);
+    process.env['GEMINI_YOLO_MODE'] = 'true';
+
+    await loadConfig({}, [], 'task-id');
+
+    expect(mockConfigCtor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        approvalMode: 'yolo',
       }),
     );
   });
