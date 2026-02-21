@@ -48,6 +48,7 @@ import { doesToolInvocationMatch } from '../utils/tool-utils.js';
 import levenshtein from 'fast-levenshtein';
 import { getPlanModeSystemReminder } from './prompts.js';
 import { ShellToolInvocation } from '../tools/shell.js';
+import { stableStringify } from '../policy/stable-stringify.js';
 
 export type ValidatingToolCall = {
   status: 'validating';
@@ -351,6 +352,8 @@ interface CoreToolSchedulerOptions {
   chatRecordingService?: ChatRecordingService;
 }
 
+export const DOOM_LOOP_IDENTICAL_TOOL_CALL_THRESHOLD = 6;
+
 export class CoreToolScheduler {
   private toolRegistry: ToolRegistry;
   private toolCalls: ToolCall[] = [];
@@ -369,6 +372,9 @@ export class CoreToolScheduler {
     resolve: () => void;
     reject: (reason?: Error) => void;
   }> = [];
+  private doomLoopPromptId: string | null = null;
+  private doomLoopLastSignature: string | null = null;
+  private doomLoopRunLength = 0;
 
   constructor(options: CoreToolSchedulerOptions) {
     this.config = options.config;
@@ -705,6 +711,20 @@ export class CoreToolScheduler {
 
       const newToolCalls: ToolCall[] = requestsToProcess.map(
         (reqInfo): ToolCall => {
+          const doomLoopBlockReason = this.getDoomLoopBlockReason(reqInfo);
+          if (doomLoopBlockReason) {
+            return {
+              status: 'error',
+              request: reqInfo,
+              response: createErrorResponse(
+                reqInfo,
+                new Error(doomLoopBlockReason),
+                ToolErrorType.EXECUTION_DENIED,
+              ),
+              durationMs: 0,
+            };
+          }
+
           // Check if the tool is excluded due to permissions/environment restrictions
           // This check should happen before registry lookup to provide a clear permission error
           const excludeTools = this.config.getExcludeTools?.() ?? undefined;
@@ -1269,6 +1289,30 @@ export class CoreToolScheduler {
         }
       }
     }
+  }
+
+  private getDoomLoopBlockReason(
+    request: ToolCallRequestInfo,
+  ): string | undefined {
+    if (this.doomLoopPromptId !== request.prompt_id) {
+      this.doomLoopPromptId = request.prompt_id;
+      this.doomLoopLastSignature = null;
+      this.doomLoopRunLength = 0;
+    }
+
+    const signature = `${request.name}:${stableStringify(request.args ?? {})}`;
+    if (this.doomLoopLastSignature === signature) {
+      this.doomLoopRunLength += 1;
+    } else {
+      this.doomLoopLastSignature = signature;
+      this.doomLoopRunLength = 1;
+    }
+
+    if (this.doomLoopRunLength < DOOM_LOOP_IDENTICAL_TOOL_CALL_THRESHOLD) {
+      return undefined;
+    }
+
+    return `Doom-loop protection blocked repeated identical tool call "${request.name}" after ${this.doomLoopRunLength} consecutive attempts in the same prompt.`;
   }
 
   private async checkAndNotifyCompletion(): Promise<void> {

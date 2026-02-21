@@ -27,6 +27,7 @@ import {
 import type { ToolCall, WaitingToolCall } from './coreToolScheduler.js';
 import {
   CoreToolScheduler,
+  DOOM_LOOP_IDENTICAL_TOOL_CALL_THRESHOLD,
   convertToFunctionResponse,
   truncateAndSaveToFile,
 } from './coreToolScheduler.js';
@@ -36,6 +37,7 @@ import {
   MockTool,
   MOCK_TOOL_SHOULD_CONFIRM_EXECUTE,
 } from '../test-utils/mock-tool.js';
+import { ToolErrorType } from '../tools/tool-error.js';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 vi.mock('fs/promises', () => ({
@@ -191,6 +193,114 @@ async function waitForStatus(
   });
 }
 describe('CoreToolScheduler', () => {
+  it('blocks repeated identical tool calls with doom-loop protection', async () => {
+    const mockTool = new MockTool({ name: 'repeatableTool' });
+    const mockToolRegistry = {
+      getTool: () => mockTool,
+      getFunctionDeclarations: () => [],
+      tools: new Map(),
+      discovery: {},
+      registerTool: () => { },
+      getToolByName: () => mockTool,
+      getToolByDisplayName: () => mockTool,
+      getTools: () => [],
+      discoverTools: async () => { },
+      getAllTools: () => [],
+      getToolsByServer: () => [],
+    } as unknown as ToolRegistry;
+
+    const onAllToolCallsComplete = vi.fn();
+    const mockConfig = {
+      getSessionId: () => 'test-session-id',
+      getUsageStatisticsEnabled: () => true,
+      getDebugMode: () => false,
+      getApprovalMode: () => ApprovalMode.YOLO,
+      getAllowedTools: () => [],
+      getContentGeneratorConfig: () => ({
+        model: 'test-model',
+        authType: 'oauth-personal',
+      }),
+      getShellExecutionConfig: () => ({
+        terminalWidth: 90,
+        terminalHeight: 30,
+      }),
+      storage: {
+        getProjectTempDir: () => '/tmp',
+      },
+      getTruncateToolOutputThreshold: () =>
+        DEFAULT_TRUNCATE_TOOL_OUTPUT_THRESHOLD,
+      getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES,
+      getToolRegistry: () => mockToolRegistry,
+      getUseSmartEdit: () => false,
+      getUseModelRouter: () => false,
+      getGeminiClient: () => null,
+      getModel: () => 'test-model',
+      getChatRecordingService: () => undefined,
+      getEnableHooks: () => false,
+      getMessageBus: () => undefined,
+      getPluginSystem: () => undefined,
+      isInteractive: () => true,
+      getIdeMode: () => false,
+      getExperimentalZedIntegration: () => false,
+      getInputFormat: () => 'text',
+      getActiveModel: () => 'test-model',
+    } as unknown as Config;
+
+    const scheduler = new CoreToolScheduler({
+      config: mockConfig,
+      onAllToolCallsComplete,
+      onToolCallsUpdate: vi.fn(),
+      getPreferredEditor: () => 'vscode',
+      onEditorClose: vi.fn(),
+    });
+
+    const signal = new AbortController().signal;
+    const promptId = 'prompt-doom-loop';
+
+    for (let i = 1; i < DOOM_LOOP_IDENTICAL_TOOL_CALL_THRESHOLD; i++) {
+      await scheduler.schedule(
+        [
+          {
+            callId: `safe-${i}`,
+            name: 'repeatableTool',
+            args: { value: 1 },
+            isClientInitiated: false,
+            prompt_id: promptId,
+          },
+        ],
+        signal,
+      );
+      const completed = onAllToolCallsComplete.mock.calls.at(-1)?.[0] as
+        | ToolCall[]
+        | undefined;
+      expect(completed?.[0].status).toBe('success');
+    }
+
+    await scheduler.schedule(
+      [
+        {
+          callId: 'blocked-call',
+          name: 'repeatableTool',
+          args: { value: 1 },
+          isClientInitiated: false,
+          prompt_id: promptId,
+        },
+      ],
+      signal,
+    );
+
+    const blocked = onAllToolCallsComplete.mock.calls.at(-1)?.[0] as
+      | ToolCall[]
+      | undefined;
+    expect(blocked?.[0].status).toBe('error');
+    if (blocked?.[0].status === 'error') {
+      expect(blocked[0].response.errorType).toBe(ToolErrorType.EXECUTION_DENIED);
+      expect(String(blocked[0].response.resultDisplay)).toContain(
+        'Doom-loop protection blocked repeated identical tool call',
+      );
+    }
+  });
+
   it('should cancel a tool call if the signal is aborted before confirmation', async () => {
     const mockTool = new MockTool({
       name: 'mockTool',
