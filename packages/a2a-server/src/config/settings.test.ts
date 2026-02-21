@@ -23,7 +23,7 @@ vi.mock('node:os', async (importOriginal) => {
   const path = await import('node:path');
   return {
     ...actual,
-    homedir: () => path.join(actual.tmpdir(), `gemini-home-${mocks.suffix}`),
+    homedir: () => path.join(actual.tmpdir(), `papert-home-${mocks.suffix}`),
   };
 });
 
@@ -41,22 +41,22 @@ vi.mock('@papert-code/papert-code-core', async (importOriginal) => {
 });
 
 describe('loadSettings', () => {
-  const mockHomeDir = path.join(os.tmpdir(), `gemini-home-${mocks.suffix}`);
+  const mockHomeDir = path.join(os.tmpdir(), `papert-home-${mocks.suffix}`);
   const mockWorkspaceDir = path.join(
     os.tmpdir(),
-    `gemini-workspace-${mocks.suffix}`,
+    `papert-workspace-${mocks.suffix}`,
   );
-  const mockGeminiHomeDir = path.join(mockHomeDir, PAPERT_DIR);
-  const mockGeminiWorkspaceDir = path.join(mockWorkspaceDir, PAPERT_DIR);
+  const mockPapertHomeDir = path.join(mockHomeDir, PAPERT_DIR);
+  const mockPapertWorkspaceDir = path.join(mockWorkspaceDir, PAPERT_DIR);
 
   beforeEach(() => {
     vi.clearAllMocks();
     // Create the directories using the real fs
-    if (!fs.existsSync(mockGeminiHomeDir)) {
-      fs.mkdirSync(mockGeminiHomeDir, { recursive: true });
+    if (!fs.existsSync(mockPapertHomeDir)) {
+      fs.mkdirSync(mockPapertHomeDir, { recursive: true });
     }
-    if (!fs.existsSync(mockGeminiWorkspaceDir)) {
-      fs.mkdirSync(mockGeminiWorkspaceDir, { recursive: true });
+    if (!fs.existsSync(mockPapertWorkspaceDir)) {
+      fs.mkdirSync(mockPapertWorkspaceDir, { recursive: true });
     }
 
     // Clean up settings files before each test
@@ -64,7 +64,7 @@ describe('loadSettings', () => {
       fs.rmSync(USER_SETTINGS_PATH);
     }
     const workspaceSettingsPath = path.join(
-      mockGeminiWorkspaceDir,
+      mockPapertWorkspaceDir,
       'settings.json',
     );
     if (fs.existsSync(workspaceSettingsPath)) {
@@ -86,38 +86,102 @@ describe('loadSettings', () => {
     vi.restoreAllMocks();
   });
 
-  it('should load nested previewFeatures from user settings', () => {
+  it('normalizes v2 nested settings into server-consumed canonical fields', () => {
     const settings = {
+      tools: {
+        core: ['read_file'],
+        exclude: ['run_shell_command'],
+      },
+      ui: {
+        showMemoryUsage: true,
+      },
       general: {
+        checkpointing: {
+          enabled: true,
+        },
         previewFeatures: true,
+      },
+      context: {
+        fileFiltering: {
+          respectGitIgnore: true,
+          respectPapertIgnore: false,
+          enableRecursiveFileSearch: true,
+          customIgnoreFilePaths: ['.custom.ignore'],
+        },
+      },
+      security: {
+        folderTrust: {
+          enabled: true,
+        },
+        auth: {
+          selectedType: 'use_openai',
+        },
+      },
+      mcp: {
+        servers: {
+          local: {
+            command: 'node',
+            args: ['server.js'],
+          },
+        },
       },
     };
     fs.writeFileSync(USER_SETTINGS_PATH, JSON.stringify(settings));
 
     const result = loadSettings(mockWorkspaceDir);
+    expect(result.coreTools).toEqual(['read_file']);
+    expect(result.excludeTools).toEqual(['run_shell_command']);
+    expect(result.showMemoryUsage).toBe(true);
+    expect(result.checkpointing?.enabled).toBe(true);
+    expect(result.folderTrust).toBe(true);
+    expect(result.mcpServers).toHaveProperty('local');
+    expect(result.fileFiltering?.customIgnoreFilePaths).toEqual([
+      '.custom.ignore',
+    ]);
     expect(result.general?.previewFeatures).toBe(true);
   });
 
-  it('should load nested previewFeatures from workspace settings', () => {
+  it('keeps legacy flat settings compatible', () => {
     const settings = {
-      general: {
-        previewFeatures: true,
+      coreTools: ['legacy-read'],
+      excludeTools: ['legacy-shell'],
+      showMemoryUsage: true,
+      checkpointing: {
+        enabled: true,
+      },
+      folderTrust: true,
+      fileFiltering: {
+        respectGitIgnore: true,
       },
     };
     const workspaceSettingsPath = path.join(
-      mockGeminiWorkspaceDir,
+      mockPapertWorkspaceDir,
       'settings.json',
     );
     fs.writeFileSync(workspaceSettingsPath, JSON.stringify(settings));
 
     const result = loadSettings(mockWorkspaceDir);
-    expect(result.general?.previewFeatures).toBe(true);
+    expect(result.coreTools).toEqual(['legacy-read']);
+    expect(result.excludeTools).toEqual(['legacy-shell']);
+    expect(result.showMemoryUsage).toBe(true);
+    expect(result.checkpointing?.enabled).toBe(true);
+    expect(result.folderTrust).toBe(true);
+    expect(result.security?.folderTrust?.enabled).toBe(true);
+    expect(result.fileFiltering?.respectGitIgnore).toBe(true);
   });
 
-  it('should prioritize workspace settings over user settings', () => {
+  it('deep merges nested objects while keeping workspace precedence', () => {
     const userSettings = {
       general: {
-        previewFeatures: false,
+        checkpointing: {
+          enabled: true,
+        },
+      },
+      context: {
+        fileFiltering: {
+          respectGitIgnore: true,
+          enableRecursiveFileSearch: true,
+        },
       },
     };
     fs.writeFileSync(USER_SETTINGS_PATH, JSON.stringify(userSettings));
@@ -126,84 +190,67 @@ describe('loadSettings', () => {
       general: {
         previewFeatures: true,
       },
+      context: {
+        fileFiltering: {
+          respectPapertIgnore: false,
+        },
+      },
     };
     const workspaceSettingsPath = path.join(
-      mockGeminiWorkspaceDir,
+      mockPapertWorkspaceDir,
       'settings.json',
     );
     fs.writeFileSync(workspaceSettingsPath, JSON.stringify(workspaceSettings));
 
     const result = loadSettings(mockWorkspaceDir);
     expect(result.general?.previewFeatures).toBe(true);
+    expect(result.general?.checkpointing).toEqual({ enabled: true });
+    expect(result.fileFiltering).toEqual({
+      respectGitIgnore: true,
+      respectPapertIgnore: false,
+      enableRecursiveFileSearch: true,
+    });
   });
 
-  it('should handle missing previewFeatures', () => {
-    const settings = {
-      general: {},
-    };
-    fs.writeFileSync(USER_SETTINGS_PATH, JSON.stringify(settings));
-
-    const result = loadSettings(mockWorkspaceDir);
-    expect(result.general?.previewFeatures).toBeUndefined();
-  });
-
-  it('should load other top-level settings correctly', () => {
-    const settings = {
-      showMemoryUsage: true,
-      coreTools: ['tool1', 'tool2'],
-      mcpServers: {
-        server1: {
-          command: 'cmd',
-          args: ['arg'],
+  it('workspace arrays override user arrays for canonical tool fields', () => {
+    fs.writeFileSync(
+      USER_SETTINGS_PATH,
+      JSON.stringify({
+        tools: {
+          core: ['read_file', 'grep'],
         },
-      },
-      fileFiltering: {
-        respectGitIgnore: true,
-        respectPapertIgnore: false,
-        customIgnoreFilePaths: ['custom.ignore'],
-      },
-    };
-    fs.writeFileSync(USER_SETTINGS_PATH, JSON.stringify(settings));
-
-    const result = loadSettings(mockWorkspaceDir);
-    expect(result.showMemoryUsage).toBe(true);
-    expect(result.coreTools).toEqual(['tool1', 'tool2']);
-    expect(result.mcpServers).toHaveProperty('server1');
-    expect(result.fileFiltering?.respectGitIgnore).toBe(true);
-    expect(result.fileFiltering?.respectPapertIgnore).toBe(false);
-    expect(result.fileFiltering?.customIgnoreFilePaths).toEqual([
-      'custom.ignore',
-    ]);
-  });
-
-  it('should overwrite top-level settings from workspace (shallow merge)', () => {
-    const userSettings = {
-      showMemoryUsage: false,
-      fileFiltering: {
-        respectGitIgnore: true,
-        enableRecursiveFileSearch: true,
-      },
-    };
-    fs.writeFileSync(USER_SETTINGS_PATH, JSON.stringify(userSettings));
-
-    const workspaceSettings = {
-      showMemoryUsage: true,
-      fileFiltering: {
-        respectGitIgnore: false,
-      },
-    };
+      }),
+    );
     const workspaceSettingsPath = path.join(
-      mockGeminiWorkspaceDir,
+      mockPapertWorkspaceDir,
       'settings.json',
     );
-    fs.writeFileSync(workspaceSettingsPath, JSON.stringify(workspaceSettings));
+    fs.writeFileSync(
+      workspaceSettingsPath,
+      JSON.stringify({
+        tools: {
+          core: ['write_file'],
+        },
+      }),
+    );
 
     const result = loadSettings(mockWorkspaceDir);
-    // Primitive value overwritten
-    expect(result.showMemoryUsage).toBe(true);
+    expect(result.coreTools).toEqual(['write_file']);
+  });
 
-    // Object value completely replaced (shallow merge behavior)
-    expect(result.fileFiltering?.respectGitIgnore).toBe(false);
-    expect(result.fileFiltering?.enableRecursiveFileSearch).toBeUndefined();
+  it('resolves environment variables in nested values', () => {
+    process.env['TEST_PAPERT_BASE_URL'] = 'https://api.example.dev/v1';
+    const settings = {
+      security: {
+        auth: {
+          baseUrl: '$TEST_PAPERT_BASE_URL',
+          selectedType: 'use_openai',
+        },
+      },
+    };
+    fs.writeFileSync(USER_SETTINGS_PATH, JSON.stringify(settings));
+
+    const result = loadSettings(mockWorkspaceDir);
+    expect(result.security?.auth?.baseUrl).toBe('https://api.example.dev/v1');
   });
 });

@@ -26,3 +26,17 @@ The server exposes command execution over `/executeCommand`.
 - Memory loading supports custom ignore files via `CUSTOM_IGNORE_FILE_PATHS` (path-delimited list) and `settings.fileFiltering.customIgnoreFilePaths`.
 - Task streaming now tolerates retry/invalid-stream control events and preserves checkpoint ids on restorable tool calls.
 - Command registry can be reinitialized at runtime (`CommandRegistry.initialize()`), which clears stale registrations and restores built-ins.
+
+## Settings Compatibility
+
+The A2A server now supports both legacy flat settings and V2 nested settings
+from `.papert/settings.json` and `~/.papert/settings.json`.
+
+- V2 nested keys supported: `tools.core`, `tools.exclude`,
+  `ui.showMemoryUsage`, `general.checkpointing`,
+  `context.fileFiltering`, `security.folderTrust.enabled`, and `mcp.servers`.
+- Legacy aliases remain supported: `coreTools`, `excludeTools`,
+  `showMemoryUsage`, `checkpointing`, `fileFiltering`, `folderTrust`,
+  and `mcpServers`.
+- User and workspace settings are merged deeply, with workspace values taking
+  precedence.

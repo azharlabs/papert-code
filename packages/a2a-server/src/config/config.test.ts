@@ -132,6 +132,60 @@ describe('loadConfig checkpointing guard', () => {
     );
   });
 
+  it('consumes v2 nested settings fields', async () => {
+    mockVerifyGitAvailability.mockResolvedValue(true);
+    const settings: Settings = {
+      tools: {
+        core: ['read_file'],
+        exclude: ['run_shell_command'],
+      },
+      ui: {
+        showMemoryUsage: true,
+      },
+      general: {
+        checkpointing: {
+          enabled: true,
+        },
+      },
+      context: {
+        fileFiltering: {
+          respectPapertIgnore: false,
+        },
+      },
+      security: {
+        folderTrust: {
+          enabled: true,
+        },
+      },
+      mcp: {
+        servers: {
+          local: {
+            command: 'node',
+            args: ['server.js'],
+          },
+        },
+      },
+    };
+
+    await loadConfig(settings, [], 'task-id');
+
+    expect(mockConfigCtor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        coreTools: ['read_file'],
+        excludeTools: ['run_shell_command'],
+        showMemoryUsage: true,
+        checkpointing: true,
+        folderTrust: true,
+        mcpServers: expect.objectContaining({
+          local: expect.any(Object),
+        }),
+        fileFiltering: expect.objectContaining({
+          respectPapertIgnore: false,
+        }),
+      }),
+    );
+  });
+
   it('uses YOLO approval mode when PAPERT_YOLO_MODE is true', async () => {
     mockVerifyGitAvailability.mockResolvedValue(true);
     process.env['PAPERT_YOLO_MODE'] = 'true';

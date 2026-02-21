@@ -66,6 +66,19 @@ export async function loadConfig(
   const extensionContextFilePaths = extensions.flatMap(
     (extension) => extension.contextFiles ?? [],
   );
+  const resolvedCoreTools = settings.coreTools ?? settings.tools?.core;
+  const resolvedExcludeTools =
+    settings.excludeTools ?? settings.tools?.exclude;
+  const resolvedShowMemoryUsage =
+    settings.showMemoryUsage ?? settings.ui?.showMemoryUsage ?? false;
+  const resolvedCheckpointing =
+    settings.checkpointing?.enabled ??
+    settings.general?.checkpointing?.enabled;
+  const resolvedFileFiltering =
+    settings.fileFiltering ?? settings.context?.fileFiltering;
+  const resolvedFolderTrust =
+    settings.folderTrust ?? settings.security?.folderTrust?.enabled ?? false;
+  const resolvedMcpServers = settings.mcpServers ?? settings.mcp?.servers;
 
   const authSettings = settings.security?.auth;
   const resolvedAuthType =
@@ -110,7 +123,7 @@ export async function loadConfig(
 
   let checkpointing = process.env['CHECKPOINTING']
     ? process.env['CHECKPOINTING'] === 'true'
-    : settings.checkpointing?.enabled;
+    : resolvedCheckpointing;
   const gitServiceClass = GitService as unknown as {
     verifyGitAvailability?: () => Promise<boolean>;
   };
@@ -125,7 +138,7 @@ export async function loadConfig(
   }
 
   const customIgnoreFilePaths = [
-    ...(settings.fileFiltering?.customIgnoreFilePaths || []),
+    ...(resolvedFileFiltering?.customIgnoreFilePaths || []),
     ...(process.env['CUSTOM_IGNORE_FILE_PATHS']
       ? process.env['CUSTOM_IGNORE_FILE_PATHS'].split(path.delimiter)
       : []),
@@ -140,15 +153,15 @@ export async function loadConfig(
     debugMode: process.env['DEBUG'] === 'true' || false,
     question: '', // Not used in server mode directly like CLI
 
-    coreTools: settings.coreTools || undefined,
-    excludeTools: settings.excludeTools || undefined,
-    showMemoryUsage: settings.showMemoryUsage || false,
+    coreTools: resolvedCoreTools || undefined,
+    excludeTools: resolvedExcludeTools || undefined,
+    showMemoryUsage: resolvedShowMemoryUsage,
     approvalMode:
       process.env['PAPERT_YOLO_MODE'] === 'true' ||
         resolveEnvAlias('PAPERT_YOLO_MODE', 'GEMINI_YOLO_MODE') === 'true'
         ? ApprovalMode.YOLO
         : ApprovalMode.DEFAULT,
-    mcpServers: settings.mcpServers,
+    mcpServers: resolvedMcpServers,
     cwd: workspaceDir,
     extensions,
     telemetry: {
@@ -161,13 +174,13 @@ export async function loadConfig(
     },
     // Git-aware file filtering settings
     fileFiltering: {
-      respectGitIgnore: settings.fileFiltering?.respectGitIgnore,
-      respectPapertIgnore: settings.fileFiltering?.respectPapertIgnore,
+      respectGitIgnore: resolvedFileFiltering?.respectGitIgnore,
+      respectPapertIgnore: resolvedFileFiltering?.respectPapertIgnore,
       enableRecursiveFileSearch:
-        settings.fileFiltering?.enableRecursiveFileSearch,
+        resolvedFileFiltering?.enableRecursiveFileSearch,
     },
     ideMode: false,
-    folderTrust: settings.folderTrust === true,
+    folderTrust: resolvedFolderTrust === true,
     extensionContextFilePaths,
     checkpointing,
     authType: resolvedAuthType,
@@ -188,7 +201,7 @@ export async function loadConfig(
     false,
     fileService,
     extensionContextFilePaths,
-    settings.folderTrust === true,
+    resolvedFolderTrust === true,
   );
   configParams.userMemory = memoryContent;
   configParams.geminiMdFileCount = fileCount;
