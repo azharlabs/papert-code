@@ -1,68 +1,69 @@
 # Papert Code Architecture Overview
 
-This document provides a high-level overview of Papert Code's architecture.
+This document defines the package boundaries across `core`, `cli`, `sdk`, `web`, and `desktop`.
 
-## Core components
+## Package map
 
-Papert Code is primarily composed of two main packages, along with a suite of tools that can be used by the system in the course of handling command-line input.
+1. **Core (`packages/core`)**
+   - Owns agent orchestration, model routing/availability, policy evaluation, tool registry/execution, checkpointing, and shared protocol/types.
+   - Must stay UI-agnostic (no Ink/Tauri/browser dependencies).
 
-Papert Code can also run in an optional **remote driving** topology:
+2. **CLI (`packages/cli`)**
+   - Terminal UX: slash commands, dialogs, rendering, local interaction flow, and non-interactive/headless adapters.
+   - Consumes `core` public APIs; does not own model/tool execution logic.
 
-- A long-running HTTP daemon (server) hosts the agent/task endpoints and exposes a small *control plane* for remote session creation.
-- A CLI instance (client) connects to the daemon and forwards work over HTTP.
+3. **SDKs**
+   - TypeScript: `packages/sdk-typescript`
+   - Python: `packages/sdk-python`
+   - Provide programmatic access to Papert sessions/streams/protocol events.
+   - Depend on stable CLI/server protocol contracts, not private UI internals.
 
-The remote driving mode is implemented primarily by:
+4. **Web + Server (`packages/a2a-server`)**
+   - Remote session daemon, HTTP APIs, Web UI, OpenAPI contract, and workspace control plane.
+   - Uses `core` for execution logic and exposes orchestration through network boundaries.
 
-- `packages/a2a-server` (daemon HTTP server, including remote session auth + workspace locks)
-- `packages/cli` (client-side session bootstrap and request routing)
+5. **Desktop (`packages/desktop`)**
+   - Tauri-based shell + desktop web layer.
+   - Integrates with CLI/server flows but should avoid duplicating core orchestration logic.
 
-For protocol details (endpoints, headers, locking semantics, and streaming), see `docs/development/remote-driving.md`.
+## Boundary rules
 
-Papert Code's local (non-remote) architecture is primarily composed of two main packages, along with a suite of tools that can be used by the system in the course of handling command-line input:
+1. **`core` is the domain layer**
+   - UI/web/desktop code must call into `core`; `core` must not import from those layers.
 
-1.  **CLI package (`packages/cli`):**
-    - **Purpose:** This contains the user-facing portion of Papert Code, such as handling the initial user input, presenting the final output, and managing the overall user experience.
-    - **Key functions contained in the package:**
-      - [Input processing](../cli/commands.md)
-      - History management
-      - Display rendering
-      - [Theme and UI customization](../cli/themes.md)
-      - [CLI configuration settings](../cli/configuration.md)
+2. **`cli`, `a2a-server`, and `desktop` are delivery layers**
+   - They differ by transport/UX (terminal, HTTP/web, desktop shell) but should share execution behavior through `core`.
 
-2.  **Core package (`packages/core`):**
-    - **Purpose:** This acts as the backend for Papert Code. It receives requests sent from `packages/cli`, orchestrates interactions with the configured model API, and manages the execution of available tools.
-    - **Key functions contained in the package:**
-      - API client for communicating with the Google Gemini API
-      - Prompt construction and management
-      - Tool registration and execution logic
-      - State management for conversations or sessions
-      - Server-side configuration
+3. **SDKs are contract clients**
+   - SDK behavior should track protocol schemas and streaming semantics, not internal command implementations.
 
-3.  **Tools (`packages/core/src/tools/`):**
-    - **Purpose:** These are individual modules that extend the capabilities of the Gemini model, allowing it to interact with the local environment (e.g., file system, shell commands, web fetching).
-    - **Interaction:** `packages/core` invokes these tools based on requests from the Gemini model.
+4. **Cross-layer changes require contract updates**
+   - If behavior crosses process boundaries (web APIs, headless JSON, SDK streams), update tests/docs in each affected layer.
 
-## Interaction Flow
+## Runtime topologies
 
-A typical interaction with Papert Code follows this flow:
+### Local CLI topology
 
-1.  **User input:** The user types a prompt or command into the terminal, which is managed by `packages/cli`.
-2.  **Request to core:** `packages/cli` sends the user's input to `packages/core`.
-3.  **Request processed:** The core package:
-    - Constructs an appropriate prompt for the configured model API, possibly including conversation history and available tool definitions.
-    - Sends the prompt to the model API.
-4.  **Model API response:** The model API processes the prompt and returns a response. This response might be a direct answer or a request to use one of the available tools.
-5.  **Tool execution (if applicable):**
-    - When the model API requests a tool, the core package prepares to execute it.
-    - If the requested tool can modify the file system or execute shell commands, the user is first given details of the tool and its arguments, and the user must approve the execution.
-    - Read-only operations, such as reading files, might not require explicit user confirmation to proceed.
-    - Once confirmed, or if confirmation is not required, the core package executes the relevant action within the relevant tool, and the result is sent back to the model API by the core package.
-    - The model API processes the tool result and generates a final response.
-6.  **Response to CLI:** The core package sends the final response back to the CLI package.
-7.  **Display to user:** The CLI package formats and displays the response to the user in the terminal.
+1. User interacts with `packages/cli`.
+2. CLI resolves command/session context and dispatches to `core`.
+3. `core` orchestrates model/tool flow and returns structured events/results.
+4. CLI renders updates and applies confirmation/safety UX.
 
-## Key Design Principles
+### Remote/web topology
 
-- **Modularity:** Separating the CLI (frontend) from the Core (backend) allows for independent development and potential future extensions (e.g., different frontends for the same backend).
-- **Extensibility:** The tool system is designed to be extensible, allowing new capabilities to be added.
-- **User experience:** The CLI focuses on providing a rich and interactive terminal experience.
+1. `packages/a2a-server` hosts task/session APIs + Web UI.
+2. Server delegates execution logic to `core`.
+3. Web/remote clients consume server APIs and stream events.
+
+### Desktop topology
+
+1. `packages/desktop` hosts a local desktop shell.
+2. Desktop UI interacts with server/CLI-compatible flows.
+3. Execution semantics remain aligned with `core` behavior.
+
+## Testing ownership
+
+- `cli` lane: CLI typecheck + tests.
+- `sdk` lane: TypeScript + Python SDK tests.
+- `sandbox integration` lane: integration tests in sandbox-none mode.
+- Deflake workflow: retry-based integration execution and flaky-signature reporting.
