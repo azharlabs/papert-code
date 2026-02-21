@@ -5,7 +5,11 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { REMOTE_CONTROL_OPENAPI_SPEC } from './openapi.js';
+import {
+  REMOTE_CONTROL_OPENAPI_CONTRACT_ID,
+  REMOTE_CONTROL_OPENAPI_CONTRACT_VERSION,
+  REMOTE_CONTROL_OPENAPI_SPEC,
+} from './openapi.js';
 
 type RouteContract = {
   path: string;
@@ -42,6 +46,16 @@ const ROUTE_CONTRACTS: RouteContract[] = [
 ];
 
 describe('OpenAPI route contract', () => {
+  it('pins contract identity/version for SDK client generation', () => {
+    expect(REMOTE_CONTROL_OPENAPI_CONTRACT_VERSION).toBe('1.0.0');
+    expect(REMOTE_CONTROL_OPENAPI_SPEC.info.version).toBe(
+      REMOTE_CONTROL_OPENAPI_CONTRACT_VERSION,
+    );
+    expect(REMOTE_CONTROL_OPENAPI_SPEC['x-papert-contract-id']).toBe(
+      REMOTE_CONTROL_OPENAPI_CONTRACT_ID,
+    );
+  });
+
   it('documents all remote-control routes with expected methods and statuses', () => {
     for (const route of ROUTE_CONTRACTS) {
       const pathItem = REMOTE_CONTROL_OPENAPI_SPEC.paths[route.path];
@@ -60,6 +74,15 @@ describe('OpenAPI route contract', () => {
         expect(operation?.security).toBeUndefined();
       }
     }
+  });
+
+  it('assigns stable operation ids to documented operations', () => {
+    const operationIds = Object.values(REMOTE_CONTROL_OPENAPI_SPEC.paths)
+      .flatMap((pathItem) => Object.values(pathItem))
+      .map((operation) => operation.operationId)
+      .filter((operationId): operationId is string => !!operationId);
+    expect(operationIds.length).toBeGreaterThan(0);
+    expect(new Set(operationIds).size).toBe(operationIds.length);
   });
 
   it('documents session creation response payload contract', () => {

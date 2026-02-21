@@ -24,6 +24,7 @@
     "auth:docker": "gcloud auth configure-docker us-west1-docker.pkg.dev",
     "auth": "npm run auth:npm && npm run auth:docker",
     "generate": "node scripts/generate-git-commit-info.js",
+    "generate:remote-api-clients": "node --import tsx scripts/generate-remote-api-clients.ts",
     "docs:commands:sync": "node scripts/command-doc-parity.mjs --write",
     "docs:commands:check": "node scripts/command-doc-parity.mjs --check",
     "docs:dev": "npm --prefix docs/site run dev",

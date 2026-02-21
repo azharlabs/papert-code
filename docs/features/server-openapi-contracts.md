@@ -5,11 +5,19 @@ Papert server mode now has a dedicated OpenAPI source module plus contract tests
 ## What changed
 
 - OpenAPI spec moved to `packages/a2a-server/src/http/openapi.ts`.
+- Contract identity/version is now pinned in spec constants:
+  - `REMOTE_CONTROL_OPENAPI_CONTRACT_ID`
+  - `REMOTE_CONTROL_OPENAPI_CONTRACT_VERSION`
 - HTTP app wiring now reuses that shared spec for:
   - `GET /openapi.json`
   - `GET /docs` (Scalar UI)
 - Added contract tests in:
   - `packages/a2a-server/src/http/openapi.contract.test.ts`
+- Added generated SDK clients from OpenAPI:
+  - `packages/sdk-typescript/src/generated/remoteControlApiClient.ts`
+  - `packages/sdk-python/src/papert_code_sdk/generated/remote_control_api_client.py`
+- Added generator script:
+  - `scripts/generate-remote-api-clients.ts`
 
 ## Why this is important
 
@@ -26,6 +34,7 @@ The tests validate:
   - `/api/v1/sessions`
   - `/api/v1/sessions/{sessionId}/release`
 - Expected HTTP methods exist for each path.
+- Stable operation IDs are unique and present.
 - Expected status codes are documented.
 - Auth requirements for protected endpoints are declared.
 - Session-create response schema includes required fields.

@@ -18,6 +18,12 @@ from .client import (
 )
 from .abort import AbortController, AbortSignal
 from .errors import AbortError, is_abort_error
+from .generated import (
+    REMOTE_CONTROL_OPENAPI_CONTRACT_ID,
+    REMOTE_CONTROL_OPENAPI_CONTRACT_VERSION,
+    RemoteControlApiClient,
+    RemoteControlApiError,
+)
 
 __all__ = [
     "query",
@@ -31,6 +37,10 @@ __all__ = [
     "AbortSignal",
     "AbortError",
     "is_abort_error",
+    "REMOTE_CONTROL_OPENAPI_CONTRACT_ID",
+    "REMOTE_CONTROL_OPENAPI_CONTRACT_VERSION",
+    "RemoteControlApiClient",
+    "RemoteControlApiError",
     "SDKMessage",
     "SDKUserMessage",
     "SDKAssistantMessage",

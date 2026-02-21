@@ -7,23 +7,24 @@ This project maintains OpenAPI contracts for remote-control and web-ui server en
 - Spec module: `packages/a2a-server/src/http/openapi.ts`
 - Served at runtime: `GET /openapi.json`
 - Interactive docs: `GET /docs`
+- SDK client generation: `npm run generate:remote-api-clients`
 
 ## Versioning rules
 
 1. Additive, backward-compatible changes (new optional fields/endpoints):
-   - keep `info.version` patch/minor aligned with release policy.
+   - keep `info.version` and `REMOTE_CONTROL_OPENAPI_CONTRACT_VERSION` aligned.
    - update contract tests.
 2. Breaking changes (removed/renamed fields, changed required semantics):
    - require explicit changelog entry.
-   - update clients before rollout.
-   - bump API version semantics in `info.version`.
+   - regenerate SDK clients before rollout.
+   - bump API version semantics in `info.version` and `REMOTE_CONTROL_OPENAPI_CONTRACT_VERSION`.
 3. Security/authorization behavior changes:
    - update schema/response docs.
    - add/adjust contract tests for `401/403/409` paths.
 
 ## Contract enforcement
 
-- `packages/a2a-server/src/http/openapi.contract.test.ts` validates required paths, methods, auth flags, and status schemas.
+- `packages/a2a-server/src/http/openapi.contract.test.ts` validates required paths, methods, operation IDs, auth flags, and status schemas.
 - CI should fail when spec and expected contracts drift.
 
 ## Changelog

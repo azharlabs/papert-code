@@ -75,6 +75,24 @@ await session.send('Now summarize TODO.md');
 await client.close();
 ```
 
+## Remote Server API Client (OpenAPI generated)
+
+The SDK also ships a typed remote-control client generated from the server
+OpenAPI contract (`/openapi.json`):
+
+```typescript
+import { RemoteControlApiClient } from '@papert-code/sdk-typescript';
+
+const api = new RemoteControlApiClient({ baseUrl: 'http://127.0.0.1:41242' });
+const session = await api.createRemoteSession(process.env.PAPERT_REMOTE_SERVER_TOKEN);
+const catalog = await api.getWebUiCatalog({
+  sessionId: session.sessionId,
+  sessionToken: session.token,
+});
+
+console.log(catalog.releaseChannel);
+```
+
 ## Quick Start (full CLI agent)
 
 Drive the CLI/core as a subprocess while setting model/base URL/API key programmatically.

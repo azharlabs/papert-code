@@ -4,16 +4,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export const REMOTE_CONTROL_OPENAPI_CONTRACT_VERSION = '1.0.0';
+export const REMOTE_CONTROL_OPENAPI_CONTRACT_ID =
+  'papert-remote-control-v1';
+
 export const REMOTE_CONTROL_OPENAPI_SPEC = {
   openapi: '3.0.3',
   info: {
     title: 'Papert Code Remote Control API',
-    version: '0.1.0',
+    version: REMOTE_CONTROL_OPENAPI_CONTRACT_VERSION,
+    description:
+      'Stable control-plane contract for Papert Code server mode and SDK clients.',
   },
+  'x-papert-contract-id': REMOTE_CONTROL_OPENAPI_CONTRACT_ID,
   servers: [{ url: '/' }],
   paths: {
     '/api/v1/health': {
       get: {
+        operationId: 'remoteHealth',
         summary: 'Health check',
         responses: {
           '200': {
@@ -35,6 +43,7 @@ export const REMOTE_CONTROL_OPENAPI_SPEC = {
     },
     '/api/v1/sessions': {
       post: {
+        operationId: 'createRemoteSession',
         summary: 'Create remote session',
         description:
           'Creates a remote session and acquires an exclusive workspace lock. Requires server token when configured.',
@@ -65,6 +74,7 @@ export const REMOTE_CONTROL_OPENAPI_SPEC = {
     },
     '/api/v1/sessions/{sessionId}/release': {
       post: {
+        operationId: 'releaseRemoteSession',
         summary: 'Release remote session',
         description: 'Releases the session and frees the workspace lock.',
         security: [{ bearerAuth: [] }],
@@ -85,6 +95,7 @@ export const REMOTE_CONTROL_OPENAPI_SPEC = {
     },
     '/api/v1/webui/catalog': {
       get: {
+        operationId: 'getWebUiCatalog',
         summary: 'Fetch Web UI catalog data',
         security: [{ bearerAuth: [] }],
         responses: {
@@ -145,6 +156,7 @@ export const REMOTE_CONTROL_OPENAPI_SPEC = {
     },
     '/api/v1/webui/release-channel': {
       put: {
+        operationId: 'updateWebUiReleaseChannel',
         summary: 'Update release channel for the workspace',
         security: [{ bearerAuth: [] }],
         requestBody: {

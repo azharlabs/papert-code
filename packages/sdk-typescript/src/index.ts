@@ -5,8 +5,25 @@ export { createClient, PapertClient, PapertClientSession } from './client.js';
 export { SdkLogger } from './utils/logger.js';
 export { createPapertAgent } from './agent.js';
 export { HttpSseTransport } from './transport/HttpSseTransport.js';
+export {
+  REMOTE_CONTROL_OPENAPI_CONTRACT_ID,
+  REMOTE_CONTROL_OPENAPI_CONTRACT_VERSION,
+  RemoteControlApiClient,
+  RemoteControlApiError,
+} from './generated/remoteControlApiClient.js';
 
 export type { HttpSseTransportOptions } from './transport/HttpSseTransport.js';
+export type {
+  CreateRemoteSessionResponse,
+  ErrorResponse,
+  HealthResponse,
+  ReleaseChannel,
+  ReleaseRemoteSessionParams,
+  RemoteControlApiClientOptions,
+  UpdateWebUiReleaseChannelParams,
+  WebUiCatalogResponse,
+  WebUiSessionParams,
+} from './generated/remoteControlApiClient.js';
 
 export type { QueryOptions } from './query/createQuery.js';
 export type { LogLevel, LoggerConfig, ScopedLogger } from './utils/logger.js';

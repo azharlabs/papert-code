@@ -206,6 +206,20 @@ Detailed guide with complete project layout and end-to-end sample code:
 
 - `/Users/azhar/code/coding-agent/papert-code/docs/cli/sdk-python-multi-agent-skills.md`
 
+## Remote Server API Client (OpenAPI generated)
+
+The package also includes a typed remote-control client generated from the
+server OpenAPI contract (`/openapi.json`):
+
+```python
+from papert_code_sdk import RemoteControlApiClient
+
+api = RemoteControlApiClient("http://127.0.0.1:41242")
+session = api.create_remote_session("server-token")
+catalog = api.get_webui_catalog(session["sessionId"], session["token"])
+print(catalog.get("releaseChannel"))
+```
+
 ## MCP Servers
 
 ```python

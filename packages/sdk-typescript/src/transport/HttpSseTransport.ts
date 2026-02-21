@@ -5,6 +5,10 @@
  */
 
 import type { Transport } from './Transport.js';
+import {
+  RemoteControlApiClient,
+  type CreateRemoteSessionResponse,
+} from '../generated/remoteControlApiClient.js';
 
 export type HttpSseTransportOptions = {
   baseUrl: string;
@@ -23,6 +27,7 @@ type SessionResponse = {
 
 export class HttpSseTransport implements Transport {
   private readonly options: HttpSseTransportOptions;
+  private readonly remoteApiClient: RemoteControlApiClient;
   private _exitError: Error | null = null;
   private _isReady = false;
 
@@ -31,6 +36,9 @@ export class HttpSseTransport implements Transport {
 
   constructor(options: HttpSseTransportOptions) {
     this.options = options;
+    this.remoteApiClient = new RemoteControlApiClient({
+      baseUrl: options.baseUrl,
+    });
     this._isReady = true;
   }
 
@@ -46,15 +54,10 @@ export class HttpSseTransport implements Transport {
     if (!this.session) return;
 
     try {
-      await fetch(
-        new URL(`/api/v1/sessions/${this.session.sessionId}/release`, this.options.baseUrl),
-        {
-          method: 'POST',
-          headers: {
-            authorization: `Bearer ${this.session.token}`,
-          },
-        },
-      );
+      await this.remoteApiClient.releaseRemoteSession({
+        sessionId: this.session.sessionId,
+        sessionToken: this.session.token,
+      });
     } catch {
       // Best-effort.
     } finally {
@@ -125,17 +128,8 @@ export class HttpSseTransport implements Transport {
   }
 
   private async createSession(): Promise<SessionResponse> {
-    const res = await fetch(new URL('/api/v1/sessions', this.options.baseUrl), {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${this.options.serverToken}`,
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error(`Failed to create remote session: ${res.status} ${res.statusText}`);
-    }
-
-    return (await res.json()) as SessionResponse;
+    const response: CreateRemoteSessionResponse =
+      await this.remoteApiClient.createRemoteSession(this.options.serverToken);
+    return response;
   }
 }
