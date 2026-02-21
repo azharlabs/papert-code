@@ -35,6 +35,7 @@ import {
 import { extensionsCommand } from '../commands/extensions.js';
 import { skillsCommand } from '../commands/skills.js';
 import { hooksCommand } from '../commands/hooks.js';
+import { configCommand } from '../commands/config.js';
 import { migrateCommand } from '../commands/migrate.js';
 import { serverCommand } from '../commands/server.js';
 import { connectCommand } from '../commands/connect.js';
@@ -616,6 +617,7 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     yargsInstance.command(hooksCommand);
   }
   yargsInstance.command(migrateCommand);
+  yargsInstance.command(configCommand);
 
   yargsInstance.command(serverCommand);
   yargsInstance.command(connectCommand);

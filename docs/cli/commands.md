@@ -67,6 +67,11 @@ Papert Code supports several built-in commands to help you manage your session, 
   - **Usage:** `papert migrate --from-gemini [--dry-run]`
   - **Behavior:** Rewrites legacy `GEMINI_*` env variable names found in `.env`, `.papert/.env`, `.papert/settings*.json`, `.papert/hooks.json`, and `.github/workflows/*.yml` to their canonical `PAPERT_*` equivalents.
 
+- **`papert config explain`**
+  - **Description:** Show effective configuration with precedence source attribution per key.
+  - **Usage:** `papert config explain [key] [--json]`
+  - **Behavior:** Explains merged settings using precedence `system-defaults < user < workspace < system` (workspace values only when trusted).
+
 - **`papert schedule`**
   - **Description:** Manage scheduled Papert prompts, cron jobs, heartbeats, and webhooks.
   - **Usage:** `papert schedule <add|heartbeat|update|list|status|start|run|runs|remove|enable|disable|guide|webhook>`
