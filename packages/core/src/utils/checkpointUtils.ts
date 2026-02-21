@@ -41,6 +41,7 @@ export interface ParsedCheckpoint<HistoryType = unknown, ArgsType = unknown> {
   data: ToolCallData<HistoryType, ArgsType>;
   integrityVerified: boolean;
   version: number | null;
+  createdAt?: string | null;
 }
 
 export interface CheckpointParseError {
@@ -197,6 +198,7 @@ export function parseCheckpointContent<
         data: envelope.data as ToolCallData<HistoryType, ArgsType>,
         integrityVerified: true,
         version: envelope.version,
+        createdAt: envelope.createdAt,
       },
     };
   }
@@ -219,6 +221,7 @@ export function parseCheckpointContent<
       data: legacyResult.data as ToolCallData<HistoryType, ArgsType>,
       integrityVerified: false,
       version: null,
+      createdAt: null,
     },
   };
 }

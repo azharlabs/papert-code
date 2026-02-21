@@ -25,6 +25,10 @@ type CheckpointPreview = {
   checkpoint: string;
   toolName: string;
   hasFileRestore: boolean;
+  integrityVerified: boolean;
+  createdAt: string | null;
+  updatedAt: string;
+  commitHash: string | null;
 };
 
 type CheckpointPreviewResult =
@@ -35,6 +39,11 @@ type CheckpointPreviewResult =
       code: 'invalid_json' | 'invalid_checkpoint' | 'integrity_mismatch';
     }
   | { kind: 'error' };
+
+type ParsedRewindArgs =
+  | { checkpointName: null; allowLegacy: boolean }
+  | { checkpointName: string; allowLegacy: boolean }
+  | { error: string };
 
 function formatCheckpointErrorMessage(
   checkpointName: string,
@@ -56,6 +65,17 @@ async function readCheckpointPreview(
   checkpointName: string,
 ): Promise<CheckpointPreviewResult> {
   const filePath = path.join(checkpointDir, `${checkpointName}.json`);
+  let updatedAt: string | null = null;
+  try {
+    const stat = await fs.stat(filePath);
+    updatedAt = new Date(stat.mtimeMs).toISOString();
+  } catch (error) {
+    if (isNodeError(error) && error.code === 'ENOENT') {
+      return { kind: 'missing' };
+    }
+    return { kind: 'error' };
+  }
+
   let raw: string;
   try {
     raw = await fs.readFile(filePath, 'utf8');
@@ -79,8 +99,53 @@ async function readCheckpointPreview(
       hasFileRestore:
         typeof parsedCheckpoint.checkpoint.data.commitHash === 'string' &&
         parsedCheckpoint.checkpoint.data.commitHash.length > 0,
+      integrityVerified: parsedCheckpoint.checkpoint.integrityVerified,
+      createdAt: parsedCheckpoint.checkpoint.createdAt ?? null,
+      updatedAt: updatedAt ?? new Date().toISOString(),
+      commitHash:
+        typeof parsedCheckpoint.checkpoint.data.commitHash === 'string' &&
+        parsedCheckpoint.checkpoint.data.commitHash.length > 0
+          ? parsedCheckpoint.checkpoint.data.commitHash
+          : null,
     },
   };
+}
+
+function parseRewindArgs(args: string): ParsedRewindArgs {
+  const tokens = args
+    .trim()
+    .split(/\s+/)
+    .filter((token) => token.length > 0);
+
+  if (tokens.length === 0) {
+    return { checkpointName: null, allowLegacy: false };
+  }
+
+  let checkpointName: string | null = null;
+  let allowLegacy = false;
+  for (const token of tokens) {
+    if (token === '--allow-legacy') {
+      allowLegacy = true;
+      continue;
+    }
+
+    if (token.startsWith('--')) {
+      return {
+        error: `Unknown flag: ${token}. Supported flags: --allow-legacy`,
+      };
+    }
+
+    if (checkpointName) {
+      return {
+        error:
+          'Provide exactly one checkpoint id. Usage: /rewind <checkpoint-id> [--allow-legacy]',
+      };
+    }
+
+    checkpointName = token;
+  }
+
+  return { checkpointName, allowLegacy };
 }
 
 async function listCheckpointNames(checkpointDir: string): Promise<string[]> {
@@ -125,7 +190,16 @@ async function rewindAction(
     };
   }
 
-  const checkpointName = args.trim();
+  const parsedArgs = parseRewindArgs(args);
+  if ('error' in parsedArgs) {
+    return {
+      type: 'message',
+      messageType: 'error',
+      content: parsedArgs.error,
+    };
+  }
+
+  const { checkpointName, allowLegacy } = parsedArgs;
 
   if (!checkpointName) {
     const checkpointNames = await listCheckpointNames(checkpointDir);
@@ -151,8 +225,10 @@ async function rewindAction(
         } => preview.kind === 'ok',
       )
       .map(({ preview }) => {
-        const restoreLabel = preview.hasFileRestore ? 'file+chat restore' : 'chat restore';
-        return `- ${preview.checkpoint} (${preview.toolName}, ${restoreLabel})`;
+        const restoreLabel = preview.hasFileRestore ? 'file+chat' : 'chat-only';
+        const integrityLabel = preview.integrityVerified ? 'verified' : 'legacy';
+        const createdAt = preview.createdAt ?? preview.updatedAt;
+        return `- ${preview.checkpoint} | tool=${preview.toolName} | restore=${restoreLabel} | integrity=${integrityLabel} | created=${createdAt}`;
       });
 
     if (lines.length === 0) {
@@ -169,7 +245,7 @@ async function rewindAction(
       messageType: 'info',
       content:
         `Available rewind points (newest first):\n\n${lines.join('\n')}` +
-        '\n\nUse /rewind <checkpoint-id> to preview and confirm restore.',
+        '\n\nUse /rewind <checkpoint-id> to preview and confirm restore. For legacy checkpoints, use /rewind <checkpoint-id> --allow-legacy.',
     };
   }
 
@@ -201,20 +277,37 @@ async function rewindAction(
 
   const preview = previewResult.preview;
 
+  if (!preview.integrityVerified && !allowLegacy) {
+    return {
+      type: 'message',
+      messageType: 'error',
+      content: `Checkpoint '${checkpointName}' uses legacy format without integrity metadata. Re-run with /rewind ${checkpointName} --allow-legacy to continue.`,
+    };
+  }
+
   if (!context.overwriteConfirmed) {
-    const restoreLabel = preview.hasFileRestore
-      ? 'This will restore both files and conversation state.'
-      : 'This will restore conversation state.';
+    const restoreScope = preview.hasFileRestore
+      ? 'files + conversation'
+      : 'conversation only';
+    const integrityLabel = preview.integrityVerified
+      ? 'verified (hash checked)'
+      : 'legacy (no integrity metadata)';
+    const createdAt = preview.createdAt ?? preview.updatedAt;
+    const commitDetails = preview.commitHash
+      ? `\nGit snapshot: ${preview.commitHash.slice(0, 12)}...`
+      : '\nGit snapshot: none';
 
     return {
       type: 'confirm_action',
       prompt: React.createElement(
         Text,
         null,
-        `Rewind to '${preview.checkpoint}' from tool '${preview.toolName}'? ${restoreLabel}`,
+        `Rewind preview\nCheckpoint: ${preview.checkpoint}\nTool: ${preview.toolName}\nRestore scope: ${restoreScope}\nIntegrity: ${integrityLabel}\nCreated: ${createdAt}${commitDetails}\n\nProceed with restore?`,
       ),
       originalInvocation: {
-        raw: context.invocation?.raw || `/rewind ${checkpointName}`,
+        raw: `/rewind ${checkpointName}${
+          allowLegacy ? ' --allow-legacy' : ''
+        }`,
       },
     };
   }

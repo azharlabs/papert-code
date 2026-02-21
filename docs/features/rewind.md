@@ -34,6 +34,12 @@ Preview + confirm a specific rewind point:
 /rewind <checkpoint_id>
 ```
 
+Allow restoring a legacy checkpoint (no integrity metadata):
+
+```bash
+/rewind <checkpoint_id> --allow-legacy
+```
+
 ## What gets restored
 
 After confirmation, `/rewind` restores the same payload as `/restore`:
@@ -41,6 +47,16 @@ After confirmation, `/rewind` restores the same payload as `/restore`:
 - conversation UI history (if available in checkpoint)
 - model client history (if available)
 - git checkpoint snapshot (if `commitHash` exists in checkpoint)
+
+## Preview metadata
+
+`/rewind` now shows richer preview metadata in both list and confirm flows:
+
+- source tool name
+- restore scope (`chat-only` vs `file+chat`)
+- integrity status (`verified` vs `legacy`)
+- checkpoint creation/update timestamp
+- git snapshot presence/short hash
 
 ## Safety model
 

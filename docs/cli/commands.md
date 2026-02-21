@@ -220,11 +220,12 @@ Slash commands provide meta-level control over the CLI itself.
   - **Note:** Only available if the CLI is invoked with the `--checkpointing` option or configured via [settings](./configuration.md). See [Checkpointing documentation](../features/checkpointing.md) for more details.
 
 - **`/rewind`**
-  - **Description:** Preview and restore a previous checkpoint with explicit confirmation.
-  - **Usage:** `/rewind [checkpoint_id]`
+  - **Description:** Preview and restore a previous checkpoint with explicit confirmation and integrity-aware safety checks.
+  - **Usage:** `/rewind [checkpoint_id] [--allow-legacy]`
   - **Behavior:**
-    - Without arguments, lists available rewind points (newest first).
-    - With a checkpoint ID, shows a confirmation prompt before restoring.
+    - Without arguments, lists available rewind points (newest first) with metadata: tool, restore scope, integrity, and timestamp.
+    - With a checkpoint ID, shows a detailed confirmation preview before restoring.
+    - Legacy checkpoints (without integrity metadata) require `--allow-legacy`.
     - On confirmation, restores the same state as `/restore` (conversation history and file state when available).
   - **Note:** Only available when checkpointing is enabled.
 

@@ -82,11 +82,13 @@ describe('rewindCommand', () => {
   });
 
   it('lists available rewind points when no args are provided', async () => {
+    const checkpoint = serializeCheckpointData({
+      toolCall: { name: 'run_shell_command', args: { command: 'ls' } },
+      commitHash: 'abc123',
+    });
     await fs.writeFile(
       path.join(checkpointsDir, 'cp-1.json'),
-      JSON.stringify({
-        toolCall: { name: 'run_shell_command', args: { command: 'ls' } },
-      }),
+      checkpoint,
     );
 
     const command = rewindCommand(mockConfig);
@@ -98,15 +100,17 @@ describe('rewindCommand', () => {
       content: expect.stringContaining('Available rewind points (newest first):'),
     });
     expect((result as { content: string }).content).toContain('cp-1');
+    expect((result as { content: string }).content).toContain('integrity=verified');
   });
 
   it('asks for explicit confirmation before restore', async () => {
+    const checkpoint = serializeCheckpointData({
+      commitHash: 'abc123',
+      toolCall: { name: 'run_shell_command', args: { command: 'ls' } },
+    });
     await fs.writeFile(
       path.join(checkpointsDir, 'cp-1.json'),
-      JSON.stringify({
-        commitHash: 'abc123',
-        toolCall: { name: 'run_shell_command', args: { command: 'ls' } },
-      }),
+      checkpoint,
     );
 
     const command = rewindCommand(mockConfig);
@@ -121,14 +125,15 @@ describe('rewindCommand', () => {
   });
 
   it('restores after confirmation', async () => {
+    const checkpoint = serializeCheckpointData({
+      history: [{ type: 'user', text: 'do a thing' }],
+      clientHistory: [{ role: 'user', parts: [{ text: 'do a thing' }] }],
+      commitHash: 'abc123',
+      toolCall: { name: 'run_shell_command', args: { command: 'ls' } },
+    });
     await fs.writeFile(
       path.join(checkpointsDir, 'cp-1.json'),
-      JSON.stringify({
-        history: [{ type: 'user', text: 'do a thing' }],
-        clientHistory: [{ role: 'user', parts: [{ text: 'do a thing' }] }],
-        commitHash: 'abc123',
-        toolCall: { name: 'run_shell_command', args: { command: 'ls' } },
-      }),
+      checkpoint,
     );
 
     mockContext.overwriteConfirmed = true;
@@ -157,6 +162,44 @@ describe('rewindCommand', () => {
       messageType: 'error',
       content: 'Rewind point not found: missing',
     });
+  });
+
+  it('blocks legacy checkpoints unless --allow-legacy is provided', async () => {
+    await fs.writeFile(
+      path.join(checkpointsDir, 'cp-1.json'),
+      JSON.stringify({
+        toolCall: { name: 'run_shell_command', args: { command: 'ls' } },
+      }),
+    );
+
+    const command = rewindCommand(mockConfig);
+    const result = await command?.action?.(mockContext, 'cp-1');
+
+    expect(result).toEqual({
+      type: 'message',
+      messageType: 'error',
+      content:
+        "Checkpoint 'cp-1' uses legacy format without integrity metadata. Re-run with /rewind cp-1 --allow-legacy to continue.",
+    });
+  });
+
+  it('allows legacy checkpoints with --allow-legacy and keeps explicit confirmation', async () => {
+    await fs.writeFile(
+      path.join(checkpointsDir, 'cp-1.json'),
+      JSON.stringify({
+        toolCall: { name: 'run_shell_command', args: { command: 'ls' } },
+      }),
+    );
+
+    const command = rewindCommand(mockConfig);
+    const result = await command?.action?.(mockContext, 'cp-1 --allow-legacy');
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        type: 'confirm_action',
+        originalInvocation: { raw: '/rewind cp-1 --allow-legacy' },
+      }),
+    );
   });
 
   it('returns integrity errors for tampered rewind points', async () => {
@@ -195,6 +238,17 @@ describe('rewindCommand', () => {
       messageType: 'error',
       content:
         'No usable rewind points found. Existing checkpoint files appear invalid or corrupted.',
+    });
+  });
+
+  it('rejects unknown rewind flags', async () => {
+    const command = rewindCommand(mockConfig);
+    const result = await command?.action?.(mockContext, '--invalid-flag');
+
+    expect(result).toEqual({
+      type: 'message',
+      messageType: 'error',
+      content: 'Unknown flag: --invalid-flag. Supported flags: --allow-legacy',
     });
   });
 });
