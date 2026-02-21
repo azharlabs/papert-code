@@ -821,6 +821,20 @@ export async function loadHierarchicalGeminiMemory(
   );
 }
 
+function isValidResumedSessionData(
+  sessionData: ResumedSessionData | undefined,
+): sessionData is ResumedSessionData {
+  if (!sessionData) {
+    return false;
+  }
+
+  const conversation = sessionData.conversation;
+  return (
+    typeof conversation?.sessionId === 'string' &&
+    conversation.sessionId.trim().length > 0
+  );
+}
+
 export function isDebugMode(argv: CliArgs): boolean {
   return (
     argv.debug ||
@@ -1217,16 +1231,37 @@ export async function loadCliConfig(
   if (argv.continue || argv.resume) {
     const sessionService = new SessionService(cwd);
     if (argv.continue) {
-      sessionData = await sessionService.loadLastSession();
-      if (sessionData) {
-        sessionId = sessionData.conversation.sessionId;
+      try {
+        const latestSession = await sessionService.loadLastSession();
+        if (isValidResumedSessionData(latestSession)) {
+          sessionData = latestSession;
+          sessionId = latestSession.conversation.sessionId;
+        } else if (latestSession) {
+          logger.warn(
+            'Ignoring malformed latest session data while processing --continue; starting a fresh session.',
+          );
+        }
+      } catch (error) {
+        logger.warn(
+          'Failed to load latest session for --continue. Starting a fresh session instead.',
+          error instanceof Error ? error.message : String(error),
+        );
       }
     }
 
     if (argv.resume) {
       sessionId = argv.resume;
-      sessionData = await sessionService.loadSession(argv.resume);
-      if (!sessionData) {
+      try {
+        sessionData = await sessionService.loadSession(argv.resume);
+      } catch (error) {
+        const message = `Failed to load session ${argv.resume}. ${
+          error instanceof Error ? error.message : String(error)
+        }. Run \`papert --resume\` without an ID to choose from existing sessions.`;
+        console.log(message);
+        process.exit(1);
+      }
+
+      if (!isValidResumedSessionData(sessionData)) {
         const message = `No saved session found with ID ${argv.resume}. Run \`papert --resume\` without an ID to choose from existing sessions.`;
         console.log(message);
         process.exit(1);

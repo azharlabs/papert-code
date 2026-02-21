@@ -751,6 +751,71 @@ describe('loadCliConfig', () => {
     expect(config.getSessionId()).toBeTruthy();
   });
 
+  it('should continue safely with a fresh session when --continue session loading throws', async () => {
+    process.argv = ['node', 'script.js', '--continue'];
+    const argv = await parseArguments({} as Settings);
+    vi.spyOn(ServerConfig.SessionService.prototype, 'loadLastSession').mockRejectedValue(
+      new Error('disk read failed'),
+    );
+    const mockConsoleWarn = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => { });
+
+    const config = await loadCliConfig(
+      {},
+      [],
+      new ExtensionEnablementManager(
+        ExtensionStorage.getUserExtensionsDir(),
+        argv.extensions,
+      ),
+      argv,
+    );
+
+    expect(config.getResumedSessionData()).toBeUndefined();
+    expect(config.getSessionId()).toBeTruthy();
+    expect(mockConsoleWarn).toHaveBeenCalledWith(
+      '[WARN]',
+      expect.stringContaining(
+        'Failed to load latest session for --continue. Starting a fresh session instead.',
+      ),
+      'disk read failed',
+    );
+
+    mockConsoleWarn.mockRestore();
+  });
+
+  it('should ignore malformed latest session data during --continue and start a fresh session', async () => {
+    process.argv = ['node', 'script.js', '--continue'];
+    const argv = await parseArguments({} as Settings);
+    vi.spyOn(ServerConfig.SessionService.prototype, 'loadLastSession').mockResolvedValue(
+      {
+        conversation: { sessionId: '' },
+      } as unknown as ServerConfig.ResumedSessionData,
+    );
+    const mockConsoleWarn = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => { });
+
+    const config = await loadCliConfig(
+      {},
+      [],
+      new ExtensionEnablementManager(
+        ExtensionStorage.getUserExtensionsDir(),
+        argv.extensions,
+      ),
+      argv,
+    );
+
+    expect(config.getResumedSessionData()).toBeUndefined();
+    expect(config.getSessionId()).toBeTruthy();
+    expect(mockConsoleWarn).toHaveBeenCalledWith(
+      '[WARN]',
+      'Ignoring malformed latest session data while processing --continue; starting a fresh session.',
+    );
+
+    mockConsoleWarn.mockRestore();
+  });
+
   it('should resume a specific session when --resume <id> is provided', async () => {
     const resumeId = '22222222-2222-4222-8222-222222222222';
     process.argv = ['node', 'script.js', '--resume', resumeId];
@@ -805,6 +870,45 @@ describe('loadCliConfig', () => {
     );
     expect(mockConsoleLog).toHaveBeenCalledWith(
       expect.stringContaining('papert --resume'),
+    );
+
+    mockExit.mockRestore();
+    mockConsoleLog.mockRestore();
+  });
+
+  it('should exit with a clear message when --resume session loading throws', async () => {
+    const resumeId = 'broken-session-id';
+    process.argv = ['node', 'script.js', '--resume', resumeId];
+    const argv = await parseArguments({} as Settings);
+    vi.spyOn(ServerConfig.SessionService.prototype, 'loadSession').mockRejectedValue(
+      new Error('EIO: failed to read session'),
+    );
+
+    const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error('process.exit called');
+    });
+    const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => { });
+
+    await expect(
+      loadCliConfig(
+        {},
+        [],
+        new ExtensionEnablementManager(
+          ExtensionStorage.getUserExtensionsDir(),
+          argv.extensions,
+        ),
+        argv,
+      ),
+    ).rejects.toThrow('process.exit called');
+
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining(`Failed to load session ${resumeId}`),
+    );
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining('papert --resume'),
+    );
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining('EIO: failed to read session'),
     );
 
     mockExit.mockRestore();

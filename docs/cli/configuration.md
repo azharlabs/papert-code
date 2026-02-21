@@ -642,9 +642,11 @@ Arguments passed directly when running the CLI can override other configurations
 - **`--continue`**:
   - Resume the most recent session for the current project (current working directory).
   - Works in interactive and headless modes (e.g., `papert --continue -p "Keep going"`).
+  - If the latest session cannot be read (for example, corrupted or transient file errors), Papert logs a warning and starts a fresh session instead of crashing.
 - **`--resume [sessionId]`**:
   - Resume a specific session for the current project. When called without an ID, an interactive picker lists only this project's sessions with prompt preview, timestamps, message count, and optional git branch.
   - If an ID is provided and not found for this project, the CLI exits with an error.
+  - If session loading fails for the provided ID, the CLI exits with a clear error that includes the load failure reason and suggests `papert --resume` (without ID) to pick an available session.
 - **`--output-format <format>`** (**`-o <format>`**):
   - **Description:** Specifies the format of the CLI output for non-interactive mode.
   - **Values:**
