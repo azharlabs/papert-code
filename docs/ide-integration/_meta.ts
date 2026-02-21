@@ -3,4 +3,5 @@ export default {
   'desktop-app': 'Desktop App',
   'ide-integration': 'IDE Integration',
   'ide-companion-spec': 'IDE Companion Spec',
+  'parity-roadmap': 'IDE Parity Roadmap',
 };
