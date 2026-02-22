@@ -46,17 +46,17 @@ function emptyControls(): AdminControls {
 const formatTimestamp = (value?: string | null) =>
   value ? new Date(value).toLocaleString() : '—';
 
-const landingSections = ['overview', 'users', 'groups', 'usage', 'sessions', 'settings'] as const;
+const landingSections = ['overview', 'users', 'groups', 'usage', 'sessions'] as const;
 type LandingSection = (typeof landingSections)[number];
 
 export function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     () => localStorage.getItem('papert_admin_sidebar_collapsed') === '1',
   );
-  const [showStatusRow, setShowStatusRow] = useState(
+  const [showStatusRow] = useState(
     () => localStorage.getItem('papert_admin_show_status_row') !== '0',
   );
-  const [defaultLandingSection, setDefaultLandingSection] = useState<LandingSection>(() => {
+  const [defaultLandingSection] = useState<LandingSection>(() => {
     const stored = localStorage.getItem('papert_admin_default_section');
     if (!stored) return 'overview';
     return landingSections.includes(stored as LandingSection)
@@ -111,7 +111,6 @@ export function App() {
     | 'groupDetails'
     | 'usage'
     | 'sessions'
-    | 'settings'
   >('overview');
   const [userSearch, setUserSearch] = useState('');
   const [groupSearch, setGroupSearch] = useState('');
@@ -273,7 +272,6 @@ export function App() {
     { id: 'groups', label: 'Groups', shortLabel: 'GR' },
     { id: 'usage', label: 'Usage', shortLabel: 'UG' },
     { id: 'sessions', label: 'Sessions', shortLabel: 'SE' },
-    { id: 'settings', label: 'Settings', shortLabel: 'ST' },
   ] as const;
 
   const activeLabel = activeSection === 'userDetails' && selectedUser
@@ -390,7 +388,6 @@ export function App() {
       | 'usage'
       | 'sessions'
       | 'quota_review'
-      | 'settings'
       | 'api_health',
   ) => {
     if (action === 'sync') {
@@ -426,11 +423,6 @@ export function App() {
     if (action === 'quota_review') {
       setIsFlowModalOpen(false);
       setActiveSection('overview');
-      return;
-    }
-    if (action === 'settings') {
-      setIsFlowModalOpen(false);
-      setActiveSection('settings');
       return;
     }
     if (action === 'api_health') {
@@ -1400,98 +1392,6 @@ export function App() {
             </section>
           )}
 
-          {activeSection === 'settings' && (
-            <section className="panel settings-section">
-              <div className="panel-header">
-                <div>
-                  <h2>Settings</h2>
-                  <p className="hint">Configure admin-web behavior and view operational status.</p>
-                </div>
-              </div>
-              <div className="detail-card">
-                <div className="panel-header">
-                  <div>
-                    <h3>Preferences</h3>
-                    <p className="hint">Saved locally in this browser.</p>
-                  </div>
-                </div>
-                <div className="policy">
-                  <Toggle
-                    label="Collapse sidebar"
-                    description="Use compact left navigation by default."
-                    checked={isSidebarCollapsed}
-                    onChange={setIsSidebarCollapsed}
-                  />
-                  <Toggle
-                    label="Show status row"
-                    description="Display sync/error/success badges under the page header."
-                    checked={showStatusRow}
-                    onChange={setShowStatusRow}
-                  />
-                  <div className="field">
-                    <span>Default landing tab after login</span>
-                    <select
-                      value={defaultLandingSection}
-                      onChange={(event) =>
-                        setDefaultLandingSection(event.target.value as LandingSection)
-                      }
-                    >
-                      <option value="overview">Overview</option>
-                      <option value="users">Users</option>
-                      <option value="groups">Groups</option>
-                      <option value="usage">Usage</option>
-                      <option value="sessions">Sessions</option>
-                      <option value="settings">Settings</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="actions">
-                  <button
-                    className="ghost subtle"
-                    type="button"
-                    onClick={() => setIsFlowModalOpen(true)}
-                  >
-                    Open flow guide
-                  </button>
-                  <button
-                    className="ghost subtle"
-                    type="button"
-                    onClick={() => {
-                      setIsSidebarCollapsed(false);
-                      setShowStatusRow(true);
-                      setDefaultLandingSection('overview');
-                    }}
-                  >
-                    Reset UI defaults
-                  </button>
-                </div>
-              </div>
-              <div className="settings-grid">
-                <article className="mini-card">
-                  <p className="mini-card__label">Active users</p>
-                  <p className="mini-card__value">{activeUsers}</p>
-                  <p className="mini-card__note">{users.length} total</p>
-                </article>
-                <article className="mini-card">
-                  <p className="mini-card__label">Pending quota requests</p>
-                  <p className="mini-card__value">{pendingQuotaCount}</p>
-                  <p className="mini-card__note">Approve to keep teams moving.</p>
-                </article>
-                <article className="mini-card">
-                  <p className="mini-card__label">Last sync</p>
-                  <p className="mini-card__value">
-                    {lastSyncedSession ? formatTimestamp(lastSyncedSession.createdAt) : 'No data'}
-                  </p>
-                  <p className="mini-card__note">Sessions refreshed after login.</p>
-                </article>
-                <article className="mini-card">
-                  <p className="mini-card__label">Current group context</p>
-                  <p className="mini-card__value">{selectedGroup ? selectedGroup.name : 'None'}</p>
-                  <p className="mini-card__note">From selected group details.</p>
-                </article>
-              </div>
-            </section>
-          )}
         </div>
       </main>
       {isFlowModalOpen && (
@@ -1597,8 +1497,8 @@ export function App() {
               >
                 Open API health
               </button>
-              <button className="primary" type="button" onClick={() => runFlowAction('settings')}>
-                Go to settings
+              <button className="primary" type="button" onClick={() => runFlowAction('sessions')}>
+                Go to sessions
               </button>
             </div>
           </div>
