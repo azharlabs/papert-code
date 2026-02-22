@@ -21,6 +21,70 @@ const DEFAULT_OPENAI_BASE_URL =
   'https://dashscope.aliyuncs.com/compatible-mode/v1';
 const DEFAULT_OPENAI_MODEL = 'papert3-coder-plus';
 
+interface DockerAvailability {
+  available: boolean;
+  reason?: string;
+}
+
+function extractExecError(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object') {
+    return undefined;
+  }
+
+  const stderr = (error as { stderr?: string | Buffer }).stderr;
+  if (typeof stderr === 'string' && stderr.trim().length > 0) {
+    return stderr.trim();
+  }
+  if (stderr instanceof Buffer) {
+    const text = stderr.toString('utf-8').trim();
+    if (text.length > 0) {
+      return text;
+    }
+  }
+
+  const stdout = (error as { stdout?: string | Buffer }).stdout;
+  if (typeof stdout === 'string' && stdout.trim().length > 0) {
+    return stdout.trim();
+  }
+  if (stdout instanceof Buffer) {
+    const text = stdout.toString('utf-8').trim();
+    if (text.length > 0) {
+      return text;
+    }
+  }
+
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message.trim();
+  }
+
+  return undefined;
+}
+
+function checkDockerAvailability(): DockerAvailability {
+  try {
+    execSync('docker --version', { stdio: 'ignore' });
+  } catch {
+    return {
+      available: false,
+      reason:
+        'Docker CLI is not installed or not on PATH. Install Docker Desktop/Engine and retry.',
+    };
+  }
+
+  try {
+    execSync('docker info', { stdio: 'ignore' });
+    return { available: true };
+  } catch (error) {
+    const details = extractExecError(error);
+    return {
+      available: false,
+      reason: details
+        ? `Docker daemon is not reachable. ${details}`
+        : 'Docker daemon is not reachable. Start Docker and retry.',
+    };
+  }
+}
+
 function addPathIfMissing(basePath: string, addition: string): string {
   const separator = process.platform === 'win32' ? ';' : ':';
   const existing = basePath.split(separator).filter(Boolean);
@@ -87,7 +151,22 @@ function tryInstallTerminalBench(): string[] {
   return attemptedCommands;
 }
 
-describe('terminal-bench integration', () => {
+const dockerAvailability = checkDockerAvailability();
+const dockerRequired =
+  process.env['TB_REQUIRE_DOCKER'] === 'true' ||
+  process.env['CI'] === 'true';
+const shouldSkipDockerSuite =
+  !dockerAvailability.available && !dockerRequired;
+
+if (shouldSkipDockerSuite) {
+  console.warn(
+    `[terminal-bench] Skipping Docker-dependent suite: ${dockerAvailability.reason ?? 'Docker unavailable.'}`,
+  );
+}
+
+const describeTerminalBench = shouldSkipDockerSuite ? describe.skip : describe;
+
+describeTerminalBench('terminal-bench integration', () => {
   const rig = new TestRig();
   // Use local ci-tasks directory for self-contained tests
   const ciTasksPath = join(__dirname, 'ci-tasks');
@@ -109,6 +188,12 @@ describe('terminal-bench integration', () => {
   const outputBase = join(baseRunDir, 'terminal-bench-output');
 
   beforeAll(async () => {
+    if (!dockerAvailability.available) {
+      throw new Error(
+        `Docker is required for terminal-bench integration tests. ${dockerAvailability.reason ?? ''}`.trim(),
+      );
+    }
+
     // Ensure integration tests directory exists
     if (!existsSync(integrationTestsDir)) {
       mkdirSync(integrationTestsDir, { recursive: true });

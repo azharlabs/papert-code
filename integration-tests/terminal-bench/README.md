@@ -61,6 +61,17 @@ Both:
 npm run test:terminal-bench
 ```
 
+Docker is required to execute task containers. If Docker is unavailable:
+
+- local runs skip the Docker-dependent integration suite by default
+- CI runs fail fast (Docker is required in CI)
+
+You can force local failure when Docker is missing with:
+
+```bash
+TB_REQUIRE_DOCKER=true npm run test:terminal-bench
+```
+
 ## Authoring a new task
 
 Create a folder under `ci-tasks/<task-id>/` with:
@@ -78,6 +89,7 @@ Keep tasks deterministic and testable with simple assertions.
 
 - Oracle runs should resolve each task at `accuracy = 1.0`.
 - Papert-agent runs require network/API credentials.
+- Docker daemon must be running to execute terminal-bench tasks.
 - Timeout can be tuned via `TB_TIMEOUT_MINUTES`.
 - Terminal-bench bootstrap will try multiple installers in order:
   `uv tool install terminal-bench`, `uv tool install --python 3 terminal-bench`,
