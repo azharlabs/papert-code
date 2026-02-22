@@ -31,6 +31,7 @@ describe('AdminRepo', () => {
     });
 
     const fetchedUser = repo.getUserByEmail('user@company.com');
+    expect(fetchedUser?.id).toBe(user.id);
     expect(fetchedUser?.groupId).toBe(group.id);
     expect(fetchedUser?.provider.apiKey).toBe('secret');
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   AdminControls,
   GroupRecord,
@@ -128,8 +128,8 @@ export function App() {
     [sessions, selectedUserId],
   );
 
-  const usageSummary = useMemo(() => {
-    return usage.reduce(
+  const usageSummary = useMemo(
+    () => usage.reduce(
       (summary, record) => {
         if (record.period === 'daily') {
           summary.daily += record.tokensUsed;
@@ -140,8 +140,9 @@ export function App() {
         return summary;
       },
       { daily: 0, monthly: 0 },
-    );
-  }, [usage]);
+    ),
+    [usage],
+  );
 
   const sortedUsage = useMemo(
     () =>
@@ -263,7 +264,7 @@ export function App() {
     }
   }, [users, selectedUserId]);
 
-  const refreshAll = async () => {
+  const refreshAll = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     setError(null);
@@ -283,13 +284,13 @@ export function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) {
-      refreshAll();
+      void refreshAll();
     }
-  }, [token]);
+  }, [token, refreshAll]);
 
   useEffect(() => {
     setGroupDraft(selectedGroup ? JSON.parse(JSON.stringify(selectedGroup)) : null);
@@ -304,7 +305,7 @@ export function App() {
     } else {
       setUsage([]);
     }
-  }, [selectedUserId, token]);
+  }, [selectedUser, selectedUserId, token]);
 
   const handleLogin = async () => {
     setLoading(true);

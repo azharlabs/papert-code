@@ -67,6 +67,63 @@ export interface QuotaRequestRecord {
   updatedAt: string;
 }
 
+interface GroupRow {
+  id: string;
+  name: string;
+  controls_json: string;
+  provider_json: string;
+  quota_monthly: number | null;
+  quota_daily: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface UserRow {
+  id: string;
+  email: string;
+  password_hash: string;
+  role: 'admin' | 'user';
+  group_id: string | null;
+  self_managed: number;
+  provider_json: string;
+  controls_json: string;
+  active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SessionRow {
+  id: string;
+  user_id: string;
+  session_id: string;
+  model: string | null;
+  base_url: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  usage_json: string;
+  transcript_path: string | null;
+  created_at: string;
+}
+
+interface UsageRow {
+  id: string;
+  user_id: string;
+  period: 'daily' | 'monthly';
+  period_start: string;
+  tokens_used: number;
+  updated_at: string;
+}
+
+interface QuotaRequestRow {
+  id: string;
+  user_id: string;
+  requested_monthly: number | null;
+  reason: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  updated_at: string;
+}
+
 function encodeJson(value: unknown): string {
   return JSON.stringify(value ?? {});
 }
@@ -116,19 +173,19 @@ export class AdminRepo {
 
   listGroups(): GroupRecord[] {
     const rows = this.db.prepare(`SELECT * FROM groups ORDER BY name`).all();
-    return rows.map((row) => this.mapGroup(row));
+    return rows.map((row) => this.mapGroup(row as GroupRow));
   }
 
   getGroupByName(name: string): GroupRecord | null {
     const row = this.db
       .prepare(`SELECT * FROM groups WHERE name = ? LIMIT 1`)
       .get(name);
-    return row ? this.mapGroup(row) : null;
+    return row ? this.mapGroup(row as GroupRow) : null;
   }
 
   getGroup(id: string): GroupRecord | null {
     const row = this.db.prepare(`SELECT * FROM groups WHERE id = ?`).get(id);
-    return row ? this.mapGroup(row) : null;
+    return row ? this.mapGroup(row as GroupRow) : null;
   }
 
   updateGroup(id: string, data: Partial<GroupRecord>): GroupRecord | null {
@@ -206,17 +263,17 @@ export class AdminRepo {
 
   listUsers(): UserRecord[] {
     const rows = this.db.prepare(`SELECT * FROM users ORDER BY email`).all();
-    return rows.map((row) => this.mapUser(row));
+    return rows.map((row) => this.mapUser(row as UserRow));
   }
 
   getUserByEmail(email: string): UserRecord | null {
     const row = this.db.prepare(`SELECT * FROM users WHERE email = ?`).get(email);
-    return row ? this.mapUser(row) : null;
+    return row ? this.mapUser(row as UserRow) : null;
   }
 
   getUserById(id: string): UserRecord | null {
     const row = this.db.prepare(`SELECT * FROM users WHERE id = ?`).get(id);
-    return row ? this.mapUser(row) : null;
+    return row ? this.mapUser(row as UserRow) : null;
   }
 
   updateUser(id: string, data: Partial<UserRecord>): UserRecord | null {
@@ -282,19 +339,19 @@ export class AdminRepo {
     if (!row) {
       throw new Error('usage_upsert_failed');
     }
-    return this.mapUsage(row);
+    return this.mapUsage(row as UsageRow);
   }
 
   getUsage(userId: string, period: 'daily' | 'monthly', periodStart: string): UsageRecord | null {
     const row = this.db
       .prepare(`SELECT * FROM usage WHERE user_id = ? AND period = ? AND period_start = ?`)
       .get(userId, period, periodStart);
-    return row ? this.mapUsage(row) : null;
+    return row ? this.mapUsage(row as UsageRow) : null;
   }
 
   listUsage(userId: string): UsageRecord[] {
     const rows = this.db.prepare(`SELECT * FROM usage WHERE user_id = ? ORDER BY period_start DESC`).all(userId);
-    return rows.map((row) => this.mapUsage(row));
+    return rows.map((row) => this.mapUsage(row as UsageRow));
   }
 
   createSession(record: Omit<SessionRecord, 'id' | 'createdAt'>): SessionRecord {
@@ -328,12 +385,12 @@ export class AdminRepo {
     const rows = userId
       ? this.db.prepare(`SELECT * FROM sessions WHERE user_id = ? ORDER BY created_at DESC`).all(userId)
       : this.db.prepare(`SELECT * FROM sessions ORDER BY created_at DESC`).all();
-    return rows.map((row) => this.mapSession(row));
+    return rows.map((row) => this.mapSession(row as SessionRow));
   }
 
   getSession(id: string): SessionRecord | null {
     const row = this.db.prepare(`SELECT * FROM sessions WHERE id = ?`).get(id);
-    return row ? this.mapSession(row) : null;
+    return row ? this.mapSession(row as SessionRow) : null;
   }
 
   createQuotaRequest(data: {
@@ -372,11 +429,13 @@ export class AdminRepo {
     const rows = status
       ? this.db.prepare(`SELECT * FROM quota_requests WHERE status = ? ORDER BY created_at DESC`).all(status)
       : this.db.prepare(`SELECT * FROM quota_requests ORDER BY created_at DESC`).all();
-    return rows.map((row) => this.mapQuotaRequest(row));
+    return rows.map((row) => this.mapQuotaRequest(row as QuotaRequestRow));
   }
 
   updateQuotaRequest(id: string, status: 'approved' | 'rejected'): QuotaRequestRecord | null {
-    const existing = this.db.prepare(`SELECT * FROM quota_requests WHERE id = ?`).get(id);
+    const existing = this.db
+      .prepare(`SELECT * FROM quota_requests WHERE id = ?`)
+      .get(id) as QuotaRequestRow | undefined;
     if (!existing) return null;
     const updatedAt = nowIso();
     this.db
@@ -389,7 +448,7 @@ export class AdminRepo {
     });
   }
 
-  private mapGroup(row: any): GroupRecord {
+  private mapGroup(row: GroupRow): GroupRecord {
     return {
       id: row.id,
       name: row.name,
@@ -402,7 +461,7 @@ export class AdminRepo {
     };
   }
 
-  private mapUser(row: any): UserRecord {
+  private mapUser(row: UserRow): UserRecord {
     const provider = decodeJson<ProviderConfig>(row.provider_json, {});
     if (provider.apiKey) {
       try {
@@ -426,7 +485,7 @@ export class AdminRepo {
     };
   }
 
-  private mapSession(row: any): SessionRecord {
+  private mapSession(row: SessionRow): SessionRecord {
     return {
       id: row.id,
       userId: row.user_id,
@@ -441,7 +500,7 @@ export class AdminRepo {
     };
   }
 
-  private mapUsage(row: any): UsageRecord {
+  private mapUsage(row: UsageRow): UsageRecord {
     return {
       id: row.id,
       userId: row.user_id,
@@ -452,7 +511,7 @@ export class AdminRepo {
     };
   }
 
-  private mapQuotaRequest(row: any): QuotaRequestRecord {
+  private mapQuotaRequest(row: QuotaRequestRow): QuotaRequestRecord {
     return {
       id: row.id,
       userId: row.user_id,

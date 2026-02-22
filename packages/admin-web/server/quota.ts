@@ -16,7 +16,7 @@ export function getPeriodStart(period: 'daily' | 'monthly', now = new Date()): s
   return date.toISOString();
 }
 
-export function resolveQuotaLimits(group: GroupRecord | null, user: UserRecord): {
+export function resolveQuotaLimits(group: GroupRecord | null): {
   monthlyLimit?: number | null;
   dailyLimit?: number | null;
 } {
@@ -31,7 +31,7 @@ export function computeQuotaStatus(
   group: GroupRecord | null,
   now: Date = new Date(),
 ): QuotaStatus {
-  const { monthlyLimit, dailyLimit } = resolveQuotaLimits(group, user);
+  const { monthlyLimit, dailyLimit } = resolveQuotaLimits(group);
   const monthlyStart = getPeriodStart('monthly', now);
   const dailyStart = getPeriodStart('daily', now);
 

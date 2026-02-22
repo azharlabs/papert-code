@@ -25,6 +25,8 @@ import {
 } from './auth.js';
 import { computeQuotaStatus, applyUsage, getPeriodStart } from './quota.js';
 import { adminErrorHandler, asyncHandler } from './http.js';
+import type { AdminAuthContext } from './request-context.js';
+import type { AdminControls } from './types.js';
 
 const env = readAdminServerEnv();
 const db = getDb({ path: env.storePath });
@@ -151,7 +153,7 @@ function requireAllowlist(
   if (env.allowlist.size === 0) {
     return next();
   }
-  const auth = (req as any).auth as { email?: string } | undefined;
+  const auth = req.auth;
   const adminId = readAdminHeader(req) || auth?.email;
   if (!adminId || !env.allowlist.has(adminId)) {
     return res.status(403).json({
@@ -177,7 +179,7 @@ function requireAuth(
   try {
     const token = auth.slice('Bearer '.length);
     const payload = verifyToken(token);
-    (req as any).auth = payload;
+    req.auth = payload;
     return next();
   } catch {
     return res.status(401).json({
@@ -192,7 +194,7 @@ function requireAdminRole(
   res: express.Response,
   next: express.NextFunction,
 ) {
-  const auth = (req as any).auth as { role: string } | undefined;
+  const auth = req.auth;
   if (!auth || auth.role !== 'admin') {
     return res.status(403).json({
       error: 'admin_only',
@@ -202,8 +204,8 @@ function requireAdminRole(
   return next();
 }
 
-function mergeControls(...controls: Array<Record<string, any>>): Record<string, any> {
-  return controls.reduce((acc, control) => {
+function mergeControls(...controls: AdminControls[]): AdminControls {
+  return controls.reduce<AdminControls>((acc, control) => {
     return {
       ...acc,
       ...control,
@@ -220,7 +222,21 @@ function mergeControls(...controls: Array<Record<string, any>>): Record<string, 
         },
       },
     };
-  }, {} as Record<string, any>);
+  }, {});
+}
+
+function getRequestAuth(
+  req: express.Request,
+  res: express.Response,
+): AdminAuthContext | null {
+  if (!req.auth) {
+    res.status(401).json({
+      error: 'missing_token',
+      message: 'Authorization token required.',
+    });
+    return null;
+  }
+  return req.auth;
 }
 
 function resolveUserControls(userId: string) {
@@ -307,7 +323,8 @@ app.post('/api/v1/auth/login', asyncHandler(async (req, res) => {
 }));
 
 app.get('/api/v1/admin-controls', requireAuth, async (req, res) => {
-  const auth = (req as any).auth as { userId: string; role: string };
+  const auth = getRequestAuth(req, res);
+  if (!auth) return;
   const requestedUserId =
     (req.header('x-user-id') ||
       (typeof req.query.userId === 'string' ? req.query.userId : undefined))?.trim();
@@ -331,7 +348,8 @@ app.get('/api/v1/admin-controls', requireAuth, async (req, res) => {
 });
 
 app.get('/api/v1/user/config', requireAuth, (req, res) => {
-  const auth = (req as any).auth as { userId: string };
+  const auth = getRequestAuth(req, res);
+  if (!auth) return;
   const resolved = resolveUserControls(auth.userId);
   if (!resolved) {
     return res.status(404).json({ error: 'user_not_found' });
@@ -364,7 +382,8 @@ app.post('/api/v1/user/usage', requireAuth, (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
   }
-  const auth = (req as any).auth as { userId: string };
+  const auth = getRequestAuth(req, res);
+  if (!auth) return;
   const user = repo.getUserById(auth.userId);
   if (!user) {
     return res.status(404).json({ error: 'user_not_found' });
@@ -384,7 +403,8 @@ app.post('/api/v1/user/sessions', requireAuth, asyncHandler(async (req, res) => 
   if (!parsed.success) {
     return res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
   }
-  const auth = (req as any).auth as { userId: string };
+  const auth = getRequestAuth(req, res);
+  if (!auth) return;
   const user = repo.getUserById(auth.userId);
   if (!user) {
     return res.status(404).json({ error: 'user_not_found' });
@@ -417,7 +437,8 @@ app.post('/api/v1/user/quota-requests', requireAuth, (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
   }
-  const auth = (req as any).auth as { userId: string };
+  const auth = getRequestAuth(req, res);
+  if (!auth) return;
   const request = repo.createQuotaRequest({
     userId: auth.userId,
     requestedMonthly: parsed.data.requestedMonthly,

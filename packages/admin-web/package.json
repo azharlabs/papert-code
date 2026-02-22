@@ -12,6 +12,8 @@
     "typecheck:web": "tsc -p tsconfig.json --noEmit",
     "typecheck:server": "tsc -p server/tsconfig.json --noEmit",
     "typecheck": "npm-run-all typecheck:web typecheck:server",
+    "lint": "eslint . --ext .ts,.tsx",
+    "check": "npm-run-all lint typecheck test build build:server",
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests"
   },

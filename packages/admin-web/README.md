@@ -90,6 +90,9 @@ export PAPERT_ADMIN_PASSWORD="your-password"
 
 ```bash
 npm run test --workspace=packages/admin-web
+npm run typecheck --workspace=packages/admin-web
+npm run lint --workspace=packages/admin-web
+npm run check --workspace=packages/admin-web
 ```
 
 ## Future-proofing hooks

@@ -25,7 +25,8 @@ export function asyncHandler(handler: AsyncRequestHandler): RequestHandler {
   };
 }
 
-export const adminErrorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
+export const adminErrorHandler: ErrorRequestHandler = (error, _req, res, next) => {
+  void next;
   if (res.headersSent) return;
 
   const message = getErrorMessage(error);
