@@ -24,6 +24,7 @@ import {
   verifyToken,
 } from './auth.js';
 import { computeQuotaStatus, applyUsage, getPeriodStart } from './quota.js';
+import { adminErrorHandler, asyncHandler } from './http.js';
 
 const env = readAdminServerEnv();
 const db = getDb({ path: env.storePath });
@@ -264,7 +265,7 @@ app.get('/api/v1/admin/health', (_req, res) => {
   res.json({ status: 'ok', version: 'v1', jwt: Boolean(getJwtSecret()) });
 });
 
-app.post('/api/v1/auth/login', async (req, res) => {
+app.post('/api/v1/auth/login', asyncHandler(async (req, res) => {
   const parsed = LoginSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({
@@ -303,7 +304,7 @@ app.post('/api/v1/auth/login', async (req, res) => {
     quota: resolved.quota,
     access: resolved.quota.exceeded && !user.selfManaged ? 'denied' : 'granted',
   });
-});
+}));
 
 app.get('/api/v1/admin-controls', requireAuth, async (req, res) => {
   const auth = (req as any).auth as { userId: string; role: string };
@@ -378,7 +379,7 @@ app.post('/api/v1/user/usage', requireAuth, (req, res) => {
   });
 });
 
-app.post('/api/v1/user/sessions', requireAuth, async (req, res) => {
+app.post('/api/v1/user/sessions', requireAuth, asyncHandler(async (req, res) => {
   const parsed = SessionUploadSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
@@ -409,7 +410,7 @@ app.post('/api/v1/user/sessions', requireAuth, async (req, res) => {
   });
 
   return res.json({ session: record });
-});
+}));
 
 app.post('/api/v1/user/quota-requests', requireAuth, (req, res) => {
   const parsed = QuotaRequestSchema.safeParse(req.body);
@@ -430,7 +431,7 @@ app.get('/api/v1/admin/users', requireAuth, requireAllowlist, requireAdminRole, 
   res.json({ users: repo.listUsers().map(toPublicUser) });
 });
 
-app.post('/api/v1/admin/users', requireAuth, requireAllowlist, requireAdminRole, async (req, res) => {
+app.post('/api/v1/admin/users', requireAuth, requireAllowlist, requireAdminRole, asyncHandler(async (req, res) => {
   const parsed = UserCreateSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
@@ -449,9 +450,9 @@ app.post('/api/v1/admin/users', requireAuth, requireAllowlist, requireAdminRole,
   });
 
   res.json({ user: toPublicUser(user) });
-});
+}));
 
-app.put('/api/v1/admin/users/:id', requireAuth, requireAllowlist, requireAdminRole, async (req, res) => {
+app.put('/api/v1/admin/users/:id', requireAuth, requireAllowlist, requireAdminRole, asyncHandler(async (req, res) => {
   const parsed = UserUpdateSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: 'invalid_body', details: parsed.error.flatten() });
@@ -480,7 +481,7 @@ app.put('/api/v1/admin/users/:id', requireAuth, requireAllowlist, requireAdminRo
     return res.status(404).json({ error: 'user_not_found' });
   }
   res.json({ user: toPublicUser(updated) });
-});
+}));
 
 app.delete('/api/v1/admin/users/:id', requireAuth, requireAllowlist, requireAdminRole, (req, res) => {
   const removed = repo.deleteUser(req.params.id);
@@ -559,7 +560,7 @@ app.get('/api/v1/admin/sessions', requireAuth, requireAllowlist, requireAdminRol
   res.json({ sessions: repo.listSessions(userId) });
 });
 
-app.get('/api/v1/admin/sessions/:id', requireAuth, requireAllowlist, requireAdminRole, async (req, res) => {
+app.get('/api/v1/admin/sessions/:id', requireAuth, requireAllowlist, requireAdminRole, asyncHandler(async (req, res) => {
   const session = repo.getSession(req.params.id);
   if (!session) {
     return res.status(404).json({ error: 'session_not_found' });
@@ -573,7 +574,9 @@ app.get('/api/v1/admin/sessions/:id', requireAuth, requireAllowlist, requireAdmi
     }
   }
   res.json({ session, transcript });
-});
+}));
+
+app.use(adminErrorHandler);
 
 ensureBootstrapAdmin()
   .then(() => {
