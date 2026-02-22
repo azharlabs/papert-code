@@ -98,6 +98,11 @@ npm run lint --workspace=packages/admin-web
 npm run check --workspace=packages/admin-web
 ```
 
+## Operational notes
+
+See [hardening-and-maintenance.md](./docs/hardening-and-maintenance.md) for
+security, reliability, pagination, and cross-package compatibility notes.
+
 ## Future-proofing hooks
 
 - The API is versioned at `/api/v1/...` to allow evolution.
