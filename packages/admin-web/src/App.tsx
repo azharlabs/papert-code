@@ -82,6 +82,8 @@ export function App() {
   const [groupDraft, setGroupDraft] = useState<GroupRecord | null>(null);
   const [userDraft, setUserDraft] = useState<UserRecord | null>(null);
   const [editUserPassword, setEditUserPassword] = useState('');
+  const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
+  const [createGroupDraft, setCreateGroupDraft] = useState<GroupRecord | null>(null);
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   const [createUserDraft, setCreateUserDraft] = useState<UserRecord | null>(null);
   const [createUserPassword, setCreateUserPassword] = useState('');
@@ -318,15 +320,20 @@ export function App() {
   };
 
   const handleNewGroup = () => {
-    setGroupDraft(createEmptyGroup());
-    setSelectedGroupId('');
-    setActiveSection('groupDetails');
+    setCreateGroupDraft(createEmptyGroup());
+    setIsFlowModalOpen(false);
+    setIsCreateGroupModalOpen(true);
   };
 
   const closeCreateUserModal = () => {
     setIsCreateUserModalOpen(false);
     setCreateUserDraft(null);
     setCreateUserPassword('');
+  };
+
+  const closeCreateGroupModal = () => {
+    setIsCreateGroupModalOpen(false);
+    setCreateGroupDraft(null);
   };
 
   const runFlowAction = (
@@ -447,6 +454,8 @@ export function App() {
     setGroupDraft(null);
     setUserDraft(null);
     setEditUserPassword('');
+    setIsCreateGroupModalOpen(false);
+    setCreateGroupDraft(null);
     setCreateUserPassword('');
     setCreateUserDraft(null);
     setIsCreateUserModalOpen(false);
@@ -472,6 +481,36 @@ export function App() {
       setGroups((prev) => [...prev, group]);
       setSelectedGroupId(group.id);
       setActiveSection('groupDetails');
+      setInfo('Group created.');
+      setTimeout(() => setInfo(null), 3000);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateGroupFromModal = async () => {
+    if (!token || !createGroupDraft) return;
+    if (!createGroupDraft.name.trim()) {
+      setError('Group name is required.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const group = await createGroup(token, {
+        name: createGroupDraft.name,
+        controls: createGroupDraft.controls,
+        provider: createGroupDraft.provider,
+        quotaMonthly: createGroupDraft.quotaMonthly ?? null,
+        quotaDaily: createGroupDraft.quotaDaily ?? null,
+      });
+      setGroups((prev) => [...prev, group]);
+      setSelectedGroupId(group.id);
+      setGroupDraft(group);
+      setActiveSection('groupDetails');
+      closeCreateGroupModal();
       setInfo('Group created.');
       setTimeout(() => setInfo(null), 3000);
     } catch (err) {
@@ -1755,6 +1794,103 @@ export function App() {
                 disabled={!createUserPassword || createUserPassword.length < 8}
               >
                 Create user
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isCreateGroupModalOpen && createGroupDraft && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Create group"
+          onClick={closeCreateGroupModal}
+        >
+          <div className="modal-card modal-card--wide" onClick={(event) => event.stopPropagation()}>
+            <div className="panel-header">
+              <div>
+                <h2>Create group</h2>
+                <p className="hint">Add a new group with provider defaults and policy settings.</p>
+              </div>
+              <button className="ghost subtle" type="button" onClick={closeCreateGroupModal}>
+                Close
+              </button>
+            </div>
+            <div className="policy modal-body">
+              <div className="control-grid">
+                <label className="field">
+                  <span>Name</span>
+                  <input
+                    value={createGroupDraft.name}
+                    onChange={(event) =>
+                      setCreateGroupDraft({ ...createGroupDraft, name: event.target.value })
+                    }
+                    placeholder="Engineering"
+                  />
+                </label>
+                <label className="field">
+                  <span>Default model</span>
+                  <input
+                    value={createGroupDraft.provider.model ?? ''}
+                    onChange={(event) =>
+                      setCreateGroupDraft({
+                        ...createGroupDraft,
+                        provider: { ...createGroupDraft.provider, model: event.target.value },
+                      })
+                    }
+                    placeholder="gpt-5"
+                  />
+                </label>
+              </div>
+              <PolicyEditor
+                controls={createGroupDraft.controls}
+                onChange={(controls) => setCreateGroupDraft({ ...createGroupDraft, controls })}
+              />
+              <ProviderEditor
+                provider={createGroupDraft.provider}
+                onChange={(provider) => setCreateGroupDraft({ ...createGroupDraft, provider })}
+              />
+              <div className="control-grid">
+                <label className="field">
+                  <span>Monthly quota</span>
+                  <input
+                    type="number"
+                    value={createGroupDraft.quotaMonthly ?? ''}
+                    onChange={(event) =>
+                      setCreateGroupDraft({
+                        ...createGroupDraft,
+                        quotaMonthly: event.target.value ? Number(event.target.value) : null,
+                      })
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Daily quota</span>
+                  <input
+                    type="number"
+                    value={createGroupDraft.quotaDaily ?? ''}
+                    onChange={(event) =>
+                      setCreateGroupDraft({
+                        ...createGroupDraft,
+                        quotaDaily: event.target.value ? Number(event.target.value) : null,
+                      })
+                    }
+                  />
+                </label>
+              </div>
+            </div>
+            <div className="actions modal-actions">
+              <button className="ghost subtle" type="button" onClick={closeCreateGroupModal}>
+                Cancel
+              </button>
+              <button
+                className="primary"
+                type="button"
+                onClick={handleCreateGroupFromModal}
+                disabled={!createGroupDraft.name.trim()}
+              >
+                Create group
               </button>
             </div>
           </div>
