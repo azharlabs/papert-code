@@ -104,6 +104,7 @@ export function App() {
   const [createUserDraft, setCreateUserDraft] = useState<UserRecord | null>(null);
   const [createUserPassword, setCreateUserPassword] = useState('');
   const [isFlowModalOpen, setIsFlowModalOpen] = useState(false);
+  const [groupMembersPage, setGroupMembersPage] = useState(1);
   const [activeSection, setActiveSection] = useState<
     | 'overview'
     | 'users'
@@ -198,6 +199,19 @@ export function App() {
     () => users.filter((user) => selectedGroupMemberIds.has(user.id)),
     [users, selectedGroupMemberIds],
   );
+  const groupMembersPageSize = 6;
+  const selectedGroupMembersSorted = useMemo(
+    () => [...selectedGroupMembers].sort((a, b) => a.email.localeCompare(b.email)),
+    [selectedGroupMembers],
+  );
+  const groupMembersPageCount = Math.max(
+    1,
+    Math.ceil(selectedGroupMembersSorted.length / groupMembersPageSize),
+  );
+  const pagedGroupMembers = useMemo(() => {
+    const start = (groupMembersPage - 1) * groupMembersPageSize;
+    return selectedGroupMembersSorted.slice(start, start + groupMembersPageSize);
+  }, [groupMembersPage, selectedGroupMembersSorted]);
   const selectedGroupSessions = useMemo(
     () => sessions.filter((session) => selectedGroupMemberIds.has(session.userId)),
     [sessions, selectedGroupMemberIds],
@@ -272,6 +286,17 @@ export function App() {
     () => (sessions.length ? Math.round(usageSessionTotals.total / sessions.length) : 0),
     [sessions.length, usageSessionTotals.total],
   );
+
+  useEffect(() => {
+    setGroupMembersPage(1);
+  }, [selectedGroupId]);
+
+  useEffect(() => {
+    if (groupMembersPage > groupMembersPageCount) {
+      setGroupMembersPage(groupMembersPageCount);
+    }
+  }, [groupMembersPage, groupMembersPageCount]);
+
   const stats = [
     {
       label: 'Active users',
@@ -1314,6 +1339,62 @@ export function App() {
                     <button className="primary" type="button" onClick={openEditGroupModal}>
                       Edit group
                     </button>
+                  </div>
+                  <div className="group-members-table">
+                    <div className="panel-header">
+                      <div>
+                        <h3>Group users</h3>
+                        <p className="hint">Users associated with this group, paginated.</p>
+                      </div>
+                      <p className="hint">
+                        Page {groupMembersPage} of {groupMembersPageCount}
+                      </p>
+                    </div>
+                    <div className="table-head group-members-head">
+                      <span>Email</span>
+                      <span>Role</span>
+                      <span>Status</span>
+                      <span>Provider</span>
+                      <span>Created</span>
+                    </div>
+                    {pagedGroupMembers.length === 0 && (
+                      <p className="hint group-members-empty">
+                        No users are assigned to this group.
+                      </p>
+                    )}
+                    {pagedGroupMembers.map((member) => (
+                      <div key={member.id} className="table-row group-members-row">
+                        <span>{member.email}</span>
+                        <span>{member.role}</span>
+                        <span>
+                          <span className={`status-pill ${member.active ? 'success' : 'muted'}`}>
+                            {member.active ? 'active' : 'disabled'}
+                          </span>
+                        </span>
+                        <span>{member.selfManaged ? 'self-managed' : 'admin-managed'}</span>
+                        <span>{new Date(member.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    ))}
+                    <div className="pagination-controls">
+                      <button
+                        className="ghost subtle"
+                        type="button"
+                        onClick={() => setGroupMembersPage((page) => Math.max(1, page - 1))}
+                        disabled={groupMembersPage <= 1}
+                      >
+                        Previous
+                      </button>
+                      <button
+                        className="ghost subtle"
+                        type="button"
+                        onClick={() =>
+                          setGroupMembersPage((page) => Math.min(groupMembersPageCount, page + 1))
+                        }
+                        disabled={groupMembersPage >= groupMembersPageCount}
+                      >
+                        Next
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (

@@ -735,6 +735,30 @@ textarea {
   padding: 12px 14px;
 }
 
+.group-members-table {
+  margin-top: 18px;
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  background: #fff;
+  padding: 14px;
+}
+
+.group-members-head,
+.group-members-row {
+  grid-template-columns: minmax(220px, 1.6fr) minmax(100px, 0.7fr) minmax(110px, 0.7fr) minmax(140px, 1fr) minmax(130px, 0.8fr);
+}
+
+.group-members-empty {
+  padding: 12px 14px;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
 .transcript {
   margin-top: 16px;
   border-radius: 14px;
