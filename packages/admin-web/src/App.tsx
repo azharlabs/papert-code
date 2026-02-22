@@ -91,8 +91,9 @@ export function App() {
   const [activeSection, setActiveSection] = useState<
     | 'overview'
     | 'users'
-    | 'userMetrics'
+    | 'userDetails'
     | 'groups'
+    | 'groupDetails'
     | 'usage'
     | 'sessions'
     | 'settings'
@@ -211,16 +212,17 @@ export function App() {
   const navItems = [
     { id: 'overview', label: 'Overview', shortLabel: 'OV' },
     { id: 'users', label: 'Users', shortLabel: 'US' },
-    { id: 'userMetrics', label: 'User metrics', shortLabel: 'UM' },
     { id: 'groups', label: 'Groups', shortLabel: 'GR' },
     { id: 'usage', label: 'Usage', shortLabel: 'UG' },
     { id: 'sessions', label: 'Sessions', shortLabel: 'SE' },
     { id: 'settings', label: 'Settings', shortLabel: 'ST' },
   ] as const;
 
-  const activeLabel = activeSection === 'userMetrics' && selectedUser
-    ? `${selectedUser.email} metrics`
-    : navItems.find((item) => item.id === activeSection)?.label ?? 'Overview';
+  const activeLabel = activeSection === 'userDetails' && selectedUser
+    ? `${selectedUser.email} details`
+    : activeSection === 'groupDetails' && groupDraft
+      ? `${groupDraft.name || 'New group'} details`
+      : navItems.find((item) => item.id === activeSection)?.label ?? 'Overview';
 
   useEffect(() => {
     localStorage.setItem(
@@ -290,6 +292,7 @@ export function App() {
   const handleNewGroup = () => {
     setGroupDraft(createEmptyGroup());
     setSelectedGroupId('');
+    setActiveSection('groupDetails');
   };
 
   const closeCreateUserModal = () => {
@@ -363,8 +366,14 @@ export function App() {
   }, [users, selectedUserId]);
 
   useEffect(() => {
-    setGroupDraft(selectedGroup ? JSON.parse(JSON.stringify(selectedGroup)) : null);
-  }, [selectedGroup]);
+    if (!selectedGroup) {
+      if (selectedGroupId) {
+        setGroupDraft(null);
+      }
+      return;
+    }
+    setGroupDraft(JSON.parse(JSON.stringify(selectedGroup)));
+  }, [selectedGroup, selectedGroupId]);
 
   useEffect(() => {
     setUserDraft(selectedUser ? JSON.parse(JSON.stringify(selectedUser)) : null);
@@ -434,6 +443,7 @@ export function App() {
       });
       setGroups((prev) => [...prev, group]);
       setSelectedGroupId(group.id);
+      setActiveSection('groupDetails');
       setInfo('Group created.');
       setTimeout(() => setInfo(null), 3000);
     } catch (err) {
@@ -473,6 +483,8 @@ export function App() {
       await deleteGroup(token, groupDraft.id);
       setGroups((prev) => prev.filter((g) => g.id !== groupDraft.id));
       setSelectedGroupId('');
+      setGroupDraft(null);
+      setActiveSection('groups');
       setInfo('Group removed.');
       setTimeout(() => setInfo(null), 3000);
     } catch (err) {
@@ -503,6 +515,7 @@ export function App() {
       });
       setUsers((prev) => [...prev, created]);
       setSelectedUserId(created.id);
+      setActiveSection('userDetails');
       closeCreateUserModal();
       setInfo('User created.');
       setTimeout(() => setInfo(null), 3000);
@@ -554,6 +567,7 @@ export function App() {
       await deleteUser(token, userDraft.id);
       setUsers((prev) => prev.filter((u) => u.id !== userDraft.id));
       setSelectedUserId('');
+      setActiveSection('users');
       setInfo('User removed.');
       setTimeout(() => setInfo(null), 3000);
     } catch (err) {
@@ -605,12 +619,12 @@ export function App() {
 
   const handleSelectUser = (id: string) => {
     setSelectedUserId(id);
-    setActiveSection('userMetrics');
+    setActiveSection('userDetails');
   };
 
   const handleSelectGroup = (id: string) => {
     setSelectedGroupId(id);
-    setActiveSection('groups');
+    setActiveSection('groupDetails');
   };
 
   if (!token) {
@@ -970,217 +984,58 @@ export function App() {
               <div className="panel-header">
                 <div>
                   <h2>User directory</h2>
-                  <p className="hint">
-                    Click a user row to open metrics. Use this page to edit policies.
-                  </p>
+                  <p className="hint">Search users and click a row to open full details.</p>
                 </div>
                 <button className="primary" onClick={handleNewUser} type="button">
                   + New user
                 </button>
               </div>
-              <div className="panel-split">
-                <div className="list-card">
-                  <div className="list-filter">
-                    <input
-                      value={userSearch}
-                      onChange={(event) => setUserSearch(event.target.value)}
-                      placeholder="Search by email or group..."
-                    />
-                  </div>
-                  <div className="list-body">
-                    {filteredUsers.length === 0 ? (
-                      <p className="hint">No users match that query.</p>
-                    ) : (
-                      filteredUsers.map((user) => (
-                        <button
-                          key={user.id}
-                          type="button"
-                          className={`list-row ${user.id === selectedUserId ? 'active' : ''}`}
-                          onClick={() => handleSelectUser(user.id)}
-                        >
-                          <div>
-                            <strong>{user.email}</strong>
-                            <p className="hint">
-                              {user.groupId || 'no group'} • {user.role}
-                            </p>
-                          </div>
-                          <div className="list-row__meta">
-                            <span>{user.provider.baseUrl ?? 'admin managed'}</span>
-                            <span className={`status-pill ${user.active ? 'success' : 'muted'}`}>
-                              {user.active ? 'active' : 'disabled'}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
+              <div className="list-card">
+                <div className="list-filter">
+                  <input
+                    value={userSearch}
+                    onChange={(event) => setUserSearch(event.target.value)}
+                    placeholder="Search by email or group..."
+                  />
                 </div>
-                <div className="detail-card">
-                  <div className="panel-header">
-                    <div>
-                      <h3>{userDraft ? `${userDraft.email || 'Edit user'}` : 'User details'}</h3>
-                      <p className="hint">Update credentials, provider, and policies.</p>
-                    </div>
-                  </div>
-                  {userDraft ? (
-                    <>
-                      <div className="control-grid">
-                        <label className="field">
-                          <span>Email</span>
-                          <input
-                            value={userDraft.email}
-                            onChange={(e) => setUserDraft({ ...userDraft, email: e.target.value })}
-                          />
-                        </label>
-                        <label className="field">
-                          <span>Password</span>
-                          <input
-                            type="password"
-                            value={editUserPassword}
-                            onChange={(e) => setEditUserPassword(e.target.value)}
-                            placeholder="Leave blank to keep current"
-                          />
-                          {editUserPassword && editUserPassword.length < 8 && (
-                            <span className="hint error">
-                              Password must be at least 8 characters.
-                            </span>
-                          )}
-                        </label>
-                      </div>
-                      <div className="control-grid">
-                        <label className="field">
-                          <span>Role</span>
-                          <select
-                            value={userDraft.role}
-                            onChange={(e) =>
-                              setUserDraft({ ...userDraft, role: e.target.value as 'admin' | 'user' })
-                            }
-                          >
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                        </label>
-                        <label className="field">
-                          <span>Group</span>
-                          <select
-                            value={userDraft.groupId ?? ''}
-                            onChange={(e) =>
-                              setUserDraft({ ...userDraft, groupId: e.target.value || null })
-                            }
-                          >
-                            <option value="">No group</option>
-                            {groups.map((group) => (
-                              <option key={group.id} value={group.id}>
-                                {group.name}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      </div>
-                      <Toggle
-                        label="Self-managed provider"
-                        description="Allow the user to bring their own OpenAI-compatible key."
-                        checked={userDraft.selfManaged}
-                        onChange={(value) => setUserDraft({ ...userDraft, selfManaged: value })}
-                      />
-                      {!userDraft.selfManaged && (
-                        <>
-                          <ProviderEditor
-                            provider={userDraft.provider}
-                            onChange={(provider) => setUserDraft({ ...userDraft, provider })}
-                          />
-                          <PolicyEditor
-                            controls={userDraft.controls}
-                            onChange={(controls) => setUserDraft({ ...userDraft, controls })}
-                          />
-                        </>
-                      )}
-                      <Toggle
-                        label="Active"
-                        description="Disable to block policy fetch and login."
-                        checked={userDraft.active}
-                        onChange={(value) => setUserDraft({ ...userDraft, active: value })}
-                      />
-                      <div className="actions">
-                        <button className="ghost danger" onClick={handleDeleteUser}>
-                          Remove user
-                        </button>
-                        <button className="primary" onClick={handleSaveUser}>
-                          Save user
-                        </button>
-                      </div>
-                    </>
+                <div className="list-body">
+                  {filteredUsers.length === 0 ? (
+                    <p className="hint">No users match that query.</p>
                   ) : (
-                    <div className="empty-state">
-                      Select a user to edit their policies and usage.
-                    </div>
+                    filteredUsers.map((user) => (
+                      <button
+                        key={user.id}
+                        type="button"
+                        className={`list-row ${user.id === selectedUserId ? 'active' : ''}`}
+                        onClick={() => handleSelectUser(user.id)}
+                      >
+                        <div>
+                          <strong>{user.email}</strong>
+                          <p className="hint">
+                            {user.groupId || 'no group'} • {user.role}
+                          </p>
+                        </div>
+                        <div className="list-row__meta">
+                          <span>{user.provider.baseUrl ?? 'admin managed'}</span>
+                          <span className={`status-pill ${user.active ? 'success' : 'muted'}`}>
+                            {user.active ? 'active' : 'disabled'}
+                          </span>
+                        </div>
+                      </button>
+                    ))
                   )}
                 </div>
               </div>
-              {selectedUser && (
-                <div className="usage-grid">
-                  <div className="usage-summary-row">
-                    <article className="usage-card">
-                      <p>Daily tokens</p>
-                      <strong>{usageSummary.daily.toLocaleString()}</strong>
-                      <span className="hint">Latest daily report</span>
-                    </article>
-                    <article className="usage-card">
-                      <p>Monthly tokens</p>
-                      <strong>{usageSummary.monthly.toLocaleString()}</strong>
-                      <span className="hint">Aggregated this month</span>
-                    </article>
-                    <article className="usage-card">
-                      <p>Sessions</p>
-                      <strong>
-                        {selectedUserSessions.length
-                          ? selectedUserSessions.length.toLocaleString()
-                          : '0'}
-                      </strong>
-                      <span className="hint">Uploaded from CLI</span>
-                    </article>
-                  </div>
-                  <div className="session-table">
-                    <div className="table-head">
-                      <span>Session ID</span>
-                      <span>Model</span>
-                      <span>Started</span>
-                      <span>Tokens</span>
-                      <span>Action</span>
-                    </div>
-                    {selectedUserSessions.length === 0 && (
-                      <p className="hint">No sessions recorded yet for this user.</p>
-                    )}
-                    {selectedUserSessions.map((session) => (
-                      <div key={session.id} className="session-row">
-                        <span>{session.sessionId}</span>
-                        <span>{session.model ?? 'unknown model'}</span>
-                        <span>{formatTimestamp(session.startedAt)}</span>
-                        <span>
-                          {getSessionTokenSummary(session.usage).totalTokens.toLocaleString()}
-                        </span>
-                        <button
-                          className="ghost subtle"
-                          onClick={() => handleLoadSession(session.id)}
-                          type="button"
-                        >
-                          View
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </section>
           )}
 
-          {activeSection === 'userMetrics' && (
-            <section className="panel user-metrics-section">
+          {activeSection === 'userDetails' && (
+            <section className="panel user-details-section">
               <div className="panel-header">
                 <div>
-                  <h2>{selectedUser ? `${selectedUser.email} usage metrics` : 'User metrics'}</h2>
+                  <h2>{selectedUser ? `${selectedUser.email} details` : 'User details'}</h2>
                   <p className="hint">
-                    Token totals, daily usage, and sessions for the selected user.
+                    Edit user config and review usage/session metrics.
                   </p>
                 </div>
                 <div className="flow-node__actions">
@@ -1203,10 +1058,108 @@ export function App() {
 
               {!selectedUser ? (
                 <div className="empty-state">
-                  Select a user from the Users tab to view metrics.
+                  Select a user from the Users table to open details.
                 </div>
               ) : (
                 <div className="user-metrics-body">
+                  {userDraft && (
+                    <div className="detail-card">
+                      <div className="panel-header">
+                        <div>
+                          <h3>{userDraft.email || 'Edit user'}</h3>
+                          <p className="hint">Update credentials, provider, and policies.</p>
+                        </div>
+                      </div>
+                      <div className="policy">
+                        <div className="control-grid">
+                          <label className="field">
+                            <span>Email</span>
+                            <input
+                              value={userDraft.email}
+                              onChange={(e) => setUserDraft({ ...userDraft, email: e.target.value })}
+                            />
+                          </label>
+                          <label className="field">
+                            <span>Password</span>
+                            <input
+                              type="password"
+                              value={editUserPassword}
+                              onChange={(e) => setEditUserPassword(e.target.value)}
+                              placeholder="Leave blank to keep current"
+                            />
+                            {editUserPassword && editUserPassword.length < 8 && (
+                              <span className="hint error">
+                                Password must be at least 8 characters.
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                        <div className="control-grid">
+                          <label className="field">
+                            <span>Role</span>
+                            <select
+                              value={userDraft.role}
+                              onChange={(e) =>
+                                setUserDraft({ ...userDraft, role: e.target.value as 'admin' | 'user' })
+                              }
+                            >
+                              <option value="user">User</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                          </label>
+                          <label className="field">
+                            <span>Group</span>
+                            <select
+                              value={userDraft.groupId ?? ''}
+                              onChange={(e) =>
+                                setUserDraft({ ...userDraft, groupId: e.target.value || null })
+                              }
+                            >
+                              <option value="">No group</option>
+                              {groups.map((group) => (
+                                <option key={group.id} value={group.id}>
+                                  {group.name}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+                        <Toggle
+                          label="Self-managed provider"
+                          description="Allow the user to bring their own OpenAI-compatible key."
+                          checked={userDraft.selfManaged}
+                          onChange={(value) => setUserDraft({ ...userDraft, selfManaged: value })}
+                        />
+                        {!userDraft.selfManaged && (
+                          <>
+                            <ProviderEditor
+                              provider={userDraft.provider}
+                              onChange={(provider) => setUserDraft({ ...userDraft, provider })}
+                            />
+                            <PolicyEditor
+                              controls={userDraft.controls}
+                              onChange={(controls) => setUserDraft({ ...userDraft, controls })}
+                            />
+                          </>
+                        )}
+                        <Toggle
+                          label="Active"
+                          description="Disable to block policy fetch and login."
+                          checked={userDraft.active}
+                          onChange={(value) => setUserDraft({ ...userDraft, active: value })}
+                        />
+                        <div className="actions">
+                          <button className="ghost danger" onClick={handleDeleteUser}>
+                            Remove user
+                          </button>
+                          <button className="primary" onClick={handleSaveUser}>
+                            Save user
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="usage-summary-row user-metrics-summary">
                     <article className="usage-card">
                       <p>Total tokens so far</p>
@@ -1253,6 +1206,36 @@ export function App() {
                       </div>
                     ))}
                   </div>
+
+                  <div className="session-table">
+                    <div className="table-head">
+                      <span>Session ID</span>
+                      <span>Model</span>
+                      <span>Started</span>
+                      <span>Tokens</span>
+                      <span>Action</span>
+                    </div>
+                    {selectedUserSessions.length === 0 && (
+                      <p className="hint">No sessions recorded yet for this user.</p>
+                    )}
+                    {selectedUserSessions.map((session) => (
+                      <div key={session.id} className="session-row">
+                        <span>{session.sessionId}</span>
+                        <span>{session.model ?? 'unknown model'}</span>
+                        <span>{formatTimestamp(session.startedAt)}</span>
+                        <span>
+                          {getSessionTokenSummary(session.usage).totalTokens.toLocaleString()}
+                        </span>
+                        <button
+                          className="ghost subtle"
+                          onClick={() => handleLoadSession(session.id)}
+                          type="button"
+                        >
+                          View
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </section>
@@ -1263,143 +1246,153 @@ export function App() {
               <div className="panel-header">
                 <div>
                   <h2>Groups directory</h2>
-                  <p className="hint">Manage group policies and quotas.</p>
+                  <p className="hint">Search groups and click a row to open full details.</p>
                 </div>
                 <button className="primary" onClick={handleNewGroup} type="button">
                   + New group
                 </button>
               </div>
-              <div className="panel-split">
-                <div className="list-card">
-                  <div className="list-filter">
-                    <input
-                      value={groupSearch}
-                      onChange={(event) => setGroupSearch(event.target.value)}
-                      placeholder="Search groups..."
-                    />
-                  </div>
-                  <div className="list-body">
-                    {filteredGroups.length === 0 ? (
-                      <p className="hint">No groups match that query.</p>
-                    ) : (
-                      filteredGroups.map((group) => (
-                        <button
-                          key={group.id}
-                          type="button"
-                          className={`list-row ${group.id === selectedGroupId ? 'active' : ''}`}
-                          onClick={() => handleSelectGroup(group.id)}
-                        >
-                          <div>
-                            <strong>{group.name}</strong>
-                            <p className="hint">
-                              {group.provider.baseUrl ?? 'admin provider'}
-                            </p>
-                          </div>
-                          <div className="list-row__meta">
-                            <span>
-                              {group.quotaMonthly ? `${group.quotaMonthly} tokens/mo` : 'No quota'}
-                            </span>
-                            <span>
-                              {group.quotaDaily ? `${group.quotaDaily} tokens/day` : '—'}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
+              <div className="list-card">
+                <div className="list-filter">
+                  <input
+                    value={groupSearch}
+                    onChange={(event) => setGroupSearch(event.target.value)}
+                    placeholder="Search groups..."
+                  />
                 </div>
-                <div className="detail-card">
-                  <div className="panel-header">
-                    <div>
-                      <h3>{groupDraft ? `${groupDraft.name || 'Edit group'}` : 'Group details'}</h3>
-                      <p className="hint">Adjust policies, providers, and quotas.</p>
-                    </div>
-                  </div>
-                  {groupDraft ? (
-                    <>
-                      <div className="control-grid">
-                        <label className="field">
-                          <span>Name</span>
-                          <input
-                            value={groupDraft.name}
-                            onChange={(event) =>
-                              setGroupDraft({ ...groupDraft, name: event.target.value })
-                            }
-                          />
-                        </label>
-                        <label className="field">
-                          <span>Default model</span>
-                          <input
-                            value={groupDraft.provider.model ?? ''}
-                            onChange={(event) =>
-                              setGroupDraft({
-                                ...groupDraft,
-                                provider: { ...groupDraft.provider, model: event.target.value },
-                              })
-                            }
-                          />
-                        </label>
-                      </div>
-                      <PolicyEditor
-                        controls={groupDraft.controls}
-                        onChange={(controls) => setGroupDraft({ ...groupDraft, controls })}
-                      />
-                      <ProviderEditor
-                        provider={groupDraft.provider}
-                        onChange={(provider) => setGroupDraft({ ...groupDraft, provider })}
-                      />
-                      <div className="control-grid">
-                        <label className="field">
-                          <span>Monthly quota</span>
-                          <input
-                            type="number"
-                            value={groupDraft.quotaMonthly ?? ''}
-                            onChange={(e) =>
-                              setGroupDraft({
-                                ...groupDraft,
-                                quotaMonthly: e.target.value ? Number(e.target.value) : null,
-                              })
-                            }
-                          />
-                        </label>
-                        <label className="field">
-                          <span>Daily quota</span>
-                          <input
-                            type="number"
-                            value={groupDraft.quotaDaily ?? ''}
-                            onChange={(e) =>
-                              setGroupDraft({
-                                ...groupDraft,
-                                quotaDaily: e.target.value ? Number(e.target.value) : null,
-                              })
-                            }
-                          />
-                        </label>
-                      </div>
-                      <div className="actions">
-                        {groupDraft.id ? (
-                          <>
-                            <button className="ghost danger" onClick={handleDeleteGroup}>
-                              Delete group
-                            </button>
-                            <button className="primary" onClick={handleSaveGroup}>
-                              Save group
-                            </button>
-                          </>
-                        ) : (
-                          <button className="primary" onClick={handleCreateGroup}>
-                            Create group
-                          </button>
-                        )}
-                      </div>
-                    </>
+                <div className="list-body">
+                  {filteredGroups.length === 0 ? (
+                    <p className="hint">No groups match that query.</p>
                   ) : (
-                    <div className="empty-state">
-                      Select a group to edit its policies and quotas.
-                    </div>
+                    filteredGroups.map((group) => (
+                      <button
+                        key={group.id}
+                        type="button"
+                        className={`list-row ${group.id === selectedGroupId ? 'active' : ''}`}
+                        onClick={() => handleSelectGroup(group.id)}
+                      >
+                        <div>
+                          <strong>{group.name}</strong>
+                          <p className="hint">
+                            {group.provider.baseUrl ?? 'admin provider'}
+                          </p>
+                        </div>
+                        <div className="list-row__meta">
+                          <span>
+                            {group.quotaMonthly ? `${group.quotaMonthly} tokens/mo` : 'No quota'}
+                          </span>
+                          <span>
+                            {group.quotaDaily ? `${group.quotaDaily} tokens/day` : '—'}
+                          </span>
+                        </div>
+                      </button>
+                    ))
                   )}
                 </div>
               </div>
+            </section>
+          )}
+
+          {activeSection === 'groupDetails' && (
+            <section className="panel group-details-section">
+              <div className="panel-header">
+                <div>
+                  <h2>{groupDraft ? `${groupDraft.name || 'New group'} details` : 'Group details'}</h2>
+                  <p className="hint">Adjust policies, providers, and quotas for this group.</p>
+                </div>
+                <button
+                  className="ghost subtle"
+                  type="button"
+                  onClick={() => setActiveSection('groups')}
+                >
+                  Back to groups
+                </button>
+              </div>
+              {groupDraft ? (
+                <div className="detail-card">
+                  <div className="policy">
+                    <div className="control-grid">
+                      <label className="field">
+                        <span>Name</span>
+                        <input
+                          value={groupDraft.name}
+                          onChange={(event) =>
+                            setGroupDraft({ ...groupDraft, name: event.target.value })
+                          }
+                        />
+                      </label>
+                      <label className="field">
+                        <span>Default model</span>
+                        <input
+                          value={groupDraft.provider.model ?? ''}
+                          onChange={(event) =>
+                            setGroupDraft({
+                              ...groupDraft,
+                              provider: { ...groupDraft.provider, model: event.target.value },
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+                    <PolicyEditor
+                      controls={groupDraft.controls}
+                      onChange={(controls) => setGroupDraft({ ...groupDraft, controls })}
+                    />
+                    <ProviderEditor
+                      provider={groupDraft.provider}
+                      onChange={(provider) => setGroupDraft({ ...groupDraft, provider })}
+                    />
+                    <div className="control-grid">
+                      <label className="field">
+                        <span>Monthly quota</span>
+                        <input
+                          type="number"
+                          value={groupDraft.quotaMonthly ?? ''}
+                          onChange={(e) =>
+                            setGroupDraft({
+                              ...groupDraft,
+                              quotaMonthly: e.target.value ? Number(e.target.value) : null,
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="field">
+                        <span>Daily quota</span>
+                        <input
+                          type="number"
+                          value={groupDraft.quotaDaily ?? ''}
+                          onChange={(e) =>
+                            setGroupDraft({
+                              ...groupDraft,
+                              quotaDaily: e.target.value ? Number(e.target.value) : null,
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+                    <div className="actions">
+                      {groupDraft.id ? (
+                        <>
+                          <button className="ghost danger" onClick={handleDeleteGroup}>
+                            Delete group
+                          </button>
+                          <button className="primary" onClick={handleSaveGroup}>
+                            Save group
+                          </button>
+                        </>
+                      ) : (
+                        <button className="primary" onClick={handleCreateGroup}>
+                          Create group
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="empty-state">
+                  Select a group from the Groups table to open details.
+                </div>
+              )}
             </section>
           )}
 
