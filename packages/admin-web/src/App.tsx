@@ -87,6 +87,7 @@ export function App() {
   } = useAdminResourceState(token);
   const [selectedSession, setSelectedSession] = useState<SessionRecord | null>(null);
   const [sessionTranscript, setSessionTranscript] = useState<string>('');
+  const [isSessionDetailModalOpen, setIsSessionDetailModalOpen] = useState(false);
 
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
@@ -524,6 +525,7 @@ export function App() {
     setSessions([]);
     setSelectedSession(null);
     setSessionTranscript('');
+    setIsSessionDetailModalOpen(false);
     setSelectedGroupId('');
     setSelectedUserId('');
     setUsage([]);
@@ -710,6 +712,21 @@ export function App() {
       const data = await fetchSession(token, sessionId);
       setSelectedSession(data.session);
       setSessionTranscript(data.transcript || '');
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenSessionDetailModal = async (sessionId: string) => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const data = await fetchSession(token, sessionId);
+      setSelectedSession(data.session);
+      setSessionTranscript(data.transcript || '');
+      setIsSessionDetailModalOpen(true);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -1161,7 +1178,7 @@ export function App() {
                         </span>
                         <button
                           className="ghost subtle"
-                          onClick={() => handleLoadSession(session.id)}
+                          onClick={() => handleOpenSessionDetailModal(session.id)}
                           type="button"
                         >
                           View
@@ -1577,6 +1594,62 @@ export function App() {
               <button className="primary" type="button" onClick={() => runFlowAction('sessions')}>
                 Go to sessions
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isSessionDetailModalOpen && selectedSession && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Session details"
+          onClick={() => setIsSessionDetailModalOpen(false)}
+        >
+          <div className="modal-card modal-card--wide" onClick={(event) => event.stopPropagation()}>
+            <div className="panel-header">
+              <div>
+                <h2>Session details</h2>
+                <p className="hint">Detailed transcript and metadata for this user session.</p>
+              </div>
+              <button
+                className="ghost subtle"
+                type="button"
+                onClick={() => setIsSessionDetailModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="session-meta">
+              <div>
+                <p className="hint">Session</p>
+                <strong>{selectedSession.sessionId}</strong>
+              </div>
+              <div>
+                <p className="hint">User</p>
+                <strong>{selectedSession.userId}</strong>
+              </div>
+              <div>
+                <p className="hint">Model</p>
+                <strong>{selectedSession.model ?? 'unknown model'}</strong>
+              </div>
+              <div>
+                <p className="hint">Started</p>
+                <strong>{formatTimestamp(selectedSession.startedAt)}</strong>
+              </div>
+              <div>
+                <p className="hint">Ended</p>
+                <strong>{formatTimestamp(selectedSession.endedAt)}</strong>
+              </div>
+              <div>
+                <p className="hint">Uploaded</p>
+                <strong>{formatTimestamp(selectedSession.createdAt)}</strong>
+              </div>
+            </div>
+            <div className="modal-body">
+              <pre className="transcript">
+                {sessionTranscript || 'No transcript body provided.'}
+              </pre>
             </div>
           </div>
         </div>
