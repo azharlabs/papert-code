@@ -88,7 +88,30 @@ export class SkillStorage {
 function getBundledSkillsDir(): string | null {
   try {
     const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-    return path.join(moduleDir, '..', DEFAULT_SKILLS_DIR);
+    const candidates = [
+      // Bundled CLI layout (root dist).
+      path.join(moduleDir, '..', DEFAULT_SKILLS_DIR),
+      // Package-local build layout (packages/cli/dist/src).
+      path.join(moduleDir, '..', 'src', DEFAULT_SKILLS_DIR),
+      // Monorepo development layout (root dist bundle running from source tree).
+      path.join(
+        moduleDir,
+        '..',
+        '..',
+        'packages',
+        'cli',
+        'src',
+        DEFAULT_SKILLS_DIR,
+      ),
+    ];
+
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate)) {
+        return candidate;
+      }
+    }
+
+    return null;
   } catch {
     return null;
   }

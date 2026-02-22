@@ -27,6 +27,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const distDir = join(root, 'dist');
 const coreVendorDir = join(root, 'packages', 'core', 'vendor');
+const bundledSkillsSourceDir = join(root, 'packages', 'cli', 'src', 'skills');
+const bundledSkillsDistDir = join(distDir, 'skills');
 
 // Create the dist directory if it doesn't exist
 if (!existsSync(distDir)) {
@@ -49,6 +51,17 @@ if (existsSync(coreVendorDir)) {
   console.log('Copied vendor directory to dist/');
 } else {
   console.warn(`Warning: Vendor directory not found at ${coreVendorDir}`);
+}
+
+// Copy bundled default skills for first-run installation.
+console.log('Copying bundled skills...');
+if (existsSync(bundledSkillsSourceDir)) {
+  copyRecursiveSync(bundledSkillsSourceDir, bundledSkillsDistDir);
+  console.log('Copied bundled skills to dist/skills');
+} else {
+  console.warn(
+    `Warning: Bundled skills directory not found at ${bundledSkillsSourceDir}`,
+  );
 }
 
 console.log('\n✅ All bundle assets copied to dist/');
