@@ -61,6 +61,8 @@ function migrate(database: Database.Database) {
       updated_at TEXT NOT NULL,
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
+    CREATE UNIQUE INDEX IF NOT EXISTS usage_user_period_start_idx
+      ON usage (user_id, period, period_start);
 
     CREATE TABLE IF NOT EXISTS sessions (
       id TEXT PRIMARY KEY,

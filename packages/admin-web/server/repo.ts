@@ -263,36 +263,26 @@ export class AdminRepo {
   }
 
   upsertUsage(userId: string, period: 'daily' | 'monthly', periodStart: string, tokens: number): UsageRecord {
-    const existing = this.db
-      .prepare(`SELECT * FROM usage WHERE user_id = ? AND period = ? AND period_start = ?`)
-      .get(userId, period, periodStart) as UsageRecord | undefined;
-
-    const timestamp = nowIso();
-    if (existing) {
-      const updatedTokens = existing.tokensUsed + tokens;
-      this.db
-        .prepare(`UPDATE usage SET tokens_used = ?, updated_at = ? WHERE id = ?`)
-        .run(updatedTokens, timestamp, existing.id);
-      return {
-        ...existing,
-        tokensUsed: updatedTokens,
-        updatedAt: timestamp,
-      };
-    }
-
     const id = randomUUID();
+    const timestamp = nowIso();
     this.db
-      .prepare(`INSERT INTO usage (id, user_id, period, period_start, tokens_used, updated_at) VALUES (?, ?, ?, ?, ?, ?)`)
+      .prepare(
+        `INSERT INTO usage (id, user_id, period, period_start, tokens_used, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON CONFLICT(user_id, period, period_start)
+         DO UPDATE SET
+           tokens_used = usage.tokens_used + excluded.tokens_used,
+           updated_at = excluded.updated_at`,
+      )
       .run(id, userId, period, periodStart, tokens, timestamp);
 
-    return {
-      id,
-      userId,
-      period,
-      periodStart,
-      tokensUsed: tokens,
-      updatedAt: timestamp,
-    };
+    const row = this.db
+      .prepare(`SELECT * FROM usage WHERE user_id = ? AND period = ? AND period_start = ?`)
+      .get(userId, period, periodStart);
+    if (!row) {
+      throw new Error('usage_upsert_failed');
+    }
+    return this.mapUsage(row);
   }
 
   getUsage(userId: string, period: 'daily' | 'monthly', periodStart: string): UsageRecord | null {

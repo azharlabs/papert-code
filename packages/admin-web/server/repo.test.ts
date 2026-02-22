@@ -74,4 +74,30 @@ describe('AdminRepo', () => {
       (updated as unknown as { requested_monthly?: number }).requested_monthly,
     ).toBeUndefined();
   });
+
+  it('coalesces usage writes into one row per user/period bucket', () => {
+    const repo = createRepo();
+    const group = repo.createGroup({
+      name: 'Data',
+      controls: {},
+      provider: {},
+    });
+    const user = repo.createUser({
+      email: 'usage@company.com',
+      passwordHash: 'hash',
+      role: 'user',
+      groupId: group.id,
+      controls: {},
+      provider: {},
+    });
+
+    const periodStart = '2026-02-01T00:00:00.000Z';
+    repo.upsertUsage(user.id, 'monthly', periodStart, 40);
+    const second = repo.upsertUsage(user.id, 'monthly', periodStart, 60);
+    const usageRows = repo.listUsage(user.id).filter((row) => row.period === 'monthly');
+
+    expect(usageRows).toHaveLength(1);
+    expect(second.tokensUsed).toBe(100);
+    expect(usageRows[0]?.tokensUsed).toBe(100);
+  });
 });
