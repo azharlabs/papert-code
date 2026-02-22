@@ -49,6 +49,9 @@ const formatTimestamp = (value?: string | null) =>
   value ? new Date(value).toLocaleString() : '—';
 
 export function App() {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    () => localStorage.getItem('papert_admin_sidebar_collapsed') === '1',
+  );
   const [token, setToken] = useState(
     () => localStorage.getItem('papert_admin_token') || '',
   );
@@ -197,16 +200,23 @@ export function App() {
   );
 
   const navItems = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'users', label: 'Users' },
-    { id: 'groups', label: 'Groups' },
-    { id: 'usage', label: 'Usage' },
-    { id: 'sessions', label: 'Sessions' },
-    { id: 'settings', label: 'Settings' },
+    { id: 'overview', label: 'Overview', shortLabel: 'OV' },
+    { id: 'users', label: 'Users', shortLabel: 'US' },
+    { id: 'groups', label: 'Groups', shortLabel: 'GR' },
+    { id: 'usage', label: 'Usage', shortLabel: 'UG' },
+    { id: 'sessions', label: 'Sessions', shortLabel: 'SE' },
+    { id: 'settings', label: 'Settings', shortLabel: 'ST' },
   ] as const;
 
   const activeLabel =
     navItems.find((item) => item.id === activeSection)?.label ?? 'Overview';
+
+  useEffect(() => {
+    localStorage.setItem(
+      'papert_admin_sidebar_collapsed',
+      isSidebarCollapsed ? '1' : '0',
+    );
+  }, [isSidebarCollapsed]);
 
 
 
@@ -625,14 +635,23 @@ export function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <aside className="admin-nav">
         <div className="nav-brand">
           <div className="logo-badge" />
-          <div>
+          <div className="nav-brand__copy">
             <p className="nav-brand__title">Papert Admin</p>
             <p className="nav-brand__subtitle">Control plane</p>
           </div>
+          <button
+            className="sidebar-toggle"
+            type="button"
+            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+            aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isSidebarCollapsed ? '>>' : '<<'}
+          </button>
         </div>
         <div className="nav-items">
           {navItems.map((item) => (
@@ -641,6 +660,9 @@ export function App() {
               type="button"
               className={`nav-item ${activeSection === item.id ? 'active' : ''}`}
               onClick={() => setActiveSection(item.id)}
+              aria-label={item.label}
+              title={item.label}
+              data-short-label={item.shortLabel}
             >
               {item.label}
             </button>
