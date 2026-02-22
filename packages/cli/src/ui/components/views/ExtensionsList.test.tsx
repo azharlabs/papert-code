@@ -10,10 +10,15 @@ import { useUIState } from '../../contexts/UIStateContext.js';
 import { ExtensionUpdateState } from '../../state/extensions.js';
 import { ExtensionsList } from './ExtensionsList.js';
 import { createMockCommandContext } from '../../../test-utils/mockCommandContext.js';
+import { loadUserExtensions } from '../../../config/extension.js';
 
 vi.mock('../../contexts/UIStateContext.js');
+vi.mock('../../../config/extension.js', () => ({
+  loadUserExtensions: vi.fn(),
+}));
 
 const mockUseUIState = vi.mocked(useUIState);
+const mockLoadUserExtensions = vi.mocked(loadUserExtensions);
 
 const mockExtensions = [
   { name: 'ext-one', version: '1.0.0', isActive: true },
@@ -27,10 +32,21 @@ describe('<ExtensionsList />', () => {
   });
 
   const mockUIState = (
-    extensions: unknown[],
+    extensions: Array<{ name: string; version: string }>,
     extensionsUpdateState: Map<string, ExtensionUpdateState>,
     disabledExtensions: string[] = [],
   ) => {
+    mockLoadUserExtensions.mockReturnValue(
+      extensions.map((extension) => ({
+        path: `/tmp/${extension.name}`,
+        contextFiles: [],
+        config: {
+          name: extension.name,
+          version: extension.version,
+        },
+      })) as ReturnType<typeof loadUserExtensions>,
+    );
+
     mockUseUIState.mockReturnValue({
       commandContext: createMockCommandContext({
         services: {

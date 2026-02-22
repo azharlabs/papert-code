@@ -123,7 +123,8 @@ describe('TaskTool', () => {
       expect(mockSubagentManager.addChangeListener).toHaveBeenCalledTimes(1);
     });
 
-    it('should update description with available subagents', () => {
+    it('should update description with available subagents', async () => {
+      await taskTool.refreshSubagents();
       expect(taskTool.description).toContain('file-search');
       expect(taskTool.description).toContain(
         'Specialized agent for searching and analyzing files',
@@ -138,7 +139,7 @@ describe('TaskTool', () => {
       vi.mocked(mockSubagentManager.listSubagents).mockResolvedValue([]);
 
       const emptyTaskTool = new TaskTool(config);
-      await vi.runAllTimersAsync();
+      await emptyTaskTool.refreshSubagents();
 
       expect(emptyTaskTool.description).toContain(
         'No subagents are currently configured',
@@ -164,7 +165,8 @@ describe('TaskTool', () => {
   });
 
   describe('schema generation', () => {
-    it('should generate schema with subagent names as enum', () => {
+    it('should generate schema with subagent names as enum', async () => {
+      await taskTool.refreshSubagents();
       const schema = taskTool.schema;
       const properties = schema.parametersJsonSchema as {
         properties: {

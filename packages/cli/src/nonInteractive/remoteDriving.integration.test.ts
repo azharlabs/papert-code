@@ -47,6 +47,7 @@ describe('stream-json remote driving init', () => {
     async () => {
     process.env['PAPERT_REMOTE_URL'] = 'http://remote.example:41242';
     process.env['PAPERT_REMOTE_TOKEN'] = 'server-token-xyz';
+    process.env['PAPERT_REMOTE_ALLOW_INSECURE_HTTP'] = '1';
 
     // Ensure we never hit the network in this test.
     // Session initialization uses global fetch; we stub it below.
@@ -84,7 +85,7 @@ describe('stream-json remote driving init', () => {
 
     expect((config as any)._creds).toEqual({
       apiKey: 'sess-token-remote',
-      baseUrl: 'http://remote.example:41242',
+      baseUrl: 'http://remote.example:41242/',
       extraHeaders: {
         'x-papert-session-id': 'sid-remote',
       },

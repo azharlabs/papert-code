@@ -145,6 +145,7 @@ describe('executeToolCall', () => {
       callId: 'call2',
       error: new Error(expectedErrorMessage),
       errorType: ToolErrorType.TOOL_NOT_REGISTERED,
+      reason: expectedErrorMessage,
       resultDisplay: expectedErrorMessage,
       contentLength: expectedErrorMessage.length,
       responseParts: [
@@ -183,6 +184,7 @@ describe('executeToolCall', () => {
       callId: 'call3',
       error: new Error('Invalid parameters'),
       errorType: ToolErrorType.INVALID_TOOL_PARAMS,
+      reason: 'Invalid parameters',
       responseParts: [
         {
           functionResponse: {
@@ -227,6 +229,7 @@ describe('executeToolCall', () => {
       callId: 'call4',
       error: new Error('Execution failed'),
       errorType: ToolErrorType.EXECUTION_FAILED,
+      reason: 'Execution failed',
       responseParts: [
         {
           functionResponse: {
@@ -264,6 +267,7 @@ describe('executeToolCall', () => {
       callId: 'call5',
       error: new Error('Something went very wrong'),
       errorType: ToolErrorType.UNHANDLED_EXCEPTION,
+      reason: 'Something went very wrong',
       resultDisplay: 'Something went very wrong',
       contentLength: 'Something went very wrong'.length,
       responseParts: [

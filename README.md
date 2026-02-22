@@ -2,7 +2,6 @@
 
 [![npm version](https://img.shields.io/npm/v/%40papert-code%2Fpapert-code?logo=npm&label=npm)](https://www.npmjs.com/package/@papert-code/papert-code)
 [![npm downloads](https://img.shields.io/npm/dm/%40papert-code%2Fpapert-code?logo=npm&label=downloads)](https://www.npmjs.com/package/@papert-code/papert-code)
-[![Integration deflake](https://img.shields.io/github/actions/workflow/status/azharlabs/papert-code/integration-deflake.yml?branch=main&label=integration-deflake)](https://github.com/azharlabs/papert-code/actions/workflows/integration-deflake.yml)
 [![License](https://img.shields.io/github/license/azharlabs/papert-code)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/azharlabs/papert-code?style=social)](https://github.com/azharlabs/papert-code/stargazers)
 [![Forks](https://img.shields.io/github/forks/azharlabs/papert-code?style=social)](https://github.com/azharlabs/papert-code/network/members)

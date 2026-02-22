@@ -7,19 +7,27 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseArguments } from './config.js';
 import type { Settings } from './settings.js';
+import { EventEmitter } from 'node:events';
+import type { ChildProcess } from 'node:child_process';
+import { __setSpawnForServer, __resetSpawnForServer } from '../commands/server.js';
+import { __setSpawnForConnect, __resetSpawnForConnect } from '../commands/connect.js';
 
 describe('parseArguments (subcommands)', () => {
-  it('should not exit early for `server` subcommand (yargs should run handler)', async () => {
+  const child = new EventEmitter() as unknown as ChildProcess;
+
+  it('should invoke the `server` subcommand handler', async () => {
     const exitSpy = vi
       .spyOn(process, 'exit')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .mockImplementation((() => undefined) as any);
+    __setSpawnForServer(vi.fn().mockReturnValue(child as any));
 
     process.argv = ['node', 'dist/index.js', 'server', '--port', '41242', '--token', 'x'];
 
     await parseArguments({} as Settings);
 
-    expect(exitSpy).not.toHaveBeenCalled();
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    __resetSpawnForServer();
   });
 
   it('should not exit early for `connect` subcommand (yargs should run handler)', async () => {
@@ -27,12 +35,14 @@ describe('parseArguments (subcommands)', () => {
       .spyOn(process, 'exit')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .mockImplementation((() => undefined) as any);
+    __setSpawnForConnect(vi.fn().mockReturnValue(child as any));
 
     process.argv = ['node', 'dist/index.js', 'connect', 'http://localhost:41242', '--token', 'x'];
 
     await parseArguments({} as Settings);
 
     expect(exitSpy).not.toHaveBeenCalled();
+    __resetSpawnForConnect();
   });
 
   it('should parse hidden --remote-control flag (used by `papert connect` child process)', async () => {
