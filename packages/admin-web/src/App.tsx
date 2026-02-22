@@ -104,6 +104,7 @@ export function App() {
   const [createUserDraft, setCreateUserDraft] = useState<UserRecord | null>(null);
   const [createUserPassword, setCreateUserPassword] = useState('');
   const [isFlowModalOpen, setIsFlowModalOpen] = useState(false);
+  const [userSessionsPage, setUserSessionsPage] = useState(1);
   const [groupMembersPage, setGroupMembersPage] = useState(1);
   const [activeSection, setActiveSection] = useState<
     | 'overview'
@@ -158,6 +159,22 @@ export function App() {
     () => sessions.filter((session) => session.userId === selectedUserId),
     [sessions, selectedUserId],
   );
+  const userSessionsPageSize = 6;
+  const selectedUserSessionsSorted = useMemo(
+    () =>
+      [...selectedUserSessions].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
+    [selectedUserSessions],
+  );
+  const userSessionsPageCount = Math.max(
+    1,
+    Math.ceil(selectedUserSessionsSorted.length / userSessionsPageSize),
+  );
+  const pagedUserSessions = useMemo(() => {
+    const start = (userSessionsPage - 1) * userSessionsPageSize;
+    return selectedUserSessionsSorted.slice(start, start + userSessionsPageSize);
+  }, [userSessionsPage, selectedUserSessionsSorted]);
   const selectedUserGroupName = useMemo(() => {
     if (!selectedUser?.groupId) return 'No group';
     return groups.find((group) => group.id === selectedUser.groupId)?.name ?? selectedUser.groupId;
@@ -286,6 +303,16 @@ export function App() {
     () => (sessions.length ? Math.round(usageSessionTotals.total / sessions.length) : 0),
     [sessions.length, usageSessionTotals.total],
   );
+
+  useEffect(() => {
+    setUserSessionsPage(1);
+  }, [selectedUserId]);
+
+  useEffect(() => {
+    if (userSessionsPage > userSessionsPageCount) {
+      setUserSessionsPage(userSessionsPageCount);
+    }
+  }, [userSessionsPage, userSessionsPageCount]);
 
   useEffect(() => {
     setGroupMembersPage(1);
@@ -1193,7 +1220,7 @@ export function App() {
                     {selectedUserSessions.length === 0 && (
                       <p className="hint">No sessions recorded yet for this user.</p>
                     )}
-                    {selectedUserSessions.map((session) => (
+                    {pagedUserSessions.map((session) => (
                       <div key={session.id} className="session-row">
                         <span>{session.sessionId}</span>
                         <span>{session.model ?? 'unknown model'}</span>
@@ -1210,6 +1237,29 @@ export function App() {
                         </button>
                       </div>
                     ))}
+                    <div className="pagination-controls">
+                      <p className="hint">
+                        Page {userSessionsPage} of {userSessionsPageCount}
+                      </p>
+                      <button
+                        className="ghost subtle"
+                        type="button"
+                        onClick={() => setUserSessionsPage((page) => Math.max(1, page - 1))}
+                        disabled={userSessionsPage <= 1}
+                      >
+                        Previous
+                      </button>
+                      <button
+                        className="ghost subtle"
+                        type="button"
+                        onClick={() =>
+                          setUserSessionsPage((page) => Math.min(userSessionsPageCount, page + 1))
+                        }
+                        disabled={userSessionsPage >= userSessionsPageCount}
+                      >
+                        Next
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
