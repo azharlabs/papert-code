@@ -50,6 +50,8 @@ export interface UsageRecord {
   period: 'daily' | 'monthly';
   periodStart: string;
   tokensUsed: number;
+  promptTokens: number;
+  completionTokens: number;
   updatedAt: string;
 }
 

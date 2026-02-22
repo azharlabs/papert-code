@@ -23,6 +23,9 @@ This document summarizes the hardening and maintainability upgrades implemented 
 - Usage accounting is now atomic and race-safe:
   - Added unique index on `(user_id, period, period_start)`.
   - Usage writes use SQL `ON CONFLICT` upsert accumulation.
+- Usage accounting now tracks token breakdown fields:
+  - `usage` table stores `prompt_tokens` and `completion_tokens` in addition to `tokens_used`.
+  - `/api/v1/user/usage` persists all three counters per daily/monthly bucket.
 - Session transcript storage is now configurable:
   - Added `PAPERT_ADMIN_SESSIONS_DIR` (default: `./data/sessions`).
 - List endpoints now support pagination/filtering:
@@ -39,6 +42,11 @@ This document summarizes the hardening and maintainability upgrades implemented 
   - `src/components/ProviderEditor.tsx`
 - Centralized admin resource fetching in:
   - `src/hooks/useAdminResourceState.ts`
+- Added metrics helpers in:
+  - `src/lib/userMetrics.ts` (session token parsing, totals, date-wise rollups).
+- User click flow now opens a dedicated metrics page:
+  - From `Users`, clicking a user opens `User metrics`.
+  - The page shows total/input/output tokens and date-wise sessions/token rows.
 
 ## Quality gates
 

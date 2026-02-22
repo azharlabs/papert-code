@@ -58,11 +58,27 @@ export function applyUsage(
   repo: AdminRepo,
   user: UserRecord,
   tokens: number,
+  promptTokens = 0,
+  completionTokens = 0,
   now: Date = new Date(),
 ): { monthly: UsageRecord; daily: UsageRecord } {
   const monthlyStart = getPeriodStart('monthly', now);
   const dailyStart = getPeriodStart('daily', now);
-  const monthly = repo.upsertUsage(user.id, 'monthly', monthlyStart, tokens);
-  const daily = repo.upsertUsage(user.id, 'daily', dailyStart, tokens);
+  const monthly = repo.upsertUsage(
+    user.id,
+    'monthly',
+    monthlyStart,
+    tokens,
+    promptTokens,
+    completionTokens,
+  );
+  const daily = repo.upsertUsage(
+    user.id,
+    'daily',
+    dailyStart,
+    tokens,
+    promptTokens,
+    completionTokens,
+  );
   return { monthly, daily };
 }

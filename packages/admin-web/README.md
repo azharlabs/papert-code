@@ -4,6 +4,7 @@ This package provides a lightweight admin control plane for Papert Code. It ship
 
 - A React + Vite admin UI.
 - A Node/Express API server that stores user policy overrides.
+- A dedicated user metrics page (date-wise sessions + input/output/total token usage).
 
 ## Quick start
 
@@ -74,10 +75,27 @@ The stored data uses SQLite with the following logical shape:
 ```
 groups:  name, controls_json, provider_json, quota_monthly, quota_daily
 users:   email, password_hash, role, group_id, self_managed, provider_json, controls_json
-usage:   user_id, period, period_start, tokens_used
+usage:   user_id, period, period_start, tokens_used, prompt_tokens, completion_tokens
 sessions: user_id, session_id, usage_json, transcript_path
 quota_requests: user_id, requested_monthly, status
 ```
+
+`POST /api/v1/user/usage` accepts:
+
+- `totalTokens` (required)
+- `promptTokens` (optional; defaults to `0`)
+- `completionTokens` (optional; defaults to `0`)
+
+## UI flow: user metrics page
+
+1. Open the `Users` tab.
+2. Click any user row.
+3. The app navigates to `User metrics` for that user.
+4. Review:
+   - total tokens so far
+   - input/output token totals
+   - date-wise rows with session counts and token totals
+5. Click `Back to users` to return to policy editing.
 
 ## CLI integration (override URL)
 

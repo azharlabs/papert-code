@@ -655,6 +655,30 @@ textarea {
   background: #fff;
 }
 
+.user-metrics-body {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.user-metrics-summary {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.user-metrics-history {
+  margin-top: 0;
+}
+
+.user-metrics-head,
+.user-metrics-row {
+  grid-template-columns: minmax(160px, 1.2fr) repeat(4, minmax(120px, 1fr));
+}
+
+.user-metrics-empty {
+  padding: 12px 14px;
+}
+
 .table-head,
 .table-row {
   display: grid;
@@ -973,6 +997,15 @@ textarea {
   .panel-split,
   .usage-summary-row {
     display: block;
+  }
+
+  .user-metrics-history {
+    overflow-x: auto;
+  }
+
+  .user-metrics-head,
+  .user-metrics-row {
+    min-width: 760px;
   }
 
   .modal-backdrop {

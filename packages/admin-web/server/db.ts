@@ -58,6 +58,8 @@ function migrate(database: Database.Database) {
       period TEXT NOT NULL,
       period_start TEXT NOT NULL,
       tokens_used INTEGER NOT NULL DEFAULT 0,
+      prompt_tokens INTEGER NOT NULL DEFAULT 0,
+      completion_tokens INTEGER NOT NULL DEFAULT 0,
       updated_at TEXT NOT NULL,
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
@@ -89,4 +91,20 @@ function migrate(database: Database.Database) {
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
   `);
+
+  const usageColumns = database
+    .prepare(`PRAGMA table_info(usage)`)
+    .all() as Array<{ name: string }>;
+  const usageColumnNames = new Set(usageColumns.map((column) => column.name));
+
+  if (!usageColumnNames.has('prompt_tokens')) {
+    database.exec(
+      `ALTER TABLE usage ADD COLUMN prompt_tokens INTEGER NOT NULL DEFAULT 0`,
+    );
+  }
+  if (!usageColumnNames.has('completion_tokens')) {
+    database.exec(
+      `ALTER TABLE usage ADD COLUMN completion_tokens INTEGER NOT NULL DEFAULT 0`,
+    );
+  }
 }

@@ -41,6 +41,8 @@ export interface UsageRecord {
   period: 'daily' | 'monthly';
   periodStart: string;
   tokensUsed: number;
+  promptTokens: number;
+  completionTokens: number;
   updatedAt: string;
 }
 
@@ -111,6 +113,8 @@ interface UsageRow {
   period: 'daily' | 'monthly';
   period_start: string;
   tokens_used: number;
+  prompt_tokens: number;
+  completion_tokens: number;
   updated_at: string;
 }
 
@@ -319,19 +323,37 @@ export class AdminRepo {
     return result.changes > 0;
   }
 
-  upsertUsage(userId: string, period: 'daily' | 'monthly', periodStart: string, tokens: number): UsageRecord {
+  upsertUsage(
+    userId: string,
+    period: 'daily' | 'monthly',
+    periodStart: string,
+    tokens: number,
+    promptTokens = 0,
+    completionTokens = 0,
+  ): UsageRecord {
     const id = randomUUID();
     const timestamp = nowIso();
     this.db
       .prepare(
-        `INSERT INTO usage (id, user_id, period, period_start, tokens_used, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?)
+        `INSERT INTO usage (id, user_id, period, period_start, tokens_used, prompt_tokens, completion_tokens, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(user_id, period, period_start)
          DO UPDATE SET
            tokens_used = usage.tokens_used + excluded.tokens_used,
+           prompt_tokens = usage.prompt_tokens + excluded.prompt_tokens,
+           completion_tokens = usage.completion_tokens + excluded.completion_tokens,
            updated_at = excluded.updated_at`,
       )
-      .run(id, userId, period, periodStart, tokens, timestamp);
+      .run(
+        id,
+        userId,
+        period,
+        periodStart,
+        tokens,
+        promptTokens,
+        completionTokens,
+        timestamp,
+      );
 
     const row = this.db
       .prepare(`SELECT * FROM usage WHERE user_id = ? AND period = ? AND period_start = ?`)
@@ -507,6 +529,8 @@ export class AdminRepo {
       period: row.period,
       periodStart: row.period_start,
       tokensUsed: row.tokens_used,
+      promptTokens: row.prompt_tokens,
+      completionTokens: row.completion_tokens,
       updatedAt: row.updated_at,
     };
   }

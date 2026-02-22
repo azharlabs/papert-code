@@ -390,7 +390,13 @@ app.post('/api/v1/user/usage', requireAuth, (req, res) => {
     return res.status(404).json({ error: 'user_not_found' });
   }
 
-  applyUsage(repo, user, parsed.data.totalTokens);
+  applyUsage(
+    repo,
+    user,
+    parsed.data.totalTokens,
+    parsed.data.promptTokens ?? 0,
+    parsed.data.completionTokens ?? 0,
+  );
 
   const resolved = resolveUserControls(user.id);
   return res.json({

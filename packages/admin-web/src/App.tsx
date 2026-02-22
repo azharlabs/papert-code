@@ -23,6 +23,12 @@ import { PolicyEditor } from './components/PolicyEditor';
 import { ProviderEditor } from './components/ProviderEditor';
 import { Toggle } from './components/Toggle';
 import { useAdminResourceState } from './hooks/useAdminResourceState';
+import {
+  buildDailyUserMetrics,
+  buildUserTokenTotals,
+  formatDateKey,
+  getSessionTokenSummary,
+} from './lib/userMetrics';
 
 function emptyControls(): AdminControls {
   return {
@@ -91,6 +97,7 @@ export function App() {
   const [activeSection, setActiveSection] = useState<
     | 'overview'
     | 'users'
+    | 'userMetrics'
     | 'groups'
     | 'usage'
     | 'sessions'
@@ -116,10 +123,8 @@ export function App() {
   const totalTokensReported = useMemo(
     () =>
       sessions.reduce((sum, session) => {
-        const tokens = typeof session.usage?.tokensUsed === 'number'
-          ? session.usage.tokensUsed
-          : 0;
-        return sum + tokens;
+        const tokens = getSessionTokenSummary(session.usage);
+        return sum + tokens.totalTokens;
       }, 0),
     [sessions],
   );
@@ -141,6 +146,16 @@ export function App() {
   const selectedUserSessions = useMemo(
     () => sessions.filter((session) => session.userId === selectedUserId),
     [sessions, selectedUserId],
+  );
+
+  const selectedUserTokenTotals = useMemo(
+    () => buildUserTokenTotals(usage),
+    [usage],
+  );
+
+  const selectedUserDailyMetrics = useMemo(
+    () => buildDailyUserMetrics(usage, selectedUserSessions),
+    [usage, selectedUserSessions],
   );
 
   const usageSummary = useMemo(
@@ -202,14 +217,16 @@ export function App() {
   const navItems = [
     { id: 'overview', label: 'Overview', shortLabel: 'OV' },
     { id: 'users', label: 'Users', shortLabel: 'US' },
+    { id: 'userMetrics', label: 'User metrics', shortLabel: 'UM' },
     { id: 'groups', label: 'Groups', shortLabel: 'GR' },
     { id: 'usage', label: 'Usage', shortLabel: 'UG' },
     { id: 'sessions', label: 'Sessions', shortLabel: 'SE' },
     { id: 'settings', label: 'Settings', shortLabel: 'ST' },
   ] as const;
 
-  const activeLabel =
-    navItems.find((item) => item.id === activeSection)?.label ?? 'Overview';
+  const activeLabel = activeSection === 'userMetrics' && selectedUser
+    ? `${selectedUser.email} metrics`
+    : navItems.find((item) => item.id === activeSection)?.label ?? 'Overview';
 
   useEffect(() => {
     localStorage.setItem(
@@ -594,7 +611,7 @@ export function App() {
 
   const handleSelectUser = (id: string) => {
     setSelectedUserId(id);
-    setActiveSection('users');
+    setActiveSection('userMetrics');
   };
 
   const handleSelectGroup = (id: string) => {
@@ -976,7 +993,9 @@ export function App() {
               <div className="panel-header">
                 <div>
                   <h2>User directory</h2>
-                  <p className="hint">Browse users and adjust policies.</p>
+                  <p className="hint">
+                    Click a user row to open metrics. Use this page to edit policies.
+                  </p>
                 </div>
                 <button className="primary" onClick={handleNewUser} type="button">
                   + New user
@@ -1161,9 +1180,7 @@ export function App() {
                         <span>{session.model ?? 'unknown model'}</span>
                         <span>{formatTimestamp(session.startedAt)}</span>
                         <span>
-                          {typeof session.usage?.tokensUsed === 'number'
-                            ? session.usage.tokensUsed.toLocaleString()
-                            : '—'}
+                          {getSessionTokenSummary(session.usage).totalTokens.toLocaleString()}
                         </span>
                         <button
                           className="ghost subtle"
@@ -1179,6 +1196,91 @@ export function App() {
               )}
             </section>
           )}
+
+          {activeSection === 'userMetrics' && (
+            <section className="panel user-metrics-section">
+              <div className="panel-header">
+                <div>
+                  <h2>{selectedUser ? `${selectedUser.email} usage metrics` : 'User metrics'}</h2>
+                  <p className="hint">
+                    Token totals, daily usage, and sessions for the selected user.
+                  </p>
+                </div>
+                <div className="flow-node__actions">
+                  <button
+                    className="ghost subtle"
+                    type="button"
+                    onClick={() => setActiveSection('users')}
+                  >
+                    Back to users
+                  </button>
+                  <button
+                    className="ghost subtle"
+                    type="button"
+                    onClick={() => setActiveSection('sessions')}
+                  >
+                    Open sessions
+                  </button>
+                </div>
+              </div>
+
+              {!selectedUser ? (
+                <div className="empty-state">
+                  Select a user from the Users tab to view metrics.
+                </div>
+              ) : (
+                <div className="user-metrics-body">
+                  <div className="usage-summary-row user-metrics-summary">
+                    <article className="usage-card">
+                      <p>Total tokens so far</p>
+                      <strong>{selectedUserTokenTotals.totalTokens.toLocaleString()}</strong>
+                      <span className="hint">Across all monthly buckets</span>
+                    </article>
+                    <article className="usage-card">
+                      <p>Input tokens</p>
+                      <strong>{selectedUserTokenTotals.inputTokens.toLocaleString()}</strong>
+                      <span className="hint">Prompt tokens reported</span>
+                    </article>
+                    <article className="usage-card">
+                      <p>Output tokens</p>
+                      <strong>{selectedUserTokenTotals.outputTokens.toLocaleString()}</strong>
+                      <span className="hint">Completion tokens reported</span>
+                    </article>
+                    <article className="usage-card">
+                      <p>Sessions</p>
+                      <strong>{selectedUserSessions.length.toLocaleString()}</strong>
+                      <span className="hint">Total uploaded sessions</span>
+                    </article>
+                  </div>
+
+                  <div className="usage-history user-metrics-history">
+                    <div className="table-head user-metrics-head">
+                      <span>Date</span>
+                      <span>Sessions</span>
+                      <span>Total tokens</span>
+                      <span>Input tokens</span>
+                      <span>Output tokens</span>
+                    </div>
+                    {selectedUserDailyMetrics.length === 0 && (
+                      <p className="hint user-metrics-empty">
+                        No daily usage or session data found for this user.
+                      </p>
+                    )}
+                    {selectedUserDailyMetrics.map((row) => (
+                      <div key={row.date} className="table-row user-metrics-row">
+                        <span>{formatDateKey(row.date)}</span>
+                        <span>{row.sessionCount.toLocaleString()}</span>
+                        <span>{row.totalTokens.toLocaleString()}</span>
+                        <span>{row.inputTokens.toLocaleString()}</span>
+                        <span>{row.outputTokens.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
           {activeSection === 'groups' && (
             <section className="panel groups-section">
               <div className="panel-header">
@@ -1399,9 +1501,7 @@ export function App() {
                           <div className="list-row__meta">
                             <span>{formatTimestamp(session.startedAt)}</span>
                             <span className="hint">
-                              {typeof session.usage?.tokensUsed === 'number'
-                                ? session.usage.tokensUsed.toLocaleString()
-                                : '—'}
+                              {getSessionTokenSummary(session.usage).totalTokens.toLocaleString()}
                               {' '}tokens
                             </span>
                           </div>

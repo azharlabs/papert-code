@@ -93,12 +93,16 @@ describe('AdminRepo', () => {
     });
 
     const periodStart = '2026-02-01T00:00:00.000Z';
-    repo.upsertUsage(user.id, 'monthly', periodStart, 40);
-    const second = repo.upsertUsage(user.id, 'monthly', periodStart, 60);
+    repo.upsertUsage(user.id, 'monthly', periodStart, 40, 30, 10);
+    const second = repo.upsertUsage(user.id, 'monthly', periodStart, 60, 20, 40);
     const usageRows = repo.listUsage(user.id).filter((row) => row.period === 'monthly');
 
     expect(usageRows).toHaveLength(1);
     expect(second.tokensUsed).toBe(100);
+    expect(second.promptTokens).toBe(50);
+    expect(second.completionTokens).toBe(50);
     expect(usageRows[0]?.tokensUsed).toBe(100);
+    expect(usageRows[0]?.promptTokens).toBe(50);
+    expect(usageRows[0]?.completionTokens).toBe(50);
   });
 });
