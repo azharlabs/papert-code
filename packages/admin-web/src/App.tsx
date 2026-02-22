@@ -7,7 +7,6 @@ import type {
   UserRecord,
 } from './types';
 import {
-  approveQuotaRequest,
   createGroup,
   createUser,
   deleteGroup,
@@ -15,7 +14,6 @@ import {
   fetchSession,
   fetchUsage,
   login,
-  rejectQuotaRequest,
   updateGroup,
   updateUser,
 } from './api/client';
@@ -273,19 +271,6 @@ export function App() {
       isSidebarCollapsed ? '1' : '0',
     );
   }, [isSidebarCollapsed]);
-
-
-
-  const recentSessions = useMemo(
-    () =>
-      [...sessions]
-        .sort((a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        )
-        .slice(0, 6),
-    [sessions],
-  );
-
   const filteredUsers = useMemo(() => {
     const query = userSearch.trim().toLowerCase();
     if (!query) return users;
@@ -620,32 +605,6 @@ export function App() {
     }
   };
 
-  const handleApproveRequest = async (id: string) => {
-    if (!token) return;
-    setLoading(true);
-    try {
-      const updated = await approveQuotaRequest(token, id);
-      setQuotaRequests((prev) =>
-        prev.map((req) => (req.id === updated.id ? updated : req)),
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRejectRequest = async (id: string) => {
-    if (!token) return;
-    setLoading(true);
-    try {
-      const updated = await rejectQuotaRequest(token, id);
-      setQuotaRequests((prev) =>
-        prev.map((req) => (req.id === updated.id ? updated : req)),
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleLoadSession = async (sessionId: string) => {
     if (!token) return;
     setLoading(true);
@@ -892,118 +851,6 @@ export function App() {
                   </article>
                 ))}
               </section>
-              <div className="overview-grid">
-                <article className="panel">
-                  <div className="panel-header">
-                    <div>
-                      <h2>Recent sessions</h2>
-                      <p className="hint">Sessions uploaded to the admin control plane.</p>
-                    </div>
-                  </div>
-                  {recentSessions.length === 0 ? (
-                    <p className="hint">No sessions yet.</p>
-                  ) : (
-                    <div className="session-list overview">
-                      {recentSessions.map((session) => (
-                        <div key={session.id} className="session-row overview">
-                          <div>
-                            <strong>{session.sessionId}</strong>
-                            <p className="hint">
-                              {session.userId} • {session.model ?? 'model unknown'}
-                            </p>
-                          </div>
-                          <div className="session-row__actions">
-                            <p className="hint">{formatTimestamp(session.startedAt)}</p>
-                            <button
-                              className="ghost subtle"
-                              onClick={() => handleLoadSession(session.id)}
-                              type="button"
-                            >
-                              Load
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </article>
-                <article className="panel">
-                  <div className="panel-header">
-                    <div>
-                      <h2>Quota requests</h2>
-                      <p className="hint">Approve pending token increases.</p>
-                    </div>
-                  </div>
-                  {quotaRequests.length === 0 ? (
-                    <p className="hint">No outstanding requests.</p>
-                  ) : (
-                    <div className="quota-list overview">
-                      {quotaRequests.map((req) => (
-                        <div key={req.id} className="quota-card">
-                          <div>
-                            <strong>{req.userId}</strong>
-                            <p className="hint">{req.requestedMonthly ?? '—'} tokens requested</p>
-                          </div>
-                          <div className="chip-row">
-                            <span className={`status-pill ${req.status}`}>{req.status}</span>
-                            <div className="chip-row__actions">
-                              <button
-                                className="ghost subtle"
-                                onClick={() => handleApproveRequest(req.id)}
-                                type="button"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                className="ghost subtle danger"
-                                onClick={() => handleRejectRequest(req.id)}
-                                type="button"
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </article>
-                <article className="panel">
-                  <div className="panel-header">
-                    <div>
-                      <h2>Last transcript</h2>
-                      <p className="hint">Review the most recent transcript you opened.</p>
-                    </div>
-                  </div>
-                  {selectedSession ? (
-                    <>
-                      <div className="session-meta">
-                        <div>
-                          <p className="hint">Session</p>
-                          <strong>{selectedSession.sessionId}</strong>
-                        </div>
-                        <div>
-                          <p className="hint">User</p>
-                          <strong>{selectedSession.userId}</strong>
-                        </div>
-                        <div>
-                          <p className="hint">Model</p>
-                          <strong>{selectedSession.model ?? 'unknown model'}</strong>
-                        </div>
-                        <div>
-                          <p className="hint">Uploaded</p>
-                          <strong>{formatTimestamp(selectedSession.createdAt)}</strong>
-                        </div>
-                      </div>
-                      <pre className="transcript">
-                        {sessionTranscript || 'No transcript body provided.'}
-                      </pre>
-                    </>
-                  ) : (
-                    <p className="hint">Load a session to preview the transcript.</p>
-                  )}
-                </article>
-              </div>
             </>
           )}
 
