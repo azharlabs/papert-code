@@ -6,6 +6,7 @@ import * as fs from 'node:fs/promises';
 import { readAdminServerEnv } from './env.js';
 import { getDb } from './db.js';
 import { AdminRepo } from './repo.js';
+import { toPublicUser } from './serializers.js';
 import {
   GroupSchema,
   LoginSchema,
@@ -403,7 +404,7 @@ app.post('/api/v1/user/quota-requests', requireAuth, (req, res) => {
 
 // Admin endpoints
 app.get('/api/v1/admin/users', requireAuth, requireAllowlist, requireAdminRole, (_req, res) => {
-  res.json({ users: repo.listUsers() });
+  res.json({ users: repo.listUsers().map(toPublicUser) });
 });
 
 app.post('/api/v1/admin/users', requireAuth, requireAllowlist, requireAdminRole, async (req, res) => {
@@ -424,7 +425,7 @@ app.post('/api/v1/admin/users', requireAuth, requireAllowlist, requireAdminRole,
     active: parsed.data.active,
   });
 
-  res.json({ user });
+  res.json({ user: toPublicUser(user) });
 });
 
 app.put('/api/v1/admin/users/:id', requireAuth, requireAllowlist, requireAdminRole, async (req, res) => {
@@ -452,7 +453,10 @@ app.put('/api/v1/admin/users/:id', requireAuth, requireAllowlist, requireAdminRo
     active: parsed.data.active ?? existing.active,
   });
 
-  res.json({ user: updated });
+  if (!updated) {
+    return res.status(404).json({ error: 'user_not_found' });
+  }
+  res.json({ user: toPublicUser(updated) });
 });
 
 app.delete('/api/v1/admin/users/:id', requireAuth, requireAllowlist, requireAdminRole, (req, res) => {
