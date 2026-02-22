@@ -142,6 +142,10 @@ export function App() {
     () => sessions.filter((session) => session.userId === selectedUserId),
     [sessions, selectedUserId],
   );
+  const selectedUserGroupName = useMemo(() => {
+    if (!selectedUser?.groupId) return 'No group';
+    return groups.find((group) => group.id === selectedUser.groupId)?.name ?? selectedUser.groupId;
+  }, [groups, selectedUser]);
 
   const selectedUserTokenTotals = useMemo(
     () => buildUserTokenTotals(usage),
@@ -151,6 +155,45 @@ export function App() {
   const selectedUserDailyMetrics = useMemo(
     () => buildDailyUserMetrics(usage, selectedUserSessions),
     [usage, selectedUserSessions],
+  );
+  const adminUsersCount = useMemo(
+    () => users.filter((user) => user.role === 'admin').length,
+    [users],
+  );
+  const selfManagedUsersCount = useMemo(
+    () => users.filter((user) => user.selfManaged).length,
+    [users],
+  );
+  const usersWithoutGroupCount = useMemo(
+    () => users.filter((user) => !user.groupId).length,
+    [users],
+  );
+  const groupsWithQuotasCount = useMemo(
+    () =>
+      groups.filter((group) => Boolean(group.quotaDaily) || Boolean(group.quotaMonthly)).length,
+    [groups],
+  );
+  const selectedGroupMemberIds = useMemo(() => {
+    if (!selectedGroupId) return new Set<string>();
+    return new Set(
+      users.filter((user) => user.groupId === selectedGroupId).map((user) => user.id),
+    );
+  }, [users, selectedGroupId]);
+  const selectedGroupMembers = useMemo(
+    () => users.filter((user) => selectedGroupMemberIds.has(user.id)),
+    [users, selectedGroupMemberIds],
+  );
+  const selectedGroupSessions = useMemo(
+    () => sessions.filter((session) => selectedGroupMemberIds.has(session.userId)),
+    [sessions, selectedGroupMemberIds],
+  );
+  const selectedGroupTokens = useMemo(
+    () =>
+      selectedGroupSessions.reduce(
+        (sum, session) => sum + getSessionTokenSummary(session.usage).totalTokens,
+        0,
+      ),
+    [selectedGroupSessions],
   );
 
   const usageSummary = useMemo(
@@ -990,6 +1033,28 @@ export function App() {
                   + New user
                 </button>
               </div>
+              <div className="settings-grid">
+                <article className="mini-card">
+                  <p className="mini-card__label">Total users</p>
+                  <p className="mini-card__value">{users.length.toLocaleString()}</p>
+                  <p className="mini-card__note">All user records</p>
+                </article>
+                <article className="mini-card">
+                  <p className="mini-card__label">Active users</p>
+                  <p className="mini-card__value">{activeUsers.toLocaleString()}</p>
+                  <p className="mini-card__note">Can authenticate and fetch config</p>
+                </article>
+                <article className="mini-card">
+                  <p className="mini-card__label">Admin users</p>
+                  <p className="mini-card__value">{adminUsersCount.toLocaleString()}</p>
+                  <p className="mini-card__note">Role = admin</p>
+                </article>
+                <article className="mini-card">
+                  <p className="mini-card__label">Self-managed</p>
+                  <p className="mini-card__value">{selfManagedUsersCount.toLocaleString()}</p>
+                  <p className="mini-card__note">Bring-your-own provider key</p>
+                </article>
+              </div>
               <div className="list-card">
                 <div className="list-filter">
                   <input
@@ -1062,6 +1127,28 @@ export function App() {
                 </div>
               ) : (
                 <div className="user-metrics-body">
+                  <div className="settings-grid">
+                    <article className="mini-card">
+                      <p className="mini-card__label">Role</p>
+                      <p className="mini-card__value">{selectedUser.role}</p>
+                      <p className="mini-card__note">Access scope</p>
+                    </article>
+                    <article className="mini-card">
+                      <p className="mini-card__label">Group</p>
+                      <p className="mini-card__value">{selectedUserGroupName}</p>
+                      <p className="mini-card__note">Current assignment</p>
+                    </article>
+                    <article className="mini-card">
+                      <p className="mini-card__label">Created</p>
+                      <p className="mini-card__value">{new Date(selectedUser.createdAt).toLocaleDateString()}</p>
+                      <p className="mini-card__note">{formatTimestamp(selectedUser.createdAt)}</p>
+                    </article>
+                    <article className="mini-card">
+                      <p className="mini-card__label">Updated</p>
+                      <p className="mini-card__value">{new Date(selectedUser.updatedAt).toLocaleDateString()}</p>
+                      <p className="mini-card__note">{formatTimestamp(selectedUser.updatedAt)}</p>
+                    </article>
+                  </div>
                   {userDraft && (
                     <div className="detail-card">
                       <div className="panel-header">
@@ -1252,6 +1339,28 @@ export function App() {
                   + New group
                 </button>
               </div>
+              <div className="settings-grid">
+                <article className="mini-card">
+                  <p className="mini-card__label">Total groups</p>
+                  <p className="mini-card__value">{groups.length.toLocaleString()}</p>
+                  <p className="mini-card__note">All configured groups</p>
+                </article>
+                <article className="mini-card">
+                  <p className="mini-card__label">Users in groups</p>
+                  <p className="mini-card__value">{(users.length - usersWithoutGroupCount).toLocaleString()}</p>
+                  <p className="mini-card__note">Assigned members</p>
+                </article>
+                <article className="mini-card">
+                  <p className="mini-card__label">Groups with quota</p>
+                  <p className="mini-card__value">{groupsWithQuotasCount.toLocaleString()}</p>
+                  <p className="mini-card__note">Daily or monthly cap set</p>
+                </article>
+                <article className="mini-card">
+                  <p className="mini-card__label">Ungrouped users</p>
+                  <p className="mini-card__value">{usersWithoutGroupCount.toLocaleString()}</p>
+                  <p className="mini-card__note">No group assignment</p>
+                </article>
+              </div>
               <div className="list-card">
                 <div className="list-filter">
                   <input
@@ -1310,6 +1419,30 @@ export function App() {
               </div>
               {groupDraft ? (
                 <div className="detail-card">
+                  <div className="settings-grid">
+                    <article className="mini-card">
+                      <p className="mini-card__label">Members</p>
+                      <p className="mini-card__value">{selectedGroupMembers.length.toLocaleString()}</p>
+                      <p className="mini-card__note">Users assigned to this group</p>
+                    </article>
+                    <article className="mini-card">
+                      <p className="mini-card__label">Active members</p>
+                      <p className="mini-card__value">
+                        {selectedGroupMembers.filter((user) => user.active).length.toLocaleString()}
+                      </p>
+                      <p className="mini-card__note">Users currently enabled</p>
+                    </article>
+                    <article className="mini-card">
+                      <p className="mini-card__label">Sessions</p>
+                      <p className="mini-card__value">{selectedGroupSessions.length.toLocaleString()}</p>
+                      <p className="mini-card__note">Uploaded by group members</p>
+                    </article>
+                    <article className="mini-card">
+                      <p className="mini-card__label">Session tokens</p>
+                      <p className="mini-card__value">{selectedGroupTokens.toLocaleString()}</p>
+                      <p className="mini-card__note">Total from session payloads</p>
+                    </article>
+                  </div>
                   <div className="policy">
                     <div className="control-grid">
                       <label className="field">
