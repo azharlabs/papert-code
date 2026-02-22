@@ -233,6 +233,44 @@ export function App() {
       ),
     [usage],
   );
+  const usageSessionTotals = useMemo(
+    () =>
+      sessions.reduce(
+        (totals, session) => {
+          const tokens = getSessionTokenSummary(session.usage);
+          totals.total += tokens.totalTokens;
+          totals.input += tokens.inputTokens;
+          totals.output += tokens.outputTokens;
+          return totals;
+        },
+        { total: 0, input: 0, output: 0 },
+      ),
+    [sessions],
+  );
+  const usageRecordCounts = useMemo(
+    () =>
+      usage.reduce(
+        (counts, record) => {
+          if (record.period === 'daily') {
+            counts.daily += 1;
+          }
+          if (record.period === 'monthly') {
+            counts.monthly += 1;
+          }
+          return counts;
+        },
+        { daily: 0, monthly: 0 },
+      ),
+    [usage],
+  );
+  const usageUsersWithSessions = useMemo(
+    () => new Set(sessions.map((session) => session.userId)).size,
+    [sessions],
+  );
+  const averageTokensPerSession = useMemo(
+    () => (sessions.length ? Math.round(usageSessionTotals.total / sessions.length) : 0),
+    [sessions.length, usageSessionTotals.total],
+  );
   const stats = [
     {
       label: 'Active users',
@@ -1279,35 +1317,74 @@ export function App() {
               </div>
               <div className="usage-cards">
                 <article className="usage-card">
-                  <p>Daily tokens</p>
-                  <strong>{usageSummary.daily.toLocaleString()}</strong>
-                  <span className="hint">Latest daily report</span>
+                  <p>Total tokens</p>
+                  <strong>{usageSessionTotals.total.toLocaleString()}</strong>
+                  <span className="hint">From all uploaded sessions</span>
                 </article>
                 <article className="usage-card">
-                  <p>Monthly tokens</p>
-                  <strong>{usageSummary.monthly.toLocaleString()}</strong>
-                  <span className="hint">Aggregated this month</span>
+                  <p>Input tokens</p>
+                  <strong>{usageSessionTotals.input.toLocaleString()}</strong>
+                  <span className="hint">Prompt/input token total</span>
+                </article>
+                <article className="usage-card">
+                  <p>Output tokens</p>
+                  <strong>{usageSessionTotals.output.toLocaleString()}</strong>
+                  <span className="hint">Completion/output token total</span>
+                </article>
+                <article className="usage-card">
+                  <p>Avg tokens/session</p>
+                  <strong>{averageTokensPerSession.toLocaleString()}</strong>
+                  <span className="hint">Mean usage per session</span>
                 </article>
                 <article className="usage-card">
                   <p>Sessions captured</p>
                   <strong>{sessions.length.toLocaleString()}</strong>
                   <span className="hint">Uploaded via CLI</span>
                 </article>
+                <article className="usage-card">
+                  <p>Users with sessions</p>
+                  <strong>{usageUsersWithSessions.toLocaleString()}</strong>
+                  <span className="hint">Distinct users in session data</span>
+                </article>
+                <article className="usage-card">
+                  <p>Daily buckets loaded</p>
+                  <strong>{usageRecordCounts.daily.toLocaleString()}</strong>
+                  <span className="hint">Usage rows with daily period</span>
+                </article>
+                <article className="usage-card">
+                  <p>Monthly buckets loaded</p>
+                  <strong>{usageRecordCounts.monthly.toLocaleString()}</strong>
+                  <span className="hint">Usage rows with monthly period</span>
+                </article>
+                <article className="usage-card">
+                  <p>Daily tokens (records)</p>
+                  <strong>{usageSummary.daily.toLocaleString()}</strong>
+                  <span className="hint">From loaded usage records</span>
+                </article>
+                <article className="usage-card">
+                  <p>Monthly tokens (records)</p>
+                  <strong>{usageSummary.monthly.toLocaleString()}</strong>
+                  <span className="hint">From loaded usage records</span>
+                </article>
               </div>
               <div className="usage-history">
-                <div className="table-head">
+                <div className="table-head usage-table-head">
                   <span>Period</span>
                   <span>Start</span>
-                  <span>Tokens</span>
+                  <span>Total tokens</span>
+                  <span>Input tokens</span>
+                  <span>Output tokens</span>
                 </div>
                 {sortedUsage.length === 0 && (
                   <p className="hint">No usage data yet.</p>
                 )}
                 {sortedUsage.map((record) => (
-                  <div key={`${record.period}-${record.periodStart}`} className="table-row">
+                  <div key={`${record.period}-${record.periodStart}`} className="table-row usage-table-row">
                     <span>{record.period}</span>
                     <span>{new Date(record.periodStart).toLocaleDateString()}</span>
                     <span>{record.tokensUsed?.toLocaleString() ?? '0'}</span>
+                    <span>{record.promptTokens?.toLocaleString() ?? '0'}</span>
+                    <span>{record.completionTokens?.toLocaleString() ?? '0'}</span>
                   </div>
                 ))}
               </div>

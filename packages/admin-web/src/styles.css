@@ -656,6 +656,20 @@ textarea {
   margin-top: 6px;
 }
 
+.usage-cards {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(180px, 1fr);
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.usage-table-head,
+.usage-table-row {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
 .usage-history {
   margin-top: 12px;
   border: 1px solid var(--stroke);
