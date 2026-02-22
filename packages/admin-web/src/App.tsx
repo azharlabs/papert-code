@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type {
   AdminControls,
   GroupRecord,
@@ -46,7 +46,7 @@ const maskToken = (value: string) => {
   return `${value.slice(0, 8)}…${value.slice(-6)}`;
 };
 
-const formatTimestamp = (value?: string) =>
+const formatTimestamp = (value?: string | null) =>
   value ? new Date(value).toLocaleString() : '—';
 
 export function App() {
@@ -255,7 +255,6 @@ export function App() {
   const handleNewGroup = () => {
     setGroupDraft(createEmptyGroup());
     setSelectedGroupId('');
-    setNewGroupName('');
   };
 
   useEffect(() => {
@@ -1000,10 +999,6 @@ export function App() {
               )}
             </section>
           )}
-```
-
-Continue with groups section etc.
-
           {activeSection === 'groups' && (
             <section className="panel groups-section">
               <div className="panel-header">
