@@ -46,10 +46,23 @@ function emptyControls(): AdminControls {
 const formatTimestamp = (value?: string | null) =>
   value ? new Date(value).toLocaleString() : '—';
 
+const landingSections = ['overview', 'users', 'groups', 'usage', 'sessions', 'settings'] as const;
+type LandingSection = (typeof landingSections)[number];
+
 export function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     () => localStorage.getItem('papert_admin_sidebar_collapsed') === '1',
   );
+  const [showStatusRow, setShowStatusRow] = useState(
+    () => localStorage.getItem('papert_admin_show_status_row') !== '0',
+  );
+  const [defaultLandingSection, setDefaultLandingSection] = useState<LandingSection>(() => {
+    const stored = localStorage.getItem('papert_admin_default_section');
+    if (!stored) return 'overview';
+    return landingSections.includes(stored as LandingSection)
+      ? (stored as LandingSection)
+      : 'overview';
+  });
   const [token, setToken] = useState(
     () => localStorage.getItem('papert_admin_token') || '',
   );
@@ -275,6 +288,14 @@ export function App() {
       isSidebarCollapsed ? '1' : '0',
     );
   }, [isSidebarCollapsed]);
+
+  useEffect(() => {
+    localStorage.setItem('papert_admin_show_status_row', showStatusRow ? '1' : '0');
+  }, [showStatusRow]);
+
+  useEffect(() => {
+    localStorage.setItem('papert_admin_default_section', defaultLandingSection);
+  }, [defaultLandingSection]);
   const filteredUsers = useMemo(() => {
     const query = userSearch.trim().toLowerCase();
     if (!query) return users;
@@ -454,6 +475,7 @@ export function App() {
       const authToken = response.token as string;
       setToken(authToken);
       localStorage.setItem('papert_admin_token', authToken);
+      setActiveSection(defaultLandingSection);
       setInfo('Logged in.');
       setTimeout(() => setInfo(null), 3000);
     } catch (err) {
@@ -486,6 +508,7 @@ export function App() {
     setCreateUserDraft(null);
     setIsCreateUserModalOpen(false);
     setIsFlowModalOpen(false);
+    setActiveSection('overview');
     setEmail('');
     setPassword('');
     setInfo(null);
@@ -765,14 +788,16 @@ export function App() {
           </div>
         </header>
 
-        <div className="status-row">
-          {loading && <span className="badge badge-info">Syncing…</span>}
-          {error && <span className="badge badge-error">{error}</span>}
-          {info && <span className="badge badge-success">{info}</span>}
-          {lastSyncedSession && (
-            <span className="hint">Last sync: {formatTimestamp(lastSyncedSession.createdAt)}</span>
-          )}
-        </div>
+        {showStatusRow && (
+          <div className="status-row">
+            {loading && <span className="badge badge-info">Syncing…</span>}
+            {error && <span className="badge badge-error">{error}</span>}
+            {info && <span className="badge badge-success">{info}</span>}
+            {lastSyncedSession && (
+              <span className="hint">Last sync: {formatTimestamp(lastSyncedSession.createdAt)}</span>
+            )}
+          </div>
+        )}
 
         <div className="content-body">
           {activeSection === 'overview' && (
@@ -1380,7 +1405,65 @@ export function App() {
               <div className="panel-header">
                 <div>
                   <h2>Settings</h2>
-                  <p className="hint">Quick facts and configuration reminders.</p>
+                  <p className="hint">Configure admin-web behavior and view operational status.</p>
+                </div>
+              </div>
+              <div className="detail-card">
+                <div className="panel-header">
+                  <div>
+                    <h3>Preferences</h3>
+                    <p className="hint">Saved locally in this browser.</p>
+                  </div>
+                </div>
+                <div className="policy">
+                  <Toggle
+                    label="Collapse sidebar"
+                    description="Use compact left navigation by default."
+                    checked={isSidebarCollapsed}
+                    onChange={setIsSidebarCollapsed}
+                  />
+                  <Toggle
+                    label="Show status row"
+                    description="Display sync/error/success badges under the page header."
+                    checked={showStatusRow}
+                    onChange={setShowStatusRow}
+                  />
+                  <div className="field">
+                    <span>Default landing tab after login</span>
+                    <select
+                      value={defaultLandingSection}
+                      onChange={(event) =>
+                        setDefaultLandingSection(event.target.value as LandingSection)
+                      }
+                    >
+                      <option value="overview">Overview</option>
+                      <option value="users">Users</option>
+                      <option value="groups">Groups</option>
+                      <option value="usage">Usage</option>
+                      <option value="sessions">Sessions</option>
+                      <option value="settings">Settings</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="actions">
+                  <button
+                    className="ghost subtle"
+                    type="button"
+                    onClick={() => setIsFlowModalOpen(true)}
+                  >
+                    Open flow guide
+                  </button>
+                  <button
+                    className="ghost subtle"
+                    type="button"
+                    onClick={() => {
+                      setIsSidebarCollapsed(false);
+                      setShowStatusRow(true);
+                      setDefaultLandingSection('overview');
+                    }}
+                  >
+                    Reset UI defaults
+                  </button>
                 </div>
               </div>
               <div className="settings-grid">
@@ -1402,9 +1485,9 @@ export function App() {
                   <p className="mini-card__note">Sessions refreshed after login.</p>
                 </article>
                 <article className="mini-card">
-                  <p className="mini-card__label">Selected group</p>
+                  <p className="mini-card__label">Current group context</p>
                   <p className="mini-card__value">{selectedGroup ? selectedGroup.name : 'None'}</p>
-                  <p className="mini-card__note">Use the Groups tab to adjust policies.</p>
+                  <p className="mini-card__note">From selected group details.</p>
                 </article>
               </div>
             </section>
