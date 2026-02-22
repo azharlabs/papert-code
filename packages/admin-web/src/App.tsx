@@ -117,6 +117,13 @@ export function App() {
   >('overview');
   const [userSearch, setUserSearch] = useState('');
   const [groupSearch, setGroupSearch] = useState('');
+  const [sessionSearch, setSessionSearch] = useState('');
+  const [sessionUserFilter, setSessionUserFilter] = useState('');
+  const [sessionModelFilter, setSessionModelFilter] = useState('');
+  const [sessionDateFrom, setSessionDateFrom] = useState('');
+  const [sessionDateTo, setSessionDateTo] = useState('');
+  const [sessionTokenMin, setSessionTokenMin] = useState('');
+  const [sessionTokenMax, setSessionTokenMax] = useState('');
 
   const selectedGroup = useMemo(
     () => groups.find((group) => group.id === selectedGroupId) || null,
@@ -349,13 +356,49 @@ export function App() {
     },
   ];
 
-  const sortedSessions = useMemo(
-    () =>
-      [...sessions].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      ),
+  const sessionUsers = useMemo(
+    () => [...new Set(sessions.map((session) => session.userId))].sort((a, b) => a.localeCompare(b)),
     [sessions],
   );
+  const sessionModels = useMemo(
+    () =>
+      [...new Set(sessions.map((session) => session.model).filter((model): model is string => Boolean(model)))]
+        .sort((a, b) => a.localeCompare(b)),
+    [sessions],
+  );
+  const filteredSortedSessions = useMemo(() => {
+    const text = sessionSearch.trim().toLowerCase();
+    const minTokens = sessionTokenMin.trim() ? Number(sessionTokenMin) : null;
+    const maxTokens = sessionTokenMax.trim() ? Number(sessionTokenMax) : null;
+    const fromDate = sessionDateFrom ? new Date(`${sessionDateFrom}T00:00:00.000Z`) : null;
+    const toDate = sessionDateTo ? new Date(`${sessionDateTo}T23:59:59.999Z`) : null;
+
+    return sessions
+      .filter((session) => {
+        const tokens = getSessionTokenSummary(session.usage).totalTokens;
+        const timestamp = new Date(session.startedAt ?? session.createdAt);
+        const searchable = `${session.sessionId} ${session.userId} ${session.model ?? ''}`.toLowerCase();
+
+        if (text && !searchable.includes(text)) return false;
+        if (sessionUserFilter && session.userId !== sessionUserFilter) return false;
+        if (sessionModelFilter && (session.model ?? '') !== sessionModelFilter) return false;
+        if (fromDate && timestamp < fromDate) return false;
+        if (toDate && timestamp > toDate) return false;
+        if (minTokens !== null && Number.isFinite(minTokens) && tokens < minTokens) return false;
+        if (maxTokens !== null && Number.isFinite(maxTokens) && tokens > maxTokens) return false;
+        return true;
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [
+    sessions,
+    sessionSearch,
+    sessionUserFilter,
+    sessionModelFilter,
+    sessionDateFrom,
+    sessionDateTo,
+    sessionTokenMin,
+    sessionTokenMax,
+  ]);
 
   const navItems = [
     { id: 'overview', label: 'Overview', shortLabel: 'OV' },
@@ -1547,13 +1590,106 @@ export function App() {
                   <p className="hint">Browse and inspect transcripts.</p>
                 </div>
               </div>
+              <div className="detail-card sessions-filters">
+                <div className="panel-header">
+                  <div>
+                    <h3>Filters</h3>
+                    <p className="hint">Search sessions by text, user, model, date, and token range.</p>
+                  </div>
+                  <button
+                    className="ghost subtle"
+                    type="button"
+                    onClick={() => {
+                      setSessionSearch('');
+                      setSessionUserFilter('');
+                      setSessionModelFilter('');
+                      setSessionDateFrom('');
+                      setSessionDateTo('');
+                      setSessionTokenMin('');
+                      setSessionTokenMax('');
+                    }}
+                  >
+                    Clear filters
+                  </button>
+                </div>
+                <div className="control-grid">
+                  <label className="field">
+                    <span>Search</span>
+                    <input
+                      value={sessionSearch}
+                      onChange={(event) => setSessionSearch(event.target.value)}
+                      placeholder="Session ID, user, model..."
+                    />
+                  </label>
+                  <label className="field">
+                    <span>User</span>
+                    <select
+                      value={sessionUserFilter}
+                      onChange={(event) => setSessionUserFilter(event.target.value)}
+                    >
+                      <option value="">All users</option>
+                      {sessionUsers.map((userId) => (
+                        <option key={userId} value={userId}>{userId}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span>Model</span>
+                    <select
+                      value={sessionModelFilter}
+                      onChange={(event) => setSessionModelFilter(event.target.value)}
+                    >
+                      <option value="">All models</option>
+                      {sessionModels.map((model) => (
+                        <option key={model} value={model}>{model}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span>Date from</span>
+                    <input
+                      type="date"
+                      value={sessionDateFrom}
+                      onChange={(event) => setSessionDateFrom(event.target.value)}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Date to</span>
+                    <input
+                      type="date"
+                      value={sessionDateTo}
+                      onChange={(event) => setSessionDateTo(event.target.value)}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Min tokens</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={sessionTokenMin}
+                      onChange={(event) => setSessionTokenMin(event.target.value)}
+                      placeholder="0"
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Max tokens</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={sessionTokenMax}
+                      onChange={(event) => setSessionTokenMax(event.target.value)}
+                      placeholder="50000"
+                    />
+                  </label>
+                </div>
+              </div>
               <div className="panel-split sessions-grid">
                 <div className="list-card">
                   <div className="list-body">
-                    {sortedSessions.length === 0 ? (
+                    {filteredSortedSessions.length === 0 ? (
                       <p className="hint">No sessions recorded.</p>
                     ) : (
-                      sortedSessions.map((session) => (
+                      filteredSortedSessions.map((session) => (
                         <button
                           key={session.id}
                           type="button"

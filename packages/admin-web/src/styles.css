@@ -768,6 +768,10 @@ textarea {
   margin-top: 12px;
 }
 
+.sessions-filters {
+  margin-top: 16px;
+}
+
 .transcript {
   margin-top: 16px;
   border-radius: 14px;
