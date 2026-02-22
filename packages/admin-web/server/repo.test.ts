@@ -37,4 +37,41 @@ describe('AdminRepo', () => {
     const fetchedGroup = repo.getGroup(group.id);
     expect(fetchedGroup?.quotaMonthly).toBe(1000);
   });
+
+  it('maps quota requests using API field casing', () => {
+    const repo = createRepo();
+    const group = repo.createGroup({
+      name: 'Support',
+      controls: {},
+      provider: {},
+    });
+    const user = repo.createUser({
+      email: 'quota@company.com',
+      passwordHash: 'hash',
+      role: 'user',
+      groupId: group.id,
+      controls: {},
+      provider: {},
+    });
+
+    const created = repo.createQuotaRequest({
+      userId: user.id,
+      requestedMonthly: 2000,
+      reason: 'Need more room',
+    });
+    const listed = repo.listQuotaRequests();
+    const updated = repo.updateQuotaRequest(created.id, 'approved');
+
+    expect(listed).toHaveLength(1);
+    expect(listed[0]?.userId).toBe(user.id);
+    expect(listed[0]?.requestedMonthly).toBe(2000);
+    expect((listed[0] as unknown as { user_id?: string }).user_id).toBeUndefined();
+
+    expect(updated?.userId).toBe(user.id);
+    expect(updated?.requestedMonthly).toBe(2000);
+    expect(updated?.status).toBe('approved');
+    expect(
+      (updated as unknown as { requested_monthly?: number }).requested_monthly,
+    ).toBeUndefined();
+  });
 });

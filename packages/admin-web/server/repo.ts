@@ -382,17 +382,21 @@ export class AdminRepo {
     const rows = status
       ? this.db.prepare(`SELECT * FROM quota_requests WHERE status = ? ORDER BY created_at DESC`).all(status)
       : this.db.prepare(`SELECT * FROM quota_requests ORDER BY created_at DESC`).all();
-    return rows as QuotaRequestRecord[];
+    return rows.map((row) => this.mapQuotaRequest(row));
   }
 
   updateQuotaRequest(id: string, status: 'approved' | 'rejected'): QuotaRequestRecord | null {
-    const existing = this.db.prepare(`SELECT * FROM quota_requests WHERE id = ?`).get(id) as QuotaRequestRecord | undefined;
+    const existing = this.db.prepare(`SELECT * FROM quota_requests WHERE id = ?`).get(id);
     if (!existing) return null;
     const updatedAt = nowIso();
     this.db
       .prepare(`UPDATE quota_requests SET status = ?, updated_at = ? WHERE id = ?`)
       .run(status, updatedAt, id);
-    return { ...existing, status, updatedAt };
+    return this.mapQuotaRequest({
+      ...existing,
+      status,
+      updated_at: updatedAt,
+    });
   }
 
   private mapGroup(row: any): GroupRecord {
@@ -454,6 +458,18 @@ export class AdminRepo {
       period: row.period,
       periodStart: row.period_start,
       tokensUsed: row.tokens_used,
+      updatedAt: row.updated_at,
+    };
+  }
+
+  private mapQuotaRequest(row: any): QuotaRequestRecord {
+    return {
+      id: row.id,
+      userId: row.user_id,
+      requestedMonthly: row.requested_monthly,
+      reason: row.reason,
+      status: row.status,
+      createdAt: row.created_at,
       updatedAt: row.updated_at,
     };
   }
