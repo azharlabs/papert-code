@@ -706,7 +706,7 @@ export function App() {
     <div className={`app-shell ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <aside className="admin-nav">
         <div className="nav-brand">
-          <div className="logo-badge" />
+          <img className="logo-badge" src="/papert-logo.png" alt="Papert logo" />
           <div className="nav-brand__copy">
             <p className="nav-brand__title">Papert Admin</p>
             <p className="nav-brand__subtitle">Control plane</p>
