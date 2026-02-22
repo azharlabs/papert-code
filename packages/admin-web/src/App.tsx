@@ -777,6 +777,15 @@ export function App() {
         <div className="content-body">
           {activeSection === 'overview' && (
             <>
+              <section className="stat-grid overview-stats">
+                {stats.map((stat) => (
+                  <article className="stat-card" key={stat.label}>
+                    <p className="stat-card__label">{stat.label}</p>
+                    <p className="stat-card__value">{stat.value.toLocaleString()}</p>
+                    <p className="stat-card__note">{stat.note}</p>
+                  </article>
+                ))}
+              </section>
               <section className="panel flow-canvas">
                 <div className="panel-header">
                   <div>
@@ -886,15 +895,6 @@ export function App() {
                     </div>
                   </article>
                 </div>
-              </section>
-              <section className="stat-grid overview-stats">
-                {stats.map((stat) => (
-                  <article className="stat-card" key={stat.label}>
-                    <p className="stat-card__label">{stat.label}</p>
-                    <p className="stat-card__value">{stat.value.toLocaleString()}</p>
-                    <p className="stat-card__note">{stat.note}</p>
-                  </article>
-                ))}
               </section>
             </>
           )}
