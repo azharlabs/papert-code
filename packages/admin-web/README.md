@@ -23,6 +23,7 @@ The UI defaults to `http://localhost:4173` and proxies `/api` requests to the AP
 - `PAPERT_ADMIN_STORE_PATH` (default `./data/admin-controls.sqlite`): SQLite database file.
 - `PAPERT_ADMIN_ALLOWLIST` (comma-separated): admin user IDs that can access admin endpoints.
 - `PAPERT_ADMIN_HEADER` (default `x-admin-user-id`): header used to identify admin user.
+- `PAPERT_ADMIN_CORS_ORIGINS` (comma-separated): allowed browser origins for CORS (required in production).
 - `PAPERT_ADMIN_JWT_SECRET`: JWT signing secret for user/admin login.
 - `PAPERT_ADMIN_ENC_KEY`: 32-byte encryption key for storing provider API keys.
 - `PAPERT_ADMIN_BOOTSTRAP_EMAIL` / `PAPERT_ADMIN_BOOTSTRAP_PASSWORD`: create the first admin user if no users exist.
@@ -30,6 +31,7 @@ The UI defaults to `http://localhost:4173` and proxies `/api` requests to the AP
 See `.env.example` for a full starter configuration. Copy it to `.env` and restart the server to bootstrap an admin.
 
 If `PAPERT_ADMIN_ALLOWLIST` is empty, admin endpoints are open (use only for local demos).
+If `PAPERT_ADMIN_CORS_ORIGINS` is empty, CORS accepts all origins (use only for local demos).
 
 Bootstrap the first admin user:
 

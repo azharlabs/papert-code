@@ -30,7 +30,22 @@ const db = getDb({ path: env.storePath });
 const repo = new AdminRepo(db);
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+      if (env.corsOrigins.size === 0) {
+        return callback(null, true);
+      }
+      if (env.corsOrigins.has(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error('Origin not allowed by PAPERT_ADMIN_CORS_ORIGINS'));
+    },
+  }),
+);
 app.use(express.json({ limit: '5mb' }));
 
 if (env.allowlist.size === 0) {
@@ -48,6 +63,11 @@ if (!process.env['PAPERT_ADMIN_ENC_KEY']) {
     '[admin-web] PAPERT_ADMIN_ENC_KEY is not set. Using an ephemeral dev-only encryption key.',
   );
 }
+if (env.corsOrigins.size === 0) {
+  console.warn(
+    '[admin-web] PAPERT_ADMIN_CORS_ORIGINS is empty. Browser requests are currently open to all origins.',
+  );
+}
 if (process.env['NODE_ENV'] === 'production') {
   if (env.allowlist.size === 0) {
     throw new Error(
@@ -61,6 +81,9 @@ if (process.env['NODE_ENV'] === 'production') {
   }
   if (!process.env['PAPERT_ADMIN_ENC_KEY']) {
     throw new Error('PAPERT_ADMIN_ENC_KEY must be set in production.');
+  }
+  if (env.corsOrigins.size === 0) {
+    throw new Error('PAPERT_ADMIN_CORS_ORIGINS must be set in production.');
   }
 }
 
