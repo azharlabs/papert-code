@@ -82,6 +82,8 @@ export function App() {
   const [groupDraft, setGroupDraft] = useState<GroupRecord | null>(null);
   const [userDraft, setUserDraft] = useState<UserRecord | null>(null);
   const [editUserPassword, setEditUserPassword] = useState('');
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [isEditGroupModalOpen, setIsEditGroupModalOpen] = useState(false);
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
   const [createGroupDraft, setCreateGroupDraft] = useState<GroupRecord | null>(null);
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
@@ -336,6 +338,28 @@ export function App() {
     setCreateGroupDraft(null);
   };
 
+  const openEditUserModal = () => {
+    if (!userDraft) return;
+    setEditUserPassword('');
+    setIsEditUserModalOpen(true);
+  };
+
+  const closeEditUserModal = () => {
+    setIsEditUserModalOpen(false);
+    setEditUserPassword('');
+    setUserDraft(selectedUser ? JSON.parse(JSON.stringify(selectedUser)) : null);
+  };
+
+  const openEditGroupModal = () => {
+    if (!groupDraft) return;
+    setIsEditGroupModalOpen(true);
+  };
+
+  const closeEditGroupModal = () => {
+    setIsEditGroupModalOpen(false);
+    setGroupDraft(selectedGroup ? JSON.parse(JSON.stringify(selectedGroup)) : null);
+  };
+
   const runFlowAction = (
     action:
       | 'sync'
@@ -454,6 +478,8 @@ export function App() {
     setGroupDraft(null);
     setUserDraft(null);
     setEditUserPassword('');
+    setIsEditUserModalOpen(false);
+    setIsEditGroupModalOpen(false);
     setIsCreateGroupModalOpen(false);
     setCreateGroupDraft(null);
     setCreateUserPassword('');
@@ -464,30 +490,6 @@ export function App() {
     setPassword('');
     setInfo(null);
     setError(null);
-  };
-
-  const handleCreateGroup = async () => {
-    if (!token || !groupDraft) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const group = await createGroup(token, {
-        name: groupDraft.name,
-        controls: groupDraft.controls,
-        provider: groupDraft.provider,
-        quotaMonthly: groupDraft.quotaMonthly ?? null,
-        quotaDaily: groupDraft.quotaDaily ?? null,
-      });
-      setGroups((prev) => [...prev, group]);
-      setSelectedGroupId(group.id);
-      setActiveSection('groupDetails');
-      setInfo('Group created.');
-      setTimeout(() => setInfo(null), 3000);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleCreateGroupFromModal = async () => {
@@ -533,6 +535,7 @@ export function App() {
         quotaDaily: groupDraft.quotaDaily ?? null,
       });
       setGroups((prev) => prev.map((g) => (g.id === updated.id ? updated : g)));
+      setIsEditGroupModalOpen(false);
       setInfo('Group updated.');
       setTimeout(() => setInfo(null), 3000);
     } catch (err) {
@@ -551,6 +554,7 @@ export function App() {
       setGroups((prev) => prev.filter((g) => g.id !== groupDraft.id));
       setSelectedGroupId('');
       setGroupDraft(null);
+      setIsEditGroupModalOpen(false);
       setActiveSection('groups');
       setInfo('Group removed.');
       setTimeout(() => setInfo(null), 3000);
@@ -617,6 +621,7 @@ export function App() {
       const updated = await updateUser(token, userDraft.id, payload);
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       setEditUserPassword('');
+      setIsEditUserModalOpen(false);
       setInfo('User updated.');
       setTimeout(() => setInfo(null), 3000);
     } catch (err) {
@@ -634,6 +639,7 @@ export function App() {
       await deleteUser(token, userDraft.id);
       setUsers((prev) => prev.filter((u) => u.id !== userDraft.id));
       setSelectedUserId('');
+      setIsEditUserModalOpen(false);
       setActiveSection('users');
       setInfo('User removed.');
       setTimeout(() => setInfo(null), 3000);
@@ -1020,103 +1026,17 @@ export function App() {
                       <p className="mini-card__note">{formatTimestamp(selectedUser.updatedAt)}</p>
                     </article>
                   </div>
-                  {userDraft && (
-                    <div className="detail-card">
-                      <div className="panel-header">
-                        <div>
-                          <h3>{userDraft.email || 'Edit user'}</h3>
-                          <p className="hint">Update credentials, provider, and policies.</p>
-                        </div>
+                  <div className="detail-card">
+                    <div className="panel-header">
+                      <div>
+                        <h3>User config</h3>
+                        <p className="hint">Open the edit modal to update provider and policy settings.</p>
                       </div>
-                      <div className="policy">
-                        <div className="control-grid">
-                          <label className="field">
-                            <span>Email</span>
-                            <input
-                              value={userDraft.email}
-                              onChange={(e) => setUserDraft({ ...userDraft, email: e.target.value })}
-                            />
-                          </label>
-                          <label className="field">
-                            <span>Password</span>
-                            <input
-                              type="password"
-                              value={editUserPassword}
-                              onChange={(e) => setEditUserPassword(e.target.value)}
-                              placeholder="Leave blank to keep current"
-                            />
-                            {editUserPassword && editUserPassword.length < 8 && (
-                              <span className="hint error">
-                                Password must be at least 8 characters.
-                              </span>
-                            )}
-                          </label>
-                        </div>
-                        <div className="control-grid">
-                          <label className="field">
-                            <span>Role</span>
-                            <select
-                              value={userDraft.role}
-                              onChange={(e) =>
-                                setUserDraft({ ...userDraft, role: e.target.value as 'admin' | 'user' })
-                              }
-                            >
-                              <option value="user">User</option>
-                              <option value="admin">Admin</option>
-                            </select>
-                          </label>
-                          <label className="field">
-                            <span>Group</span>
-                            <select
-                              value={userDraft.groupId ?? ''}
-                              onChange={(e) =>
-                                setUserDraft({ ...userDraft, groupId: e.target.value || null })
-                              }
-                            >
-                              <option value="">No group</option>
-                              {groups.map((group) => (
-                                <option key={group.id} value={group.id}>
-                                  {group.name}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        </div>
-                        <Toggle
-                          label="Self-managed provider"
-                          description="Allow the user to bring their own OpenAI-compatible key."
-                          checked={userDraft.selfManaged}
-                          onChange={(value) => setUserDraft({ ...userDraft, selfManaged: value })}
-                        />
-                        {!userDraft.selfManaged && (
-                          <>
-                            <ProviderEditor
-                              provider={userDraft.provider}
-                              onChange={(provider) => setUserDraft({ ...userDraft, provider })}
-                            />
-                            <PolicyEditor
-                              controls={userDraft.controls}
-                              onChange={(controls) => setUserDraft({ ...userDraft, controls })}
-                            />
-                          </>
-                        )}
-                        <Toggle
-                          label="Active"
-                          description="Disable to block policy fetch and login."
-                          checked={userDraft.active}
-                          onChange={(value) => setUserDraft({ ...userDraft, active: value })}
-                        />
-                        <div className="actions">
-                          <button className="ghost danger" onClick={handleDeleteUser}>
-                            Remove user
-                          </button>
-                          <button className="primary" onClick={handleSaveUser}>
-                            Save user
-                          </button>
-                        </div>
-                      </div>
+                      <button className="primary" type="button" onClick={openEditUserModal}>
+                        Edit user
+                      </button>
                     </div>
-                  )}
+                  </div>
 
                   <div className="usage-summary-row user-metrics-summary">
                     <article className="usage-card">
@@ -1314,82 +1234,14 @@ export function App() {
                       <p className="mini-card__note">Total from session payloads</p>
                     </article>
                   </div>
-                  <div className="policy">
-                    <div className="control-grid">
-                      <label className="field">
-                        <span>Name</span>
-                        <input
-                          value={groupDraft.name}
-                          onChange={(event) =>
-                            setGroupDraft({ ...groupDraft, name: event.target.value })
-                          }
-                        />
-                      </label>
-                      <label className="field">
-                        <span>Default model</span>
-                        <input
-                          value={groupDraft.provider.model ?? ''}
-                          onChange={(event) =>
-                            setGroupDraft({
-                              ...groupDraft,
-                              provider: { ...groupDraft.provider, model: event.target.value },
-                            })
-                          }
-                        />
-                      </label>
+                  <div className="panel-header">
+                    <div>
+                      <h3>Group config</h3>
+                      <p className="hint">Open the edit modal to update provider, policy, and quotas.</p>
                     </div>
-                    <PolicyEditor
-                      controls={groupDraft.controls}
-                      onChange={(controls) => setGroupDraft({ ...groupDraft, controls })}
-                    />
-                    <ProviderEditor
-                      provider={groupDraft.provider}
-                      onChange={(provider) => setGroupDraft({ ...groupDraft, provider })}
-                    />
-                    <div className="control-grid">
-                      <label className="field">
-                        <span>Monthly quota</span>
-                        <input
-                          type="number"
-                          value={groupDraft.quotaMonthly ?? ''}
-                          onChange={(e) =>
-                            setGroupDraft({
-                              ...groupDraft,
-                              quotaMonthly: e.target.value ? Number(e.target.value) : null,
-                            })
-                          }
-                        />
-                      </label>
-                      <label className="field">
-                        <span>Daily quota</span>
-                        <input
-                          type="number"
-                          value={groupDraft.quotaDaily ?? ''}
-                          onChange={(e) =>
-                            setGroupDraft({
-                              ...groupDraft,
-                              quotaDaily: e.target.value ? Number(e.target.value) : null,
-                            })
-                          }
-                        />
-                      </label>
-                    </div>
-                    <div className="actions">
-                      {groupDraft.id ? (
-                        <>
-                          <button className="ghost danger" onClick={handleDeleteGroup}>
-                            Delete group
-                          </button>
-                          <button className="primary" onClick={handleSaveGroup}>
-                            Save group
-                          </button>
-                        </>
-                      ) : (
-                        <button className="primary" onClick={handleCreateGroup}>
-                          Create group
-                        </button>
-                      )}
-                    </div>
+                    <button className="primary" type="button" onClick={openEditGroupModal}>
+                      Edit group
+                    </button>
                   </div>
                 </div>
               ) : (
@@ -1799,6 +1651,117 @@ export function App() {
           </div>
         </div>
       )}
+      {isEditUserModalOpen && userDraft && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Edit user"
+          onClick={closeEditUserModal}
+        >
+          <div className="modal-card modal-card--wide" onClick={(event) => event.stopPropagation()}>
+            <div className="panel-header">
+              <div>
+                <h2>Edit user</h2>
+                <p className="hint">Update credentials, provider, and policy settings.</p>
+              </div>
+              <button className="ghost subtle" type="button" onClick={closeEditUserModal}>
+                Close
+              </button>
+            </div>
+            <div className="policy modal-body">
+              <div className="control-grid">
+                <label className="field">
+                  <span>Email</span>
+                  <input
+                    value={userDraft.email}
+                    onChange={(e) => setUserDraft({ ...userDraft, email: e.target.value })}
+                  />
+                </label>
+                <label className="field">
+                  <span>Password</span>
+                  <input
+                    type="password"
+                    value={editUserPassword}
+                    onChange={(e) => setEditUserPassword(e.target.value)}
+                    placeholder="Leave blank to keep current"
+                  />
+                  {editUserPassword && editUserPassword.length < 8 && (
+                    <span className="hint error">
+                      Password must be at least 8 characters.
+                    </span>
+                  )}
+                </label>
+              </div>
+              <div className="control-grid">
+                <label className="field">
+                  <span>Role</span>
+                  <select
+                    value={userDraft.role}
+                    onChange={(e) =>
+                      setUserDraft({ ...userDraft, role: e.target.value as 'admin' | 'user' })
+                    }
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </label>
+                <label className="field">
+                  <span>Group</span>
+                  <select
+                    value={userDraft.groupId ?? ''}
+                    onChange={(e) =>
+                      setUserDraft({ ...userDraft, groupId: e.target.value || null })
+                    }
+                  >
+                    <option value="">No group</option>
+                    {groups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <Toggle
+                label="Self-managed provider"
+                description="Allow the user to bring their own OpenAI-compatible key."
+                checked={userDraft.selfManaged}
+                onChange={(value) => setUserDraft({ ...userDraft, selfManaged: value })}
+              />
+              {!userDraft.selfManaged && (
+                <>
+                  <ProviderEditor
+                    provider={userDraft.provider}
+                    onChange={(provider) => setUserDraft({ ...userDraft, provider })}
+                  />
+                  <PolicyEditor
+                    controls={userDraft.controls}
+                    onChange={(controls) => setUserDraft({ ...userDraft, controls })}
+                  />
+                </>
+              )}
+              <Toggle
+                label="Active"
+                description="Disable to block policy fetch and login."
+                checked={userDraft.active}
+                onChange={(value) => setUserDraft({ ...userDraft, active: value })}
+              />
+            </div>
+            <div className="actions modal-actions">
+              <button className="ghost danger" type="button" onClick={handleDeleteUser}>
+                Remove user
+              </button>
+              <button className="ghost subtle" type="button" onClick={closeEditUserModal}>
+                Cancel
+              </button>
+              <button className="primary" type="button" onClick={handleSaveUser}>
+                Save user
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {isCreateGroupModalOpen && createGroupDraft && (
         <div
           className="modal-backdrop"
@@ -1891,6 +1854,99 @@ export function App() {
                 disabled={!createGroupDraft.name.trim()}
               >
                 Create group
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isEditGroupModalOpen && groupDraft && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Edit group"
+          onClick={closeEditGroupModal}
+        >
+          <div className="modal-card modal-card--wide" onClick={(event) => event.stopPropagation()}>
+            <div className="panel-header">
+              <div>
+                <h2>Edit group</h2>
+                <p className="hint">Update group provider defaults, policy, and quotas.</p>
+              </div>
+              <button className="ghost subtle" type="button" onClick={closeEditGroupModal}>
+                Close
+              </button>
+            </div>
+            <div className="policy modal-body">
+              <div className="control-grid">
+                <label className="field">
+                  <span>Name</span>
+                  <input
+                    value={groupDraft.name}
+                    onChange={(event) =>
+                      setGroupDraft({ ...groupDraft, name: event.target.value })
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Default model</span>
+                  <input
+                    value={groupDraft.provider.model ?? ''}
+                    onChange={(event) =>
+                      setGroupDraft({
+                        ...groupDraft,
+                        provider: { ...groupDraft.provider, model: event.target.value },
+                      })
+                    }
+                  />
+                </label>
+              </div>
+              <PolicyEditor
+                controls={groupDraft.controls}
+                onChange={(controls) => setGroupDraft({ ...groupDraft, controls })}
+              />
+              <ProviderEditor
+                provider={groupDraft.provider}
+                onChange={(provider) => setGroupDraft({ ...groupDraft, provider })}
+              />
+              <div className="control-grid">
+                <label className="field">
+                  <span>Monthly quota</span>
+                  <input
+                    type="number"
+                    value={groupDraft.quotaMonthly ?? ''}
+                    onChange={(event) =>
+                      setGroupDraft({
+                        ...groupDraft,
+                        quotaMonthly: event.target.value ? Number(event.target.value) : null,
+                      })
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Daily quota</span>
+                  <input
+                    type="number"
+                    value={groupDraft.quotaDaily ?? ''}
+                    onChange={(event) =>
+                      setGroupDraft({
+                        ...groupDraft,
+                        quotaDaily: event.target.value ? Number(event.target.value) : null,
+                      })
+                    }
+                  />
+                </label>
+              </div>
+            </div>
+            <div className="actions modal-actions">
+              <button className="ghost danger" type="button" onClick={handleDeleteGroup}>
+                Delete group
+              </button>
+              <button className="ghost subtle" type="button" onClick={closeEditGroupModal}>
+                Cancel
+              </button>
+              <button className="primary" type="button" onClick={handleSaveGroup}>
+                Save group
               </button>
             </div>
           </div>
