@@ -409,7 +409,7 @@ export class AdminRepo {
   }
 
   private mapUser(row: any): UserRecord {
-    const provider = decodeJson(row.provider_json, {});
+    const provider = decodeJson<ProviderConfig>(row.provider_json, {});
     if (provider.apiKey) {
       try {
         provider.apiKey = decryptSecret(provider.apiKey);

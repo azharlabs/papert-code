@@ -9,6 +9,9 @@
     "dev": "npm-run-all -p dev:server dev:web",
     "build": "vite build",
     "build:server": "tsc -p server/tsconfig.json",
+    "typecheck:web": "tsc -p tsconfig.json --noEmit",
+    "typecheck:server": "tsc -p server/tsconfig.json --noEmit",
+    "typecheck": "npm-run-all typecheck:web typecheck:server",
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests"
   },
