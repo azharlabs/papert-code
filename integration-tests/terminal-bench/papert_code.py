@@ -1,10 +1,52 @@
+import json
 import os
 import shlex
+from pathlib import Path
+from typing import Any
 
 from terminal_bench.agents.installed_agents.abstract_installed_agent import (
     AbstractInstalledAgent,
 )
 from terminal_bench.terminal.models import TerminalCommand
+
+
+def _normalize(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    stripped = value.strip()
+    if not stripped:
+        return None
+    if stripped.startswith("$") and len(stripped) > 1:
+        return os.environ.get(stripped[1:])
+    return stripped
+
+
+def _load_settings() -> dict[str, Any]:
+    merged: dict[str, Any] = {}
+    candidates = [
+        Path.home() / ".papert" / "settings.json",
+        Path.cwd() / ".papert" / "settings.json",
+    ]
+    for settings_path in candidates:
+        if not settings_path.exists():
+            continue
+        try:
+            with settings_path.open("r", encoding="utf-8") as handle:
+                parsed = json.load(handle)
+            if isinstance(parsed, dict):
+                merged.update(parsed)
+        except Exception:
+            continue
+    return merged
+
+
+def _resolve_setting(settings: dict[str, Any], *path_parts: str) -> str | None:
+    current: Any = settings
+    for part in path_parts:
+        if not isinstance(current, dict):
+            return None
+        current = current.get(part)
+    return _normalize(current)
 
 
 class PapertCodeAgent(AbstractInstalledAgent):
@@ -16,42 +58,49 @@ class PapertCodeAgent(AbstractInstalledAgent):
         super().__init__(*args, **kwargs)
         self._model_name = model_name
         self._version = kwargs.get("version", "latest")
-        
+
         # Configurable API settings through agent_kwargs
         self._api_key = kwargs.get("api_key")
         self._base_url = kwargs.get("base_url")
+        self._settings = _load_settings()
 
     @property
     def _env(self) -> dict[str, str]:
-        env = {}
-        
-        # API Key - prefer agent_kwargs over environment variables
-        if self._api_key:
-            env["OPENAI_API_KEY"] = self._api_key
-        elif "OPENAI_API_KEY" in os.environ:
-            env["OPENAI_API_KEY"] = os.environ["OPENAI_API_KEY"]
-        else:
+        env: dict[str, str] = {}
+
+        # API key precedence: agent kwargs > environment > papert settings
+        api_key = self._api_key
+        if not api_key:
+            api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            api_key = _resolve_setting(self._settings, "security", "auth", "apiKey")
+        if not api_key:
             raise ValueError(
-                "OPENAI_API_KEY must be provided either via environment variable "
-                "or --agent-kwarg api_key=your_key"
+                "OPENAI_API_KEY must be provided via environment, --agent-kwarg api_key=..., "
+                "or .papert/settings.json security.auth.apiKey",
             )
-        
-        # Model - use model_name parameter or fallback
-        if self._model_name:
-            env["OPENAI_MODEL"] = self._model_name
-        elif "OPENAI_MODEL" in os.environ:
-            env["OPENAI_MODEL"] = os.environ["OPENAI_MODEL"]
-        else:
-            env["OPENAI_MODEL"] = "papert3-coder-plus"
-        
-        # Base URL - prefer agent_kwargs over environment variables  
-        if self._base_url:
-            env["OPENAI_BASE_URL"] = self._base_url
-        elif "OPENAI_BASE_URL" in os.environ:
-            env["OPENAI_BASE_URL"] = os.environ["OPENAI_BASE_URL"]
-        else:
-            env["OPENAI_BASE_URL"] = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-        
+        env["OPENAI_API_KEY"] = api_key
+
+        # Model precedence: explicit model_name > environment > papert settings > default
+        model = self._model_name
+        if not model:
+            model = os.environ.get("OPENAI_MODEL")
+        if not model:
+            model = _resolve_setting(self._settings, "model", "name")
+        if not model:
+            model = "papert3-coder-plus"
+        env["OPENAI_MODEL"] = model
+
+        # Base URL precedence: agent kwargs > environment > papert settings > default
+        base_url = self._base_url
+        if not base_url:
+            base_url = os.environ.get("OPENAI_BASE_URL")
+        if not base_url:
+            base_url = _resolve_setting(self._settings, "security", "auth", "baseUrl")
+        if not base_url:
+            base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        env["OPENAI_BASE_URL"] = base_url
+
         return env
 
     @property
@@ -65,6 +114,7 @@ class PapertCodeAgent(AbstractInstalledAgent):
                 command=f"papert -y --prompt {escaped_description}",
                 max_timeout_sec=float("inf"),
                 block=True,
-                append_enter=True
+                append_enter=True,
             )
         ]
+

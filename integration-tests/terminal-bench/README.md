@@ -46,6 +46,15 @@ Papert-agent run:
 OPENAI_API_KEY=<key> npm run test:terminal-bench:papert
 ```
 
+If `OPENAI_API_KEY` / `OPENAI_BASE_URL` / `OPENAI_MODEL` are not set, the suite
+now falls back to Papert auth/settings values:
+
+- `security.auth.apiKey`
+- `security.auth.baseUrl`
+- `model.name`
+
+from `.papert/settings.json` (workspace first, then user `~/.papert/settings.json`).
+
 Both:
 
 ```bash
@@ -70,3 +79,6 @@ Keep tasks deterministic and testable with simple assertions.
 - Oracle runs should resolve each task at `accuracy = 1.0`.
 - Papert-agent runs require network/API credentials.
 - Timeout can be tuned via `TB_TIMEOUT_MINUTES`.
+- Terminal-bench bootstrap will try multiple installers in order:
+  `uv tool install terminal-bench`, `uv tool install --python 3 terminal-bench`,
+  then `python3 -m pip install --user terminal-bench`.

@@ -12,9 +12,80 @@ import { existsSync, mkdirSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { resolveTerminalBenchTasks } from './taskCatalog.js';
+import { resolveTerminalBenchOpenAiConfig } from './openaiAuthConfig.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, '..');
+
+const DEFAULT_OPENAI_BASE_URL =
+  'https://dashscope.aliyuncs.com/compatible-mode/v1';
+const DEFAULT_OPENAI_MODEL = 'papert3-coder-plus';
+
+function addPathIfMissing(basePath: string, addition: string): string {
+  const separator = process.platform === 'win32' ? ';' : ':';
+  const existing = basePath.split(separator).filter(Boolean);
+  if (existing.includes(addition)) {
+    return basePath;
+  }
+  return `${addition}${separator}${basePath}`;
+}
+
+function augmentTerminalBenchPath(): void {
+  const home = process.env['HOME'];
+  if (!home) {
+    return;
+  }
+
+  let currentPath = process.env['PATH'] ?? '';
+  currentPath = addPathIfMissing(currentPath, `${home}/.local/bin`);
+
+  try {
+    const userBase = execSync('python3 -m site --user-base', {
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (userBase.length > 0) {
+      currentPath = addPathIfMissing(currentPath, join(userBase, 'bin'));
+    }
+  } catch {
+    // no-op; best effort only
+  }
+
+  process.env['PATH'] = currentPath;
+}
+
+function hasTerminalBench(): boolean {
+  try {
+    execSync('tb --help', { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function tryInstallTerminalBench(): string[] {
+  const attemptedCommands: string[] = [];
+  const installCommands = [
+    'uv tool install terminal-bench',
+    'uv tool install --python 3 terminal-bench',
+    'python3 -m pip install --user terminal-bench',
+  ];
+
+  for (const command of installCommands) {
+    attemptedCommands.push(command);
+    try {
+      execSync(command, { stdio: 'ignore' });
+      augmentTerminalBenchPath();
+      if (hasTerminalBench()) {
+        return attemptedCommands;
+      }
+    } catch {
+      // Try the next installer command.
+    }
+  }
+
+  return attemptedCommands;
+}
 
 describe('terminal-bench integration', () => {
   const rig = new TestRig();
@@ -55,24 +126,17 @@ describe('terminal-bench integration', () => {
     }
 
     // Check if terminal-bench is installed
-    try {
-      execSync('tb --help', { stdio: 'ignore' });
-    } catch {
+    augmentTerminalBenchPath();
+    if (!hasTerminalBench()) {
       console.log('Installing terminal-bench...');
-      // Use uv tool install for terminal-bench
-      try {
-        execSync('uv tool install --python 3.12 terminal-bench');
-        // Add uv tools to PATH for this process
-        process.env['PATH'] =
-          `${process.env['HOME']}/.local/bin:${process.env['PATH']}`;
-      } catch (installError) {
-        console.error('Failed to install terminal-bench:', installError);
+      const attempted = tryInstallTerminalBench();
+      if (!hasTerminalBench()) {
         throw new Error(
-          'terminal-bench installation failed. Please run: uv tool install terminal-bench',
+          `terminal-bench installation failed. Attempted: ${attempted.join(' | ')}`,
         );
       }
     }
-  });
+  }, DEFAULT_TIMEOUT_MS);
 
   afterAll(async () => {
     await rig.cleanup();
@@ -197,14 +261,20 @@ describe('terminal-bench integration', () => {
         rig.setup(`terminal-bench-papert-${taskId}`);
 
         const outputPath = join(outputBase, `papert-${taskId}`);
+        const authConfig = resolveTerminalBenchOpenAiConfig({
+          cwd: process.cwd(),
+          env: process.env,
+        });
 
-        // Check if API key is available
-        const apiKey = process.env['OPENAI_API_KEY'];
+        // Check if API key is available from env or papert settings.
+        const apiKey = authConfig.apiKey;
         if (!apiKey) {
           throw new Error(
-            'OPENAI_API_KEY environment variable is not set. This test requires an API key to run the papert-code agent.',
+            'OpenAI API key is missing. Configure it in OPENAI_API_KEY or in /auth settings (security.auth.apiKey).',
           );
         }
+        const baseUrl = authConfig.baseUrl || DEFAULT_OPENAI_BASE_URL;
+        const model = authConfig.model || DEFAULT_OPENAI_MODEL;
 
         // Run papert-code agent using spawn to avoid blocking event loop
         const args = [
@@ -213,6 +283,10 @@ describe('terminal-bench integration', () => {
           'integration-tests.terminal-bench.papert_code:PapertCodeAgent',
           '--agent-kwarg',
           `api_key=${apiKey}`,
+          '--agent-kwarg',
+          `base_url=${baseUrl}`,
+          '--agent-kwarg',
+          `model_name=${model}`,
           '--agent-kwarg',
           `version=${process.env['PAPERT_CODE_VERSION'] || 'latest'}`,
           '--dataset-path',
@@ -228,10 +302,8 @@ describe('terminal-bench integration', () => {
         const env = {
           ...process.env,
           OPENAI_API_KEY: apiKey,
-          OPENAI_MODEL: process.env['OPENAI_MODEL'] || 'papert3-coder-plus',
-          OPENAI_BASE_URL:
-            process.env['OPENAI_BASE_URL'] ||
-            'https://dashscope.aliyuncs.com/compatible-mode/v1',
+          OPENAI_MODEL: model,
+          OPENAI_BASE_URL: baseUrl,
         };
 
         // Use spawn with promise to avoid blocking
