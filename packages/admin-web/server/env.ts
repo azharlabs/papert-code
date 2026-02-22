@@ -3,6 +3,7 @@ import * as path from 'node:path';
 export interface AdminServerEnv {
   port: number;
   storePath: string;
+  sessionStorePath: string;
   allowlist: Set<string>;
   adminHeader: string;
   corsOrigins: Set<string>;
@@ -23,6 +24,9 @@ export function readAdminServerEnv(): AdminServerEnv {
   const storePath =
     process.env['PAPERT_ADMIN_STORE_PATH'] ||
     path.resolve(process.cwd(), 'data', 'admin-controls.sqlite');
+  const sessionStorePath =
+    process.env['PAPERT_ADMIN_SESSIONS_DIR'] ||
+    path.resolve(process.cwd(), 'data', 'sessions');
   const allowlist = parseCsvSet(
     process.env['PAPERT_ADMIN_ALLOWLIST'] ||
       process.env['PAPERT_ADMIN_USER_IDS'],
@@ -34,6 +38,7 @@ export function readAdminServerEnv(): AdminServerEnv {
   return {
     port: Number.isFinite(port) ? port : 4180,
     storePath,
+    sessionStorePath,
     allowlist,
     adminHeader,
     corsOrigins,

@@ -390,7 +390,7 @@ app.post('/api/v1/user/sessions', requireAuth, asyncHandler(async (req, res) => 
     return res.status(404).json({ error: 'user_not_found' });
   }
 
-  const sessionDir = path.resolve(process.cwd(), 'data', 'sessions', user.id);
+  const sessionDir = path.resolve(env.sessionStorePath, user.id);
   await fs.mkdir(sessionDir, { recursive: true });
   const filePath = path.resolve(sessionDir, `${parsed.data.sessionId}.jsonl`);
   if (!filePath.startsWith(`${sessionDir}${path.sep}`)) {

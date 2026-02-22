@@ -33,5 +33,17 @@ describe('readAdminServerEnv', () => {
 
     expect(env.allowlist.size).toBe(0);
     expect(env.corsOrigins.size).toBe(0);
+    expect(env.sessionStorePath.endsWith('/data/sessions')).toBe(true);
+  });
+
+  it('uses explicit transcript directory when configured', () => {
+    process.env = {
+      ...ORIGINAL_ENV,
+      PAPERT_ADMIN_SESSIONS_DIR: '/tmp/papert-admin-sessions',
+    };
+
+    const env = readAdminServerEnv();
+
+    expect(env.sessionStorePath).toBe('/tmp/papert-admin-sessions');
   });
 });

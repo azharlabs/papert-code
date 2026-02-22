@@ -21,6 +21,7 @@ The UI defaults to `http://localhost:4173` and proxies `/api` requests to the AP
 
 - `PAPERT_ADMIN_PORT` (default `4180`): API server port.
 - `PAPERT_ADMIN_STORE_PATH` (default `./data/admin-controls.sqlite`): SQLite database file.
+- `PAPERT_ADMIN_SESSIONS_DIR` (default `./data/sessions`): directory used to store uploaded session transcripts.
 - `PAPERT_ADMIN_ALLOWLIST` (comma-separated): admin user IDs that can access admin endpoints.
 - `PAPERT_ADMIN_HEADER` (default `x-admin-user-id`): header used to identify admin user.
 - `PAPERT_ADMIN_CORS_ORIGINS` (comma-separated): allowed browser origins for CORS (required in production).
