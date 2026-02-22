@@ -24,6 +24,9 @@ import {
   updateGroup,
   updateUser,
 } from './api/client';
+import { PolicyEditor } from './components/PolicyEditor';
+import { ProviderEditor } from './components/ProviderEditor';
+import { Toggle } from './components/Toggle';
 
 function emptyControls(): AdminControls {
   return {
@@ -1306,155 +1309,6 @@ export function App() {
           )}
         </div>
       </main>
-    </div>
-  );
-}
-
-interface PolicyEditorProps {
-  controls: AdminControls;
-  onChange: (next: AdminControls) => void;
-}
-
-function PolicyEditor({ controls, onChange }: PolicyEditorProps) {
-  const update = (patch: Partial<AdminControls>) =>
-    onChange({ ...controls, ...patch });
-
-  const updateMcp = (patch: NonNullable<AdminControls['mcpSetting']>) =>
-    update({ mcpSetting: { ...controls.mcpSetting, ...patch } });
-
-  const updateCli = (patch: NonNullable<AdminControls['cliFeatureSetting']>) =>
-    update({ cliFeatureSetting: { ...controls.cliFeatureSetting, ...patch } });
-
-  const updateExtensions = (enabled: boolean) =>
-    updateCli({
-      extensionsSetting: {
-        ...controls.cliFeatureSetting?.extensionsSetting,
-        extensionsEnabled: enabled,
-      },
-    });
-
-  return (
-    <div className="policy">
-      <Toggle
-        label="Secure mode"
-        description="Enforce secure mode behaviors for CLI sessions."
-        checked={controls.secureModeEnabled ?? false}
-        onChange={(value) => update({ secureModeEnabled: value })}
-      />
-      <Toggle
-        label="Strict mode disabled"
-        description="Relax strict-mode safety validations."
-        checked={controls.strictModeDisabled ?? false}
-        onChange={(value) => update({ strictModeDisabled: value })}
-      />
-      <Toggle
-        label="MCP enabled"
-        description="Allow MCP servers and related commands."
-        checked={controls.mcpSetting?.mcpEnabled ?? false}
-        onChange={(value) => updateMcp({ mcpEnabled: value })}
-      />
-      <label className="field">
-        <span>Override MCP config JSON</span>
-        <textarea
-          rows={4}
-          value={controls.mcpSetting?.overrideMcpConfigJson ?? ''}
-          placeholder={`{\n  "mcpServers": {\n    "server": { ... }\n  }\n}`}
-          onChange={(event) =>
-            updateMcp({ overrideMcpConfigJson: event.target.value })
-          }
-        />
-      </label>
-      <Toggle
-        label="Extensions enabled"
-        description="Control extensions and plugins availability."
-        checked={
-          controls.cliFeatureSetting?.extensionsSetting?.extensionsEnabled ?? false
-        }
-        onChange={updateExtensions}
-      />
-      <Toggle
-        label="Skills enabled"
-        description="Allow unmanaged skills to load in the CLI."
-        checked={
-          controls.cliFeatureSetting?.unmanagedCapabilitiesEnabled ?? false
-        }
-        onChange={(value) =>
-          updateCli({ unmanagedCapabilitiesEnabled: value })
-        }
-      />
-    </div>
-  );
-}
-
-interface ProviderEditorProps {
-  provider: { apiKey?: string; baseUrl?: string; model?: string; models?: string[] };
-  onChange: (next: { apiKey?: string; baseUrl?: string; model?: string; models?: string[] }) => void;
-}
-
-function ProviderEditor({ provider, onChange }: ProviderEditorProps) {
-  const modelsValue = (provider.models || []).join(', ');
-  return (
-    <div className="policy">
-      <label className="field">
-        <span>API key</span>
-        <input
-          value={provider.apiKey ?? ''}
-          onChange={(e) => onChange({ ...provider, apiKey: e.target.value })}
-        />
-      </label>
-      <label className="field">
-        <span>Base URL</span>
-        <input
-          value={provider.baseUrl ?? ''}
-          onChange={(e) => onChange({ ...provider, baseUrl: e.target.value })}
-        />
-      </label>
-      <label className="field">
-        <span>Default model</span>
-        <input
-          value={provider.model ?? ''}
-          onChange={(e) => onChange({ ...provider, model: e.target.value })}
-        />
-      </label>
-      <label className="field">
-        <span>Available models (comma-separated)</span>
-        <input
-          value={modelsValue}
-          onChange={(e) =>
-            onChange({
-              ...provider,
-              models: e.target.value
-                .split(',')
-                .map((value) => value.trim()),
-            })
-          }
-        />
-      </label>
-    </div>
-  );
-}
-
-interface ToggleProps {
-  label: string;
-  description: string;
-  checked: boolean;
-  onChange: (value: boolean) => void;
-}
-
-function Toggle({ label, description, checked, onChange }: ToggleProps) {
-  return (
-    <div className="toggle">
-      <div>
-        <strong>{label}</strong>
-        <p>{description}</p>
-      </div>
-      <button
-        className={checked ? 'pill active' : 'pill'}
-        onClick={() => onChange(!checked)}
-        type="button"
-      >
-        {checked ? 'Enabled' : 'Disabled'}
-      </button>
     </div>
   );
 }
