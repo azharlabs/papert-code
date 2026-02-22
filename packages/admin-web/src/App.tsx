@@ -80,7 +80,10 @@ export function App() {
 
   const [groupDraft, setGroupDraft] = useState<GroupRecord | null>(null);
   const [userDraft, setUserDraft] = useState<UserRecord | null>(null);
-  const [newUserPassword, setNewUserPassword] = useState('');
+  const [editUserPassword, setEditUserPassword] = useState('');
+  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
+  const [createUserDraft, setCreateUserDraft] = useState<UserRecord | null>(null);
+  const [createUserPassword, setCreateUserPassword] = useState('');
   const [activeSection, setActiveSection] = useState<
     | 'overview'
     | 'users'
@@ -256,14 +259,20 @@ export function App() {
   });
 
   const handleNewUser = () => {
-    setUserDraft(createEmptyUser());
-    setSelectedUserId('');
-    setNewUserPassword('');
+    setCreateUserDraft(createEmptyUser());
+    setCreateUserPassword('');
+    setIsCreateUserModalOpen(true);
   };
 
   const handleNewGroup = () => {
     setGroupDraft(createEmptyGroup());
     setSelectedGroupId('');
+  };
+
+  const closeCreateUserModal = () => {
+    setIsCreateUserModalOpen(false);
+    setCreateUserDraft(null);
+    setCreateUserPassword('');
   };
 
   useEffect(() => {
@@ -278,6 +287,7 @@ export function App() {
 
   useEffect(() => {
     setUserDraft(selectedUser ? JSON.parse(JSON.stringify(selectedUser)) : null);
+    setEditUserPassword('');
     if (selectedUserId && token) {
       fetchUsage(token, selectedUserId)
         .then((data) => setUsage(data.usage))
@@ -318,7 +328,10 @@ export function App() {
     setUsage([]);
     setGroupDraft(null);
     setUserDraft(null);
-    setNewUserPassword('');
+    setEditUserPassword('');
+    setCreateUserPassword('');
+    setCreateUserDraft(null);
+    setIsCreateUserModalOpen(false);
     setEmail('');
     setPassword('');
     setInfo(null);
@@ -388,8 +401,8 @@ export function App() {
   };
 
   const handleCreateUser = async () => {
-    if (!token || !userDraft || !newUserPassword) return;
-    if (newUserPassword.length < 8) {
+    if (!token || !createUserDraft || !createUserPassword) return;
+    if (createUserPassword.length < 8) {
       setError('Password must be at least 8 characters.');
       return;
     }
@@ -397,18 +410,18 @@ export function App() {
     setError(null);
     try {
       const created = await createUser(token, {
-        email: userDraft.email,
-        password: newUserPassword,
-        role: userDraft.role,
-        groupId: userDraft.groupId ?? null,
-        selfManaged: userDraft.selfManaged,
-        provider: userDraft.provider,
-        controls: userDraft.controls,
-        active: userDraft.active,
+        email: createUserDraft.email,
+        password: createUserPassword,
+        role: createUserDraft.role,
+        groupId: createUserDraft.groupId ?? null,
+        selfManaged: createUserDraft.selfManaged,
+        provider: createUserDraft.provider,
+        controls: createUserDraft.controls,
+        active: createUserDraft.active,
       });
       setUsers((prev) => [...prev, created]);
       setSelectedUserId(created.id);
-      setNewUserPassword('');
+      closeCreateUserModal();
       setInfo('User created.');
       setTimeout(() => setInfo(null), 3000);
     } catch (err) {
@@ -420,7 +433,7 @@ export function App() {
 
   const handleSaveUser = async () => {
     if (!token || !userDraft) return;
-    if (newUserPassword && newUserPassword.length < 8) {
+    if (editUserPassword && editUserPassword.length < 8) {
       setError('Password must be at least 8 characters.');
       return;
     }
@@ -436,12 +449,12 @@ export function App() {
         controls: userDraft.controls,
         active: userDraft.active,
       };
-      if (newUserPassword) {
-        payload.password = newUserPassword;
+      if (editUserPassword) {
+        payload.password = editUserPassword;
       }
       const updated = await updateUser(token, userDraft.id, payload);
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-      setNewUserPassword('');
+      setEditUserPassword('');
       setInfo('User updated.');
       setTimeout(() => setInfo(null), 3000);
     } catch (err) {
@@ -827,13 +840,11 @@ export function App() {
                           <span>Password</span>
                           <input
                             type="password"
-                            value={newUserPassword}
-                            onChange={(e) => setNewUserPassword(e.target.value)}
-                            placeholder={
-                              userDraft.id ? 'Leave blank to keep current' : 'Set initial password'
-                            }
+                            value={editUserPassword}
+                            onChange={(e) => setEditUserPassword(e.target.value)}
+                            placeholder="Leave blank to keep current"
                           />
-                          {newUserPassword && newUserPassword.length < 8 && (
+                          {editUserPassword && editUserPassword.length < 8 && (
                             <span className="hint error">
                               Password must be at least 8 characters.
                             </span>
@@ -895,24 +906,12 @@ export function App() {
                         onChange={(value) => setUserDraft({ ...userDraft, active: value })}
                       />
                       <div className="actions">
-                        {userDraft.id ? (
-                          <>
-                            <button className="ghost danger" onClick={handleDeleteUser}>
-                              Remove user
-                            </button>
-                            <button className="primary" onClick={handleSaveUser}>
-                              Save user
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            className="primary"
-                            onClick={handleCreateUser}
-                            disabled={!newUserPassword || newUserPassword.length < 8}
-                          >
-                            Create user
-                          </button>
-                        )}
+                        <button className="ghost danger" onClick={handleDeleteUser}>
+                          Remove user
+                        </button>
+                        <button className="primary" onClick={handleSaveUser}>
+                          Save user
+                        </button>
                       </div>
                     </>
                   ) : (
@@ -1286,6 +1285,136 @@ export function App() {
           )}
         </div>
       </main>
+      {isCreateUserModalOpen && createUserDraft && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Create user"
+          onClick={closeCreateUserModal}
+        >
+          <div className="modal-card modal-card--wide" onClick={(event) => event.stopPropagation()}>
+            <div className="panel-header">
+              <div>
+                <h2>Create user</h2>
+                <p className="hint">Add a new user account and policy profile.</p>
+              </div>
+              <button className="ghost subtle" type="button" onClick={closeCreateUserModal}>
+                Close
+              </button>
+            </div>
+            <div className="policy modal-body">
+              <div className="control-grid">
+                <label className="field">
+                  <span>Email</span>
+                  <input
+                    value={createUserDraft.email}
+                    onChange={(e) =>
+                      setCreateUserDraft({ ...createUserDraft, email: e.target.value })
+                    }
+                    placeholder="user@company.com"
+                  />
+                </label>
+                <label className="field">
+                  <span>Password</span>
+                  <input
+                    type="password"
+                    value={createUserPassword}
+                    onChange={(e) => setCreateUserPassword(e.target.value)}
+                    placeholder="Set initial password"
+                  />
+                  {createUserPassword && createUserPassword.length < 8 && (
+                    <span className="hint error">
+                      Password must be at least 8 characters.
+                    </span>
+                  )}
+                </label>
+              </div>
+              <div className="control-grid">
+                <label className="field">
+                  <span>Role</span>
+                  <select
+                    value={createUserDraft.role}
+                    onChange={(e) =>
+                      setCreateUserDraft({
+                        ...createUserDraft,
+                        role: e.target.value as 'admin' | 'user',
+                      })
+                    }
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </label>
+                <label className="field">
+                  <span>Group</span>
+                  <select
+                    value={createUserDraft.groupId ?? ''}
+                    onChange={(e) =>
+                      setCreateUserDraft({
+                        ...createUserDraft,
+                        groupId: e.target.value || null,
+                      })
+                    }
+                  >
+                    <option value="">No group</option>
+                    {groups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <Toggle
+                label="Self-managed provider"
+                description="Allow the user to bring their own OpenAI-compatible key."
+                checked={createUserDraft.selfManaged}
+                onChange={(value) =>
+                  setCreateUserDraft({ ...createUserDraft, selfManaged: value })
+                }
+              />
+              {!createUserDraft.selfManaged && (
+                <>
+                  <ProviderEditor
+                    provider={createUserDraft.provider}
+                    onChange={(provider) =>
+                      setCreateUserDraft({ ...createUserDraft, provider })
+                    }
+                  />
+                  <PolicyEditor
+                    controls={createUserDraft.controls}
+                    onChange={(controls) =>
+                      setCreateUserDraft({ ...createUserDraft, controls })
+                    }
+                  />
+                </>
+              )}
+              <Toggle
+                label="Active"
+                description="Disable to block policy fetch and login."
+                checked={createUserDraft.active}
+                onChange={(value) =>
+                  setCreateUserDraft({ ...createUserDraft, active: value })
+                }
+              />
+            </div>
+            <div className="actions modal-actions">
+              <button className="ghost subtle" type="button" onClick={closeCreateUserModal}>
+                Cancel
+              </button>
+              <button
+                className="primary"
+                type="button"
+                onClick={handleCreateUser}
+                disabled={!createUserPassword || createUserPassword.length < 8}
+              >
+                Create user
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

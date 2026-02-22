@@ -674,6 +674,46 @@ textarea {
   margin-top: 16px;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  z-index: 60;
+}
+
+.modal-card {
+  width: min(1120px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid var(--stroke);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal-card--wide {
+  width: min(1180px, 100%);
+}
+
+.modal-body {
+  margin-top: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.modal-actions {
+  margin-top: 0;
+  border-top: 1px solid var(--stroke);
+  padding-top: 16px;
+}
+
 @media (max-width: 1024px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -703,5 +743,14 @@ textarea {
   .panel-split,
   .usage-summary-row {
     display: block;
+  }
+
+  .modal-backdrop {
+    padding: 12px;
+  }
+
+  .modal-card {
+    max-height: calc(100vh - 24px);
+    padding: 18px;
   }
 }
