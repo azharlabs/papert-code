@@ -759,21 +759,6 @@ export function App() {
               Manage policies, sessions, and quotas with the trusted admin tools.
             </p>
           </div>
-          <div className="header-actions">
-            <button
-              className="ghost subtle"
-              onClick={() => setIsFlowModalOpen(true)}
-              type="button"
-            >
-              Complete flow
-            </button>
-            <button className="ghost subtle" onClick={refreshAll} type="button">
-              Sync data
-            </button>
-            <button className="ghost danger" onClick={handleLogout} type="button">
-              Sign out
-            </button>
-          </div>
         </header>
 
         <div className="status-row">
