@@ -84,6 +84,7 @@ export function App() {
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   const [createUserDraft, setCreateUserDraft] = useState<UserRecord | null>(null);
   const [createUserPassword, setCreateUserPassword] = useState('');
+  const [isFlowModalOpen, setIsFlowModalOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<
     | 'overview'
     | 'users'
@@ -261,6 +262,7 @@ export function App() {
   const handleNewUser = () => {
     setCreateUserDraft(createEmptyUser());
     setCreateUserPassword('');
+    setIsFlowModalOpen(false);
     setIsCreateUserModalOpen(true);
   };
 
@@ -273,6 +275,64 @@ export function App() {
     setIsCreateUserModalOpen(false);
     setCreateUserDraft(null);
     setCreateUserPassword('');
+  };
+
+  const runFlowAction = (
+    action:
+      | 'sync'
+      | 'users'
+      | 'new_user'
+      | 'groups'
+      | 'usage'
+      | 'sessions'
+      | 'quota_review'
+      | 'settings'
+      | 'api_health',
+  ) => {
+    if (action === 'sync') {
+      setIsFlowModalOpen(false);
+      void refreshAll();
+      return;
+    }
+    if (action === 'new_user') {
+      setActiveSection('users');
+      handleNewUser();
+      return;
+    }
+    if (action === 'users') {
+      setIsFlowModalOpen(false);
+      setActiveSection('users');
+      return;
+    }
+    if (action === 'groups') {
+      setIsFlowModalOpen(false);
+      setActiveSection('groups');
+      return;
+    }
+    if (action === 'usage') {
+      setIsFlowModalOpen(false);
+      setActiveSection('usage');
+      return;
+    }
+    if (action === 'sessions') {
+      setIsFlowModalOpen(false);
+      setActiveSection('sessions');
+      return;
+    }
+    if (action === 'quota_review') {
+      setIsFlowModalOpen(false);
+      setActiveSection('overview');
+      return;
+    }
+    if (action === 'settings') {
+      setIsFlowModalOpen(false);
+      setActiveSection('settings');
+      return;
+    }
+    if (action === 'api_health') {
+      setIsFlowModalOpen(false);
+      window.open('/api/v1/admin/health', '_blank', 'noopener,noreferrer');
+    }
   };
 
   useEffect(() => {
@@ -332,6 +392,7 @@ export function App() {
     setCreateUserPassword('');
     setCreateUserDraft(null);
     setIsCreateUserModalOpen(false);
+    setIsFlowModalOpen(false);
     setEmail('');
     setPassword('');
     setInfo(null);
@@ -609,6 +670,13 @@ export function App() {
             </p>
           </div>
           <div className="header-actions">
+            <button
+              className="ghost subtle"
+              onClick={() => setIsFlowModalOpen(true)}
+              type="button"
+            >
+              Complete flow
+            </button>
             <button className="ghost subtle" onClick={refreshAll} type="button">
               Sync data
             </button>
@@ -647,6 +715,116 @@ export function App() {
         <div className="content-body">
           {activeSection === 'overview' && (
             <>
+              <section className="panel flow-canvas">
+                <div className="panel-header">
+                  <div>
+                    <h2>Complete flow canvas</h2>
+                    <p className="hint">
+                      Follow these steps in order. Every action button navigates you to the right place.
+                    </p>
+                  </div>
+                  <div className="flow-header-actions">
+                    <button
+                      className="ghost subtle"
+                      type="button"
+                      onClick={() => setIsFlowModalOpen(true)}
+                    >
+                      Open guided modal
+                    </button>
+                    <a
+                      className="ghost subtle flow-link"
+                      href="/api/v1/admin/health"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      API health
+                    </a>
+                  </div>
+                </div>
+                <div className="flow-canvas-grid">
+                  <article className="flow-node">
+                    <p className="flow-node__step">Step 1</p>
+                    <h3>Sync data</h3>
+                    <p>Pull latest users, groups, sessions, and quota requests.</p>
+                    <button
+                      className="ghost subtle"
+                      type="button"
+                      onClick={() => runFlowAction('sync')}
+                    >
+                      Sync now
+                    </button>
+                  </article>
+                  <article className="flow-node">
+                    <p className="flow-node__step">Step 2</p>
+                    <h3>Open Users</h3>
+                    <p>Go to the user directory to manage accounts.</p>
+                    <button
+                      className="ghost subtle"
+                      type="button"
+                      onClick={() => runFlowAction('users')}
+                    >
+                      Go to users
+                    </button>
+                  </article>
+                  <article className="flow-node">
+                    <p className="flow-node__step">Step 3</p>
+                    <h3>Create user</h3>
+                    <p>Open the large create-user modal and submit credentials + policy.</p>
+                    <button
+                      className="primary"
+                      type="button"
+                      onClick={() => runFlowAction('new_user')}
+                    >
+                      + New user modal
+                    </button>
+                  </article>
+                  <article className="flow-node">
+                    <p className="flow-node__step">Step 4</p>
+                    <h3>Configure groups</h3>
+                    <p>Set provider defaults and quotas at the group level.</p>
+                    <button
+                      className="ghost subtle"
+                      type="button"
+                      onClick={() => runFlowAction('groups')}
+                    >
+                      Go to groups
+                    </button>
+                  </article>
+                  <article className="flow-node">
+                    <p className="flow-node__step">Step 5</p>
+                    <h3>Review quota requests</h3>
+                    <p>Approve/reject pending quota requests from the overview queue.</p>
+                    <button
+                      className="ghost subtle"
+                      type="button"
+                      onClick={() => runFlowAction('quota_review')}
+                    >
+                      Open queue
+                    </button>
+                  </article>
+                  <article className="flow-node">
+                    <p className="flow-node__step">Step 6</p>
+                    <h3>Audit usage & sessions</h3>
+                    <p>Inspect token trends and transcript-level activity.</p>
+                    <div className="flow-node__actions">
+                      <button
+                        className="ghost subtle"
+                        type="button"
+                        onClick={() => runFlowAction('usage')}
+                      >
+                        Usage
+                      </button>
+                      <button
+                        className="ghost subtle"
+                        type="button"
+                        onClick={() => runFlowAction('sessions')}
+                      >
+                        Sessions
+                      </button>
+                    </div>
+                  </article>
+                </div>
+              </section>
               <section className="stat-grid overview-stats">
                 {stats.map((stat) => (
                   <article className="stat-card" key={stat.label}>
@@ -1285,6 +1463,116 @@ export function App() {
           )}
         </div>
       </main>
+      {isFlowModalOpen && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Complete flow guide"
+          onClick={() => setIsFlowModalOpen(false)}
+        >
+          <div className="modal-card modal-card--guide" onClick={(event) => event.stopPropagation()}>
+            <div className="panel-header">
+              <div>
+                <h2>Complete click flow</h2>
+                <p className="hint">
+                  Use this guide to run the full admin workflow from onboarding to monitoring.
+                </p>
+              </div>
+              <button
+                className="ghost subtle"
+                type="button"
+                onClick={() => setIsFlowModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="flow-guide-list">
+              <article className="flow-guide-row">
+                <div>
+                  <p className="flow-node__step">Step 1</p>
+                  <h3>Sync latest state</h3>
+                  <p className="hint">Click sync before making any user or quota changes.</p>
+                </div>
+                <button className="ghost subtle" type="button" onClick={() => runFlowAction('sync')}>
+                  Sync
+                </button>
+              </article>
+              <article className="flow-guide-row">
+                <div>
+                  <p className="flow-node__step">Step 2</p>
+                  <h3>Open Users tab</h3>
+                  <p className="hint">Start account management in the users directory.</p>
+                </div>
+                <button className="ghost subtle" type="button" onClick={() => runFlowAction('users')}>
+                  Users
+                </button>
+              </article>
+              <article className="flow-guide-row">
+                <div>
+                  <p className="flow-node__step">Step 3</p>
+                  <h3>Click + New user</h3>
+                  <p className="hint">This opens the large create-user modal.</p>
+                </div>
+                <button className="primary" type="button" onClick={() => runFlowAction('new_user')}>
+                  Open create modal
+                </button>
+              </article>
+              <article className="flow-guide-row">
+                <div>
+                  <p className="flow-node__step">Step 4</p>
+                  <h3>Configure groups</h3>
+                  <p className="hint">Assign defaults and token limits for the team.</p>
+                </div>
+                <button className="ghost subtle" type="button" onClick={() => runFlowAction('groups')}>
+                  Groups
+                </button>
+              </article>
+              <article className="flow-guide-row">
+                <div>
+                  <p className="flow-node__step">Step 5</p>
+                  <h3>Review quota queue</h3>
+                  <p className="hint">Approve or reject pending requests in overview.</p>
+                </div>
+                <button
+                  className="ghost subtle"
+                  type="button"
+                  onClick={() => runFlowAction('quota_review')}
+                >
+                  Quota queue
+                </button>
+              </article>
+              <article className="flow-guide-row">
+                <div>
+                  <p className="flow-node__step">Step 6</p>
+                  <h3>Audit usage and sessions</h3>
+                  <p className="hint">Check trends and inspect transcripts when needed.</p>
+                </div>
+                <div className="flow-node__actions">
+                  <button className="ghost subtle" type="button" onClick={() => runFlowAction('usage')}>
+                    Usage
+                  </button>
+                  <button className="ghost subtle" type="button" onClick={() => runFlowAction('sessions')}>
+                    Sessions
+                  </button>
+                </div>
+              </article>
+            </div>
+            <div className="actions modal-actions">
+              <button
+                className="ghost subtle"
+                type="button"
+                onClick={() => runFlowAction('api_health')}
+              >
+                Open API health
+              </button>
+              <button className="primary" type="button" onClick={() => runFlowAction('settings')}>
+                Go to settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {isCreateUserModalOpen && createUserDraft && (
         <div
           className="modal-backdrop"
