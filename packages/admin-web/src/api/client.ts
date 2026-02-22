@@ -35,6 +35,16 @@ async function request<T>(
   return payload as T;
 }
 
+function buildQuery(params: Record<string, string | number | undefined>): string {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined) continue;
+    query.set(key, String(value));
+  }
+  const result = query.toString();
+  return result ? `?${result}` : '';
+}
+
 export async function login(email: string, password: string) {
   return request<{ token: string } & Record<string, unknown>>('/auth/login', {
     method: 'POST',
@@ -43,8 +53,16 @@ export async function login(email: string, password: string) {
   });
 }
 
-export async function fetchUsers(token: string): Promise<UserRecord[]> {
-  const data = await request<{ users: UserRecord[] }>('/admin/users', {
+export async function fetchUsers(
+  token: string,
+  options: { query?: string; limit?: number; offset?: number } = {},
+): Promise<UserRecord[]> {
+  const query = buildQuery({
+    q: options.query,
+    limit: options.limit,
+    offset: options.offset,
+  });
+  const data = await request<{ users: UserRecord[] }>(`/admin/users${query}`, {
     headers: buildHeaders(token),
   });
   return data.users;
@@ -113,8 +131,16 @@ export async function fetchUsage(token: string, userId: string): Promise<{ usage
   });
 }
 
-export async function fetchQuotaRequests(token: string): Promise<QuotaRequestRecord[]> {
-  const data = await request<{ requests: QuotaRequestRecord[] }>('/admin/quota-requests', {
+export async function fetchQuotaRequests(
+  token: string,
+  options: { status?: string; limit?: number; offset?: number } = {},
+): Promise<QuotaRequestRecord[]> {
+  const query = buildQuery({
+    status: options.status,
+    limit: options.limit,
+    offset: options.offset,
+  });
+  const data = await request<{ requests: QuotaRequestRecord[] }>(`/admin/quota-requests${query}`, {
     headers: buildHeaders(token),
   });
   return data.requests;
@@ -142,8 +168,16 @@ export async function rejectQuotaRequest(token: string, id: string) {
   return data.request;
 }
 
-export async function fetchSessions(token: string, userId?: string): Promise<SessionRecord[]> {
-  const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+export async function fetchSessions(
+  token: string,
+  userId?: string,
+  options: { limit?: number; offset?: number } = {},
+): Promise<SessionRecord[]> {
+  const query = buildQuery({
+    userId,
+    limit: options.limit,
+    offset: options.offset,
+  });
   const data = await request<{ sessions: SessionRecord[] }>(`/admin/sessions${query}`, {
     headers: buildHeaders(token),
   });

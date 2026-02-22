@@ -49,7 +49,7 @@ export PAPERT_ADMIN_BOOTSTRAP_PASSWORD="change-me-please"
 - `POST /api/v1/user/usage` → report token usage (JWT).
 - `POST /api/v1/user/sessions` → upload session transcript (JWT).
 - `POST /api/v1/user/quota-requests` → request quota increase (JWT).
-- `GET /api/v1/admin/users` → list overrides (admin only).
+- `GET /api/v1/admin/users` → list overrides (admin only, supports `q`, `limit`, `offset`).
 - `POST /api/v1/admin/users` → create user (admin only).
 - `PUT /api/v1/admin/users/:id` → update user (admin only).
 - `DELETE /api/v1/admin/users/:id` → remove user (admin only).
@@ -58,11 +58,14 @@ export PAPERT_ADMIN_BOOTSTRAP_PASSWORD="change-me-please"
 - `PUT /api/v1/admin/groups/:id` → update group (admin only).
 - `DELETE /api/v1/admin/groups/:id` → remove group (admin only).
 - `GET /api/v1/admin/usage/:userId` → usage by user (admin only).
-- `GET /api/v1/admin/quota-requests` → list quota requests (admin only).
+- `GET /api/v1/admin/quota-requests` → list quota requests (admin only, supports `status`, `limit`, `offset`).
 - `POST /api/v1/admin/quota-requests/:id/approve` → approve request.
 - `POST /api/v1/admin/quota-requests/:id/reject` → reject request.
-- `GET /api/v1/admin/sessions` → list sessions (admin only).
+- `GET /api/v1/admin/sessions` → list sessions (admin only, supports `userId`, `limit`, `offset`).
 - `GET /api/v1/admin/sessions/:id` → fetch transcript (admin only).
+
+List endpoints that support `limit`/`offset` also return:
+`page: { limit, offset, total, hasMore }`.
 
 ## Data model
 

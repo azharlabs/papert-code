@@ -25,6 +25,7 @@ import {
 } from './auth.js';
 import { computeQuotaStatus, applyUsage, getPeriodStart } from './quota.js';
 import { adminErrorHandler, asyncHandler } from './http.js';
+import { paginate, readPageParams } from './pagination.js';
 import type { AdminAuthContext } from './request-context.js';
 import type { AdminControls } from './types.js';
 
@@ -449,7 +450,20 @@ app.post('/api/v1/user/quota-requests', requireAuth, (req, res) => {
 
 // Admin endpoints
 app.get('/api/v1/admin/users', requireAuth, requireAllowlist, requireAdminRole, (_req, res) => {
-  res.json({ users: repo.listUsers().map(toPublicUser) });
+  const rawQuery = _req.query as Record<string, unknown>;
+  const query = typeof rawQuery.q === 'string' ? rawQuery.q.trim().toLowerCase() : '';
+  const pageParams = readPageParams(rawQuery);
+
+  let users = repo.listUsers().map(toPublicUser);
+  if (query) {
+    users = users.filter((user) =>
+      user.email.toLowerCase().includes(query) ||
+      (user.groupId ?? '').toLowerCase().includes(query),
+    );
+  }
+
+  const result = paginate(users, pageParams);
+  res.json({ users: result.items, page: result.page });
 });
 
 app.post('/api/v1/admin/users', requireAuth, requireAllowlist, requireAdminRole, asyncHandler(async (req, res) => {
@@ -562,8 +576,11 @@ app.get('/api/v1/admin/usage/:userId', requireAuth, requireAllowlist, requireAdm
 });
 
 app.get('/api/v1/admin/quota-requests', requireAuth, requireAllowlist, requireAdminRole, (req, res) => {
+  const rawQuery = req.query as Record<string, unknown>;
   const status = typeof req.query.status === 'string' ? req.query.status : undefined;
-  res.json({ requests: repo.listQuotaRequests(status) });
+  const pageParams = readPageParams(rawQuery);
+  const result = paginate(repo.listQuotaRequests(status), pageParams);
+  res.json({ requests: result.items, page: result.page });
 });
 
 app.post('/api/v1/admin/quota-requests/:id/approve', requireAuth, requireAllowlist, requireAdminRole, (req, res) => {
@@ -578,7 +595,9 @@ app.post('/api/v1/admin/quota-requests/:id/reject', requireAuth, requireAllowlis
 
 app.get('/api/v1/admin/sessions', requireAuth, requireAllowlist, requireAdminRole, (req, res) => {
   const userId = typeof req.query.userId === 'string' ? req.query.userId : undefined;
-  res.json({ sessions: repo.listSessions(userId) });
+  const pageParams = readPageParams(req.query as Record<string, unknown>);
+  const result = paginate(repo.listSessions(userId), pageParams);
+  res.json({ sessions: result.items, page: result.page });
 });
 
 app.get('/api/v1/admin/sessions/:id', requireAuth, requireAllowlist, requireAdminRole, asyncHandler(async (req, res) => {
