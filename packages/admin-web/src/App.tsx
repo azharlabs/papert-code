@@ -45,12 +45,6 @@ function emptyControls(): AdminControls {
   };
 }
 
-const maskToken = (value: string) => {
-  if (!value) return 'No session token';
-  if (value.length <= 20) return value;
-  return `${value.slice(0, 8)}…${value.slice(-6)}`;
-};
-
 const formatTimestamp = (value?: string | null) =>
   value ? new Date(value).toLocaleString() : '—';
 
@@ -725,31 +719,14 @@ export function App() {
           </div>
         </header>
 
-        <section className="session-card">
-          <div>
-            <p className="session-card__title">Admin session</p>
-            <p className="session-card__token">{maskToken(token)}</p>
-            <p className="session-card__meta">Logged in as {email || 'admin'}</p>
-          </div>
-          <div className="session-card__actions">
-            <button className="ghost subtle" onClick={refreshAll} type="button">
-              Refresh
-            </button>
-            <button className="ghost danger" onClick={handleLogout} type="button">
-              Sign out
-            </button>
-          </div>
-          <div className="session-card__badges">
-            {loading && <span className="badge badge-info">Syncing…</span>}
-            {error && <span className="badge badge-error">{error}</span>}
-            {info && <span className="badge badge-success">{info}</span>}
-          </div>
+        <div className="status-row">
+          {loading && <span className="badge badge-info">Syncing…</span>}
+          {error && <span className="badge badge-error">{error}</span>}
+          {info && <span className="badge badge-success">{info}</span>}
           {lastSyncedSession && (
-            <p className="session-card__subtitle">
-              Last sync: {formatTimestamp(lastSyncedSession.createdAt)}
-            </p>
+            <span className="hint">Last sync: {formatTimestamp(lastSyncedSession.createdAt)}</span>
           )}
-        </section>
+        </div>
 
         <div className="content-body">
           {activeSection === 'overview' && (

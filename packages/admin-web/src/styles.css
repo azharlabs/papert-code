@@ -205,6 +205,13 @@ textarea {
   gap: 10px;
 }
 
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .session-card {
   background: var(--panel);
   border: 1px solid var(--stroke);
