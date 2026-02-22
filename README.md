@@ -1,5 +1,20 @@
 # Papert Code
 
+[![npm version](https://img.shields.io/npm/v/%40papert-code%2Fpapert-code?logo=npm&label=npm)](https://www.npmjs.com/package/@papert-code/papert-code)
+[![npm downloads](https://img.shields.io/npm/dm/%40papert-code%2Fpapert-code?logo=npm&label=downloads)](https://www.npmjs.com/package/@papert-code/papert-code)
+[![CI lanes](https://img.shields.io/github/actions/workflow/status/azharlabs/papert-code/ci-lanes.yml?branch=main&label=ci-lanes)](https://github.com/azharlabs/papert-code/actions/workflows/ci-lanes.yml)
+[![Integration deflake](https://img.shields.io/github/actions/workflow/status/azharlabs/papert-code/integration-deflake.yml?branch=main&label=integration-deflake)](https://github.com/azharlabs/papert-code/actions/workflows/integration-deflake.yml)
+[![License](https://img.shields.io/github/license/azharlabs/papert-code)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/azharlabs/papert-code?style=social)](https://github.com/azharlabs/papert-code/stargazers)
+[![Forks](https://img.shields.io/github/forks/azharlabs/papert-code?style=social)](https://github.com/azharlabs/papert-code/network/members)
+
+[![GitHub issues](https://img.shields.io/github/issues/azharlabs/papert-code)](https://github.com/azharlabs/papert-code/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/azharlabs/papert-code)](https://github.com/azharlabs/papert-code/pulls)
+[![Last commit](https://img.shields.io/github/last-commit/azharlabs/papert-code)](https://github.com/azharlabs/papert-code/commits/main)
+[![Release](https://img.shields.io/github/v/release/azharlabs/papert-code?sort=semver)](https://github.com/azharlabs/papert-code/releases)
+[![npm install](https://img.shields.io/badge/npm%20i%20-g%20%40papert--code%2Fpapert--code-CB3837?logo=npm&logoColor=white)](https://www.npmjs.com/package/@papert-code/papert-code)
+[![Run with npx](https://img.shields.io/badge/npx-papert-CB3837?logo=npm&logoColor=white)](https://www.npmjs.com/package/@papert-code/papert-code)
+
 ![Papert Terminal UI](docs/assets/papert-screenshot.png)
 
 Papert Code is an AI agent engine for software engineering workflows. It plans, reads, edits, and generates code across large repositories, executes shell and tool actions with safety controls, and exposes the same agent runtime through TypeScript and Python SDKs plus a VS Code companion extension.
