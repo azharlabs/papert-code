@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type {
   AdminControls,
   GroupRecord,
-  QuotaRequestRecord,
   SessionRecord,
   UsageRecord,
   UserRecord,
@@ -13,12 +12,8 @@ import {
   createUser,
   deleteGroup,
   deleteUser,
-  fetchGroups,
-  fetchQuotaRequests,
   fetchSession,
-  fetchSessions,
   fetchUsage,
-  fetchUsers,
   login,
   rejectQuotaRequest,
   updateGroup,
@@ -27,6 +22,7 @@ import {
 import { PolicyEditor } from './components/PolicyEditor';
 import { ProviderEditor } from './components/ProviderEditor';
 import { Toggle } from './components/Toggle';
+import { useAdminResourceState } from './hooks/useAdminResourceState';
 
 function emptyControls(): AdminControls {
   return {
@@ -58,14 +54,23 @@ export function App() {
   );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
-  const [groups, setGroups] = useState<GroupRecord[]>([]);
-  const [users, setUsers] = useState<UserRecord[]>([]);
-  const [quotaRequests, setQuotaRequests] = useState<QuotaRequestRecord[]>([]);
-  const [sessions, setSessions] = useState<SessionRecord[]>([]);
+  const {
+    loading,
+    setLoading,
+    error,
+    setError,
+    groups,
+    setGroups,
+    users,
+    setUsers,
+    quotaRequests,
+    setQuotaRequests,
+    sessions,
+    setSessions,
+    refreshAll,
+  } = useAdminResourceState(token);
   const [selectedSession, setSelectedSession] = useState<SessionRecord | null>(null);
   const [sessionTranscript, setSessionTranscript] = useState<string>('');
 
@@ -267,34 +272,6 @@ export function App() {
     }
   }, [users, selectedUserId]);
 
-  const refreshAll = useCallback(async () => {
-    if (!token) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const [groupsData, usersData, quotaData, sessionData] = await Promise.all([
-        fetchGroups(token),
-        fetchUsers(token),
-        fetchQuotaRequests(token),
-        fetchSessions(token),
-      ]);
-      setGroups(groupsData);
-      setUsers(usersData);
-      setQuotaRequests(quotaData);
-      setSessions(sessionData);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    if (token) {
-      void refreshAll();
-    }
-  }, [token, refreshAll]);
-
   useEffect(() => {
     setGroupDraft(selectedGroup ? JSON.parse(JSON.stringify(selectedGroup)) : null);
   }, [selectedGroup]);
@@ -308,7 +285,7 @@ export function App() {
     } else {
       setUsage([]);
     }
-  }, [selectedUser, selectedUserId, token]);
+  }, [selectedUser, selectedUserId, token, setError]);
 
   const handleLogin = async () => {
     setLoading(true);
