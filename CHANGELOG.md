@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.96
+
+- Fixed `core` non-interactive tool executor test expectations to include current error `reason` payloads.
+- Fixed `core` task tool tests to await async subagent refresh before asserting dynamic description/schema.
+- Fixed `cli` extension list tests by mocking `loadUserExtensions` (the actual extension source used by the component).
+- Updated `cli` subcommand tests for current server/connect execution behavior in test runtime.
+- Updated remote-driving integration tests for non-local insecure HTTP gating and normalized daemon URL (`/`) expectations.
+- Verified full workspace tests are green: `packages/core` and `packages/cli`.
+
 ## 0.3.95
 
 - Added dynamic web command catalog loading from `listCommands`.
