@@ -312,6 +312,37 @@ describe('Query', () => {
       await transport2.close();
     });
 
+    it('should use provided sessionId', async () => {
+      const query = new Query(transport, {
+        cwd: '/test',
+        sessionId: 'session-explicit',
+      });
+
+      expect(query.getSessionId()).toBe('session-explicit');
+      await query.close();
+    });
+
+    it('should use resume as legacy session alias', async () => {
+      const query = new Query(transport, {
+        cwd: '/test',
+        resume: 'session-legacy',
+      });
+
+      expect(query.getSessionId()).toBe('session-legacy');
+      await query.close();
+    });
+
+    it('should prefer sessionId over resume when both are set', async () => {
+      const query = new Query(transport, {
+        cwd: '/test',
+        sessionId: 'session-primary',
+        resume: 'session-legacy',
+      });
+
+      expect(query.getSessionId()).toBe('session-primary');
+      await query.close();
+    });
+
     it('should handle initialization errors', async () => {
       const query = new Query(transport, {
         cwd: '/test',

@@ -38,6 +38,8 @@ asyncio.run(main())
 
 The `query(prompt, options=...)` API supports:
 
+- `sessionId` / `session_id` (reuse session id)
+- `resume` (legacy alias for `sessionId`)
 - `cwd`
 - `model`
 - `permissionMode` / `permission_mode`

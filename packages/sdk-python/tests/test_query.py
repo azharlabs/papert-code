@@ -178,3 +178,17 @@ def test_abort_signal_rejects_pending_control_requests():
         assert q.is_closed()
 
     asyncio.run(run_case())
+
+
+def test_session_id_uses_resume_alias():
+    q = Query(transport=FakeTransport(), prompt="hello", options={"resume": "legacy-session"})
+    assert q.get_session_id() == "legacy-session"
+
+
+def test_session_id_prefers_explicit_session_id_over_resume():
+    q = Query(
+        transport=FakeTransport(),
+        prompt="hello",
+        options={"sessionId": "primary-session", "resume": "legacy-session"},
+    )
+    assert q.get_session_id() == "primary-session"

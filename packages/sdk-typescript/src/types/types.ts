@@ -77,6 +77,12 @@ export interface SdkMcpServerConfig {
  */
 export interface QueryOptions {
   /**
+   * Deprecated alias for `sessionId`.
+   * If both are provided, `sessionId` takes precedence.
+   */
+  resume?: string;
+
+  /**
    * Session identifier to reuse conversation context across calls.
    * When omitted, a random UUID is generated.
    */

@@ -44,7 +44,12 @@ class Query:
         self.transport = transport
         self.prompt = prompt
         self.options = options or {}
-        self.session_id = str(uuid.uuid4())
+        self.session_id = str(
+            self.options.get("sessionId")
+            or self.options.get("session_id")
+            or self.options.get("resume")
+            or uuid.uuid4()
+        )
 
         self.input_queue: asyncio.Queue = asyncio.Queue()
         self.pending_control_requests: Dict[str, asyncio.Future] = {}
@@ -406,4 +411,3 @@ class Query:
 
         self.abort_controller.signal.remove_listener(self._on_abort)
         await self.transport.close()
-
