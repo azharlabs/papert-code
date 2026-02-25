@@ -101,6 +101,7 @@ export interface JsonOutputAdapterInterface extends MessageEmitter {
   processEvent(event: ServerGeminiStreamEvent): void;
   finalizeAssistantMessage(): CLIAssistantMessage;
   emitResult(options: ResultOptions): void;
+  hasPermissionDenials(): boolean;
 
   startSubagentAssistantMessage?(parentToolUseId: string): void;
   processSubagentToolCall?(
@@ -1161,6 +1162,10 @@ export abstract class BaseJsonOutputAdapter {
       permission_denials: [],
       error: { message: errorMessage },
     };
+  }
+
+  hasPermissionDenials(): boolean {
+    return this.permissionDenials.length > 0;
   }
 }
 

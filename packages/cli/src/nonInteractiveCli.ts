@@ -362,11 +362,18 @@ export async function runNonInteractive(
               outputFormat === OutputFormat.JSON
                 ? uiTelemetryService.getMetrics()
                 : undefined;
+            const hasPermissionDenials = adapter.hasPermissionDenials();
             adapter.emitResult({
-              isError: false,
+              isError: hasPermissionDenials,
               durationMs: Date.now() - startTime,
               apiDurationMs: totalApiDurationMs,
               numTurns: turnCount,
+              ...(hasPermissionDenials
+                ? {
+                  errorMessage:
+                    'One or more tool calls were denied by permission policy.',
+                }
+                : {}),
               summary: structuredResult
                 ? JSON.stringify(structuredResult.value)
                 : undefined,

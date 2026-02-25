@@ -1526,6 +1526,90 @@ describe('runNonInteractive', () => {
     expect(toolResultBlock?.is_error).toBe(true);
   });
 
+  it('should emit error result when tool execution is denied by permission policy', async () => {
+    (mockConfig.getOutputFormat as Mock).mockReturnValue('stream-json');
+    (mockConfig.getIncludePartialMessages as Mock).mockReturnValue(false);
+    setupMetricsMock();
+
+    const writes: string[] = [];
+    processStdoutSpy.mockImplementation((chunk: string | Uint8Array) => {
+      if (typeof chunk === 'string') {
+        writes.push(chunk);
+      } else {
+        writes.push(Buffer.from(chunk).toString('utf8'));
+      }
+      return true;
+    });
+
+    const toolCallEvent: ServerGeminiStreamEvent = {
+      type: GeminiEventType.ToolCallRequest,
+      value: {
+        callId: 'tool-denied',
+        name: 'run_shell_command',
+        args: { command: 'papert schedule list' },
+        isClientInitiated: false,
+        prompt_id: 'prompt-id-denied',
+      },
+    };
+
+    mockCoreExecuteToolCall.mockResolvedValue({
+      error: new Error('Interactive confirmation is disabled in non-interactive mode'),
+      errorType: ToolErrorType.EXECUTION_DENIED,
+      reason: 'Interactive confirmation is disabled in non-interactive mode',
+      responseParts: [
+        {
+          functionResponse: {
+            name: 'run_shell_command',
+            response: {
+              output: 'Interactive confirmation is disabled in non-interactive mode',
+            },
+          },
+        },
+      ],
+      resultDisplay: 'Interactive confirmation is disabled in non-interactive mode',
+    });
+
+    const finalResponse: ServerGeminiStreamEvent[] = [
+      {
+        type: GeminiEventType.Content,
+        value: 'Could not run command due to permissions',
+      },
+      {
+        type: GeminiEventType.Finished,
+        value: { reason: undefined, usageMetadata: { totalTokenCount: 10 } },
+      },
+    ];
+    mockGeminiClient.sendMessageStream
+      .mockReturnValueOnce(createStreamFromEvents([toolCallEvent]))
+      .mockReturnValueOnce(createStreamFromEvents(finalResponse));
+
+    await runNonInteractive(
+      mockConfig,
+      mockSettings,
+      'Run schedule list',
+      'prompt-id-denied',
+    );
+
+    const envelopes = writes
+      .join('')
+      .split('\n')
+      .filter((line) => line.trim().length > 0)
+      .map((line) => JSON.parse(line));
+
+    const resultMessage = envelopes.find((env) => env.type === 'result');
+    expect(resultMessage).toBeTruthy();
+    expect(resultMessage.is_error).toBe(true);
+    expect(resultMessage.subtype).toBe('error_during_execution');
+    expect(resultMessage.permission_denials).toEqual([
+      {
+        tool_name: 'run_shell_command',
+        tool_use_id: 'tool-denied',
+        tool_input: { command: 'papert schedule list' },
+        reason: 'Interactive confirmation is disabled in non-interactive mode',
+      },
+    ]);
+  });
+
   it('should emit partial messages when includePartialMessages is true', async () => {
     (mockConfig.getOutputFormat as Mock).mockReturnValue('stream-json');
     (mockConfig.getIncludePartialMessages as Mock).mockReturnValue(true);
