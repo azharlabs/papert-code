@@ -58,6 +58,9 @@ The `query(prompt, options=...)` API supports:
 - `includePartialMessages` / `include_partial_messages`
 - `agents`
 
+Tool availability note:
+By default, the SDK does not disable Papert Code tools. Tools are only restricted if you explicitly set `coreTools`/`core_tools`, `excludeTools`/`exclude_tools`, or enforce custom policy in `canUseTool`/`can_use_tool`.
+
 ## Query Controls
 
 The returned `Query` object supports:
@@ -69,8 +72,21 @@ The returned `Query` object supports:
 - `set_model(model)`
 - `supported_commands()`
 - `mcp_server_status()`
+- `scheduler_list(cwd=None, include_disabled=None)`
+- `scheduler_status(cwd=None)`
+- `scheduler_add(job, cwd=None)`
+- `scheduler_update(job_id, patch, cwd=None)`
+- `scheduler_remove(job_id, cwd=None)`
+- `scheduler_run(job_id, mode=None, cwd=None)`
+- `scheduler_runs(job_id, limit=None, cwd=None)`
+- `scheduler_start(cwd=None, max_concurrent=None, queue_policy=None)`
+- `scheduler_stop(cwd=None)`
 - `end_input()`
 - `close()`
+
+Notes:
+- `scheduler_add(...)` auto-starts scheduler processing for that workspace store.
+- Scheduler activity can arrive asynchronously as `system` messages with `subtype == "scheduler_event"` while a stream/query is active.
 
 ## Permission Callback
 

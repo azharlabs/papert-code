@@ -184,6 +184,8 @@ Creates a new query session with the Papert Code.
 
 Compatibility note:
 `resume` is supported as a legacy alias for `sessionId`. If both are set, `sessionId` wins.
+Tool availability note:
+By default, the SDK does not disable tool catalogs from Papert Code. Tools are only restricted if you explicitly set `coreTools` or `excludeTools`, or enforce custom policy via `canUseTool`.
 
 | Option                   | Type                                           | Default          | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------------ | ---------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -263,6 +265,28 @@ await q.setModel('papert-max');
 // Close the session
 await q.close();
 ```
+
+Scheduler control methods are also available on `Query`:
+
+```typescript
+await q.schedulerAdd({
+  name: 'say-hi',
+  schedule: { kind: 'every', everyMs: 60_000 },
+  payload: { kind: 'heartbeat', text: 'hi' },
+});
+await q.schedulerList();
+await q.schedulerStatus();
+await q.schedulerRun('job-id', 'force');
+await q.schedulerRuns('job-id', 20);
+await q.schedulerUpdate('job-id', { enabled: false });
+await q.schedulerRemove('job-id');
+await q.schedulerStart({ maxConcurrent: 1, queuePolicy: 'queue' });
+await q.schedulerStop();
+```
+
+Notes:
+- `schedulerAdd` auto-starts the scheduler loop; explicit `schedulerStart` is mainly for restart-after-stop.
+- Long-lived scheduler activity is emitted asynchronously as `system` messages with `subtype: "scheduler_event"` in stream output.
 
 ## Permission Modes
 

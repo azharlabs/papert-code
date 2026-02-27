@@ -750,6 +750,134 @@ export class Query implements AsyncIterable<SDKMessage> {
     return this.sendControlRequest(ControlRequestType.MCP_SERVER_STATUS);
   }
 
+  async schedulerList(
+    cwd?: string,
+    includeDisabled?: boolean,
+  ): Promise<Record<string, unknown> | null> {
+    if (this.closed) {
+      throw new Error('Query is closed');
+    }
+
+    return this.sendControlRequest(ControlRequestType.SCHEDULER_LIST, {
+      ...(cwd ? { cwd } : {}),
+      ...(includeDisabled !== undefined
+        ? { include_disabled: includeDisabled }
+        : {}),
+    });
+  }
+
+  async schedulerStatus(cwd?: string): Promise<Record<string, unknown> | null> {
+    if (this.closed) {
+      throw new Error('Query is closed');
+    }
+
+    return this.sendControlRequest(ControlRequestType.SCHEDULER_STATUS, {
+      ...(cwd ? { cwd } : {}),
+    });
+  }
+
+  async schedulerAdd(
+    job: Record<string, unknown>,
+    cwd?: string,
+  ): Promise<Record<string, unknown> | null> {
+    if (this.closed) {
+      throw new Error('Query is closed');
+    }
+
+    return this.sendControlRequest(ControlRequestType.SCHEDULER_ADD, {
+      ...(cwd ? { cwd } : {}),
+      job,
+    });
+  }
+
+  async schedulerUpdate(
+    id: string,
+    patch: Record<string, unknown>,
+    cwd?: string,
+  ): Promise<Record<string, unknown> | null> {
+    if (this.closed) {
+      throw new Error('Query is closed');
+    }
+
+    return this.sendControlRequest(ControlRequestType.SCHEDULER_UPDATE, {
+      ...(cwd ? { cwd } : {}),
+      id,
+      patch,
+    });
+  }
+
+  async schedulerRemove(
+    id: string,
+    cwd?: string,
+  ): Promise<Record<string, unknown> | null> {
+    if (this.closed) {
+      throw new Error('Query is closed');
+    }
+
+    return this.sendControlRequest(ControlRequestType.SCHEDULER_REMOVE, {
+      ...(cwd ? { cwd } : {}),
+      id,
+    });
+  }
+
+  async schedulerRun(
+    id: string,
+    mode?: 'due' | 'force',
+    cwd?: string,
+  ): Promise<Record<string, unknown> | null> {
+    if (this.closed) {
+      throw new Error('Query is closed');
+    }
+
+    return this.sendControlRequest(ControlRequestType.SCHEDULER_RUN, {
+      ...(cwd ? { cwd } : {}),
+      id,
+      ...(mode ? { mode } : {}),
+    });
+  }
+
+  async schedulerRuns(
+    id: string,
+    limit?: number,
+    cwd?: string,
+  ): Promise<Record<string, unknown> | null> {
+    if (this.closed) {
+      throw new Error('Query is closed');
+    }
+
+    return this.sendControlRequest(ControlRequestType.SCHEDULER_RUNS, {
+      ...(cwd ? { cwd } : {}),
+      id,
+      ...(typeof limit === 'number' ? { limit } : {}),
+    });
+  }
+
+  async schedulerStart(
+    options?: { cwd?: string; maxConcurrent?: number; queuePolicy?: 'queue' | 'skip' },
+  ): Promise<Record<string, unknown> | null> {
+    if (this.closed) {
+      throw new Error('Query is closed');
+    }
+
+    return this.sendControlRequest(ControlRequestType.SCHEDULER_START, {
+      ...(options?.cwd ? { cwd: options.cwd } : {}),
+      ...(typeof options?.maxConcurrent === 'number'
+        ? { max_concurrent: options.maxConcurrent }
+        : {}),
+      ...(options?.queuePolicy ? { queue_policy: options.queuePolicy } : {}),
+    });
+  }
+
+  async schedulerStop(cwd?: string): Promise<Record<string, unknown> | null> {
+    if (this.closed) {
+      throw new Error('Query is closed');
+    }
+
+    return this.sendControlRequest(ControlRequestType.SCHEDULER_STOP, {
+      ...(cwd ? { cwd } : {}),
+    });
+  }
+
   getSessionId(): string {
     return this.sessionId;
   }

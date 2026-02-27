@@ -380,6 +380,91 @@ class Query:
     async def mcp_server_status(self) -> Any:
         return await self.send_control_request(ControlRequestType.MCP_SERVER_STATUS)
 
+    async def scheduler_list(
+        self,
+        cwd: Optional[str] = None,
+        include_disabled: Optional[bool] = None,
+    ) -> Any:
+        payload: Dict[str, Any] = {}
+        if cwd:
+            payload["cwd"] = cwd
+        if include_disabled is not None:
+            payload["include_disabled"] = include_disabled
+        return await self.send_control_request(ControlRequestType.SCHEDULER_LIST, payload)
+
+    async def scheduler_status(self, cwd: Optional[str] = None) -> Any:
+        payload: Dict[str, Any] = {}
+        if cwd:
+            payload["cwd"] = cwd
+        return await self.send_control_request(ControlRequestType.SCHEDULER_STATUS, payload)
+
+    async def scheduler_add(self, job: Dict[str, Any], cwd: Optional[str] = None) -> Any:
+        payload: Dict[str, Any] = {"job": job}
+        if cwd:
+            payload["cwd"] = cwd
+        return await self.send_control_request(ControlRequestType.SCHEDULER_ADD, payload)
+
+    async def scheduler_update(
+        self, job_id: str, patch: Dict[str, Any], cwd: Optional[str] = None
+    ) -> Any:
+        payload: Dict[str, Any] = {"id": job_id, "patch": patch}
+        if cwd:
+            payload["cwd"] = cwd
+        return await self.send_control_request(ControlRequestType.SCHEDULER_UPDATE, payload)
+
+    async def scheduler_remove(self, job_id: str, cwd: Optional[str] = None) -> Any:
+        payload: Dict[str, Any] = {"id": job_id}
+        if cwd:
+            payload["cwd"] = cwd
+        return await self.send_control_request(ControlRequestType.SCHEDULER_REMOVE, payload)
+
+    async def scheduler_run(
+        self,
+        job_id: str,
+        mode: Optional[str] = None,
+        cwd: Optional[str] = None,
+    ) -> Any:
+        payload: Dict[str, Any] = {"id": job_id}
+        if cwd:
+            payload["cwd"] = cwd
+        if mode:
+            payload["mode"] = mode
+        return await self.send_control_request(ControlRequestType.SCHEDULER_RUN, payload)
+
+    async def scheduler_runs(
+        self,
+        job_id: str,
+        limit: Optional[int] = None,
+        cwd: Optional[str] = None,
+    ) -> Any:
+        payload: Dict[str, Any] = {"id": job_id}
+        if cwd:
+            payload["cwd"] = cwd
+        if limit is not None:
+            payload["limit"] = limit
+        return await self.send_control_request(ControlRequestType.SCHEDULER_RUNS, payload)
+
+    async def scheduler_start(
+        self,
+        cwd: Optional[str] = None,
+        max_concurrent: Optional[int] = None,
+        queue_policy: Optional[str] = None,
+    ) -> Any:
+        payload: Dict[str, Any] = {}
+        if cwd:
+            payload["cwd"] = cwd
+        if max_concurrent is not None:
+            payload["max_concurrent"] = max_concurrent
+        if queue_policy:
+            payload["queue_policy"] = queue_policy
+        return await self.send_control_request(ControlRequestType.SCHEDULER_START, payload)
+
+    async def scheduler_stop(self, cwd: Optional[str] = None) -> Any:
+        payload: Dict[str, Any] = {}
+        if cwd:
+            payload["cwd"] = cwd
+        return await self.send_control_request(ControlRequestType.SCHEDULER_STOP, payload)
+
     def get_session_id(self) -> str:
         return self.session_id
 

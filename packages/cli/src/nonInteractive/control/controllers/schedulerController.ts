@@ -16,6 +16,7 @@ import {
   type SchedulerLogger,
   type SchedulerRunResult,
   type SchedulerDeliveryTarget,
+  type SchedulerEvent,
 } from '@papert-code/papert-code-core';
 import { BaseController } from './baseController.js';
 import type {
@@ -237,6 +238,13 @@ export class SchedulerController extends BaseController {
     cwd: string,
     opts?: { maxConcurrentRuns?: number; queuePolicy?: 'queue' | 'skip' },
   ): TaskScheduler<PapertSchedulePayload> {
+    const emitSchedulerEvent = (event: SchedulerEvent): void => {
+      this.context.streamJson.emitSystemMessage('scheduler_event', {
+        cwd,
+        event,
+      });
+    };
+
     return new TaskScheduler<PapertSchedulePayload>({
       storePath: resolveSchedulerStorePath(cwd),
       log: schedulerLogger,
@@ -244,6 +252,7 @@ export class SchedulerController extends BaseController {
       maxConcurrentRuns: opts?.maxConcurrentRuns,
       queuePolicy: opts?.queuePolicy,
       runJob: (job) => runPromptJob(job, cwd),
+      onEvent: emitSchedulerEvent,
     });
   }
 
@@ -277,6 +286,8 @@ export class SchedulerController extends BaseController {
     const cwd = this.resolveCwd(payload.cwd);
     const scheduler = this.getScheduler(cwd);
     const job = await scheduler.add(payload.job as ScheduledJobCreate<PapertSchedulePayload>);
+    // Scheduler is auto-started on add so explicit start is only needed after stop/restart.
+    await scheduler.start();
     return { subtype: 'scheduler_add', job };
   }
 

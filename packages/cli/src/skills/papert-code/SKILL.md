@@ -94,6 +94,10 @@ papert schedule heartbeat \
 papert schedule start
 ```
 
+Notes:
+- `papert schedule add` and `papert schedule heartbeat` auto-start scheduler processing for that workspace.
+- Use `papert schedule start` mainly to restart after an explicit `papert schedule stop` or process restart.
+
 #### List jobs
 
 ```bash
@@ -544,9 +548,15 @@ Inside `papert` sessions:
 
 ### Scheduler not running
 
-1. Ensure `papert schedule start` is running
+1. Add/heartbeat auto-starts scheduler; run `papert schedule start` only if it was stopped
 2. Check status: `papert schedule status`
 3. Verify credentials in environment
+
+### SDK scheduler events not appearing
+
+1. Keep the SDK stream/query session open (short `send()` calls won't receive future events)
+2. Watch `system` messages with subtype `scheduler_event`
+3. Verify jobs exist: `papert schedule list --json`
 
 ### MCP server not loading
 

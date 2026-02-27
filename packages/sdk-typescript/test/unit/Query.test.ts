@@ -1209,6 +1209,152 @@ describe('Query', () => {
       await query.close();
     });
 
+    it('should provide schedulerList() method', async () => {
+      const query = new Query(transport, { cwd: '/test' });
+
+      await vi.waitFor(() => {
+        expect(transport.writtenMessages.length).toBeGreaterThan(0);
+      });
+      const initRequest =
+        transport.getLastWrittenMessage() as CLIControlRequest;
+      transport.simulateMessage(
+        createControlResponse(initRequest.request_id, true, {}),
+      );
+
+      await query.initialized;
+
+      const listPromise = query.schedulerList('/repo', true);
+
+      await vi.waitFor(() => {
+        const messages = transport.getAllWrittenMessages();
+        const listMsg = findControlRequest(
+          messages,
+          ControlRequestType.SCHEDULER_LIST,
+        );
+        expect(listMsg).toBeDefined();
+        expect(listMsg?.request).toMatchObject({
+          cwd: '/repo',
+          include_disabled: true,
+        });
+      });
+
+      const messages = transport.getAllWrittenMessages();
+      const listMsg = findControlRequest(
+        messages,
+        ControlRequestType.SCHEDULER_LIST,
+      )!;
+      transport.simulateMessage(
+        createControlResponse(listMsg.request_id, true, {
+          jobs: [],
+        }),
+      );
+
+      const result = await listPromise;
+      expect(result).toMatchObject({ jobs: [] });
+      await query.close();
+    });
+
+    it('should provide schedulerAdd() method', async () => {
+      const query = new Query(transport, { cwd: '/test' });
+
+      await vi.waitFor(() => {
+        expect(transport.writtenMessages.length).toBeGreaterThan(0);
+      });
+      const initRequest =
+        transport.getLastWrittenMessage() as CLIControlRequest;
+      transport.simulateMessage(
+        createControlResponse(initRequest.request_id, true, {}),
+      );
+
+      await query.initialized;
+
+      const job = {
+        name: 'say-hi',
+        schedule: { kind: 'every', everyMs: 60000 },
+        payload: { kind: 'heartbeat', text: 'hi' },
+      };
+      const addPromise = query.schedulerAdd(job, '/repo');
+
+      await vi.waitFor(() => {
+        const messages = transport.getAllWrittenMessages();
+        const addMsg = findControlRequest(
+          messages,
+          ControlRequestType.SCHEDULER_ADD,
+        );
+        expect(addMsg).toBeDefined();
+        expect(addMsg?.request).toMatchObject({
+          cwd: '/repo',
+          job,
+        });
+      });
+
+      const messages = transport.getAllWrittenMessages();
+      const addMsg = findControlRequest(
+        messages,
+        ControlRequestType.SCHEDULER_ADD,
+      )!;
+      transport.simulateMessage(
+        createControlResponse(addMsg.request_id, true, {
+          job: { id: 'job-1' },
+        }),
+      );
+
+      const result = await addPromise;
+      expect(result).toMatchObject({ job: { id: 'job-1' } });
+      await query.close();
+    });
+
+    it('should provide schedulerStart() method', async () => {
+      const query = new Query(transport, { cwd: '/test' });
+
+      await vi.waitFor(() => {
+        expect(transport.writtenMessages.length).toBeGreaterThan(0);
+      });
+      const initRequest =
+        transport.getLastWrittenMessage() as CLIControlRequest;
+      transport.simulateMessage(
+        createControlResponse(initRequest.request_id, true, {}),
+      );
+
+      await query.initialized;
+
+      const startPromise = query.schedulerStart({
+        cwd: '/repo',
+        maxConcurrent: 1,
+        queuePolicy: 'queue',
+      });
+
+      await vi.waitFor(() => {
+        const messages = transport.getAllWrittenMessages();
+        const startMsg = findControlRequest(
+          messages,
+          ControlRequestType.SCHEDULER_START,
+        );
+        expect(startMsg).toBeDefined();
+        expect(startMsg?.request).toMatchObject({
+          cwd: '/repo',
+          max_concurrent: 1,
+          queue_policy: 'queue',
+        });
+      });
+
+      const messages = transport.getAllWrittenMessages();
+      const startMsg = findControlRequest(
+        messages,
+        ControlRequestType.SCHEDULER_START,
+      )!;
+      transport.simulateMessage(
+        createControlResponse(startMsg.request_id, true, {
+          subtype: 'scheduler_start',
+        }),
+      );
+
+      await expect(startPromise).resolves.toMatchObject({
+        subtype: 'scheduler_start',
+      });
+      await query.close();
+    });
+
     it('should throw if methods called on closed query', async () => {
       const query = new Query(transport, { cwd: '/test' });
       await query.close();
@@ -1222,6 +1368,16 @@ describe('Query', () => {
         'Query is closed',
       );
       await expect(query.mcpServerStatus()).rejects.toThrow('Query is closed');
+      await expect(query.schedulerList()).rejects.toThrow('Query is closed');
+      await expect(
+        query.schedulerAdd({
+          name: 'x',
+          schedule: { kind: 'every', everyMs: 60000 },
+          payload: { kind: 'heartbeat', text: 'x' },
+        }),
+      ).rejects.toThrow('Query is closed');
+      await expect(query.schedulerStart()).rejects.toThrow('Query is closed');
+      await expect(query.schedulerStop()).rejects.toThrow('Query is closed');
     });
   });
 

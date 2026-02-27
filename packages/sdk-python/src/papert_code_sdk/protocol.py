@@ -187,6 +187,17 @@ class ControlRequestType:
     MCP_MESSAGE = 'mcp_message'
     MCP_SERVER_STATUS = 'mcp_server_status'
 
+    # SchedulerController requests
+    SCHEDULER_LIST = 'scheduler_list'
+    SCHEDULER_STATUS = 'scheduler_status'
+    SCHEDULER_ADD = 'scheduler_add'
+    SCHEDULER_UPDATE = 'scheduler_update'
+    SCHEDULER_REMOVE = 'scheduler_remove'
+    SCHEDULER_RUN = 'scheduler_run'
+    SCHEDULER_RUNS = 'scheduler_runs'
+    SCHEDULER_START = 'scheduler_start'
+    SCHEDULER_STOP = 'scheduler_stop'
+
     # HookController requests
     HOOK_CALLBACK = 'hook_callback'
 
