@@ -389,13 +389,15 @@ After creating your evaluation file, you can use the provided evaluation harness
 
    Or install manually:
    ```bash
-   pip install anthropic mcp
+   pip install openai mcp
    ```
 
 2. **Set API Key**
 
    ```bash
-   export ANTHROPIC_API_KEY=your_api_key_here
+   export OPENAI_API_KEY=your_api_key_here
+   export OPENAI_BASE_URL=https://api.minimax.io/v1
+   export OPENAI_MODEL=MiniMax-M2.5-highspeed
    ```
 
 ## Evaluation File Format
@@ -485,7 +487,7 @@ positional arguments:
 optional arguments:
   -h, --help            Show help message
   -t, --transport       Transport type: stdio, sse, or http (default: stdio)
-  -m, --model           Claude model to use (default: claude-3-7-sonnet-20250219)
+  -m, --model           Model to use (default: OPENAI_MODEL or MiniMax-M2.5-highspeed)
   -o, --output          Output file for report (default: print to stdout)
 
 stdio options:
@@ -554,7 +556,9 @@ Here's a complete example of creating and running an evaluation:
 
 ```bash
 pip install -r scripts/requirements.txt
-export ANTHROPIC_API_KEY=your_api_key
+export OPENAI_API_KEY=your_api_key
+export OPENAI_BASE_URL=https://api.minimax.io/v1
+export OPENAI_MODEL=MiniMax-M2.5-highspeed
 ```
 
 3. **Run evaluation**:
@@ -596,7 +600,7 @@ If many evaluations fail:
 ### Timeout Issues
 
 If tasks are timing out:
-- Use a more capable model (e.g., `claude-3-7-sonnet-20250219`)
+- use a model that supports tool use well (for example, `MiniMax-M2.5-highspeed`)
 - Check if tools are returning too much data
 - Verify pagination is working correctly
 - Consider simplifying complex questions

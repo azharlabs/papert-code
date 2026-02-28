@@ -1,73 +1,72 @@
 ---
 name: brand-guidelines
-description: Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design standards apply.
+description: Applies papert-code web UI brand colors and typography to artifacts that should match papert-code look-and-feel. Use it for brand colors, visual formatting, and company design standards.
 license: Complete terms in LICENSE.txt
 ---
 
-# Anthropic Brand Styling
+# papert-code Brand Styling
 
 ## Overview
 
-To access Anthropic's official brand identity and style resources, use this skill.
+Use this skill to align output with papert-code's current web UI visual system.
 
-**Keywords**: branding, corporate identity, visual identity, post-processing, styling, brand colors, typography, Anthropic brand, visual formatting, visual design
+**Keywords**: branding, corporate identity, visual identity, post-processing, styling, brand colors, typography, papert-code brand, visual formatting, visual design
 
 ## Brand Guidelines
 
-### Colors
+### Light Theme Colors
 
-**Main Colors:**
+- Background: `#f6f6fb`
+- Foreground: `#0f172a`
+- Card/Surface: `#ffffff`
+- Border/Input: `#e4e7ec`
+- Muted Surface: `#eef2f8`
+- Muted Text: `#64748b`
 
-- Dark: `#141413` - Primary text and dark backgrounds
-- Light: `#faf9f5` - Light backgrounds and text on dark
-- Mid Gray: `#b0aea5` - Secondary elements
-- Light Gray: `#e8e6dc` - Subtle backgrounds
+### Primary and Status Colors
 
-**Accent Colors:**
+- Primary: `#1a9e4c`
+- Primary Foreground: `#ffffff`
+- Focus Ring: `#33d17a`
+- Success: `#0dbd5c`
+- Warning: `#f59e0b`
+- Destructive: `#ef4444`
 
-- Orange: `#d97757` - Primary accent
-- Blue: `#6a9bcc` - Secondary accent
-- Green: `#788c5d` - Tertiary accent
+### Dark Theme Colors
+
+- Background: `#0b1220`
+- Foreground: `#e2e8f0`
+- Card/Surface: `#111827`
+- Border/Input: `#334155`
+- Muted Surface: `#1f2937`
+- Muted Text: `#94a3b8`
+- Primary: `#33d17a`
+- Primary Foreground: `#052e16`
 
 ### Typography
 
-- **Headings**: Poppins (with Arial fallback)
-- **Body Text**: Lora (with Georgia fallback)
-- **Note**: Fonts should be pre-installed in your environment for best results
+- Heading and body: `Space Grotesk`
+- Monospace and code: `JetBrains Mono`
+- Fallback sans: `"Segoe UI", ui-sans-serif, system-ui, sans-serif`
+- Fallback mono: `ui-monospace, monospace`
 
-## Features
+## Usage Rules
 
-### Smart Font Application
-
-- Applies Poppins font to headings (24pt and larger)
-- Applies Lora font to body text
-- Automatically falls back to Arial/Georgia if custom fonts unavailable
-- Preserves readability across all systems
-
-### Text Styling
-
-- Headings (24pt+): Poppins font
-- Body text: Lora font
-- Smart color selection based on background
-- Preserves text hierarchy and formatting
-
-### Shape and Accent Colors
-
-- Non-text shapes use accent colors
-- Cycles through orange, blue, and green accents
-- Maintains visual interest while staying on-brand
+- Use papert-code primary green (`#1a9e4c` or `#33d17a`) for primary actions and highlights.
+- Use neutral surfaces and borders for structure; avoid legacy beige/orange theme foundations.
+- Keep text contrast high against backgrounds in both light and dark modes.
+- Use success/warning/destructive colors only for semantic states.
+- Keep typography consistent with `Space Grotesk` for interface content and `JetBrains Mono` for code/data.
 
 ## Technical Details
 
-### Font Management
-
-- Uses system-installed Poppins and Lora fonts when available
-- Provides automatic fallback to Arial (headings) and Georgia (body)
-- No font installation required - works with existing system fonts
-- For best results, pre-install Poppins and Lora fonts in your environment
-
 ### Color Application
 
-- Uses RGB color values for precise brand matching
-- Applied via python-pptx's RGBColor class
-- Maintains color fidelity across different systems
+- Apply values exactly as hex tokens for consistency with the web UI.
+- For RGB-based APIs (e.g., python-pptx), convert hex values directly and preserve fidelity.
+
+### Font Management
+
+- Prefer installed `Space Grotesk` and `JetBrains Mono`.
+- Use fallback stacks when custom fonts are unavailable.
+- Keep heading/body hierarchy clear with weight and size before introducing additional colors.
