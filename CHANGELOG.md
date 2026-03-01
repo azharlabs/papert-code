@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.97
+
+- Fixed A2A Web UI rewind checkpoint discovery to use Papert checkpoint storage instead of legacy `.gemini/checkpoints`.
+- Hardened A2A share storage/auth by hashing share secrets at rest and using timing-safe token/secret verification.
+- Added strict request-body validation (including unknown-field rejection) for high-risk Web UI mutating endpoints.
+- Switched JSON-backed A2A state/settings/schedule writes to serialized atomic updates to reduce concurrent write loss.
+- Expanded A2A regression coverage for share security and web-ui validation paths.
+- Added A2A hardening notes in `packages/a2a-server/docs/a2a-hardening-2026-03.md` and clarified OpenAPI stable-contract scope in docs.
+
 ## 0.3.96
 
 - Fixed `core` non-interactive tool executor test expectations to include current error `reason` payloads.

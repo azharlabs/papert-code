@@ -5,8 +5,10 @@
  */
 
 import express from 'express';
+import { timingSafeEqual } from 'node:crypto';
 import type { ShareStore } from './shareStore.js';
 import { logger } from '../utils/logger.js';
+import { parseBearerToken, sha256 } from './remoteAuth.js';
 
 export type ShareRouterOptions = {
   store: ShareStore;
@@ -20,8 +22,12 @@ function normalizeBaseUrl(raw: string): string {
 
 function isAuthorized(req: express.Request, token?: string): boolean {
   if (!token) return true;
-  const authHeader = req.header('authorization') ?? '';
-  return authHeader === `Bearer ${token}`;
+  const bearerToken = parseBearerToken(req.header('authorization'));
+  if (!bearerToken) return false;
+  const expectedHash = Buffer.from(sha256(token), 'hex');
+  const providedHash = Buffer.from(sha256(bearerToken), 'hex');
+  if (expectedHash.length !== providedHash.length) return false;
+  return timingSafeEqual(expectedHash, providedHash);
 }
 
 export function createShareRouter(options: ShareRouterOptions): express.Router {

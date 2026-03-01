@@ -47,3 +47,15 @@ This document tracks the A2A server parity work ported from `gemini-cli` into `p
 
 - `SimpleExtensionLoader` architecture in `gemini-cli` is not directly portable because `papert-code-core` currently models extensions as concrete extension objects in config rather than an extension-loader abstraction.
 - Equivalent behavior is retained via existing `loadExtensions(...)` and extension context path handling.
+
+## Post-Parity Hardening (2026-03-01)
+
+- Fixed Web UI checkpoint catalog path to use Papert storage checkpoint directory.
+- Hardened share auth/token verification with timing-safe hash comparisons.
+- Moved share secret persistence to hashed-at-rest format.
+- Added strict payload validation and unknown-field rejection for high-risk Web UI mutating routes.
+- Added serialized atomic JSON writes for settings/schedule/state-backed updates.
+- Added regression tests for the above in:
+  - `/Users/azhar/code/coding-agent/papert-code/packages/a2a-server/src/http/shareStore.test.ts`
+  - `/Users/azhar/code/coding-agent/papert-code/packages/a2a-server/src/http/share-auth.test.ts`
+  - `/Users/azhar/code/coding-agent/papert-code/packages/a2a-server/src/http/web-ui.test.ts`

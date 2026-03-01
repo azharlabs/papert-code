@@ -38,6 +38,7 @@ The tests validate:
 - Expected status codes are documented.
 - Auth requirements for protected endpoints are declared.
 - Session-create response schema includes required fields.
+- The documented contract is a stable subset; non-documented Web UI mutation routes are internal implementation APIs.
 
 ## Usage
 

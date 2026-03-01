@@ -8,6 +8,7 @@ This project maintains OpenAPI contracts for remote-control and web-ui server en
 - Served at runtime: `GET /openapi.json`
 - Interactive docs: `GET /docs`
 - SDK client generation: `npm run generate:remote-api-clients`
+- Contract scope: stable remote-control API only. Web UI implementation endpoints may exist outside this contract.
 
 ## Versioning rules
 
@@ -26,6 +27,7 @@ This project maintains OpenAPI contracts for remote-control and web-ui server en
 
 - `packages/a2a-server/src/http/openapi.contract.test.ts` validates required paths, methods, operation IDs, auth flags, and status schemas.
 - CI should fail when spec and expected contracts drift.
+- Internal Web UI endpoints not listed in this spec should not be consumed by SDK clients as stable contracts.
 
 ## Changelog
 
@@ -36,3 +38,9 @@ This project maintains OpenAPI contracts for remote-control and web-ui server en
   - `PUT /api/v1/webui/release-channel`
 - Added shared auth error schema:
   - `#/components/schemas/ErrorResponse`
+
+### 2026-03-01
+
+- Clarified contract boundary:
+  - OpenAPI covers stable remote-control endpoints.
+  - Web UI internal mutating endpoints remain out-of-contract unless explicitly promoted.

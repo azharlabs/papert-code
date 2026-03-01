@@ -6,6 +6,11 @@
 
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import type express from 'express';
+import * as fs from 'node:fs/promises';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { Storage } from '@papert-code/papert-code-core';
 import { createApp } from './app.js';
 import { requestApp } from './test-utils.js';
 
@@ -26,11 +31,14 @@ vi.mock('../config/config.js', async () => {
 
 describe('Web UI', () => {
   let app: express.Express;
+  let workspaceDir: string;
 
   const OLD_ENV = process.env;
 
   beforeEach(async () => {
     process.env = { ...OLD_ENV };
+    workspaceDir = mkdtempSync(path.join(tmpdir(), 'papert-a2a-webui-'));
+    process.env['CODER_AGENT_WORKSPACE_PATH'] = workspaceDir;
     process.env['NODE_ENV'] = 'test';
     process.env['PAPERT_WEB_UI_ENABLED'] = '1';
     process.env['PAPERT_REMOTE_ENABLED'] = '1';
@@ -62,6 +70,22 @@ describe('Web UI', () => {
   });
 
   it('GET /api/v1/webui/catalog includes rewind points payload', async () => {
+    const storage = new Storage(workspaceDir);
+    const checkpointsDir = storage.getProjectTempCheckpointsDir();
+    await fs.mkdir(checkpointsDir, { recursive: true });
+    await fs.writeFile(
+      path.join(checkpointsDir, 'rewind-point-1.json'),
+      JSON.stringify(
+        {
+          toolCall: { name: 'write_file', args: { file_path: 'x.ts' } },
+          commitHash: 'abc123',
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+
     const sessionRes = await requestApp(app, {
       method: 'POST',
       path: '/api/v1/sessions',
@@ -85,6 +109,18 @@ describe('Web UI', () => {
         rewindPoints: expect.any(Array),
         releaseChannel: expect.any(String),
       }),
+    );
+    const catalogBody = catalogRes.body as {
+      rewindPoints: Array<{ id: string; toolName: string; restoreType: string }>;
+    };
+    expect(catalogBody.rewindPoints).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'rewind-point-1',
+          toolName: 'write_file',
+          restoreType: 'file+chat',
+        }),
+      ]),
     );
   });
 
@@ -186,5 +222,76 @@ describe('Web UI', () => {
     });
     expect(toPreview.status).toBe(400);
     expect((toPreview.body as { code: string }).code).toBe('soak_not_met');
+  });
+
+  it('POST /api/v1/webui/agents rejects missing name', async () => {
+    const sessionRes = await requestApp(app, {
+      method: 'POST',
+      path: '/api/v1/sessions',
+      headers: { authorization: 'Bearer server-secret' },
+    });
+    expect(sessionRes.status).toBe(201);
+    const body = sessionRes.body as { sessionId: string; token: string };
+
+    const res = await requestApp(app, {
+      method: 'POST',
+      path: '/api/v1/webui/agents',
+      headers: {
+        authorization: `Bearer ${body.token}`,
+        'x-papert-session-id': body.sessionId,
+      },
+      body: { content: '# test' },
+    });
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'name is required.' });
+  });
+
+  it('POST /api/v1/webui/mcps rejects non-object config', async () => {
+    const sessionRes = await requestApp(app, {
+      method: 'POST',
+      path: '/api/v1/sessions',
+      headers: { authorization: 'Bearer server-secret' },
+    });
+    expect(sessionRes.status).toBe(201);
+    const body = sessionRes.body as { sessionId: string; token: string };
+
+    const res = await requestApp(app, {
+      method: 'POST',
+      path: '/api/v1/webui/mcps',
+      headers: {
+        authorization: `Bearer ${body.token}`,
+        'x-papert-session-id': body.sessionId,
+      },
+      body: { name: 'broken-mcp', config: 'nope' },
+    });
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'config must be an object.' });
+  });
+
+  it('POST /api/v1/webui/schedules rejects unknown fields', async () => {
+    const sessionRes = await requestApp(app, {
+      method: 'POST',
+      path: '/api/v1/sessions',
+      headers: { authorization: 'Bearer server-secret' },
+    });
+    expect(sessionRes.status).toBe(201);
+    const body = sessionRes.body as { sessionId: string; token: string };
+
+    const res = await requestApp(app, {
+      method: 'POST',
+      path: '/api/v1/webui/schedules',
+      headers: {
+        authorization: `Bearer ${body.token}`,
+        'x-papert-session-id': body.sessionId,
+      },
+      body: {
+        name: 'Daily',
+        schedule: { kind: 'every', everyMs: 60000 },
+        payload: {},
+        extra: true,
+      },
+    });
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'Unknown field(s): extra' });
   });
 });

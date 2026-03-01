@@ -6,6 +6,7 @@ This package contains the A2A server implementation for Papert Code.
 
 For migration details from `gemini-cli`, see:
 - `/Users/azhar/code/coding-agent/papert-code/packages/a2a-server/docs/gemini-parity-improvements.md`
+- `/Users/azhar/code/coding-agent/papert-code/packages/a2a-server/docs/a2a-hardening-2026-03.md`
 
 ## Commands
 
@@ -23,6 +24,11 @@ The server exposes command execution over `/executeCommand`.
 ## Runtime Notes
 
 - If checkpointing is enabled but `git` is not available on the host, the server automatically disables checkpointing at startup.
+- Web UI rewind/checkpoint listing reads from Papert temp checkpoint storage (`Storage.getProjectTempCheckpointsDir()`), not legacy Gemini paths.
+- Share records persist only `secretHash` (SHA-256), not plaintext secrets.
+- Share auth and share-secret verification use timing-safe token/hash comparisons.
+- Web UI mutating routes now enforce strict payload validation (including unknown-field rejection on validated routes).
+- JSON-backed state/settings updates use serialized atomic writes to reduce lost updates under concurrent requests.
 - Memory loading supports custom ignore files via `CUSTOM_IGNORE_FILE_PATHS` (path-delimited list) and `settings.fileFiltering.customIgnoreFilePaths`.
 - Task streaming now tolerates retry/invalid-stream control events and preserves checkpoint ids on restorable tool calls.
 - Command registry can be reinitialized at runtime (`CommandRegistry.initialize()`), which clears stale registrations and restores built-ins.

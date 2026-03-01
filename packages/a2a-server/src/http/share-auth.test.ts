@@ -64,4 +64,14 @@ describe('Share auth fallback', () => {
       }),
     );
   });
+
+  it('accepts bearer authorization with case-insensitive scheme and trimmed token', async () => {
+    const authRes = await requestApp(app, {
+      method: 'POST',
+      path: '/api/v1/share',
+      headers: { authorization: 'bearer server-secret   ' },
+      body: { payload: { message: 'hello' } },
+    });
+    expect(authRes.status).toBe(201);
+  });
 });

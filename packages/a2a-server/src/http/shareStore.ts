@@ -4,16 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { randomBytes, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
 export type ShareRecord = {
   id: string;
-  secret: string;
+  secretHash: string;
   createdAt: string;
   sessionId?: string;
   payload: Record<string, unknown>;
+  /**
+   * Legacy plaintext secret from old records. Kept optional for migration-only reads.
+   */
+  secret?: string;
 };
 
 const SHARE_ID_PATTERN = /^[a-zA-Z0-9_-]{6,64}$/;
@@ -21,6 +25,19 @@ const SHARE_ID_PATTERN = /^[a-zA-Z0-9_-]{6,64}$/;
 function generateShareId(): string {
   return randomBytes(6).toString('base64url');
 }
+
+function sha256(value: string): string {
+  return createHash('sha256').update(value).digest('hex');
+}
+
+function safeEqualHex(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a, 'hex');
+  const bBuf = Buffer.from(b, 'hex');
+  if (aBuf.length !== bBuf.length) return false;
+  return timingSafeEqual(aBuf, bBuf);
+}
+
+export type CreatedShareRecord = ShareRecord & { secret: string };
 
 export class ShareStore {
   constructor(private baseDir: string) {}
@@ -48,7 +65,10 @@ export class ShareStore {
     }
   }
 
-  async create(payload: Record<string, unknown>, sessionId?: string): Promise<ShareRecord> {
+  async create(
+    payload: Record<string, unknown>,
+    sessionId?: string,
+  ): Promise<CreatedShareRecord> {
     await this.ensureDir();
 
     let id = generateShareId();
@@ -62,9 +82,10 @@ export class ShareStore {
       throw new Error('Failed to generate a unique share id.');
     }
 
+    const secret = randomUUID();
     const record: ShareRecord = {
       id,
-      secret: randomUUID(),
+      secretHash: sha256(secret),
       createdAt: new Date().toISOString(),
       sessionId,
       payload,
@@ -72,7 +93,10 @@ export class ShareStore {
 
     await fs.writeFile(this.getSharePath(id), JSON.stringify(record, null, 2));
 
-    return record;
+    return {
+      ...record,
+      secret,
+    };
   }
 
   async get(id: string): Promise<ShareRecord | null> {
@@ -84,7 +108,14 @@ export class ShareStore {
     if (!record) {
       throw new Error('Share not found.');
     }
-    if (record.secret !== secret) {
+    const providedHash = sha256(secret);
+    const storedHash =
+      typeof record.secretHash === 'string' && record.secretHash.length > 0
+        ? record.secretHash
+        : typeof record.secret === 'string' && record.secret.length > 0
+          ? sha256(record.secret)
+          : '';
+    if (!storedHash || !safeEqualHex(storedHash, providedHash)) {
       throw new Error('Invalid share secret.');
     }
     await fs.unlink(this.getSharePath(id));
