@@ -13,6 +13,7 @@
 - Routed core prompt path-resolution warnings through shared `debugLogger` (instead of direct `console.warn`) and added regression coverage.
 - Standardized `/summary` behavior across interactive, headless, and ACP flows by switching to a shared prompt contract and enabling built-in slash-command allowlists (`summary`, `init`) in non-interactive/ACP routing.
 - Added markdown-frontmatter custom command loading (`.md`) with explicit prompt contracts, while keeping legacy `.toml` support for migration compatibility.
+- Added `/export` and `/chat export` conversation artifact export formats (`jsonl`, `html`, `md`, `json`) for downstream replay/eval workflows.
 - Added A2A hardening notes in `packages/a2a-server/docs/a2a-hardening-2026-03.md` and clarified OpenAPI stable-contract scope in docs.
 
 ## 0.3.96

@@ -205,6 +205,9 @@ describe('BuiltinCommandLoader', () => {
 
     const migrateCmd = commands.find((c) => c.name === 'migrate');
     expect(migrateCmd).toBeDefined();
+
+    const exportCmd = commands.find((c) => c.name === 'export');
+    expect(exportCmd).toBeDefined();
   });
 
   it('should include permissions command when folder trust is enabled', async () => {

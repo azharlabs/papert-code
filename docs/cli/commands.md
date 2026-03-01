@@ -20,6 +20,7 @@ Do not edit manually. Run `npm run docs:commands:sync` to refresh.
 - `/docs`
 - `/editor`
 - `/extensions`
+- `/export`
 - `/github`
 - `/help`
 - `/hooks`
@@ -119,7 +120,7 @@ Slash commands provide meta-level control over the CLI itself.
 
 - **`/chat`**
   - **Description:** Manage chat checkpoints and session navigation.
-  - **Usage:** `/chat <list|save|resume|delete|share>`
+  - **Usage:** `/chat <list|save|resume|delete|share|export>`
   - **Behavior:**
     - `/chat list` opens the same session browser used by `/resume`.
     - `/chat resume` without a tag opens the session browser.
@@ -127,6 +128,16 @@ Slash commands provide meta-level control over the CLI itself.
     - `/chat save <tag>` saves the current chat as a tagged checkpoint.
     - `/chat delete <tag>` deletes a tagged checkpoint.
     - `/chat share [filename]` exports the current chat to markdown/json.
+    - `/chat export [filename]` exports replay artifacts in `.jsonl`, `.html`, `.md`, or `.json`.
+
+- **`/export`**
+  - **Description:** Export the current conversation as prompt-replay/eval artifacts.
+  - **Usage:** `/export [filename]`
+  - **Formats:**
+    - `.jsonl` (default): one structured record per turn for dataset pipelines.
+    - `.html`: readable report for handoff/review.
+    - `.md`: prompt-replay friendly markdown transcript.
+    - `.json`: raw chat history payload.
 
 - **`/resume`**
   - **Description:** Open the interactive session browser and resume previous sessions.
