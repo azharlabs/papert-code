@@ -404,15 +404,52 @@ The name of a command is determined by its file path relative to its `commands` 
 - A file at `~/.papert/commands/test.toml` becomes the command `/test`.
 - A file at `<project>/.papert/commands/git/commit.toml` becomes the namespaced command `/git:commit`.
 
-#### TOML File Format (v1)
+#### Command File Formats
 
-Your command definition files must be written in the TOML format and use the `.toml` file extension.
+Papert Code supports both markdown and TOML custom command files:
 
-##### Required Fields
+- **Markdown (preferred):** `.md` with YAML frontmatter
+- **Legacy TOML (supported):** `.toml`
+
+If both `name.md` and `name.toml` exist for the same command path, **the markdown command takes precedence**.
+
+##### Markdown Format (v2, preferred)
+
+Use markdown with frontmatter for better readability and prompt maintenance:
+
+```md
+---
+description: Generate a review plan
+contract: custom-command/v1
+---
+Review {{args}} and produce:
+1. Risks
+2. Proposed fixes
+3. Test plan
+```
+
+- `description` (optional): shown in `/help`.
+- `contract` (optional): prompt contract label (defaults to `custom-command/v1`).
+- Prompt source:
+  - `prompt` key in frontmatter (optional), or
+  - markdown body (default and recommended).
+
+Markdown commands are wrapped in an explicit system prompt contract before execution to standardize behavior and improve prompt quality control.
+
+##### TOML Format (v1, legacy)
+
+TOML remains supported for backward compatibility and migration.
+
+```toml
+description = "Generate a review plan"
+prompt = "Review {{args}} and produce: 1) Risks 2) Proposed fixes 3) Test plan"
+```
+
+##### Required Fields (TOML)
 
 - `prompt` (String): The prompt that will be sent to the model when the command is executed. This can be a single-line or multi-line string.
 
-##### Optional Fields
+##### Optional Fields (TOML)
 
 - `description` (String): A brief, one-line description of what the command does. This text will be displayed next to your command in the `/help` menu. **If you omit this field, a generic description will be generated from the filename.**
 
@@ -430,13 +467,14 @@ The behavior of this injection depends on where it is used:
 
 When used in the main body of the prompt, the arguments are injected exactly as the user typed them.
 
-**Example (`git/fix.toml`):**
+**Example (`git/fix.md`):**
 
-```toml
+```md
 # Invoked via: /git:fix "Button is misaligned"
-
-description = "Generates a fix for a given issue."
-prompt = "Please provide a code fix for the issue described here: {{args}}."
+---
+description: Generates a fix for a given issue.
+---
+Please provide a code fix for the issue described here: {{args}}.
 ```
 
 The model receives: `Please provide a code fix for the issue described here: "Button is misaligned".`
@@ -445,15 +483,16 @@ The model receives: `Please provide a code fix for the issue described here: "Bu
 
 When you use `{{args}}` inside a shell injection block (`!{...}`), the arguments are automatically **shell-escaped** before replacement. This allows you to safely pass arguments to shell commands, ensuring the resulting command is syntactically correct and secure while preventing command injection vulnerabilities.
 
-**Example (`/grep-code.toml`):**
+**Example (`/grep-code.md`):**
 
-```toml
-prompt = """
+```md
+---
+description: Search code and summarize matches
+---
 Please summarize the findings for the pattern `{{args}}`.
 
 Search Results:
 !{grep -r {{args}} .}
-"""
 ```
 
 When you run `/grep-code It's complicated`:
@@ -473,16 +512,16 @@ If you provide arguments to the command (e.g., `/mycommand arg1`), the CLI will 
 
 If you do **not** provide any arguments (e.g., `/mycommand`), the prompt is sent to the model exactly as it is, with nothing appended.
 
-**Example (`changelog.toml`):**
+**Example (`changelog.md`):**
 
 This example shows how to create a robust command by defining a role for the model, explaining where to find the user's input, and specifying the expected format and behavior.
 
-```toml
-# In: <project>/.papert/commands/changelog.toml
+```md
+# In: <project>/.papert/commands/changelog.md
 # Invoked via: /changelog 1.2.0 added "Support for default argument parsing."
-
-description = "Adds a new entry to the project's CHANGELOG.md file."
-prompt = """
+---
+description: Adds a new entry to the project's CHANGELOG.md file.
+---
 # Task: Update Changelog
 
 You are an expert maintainer of this software project. A user has invoked a command to add a new entry to the changelog.
@@ -501,7 +540,6 @@ The command follows this format: `/changelog <version> <type> <message>`
 3. Add the `<message>` under the correct `<type>` heading.
 4. If the version or type section doesn't exist, create it.
 5. Adhere strictly to the "Keep a Changelog" format.
-"""
 ```
 
 When you run `/changelog 1.2.0 added "New feature"`, the final text sent to the model will be the original prompt followed by two newlines and the command you typed.
@@ -520,26 +558,21 @@ When a custom command attempts to execute a shell command, Papert Code will now 
 4.  **Security Check and Confirmation:** The CLI performs a security check on the final, resolved command (after arguments are escaped and substituted). A dialog will appear showing the exact command(s) to be executed.
 5.  **Execution and Error Reporting:** The command is executed. If the command fails, the output injected into the prompt will include the error messages (stderr) followed by a status line, e.g., `[Shell command exited with code 1]`. This helps the model understand the context of the failure.
 
-**Example (`git/commit.toml`):**
+**Example (`git/commit.md`):**
 
 This command gets the staged git diff and uses it to ask the model to write a commit message.
 
-````toml
-# In: <project>/.papert/commands/git/commit.toml
+````md
+# In: <project>/.papert/commands/git/commit.md
 # Invoked via: /git:commit
-
-description = "Generates a Git commit message based on staged changes."
-
-# The prompt uses !{...} to execute the command and inject its output.
-prompt = """
+---
+description: Generates a Git commit message based on staged changes.
+---
 Please generate a Conventional Commit message based on the following git diff:
 
 ```diff
 !{git diff --staged}
 ```
-
-"""
-
 ````
 
 When you run `/git:commit`, the CLI first executes `git diff --staged`, then replaces `!{git diff --staged}` with the output of that command before sending the final, complete prompt to the model.
@@ -557,16 +590,16 @@ You can directly embed the content of a file or a directory listing into your pr
 - **Processing Order**: File content injection with `@{...}` is processed _before_ shell commands (`!{...}`) and argument substitution (`{{args}}`).
 - **Parsing**: The parser requires the content inside `@{...}` (the path) to have balanced braces (`{` and `}`).
 
-**Example (`review.toml`):**
+**Example (`review.md`):**
 
 This command injects the content of a _fixed_ best practices file (`docs/best-practices.md`) and uses the user's arguments to provide context for the review.
 
-```toml
-# In: <project>/.papert/commands/review.toml
+```md
+# In: <project>/.papert/commands/review.md
 # Invoked via: /review FileCommandLoader.ts
-
-description = "Reviews the provided context using a best practice guide."
-prompt = """
+---
+description: Reviews the provided context using a best practice guide.
+---
 You are an expert code reviewer.
 
 Your task is to review {{args}}.
@@ -574,7 +607,6 @@ Your task is to review {{args}}.
 Use the following best practices when providing your review:
 
 @{docs/best-practices.md}
-"""
 ```
 
 When you run `/review FileCommandLoader.ts`, the `@{docs/best-practices.md}` placeholder is replaced by the content of that file, and `{{args}}` is replaced by the text you provided, before the final prompt is sent to the model.
@@ -587,31 +619,29 @@ Let's create a global command that asks the model to refactor a piece of code.
 
 **1. Create the file and directories:**
 
-First, ensure the user commands directory exists, then create a `refactor` subdirectory for organization and the final TOML file.
+First, ensure the user commands directory exists, then create a `refactor` subdirectory for organization and the final markdown file.
 
 ```bash
 mkdir -p ~/.papert/commands/refactor
-touch ~/.papert/commands/refactor/pure.toml
+touch ~/.papert/commands/refactor/pure.md
 ```
 
 **2. Add the content to the file:**
 
-Open `~/.papert/commands/refactor/pure.toml` in your editor and add the following content. We are including the optional `description` for best practice.
+Open `~/.papert/commands/refactor/pure.md` in your editor and add the following content. We are including the optional `description` for best practice.
 
-```toml
-# In: ~/.papert/commands/refactor/pure.toml
+```md
+# In: ~/.papert/commands/refactor/pure.md
 # This command will be invoked via: /refactor:pure
-
-description = "Asks the model to refactor the current context into a pure function."
-
-prompt = """
+---
+description: Asks the model to refactor the current context into a pure function.
+---
 Please analyze the code I've provided in the current context.
 Refactor it into a pure function.
 
 Your response should include:
 1. The refactored, pure function code block.
 2. A brief explanation of the key changes you made and why they contribute to purity.
-"""
 ```
 
 **3. Run the Command:**
@@ -623,7 +653,7 @@ That's it! You can now run your command in the CLI. First, you might add a file 
 > /refactor:pure
 ```
 
-Papert Code will then execute the multi-line prompt defined in your TOML file.
+Papert Code will then execute the multi-line prompt defined in your command file.
 
 ## Input Prompt Shortcuts
 

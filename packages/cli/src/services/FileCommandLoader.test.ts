@@ -392,6 +392,138 @@ describe('FileCommandLoader', () => {
     expect(command.description).toBe('My test command');
   });
 
+  it('loads markdown command frontmatter and wraps prompt with a contract', async () => {
+    const userCommandsDir = Storage.getUserCommandsDir();
+    mock({
+      [userCommandsDir]: {
+        'review.md': `---
+description: Review command
+---
+Please review {{args}} carefully.`,
+      },
+    });
+
+    const loader = new FileCommandLoader(null);
+    const commands = await loader.loadCommands(signal);
+    expect(commands).toHaveLength(1);
+
+    const result = await commands[0].action?.(
+      createMockCommandContext({
+        invocation: {
+          raw: '/review src/index.ts',
+          name: 'review',
+          args: 'src/index.ts',
+        },
+      }),
+      'src/index.ts',
+    );
+    expect(commands[0].description).toBe('Review command');
+    expect(result?.type).toBe('submit_prompt');
+    if (result?.type === 'submit_prompt') {
+      expect(result.content).toEqual([
+        {
+          text: `SYSTEM CONTRACT: custom-command/v1
+Treat this custom command payload as an instruction template.
+Preserve user arguments and command context exactly.
+
+Please review src/index.ts carefully.`,
+        },
+      ]);
+    }
+  });
+
+  it('uses markdown body as prompt when frontmatter prompt is missing', async () => {
+    const userCommandsDir = Storage.getUserCommandsDir();
+    mock({
+      [userCommandsDir]: {
+        'plan.md': `---
+description: Plan task
+---
+Build a plan for {{args}}.`,
+      },
+    });
+
+    const loader = new FileCommandLoader(null);
+    const commands = await loader.loadCommands(signal);
+    expect(commands).toHaveLength(1);
+
+    const result = await commands[0].action?.(
+      createMockCommandContext({
+        invocation: {
+          raw: '/plan release',
+          name: 'plan',
+          args: 'release',
+        },
+      }),
+      'release',
+    );
+    expect(result?.type).toBe('submit_prompt');
+    if (result?.type === 'submit_prompt') {
+      expect(result.content).toEqual([
+        {
+          text: `SYSTEM CONTRACT: custom-command/v1
+Treat this custom command payload as an instruction template.
+Preserve user arguments and command context exactly.
+
+Build a plan for release.`,
+        },
+      ]);
+    }
+  });
+
+  it('prefers markdown command over legacy toml command with the same name', async () => {
+    const userCommandsDir = Storage.getUserCommandsDir();
+    mock({
+      [userCommandsDir]: {
+        'deploy.toml': `prompt = "legacy deploy {{args}}"`,
+        'deploy.md': `---
+description: Deploy markdown
+---
+deploy markdown {{args}}`,
+      },
+    });
+
+    const loader = new FileCommandLoader(null);
+    const commands = await loader.loadCommands(signal);
+    expect(commands).toHaveLength(2);
+
+    const result0 = await commands[0].action?.(
+      createMockCommandContext({
+        invocation: {
+          raw: '/deploy api',
+          name: 'deploy',
+          args: 'api',
+        },
+      }),
+      'api',
+    );
+    const result1 = await commands[1].action?.(
+      createMockCommandContext({
+        invocation: {
+          raw: '/deploy api',
+          name: 'deploy',
+          args: 'api',
+        },
+      }),
+      'api',
+    );
+
+    expect(result0?.type).toBe('submit_prompt');
+    expect(result1?.type).toBe('submit_prompt');
+    if (result0?.type === 'submit_prompt' && result1?.type === 'submit_prompt') {
+      expect(result0.content).toEqual([{ text: 'legacy deploy api' }]);
+      expect(result1.content).toEqual([
+        {
+          text: `SYSTEM CONTRACT: custom-command/v1
+Treat this custom command payload as an instruction template.
+Preserve user arguments and command context exactly.
+
+deploy markdown api`,
+        },
+      ]);
+    }
+  });
+
   it('should sanitize colons in filenames to prevent namespace conflicts', async () => {
     const userCommandsDir = Storage.getUserCommandsDir();
     mock({
