@@ -21,6 +21,13 @@ import {
 } from './types.js';
 import { t } from '../../i18n/index.js';
 
+export const SKILLS_INVOCATION_POLICY = `Skill invocation policy:
+1. Invoke a skill first when the skill is explicitly named or the task clearly matches the skill description.
+2. Resolve skill-relative paths against the skill directory before trying workspace or process cwd paths.
+3. Read SKILL.md progressively: load only the sections needed for the current task.
+4. Follow linked resources only when required by the current step.
+5. If a skill is missing, unreadable, or inactive, report it and continue with the safest fallback workflow.`;
+
 async function listAction(context: CommandContext) {
   context.ui.addItem(
     {
@@ -127,6 +134,16 @@ async function updateAction(context: CommandContext, args: string) {
   }
 }
 
+async function policyAction(context: CommandContext) {
+  context.ui.addItem(
+    {
+      type: MessageType.INFO,
+      text: SKILLS_INVOCATION_POLICY,
+    },
+    Date.now(),
+  );
+}
+
 const listSkillsCommand: SlashCommand = {
   name: 'list',
   get description() {
@@ -156,12 +173,21 @@ const updateSkillsCommand: SlashCommand = {
   },
 };
 
+const policySkillsCommand: SlashCommand = {
+  name: 'policy',
+  get description() {
+    return t('Show the skill invocation and path-resolution policy');
+  },
+  kind: CommandKind.BUILT_IN,
+  action: policyAction,
+};
+
 export const skillsCommand: SlashCommand = {
   name: 'skills',
   get description() {
     return t('Manage skills');
   },
   kind: CommandKind.BUILT_IN,
-  subCommands: [listSkillsCommand, updateSkillsCommand],
+  subCommands: [listSkillsCommand, updateSkillsCommand, policySkillsCommand],
   action: (context, args) => listSkillsCommand.action!(context, args),
 };

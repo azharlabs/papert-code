@@ -144,6 +144,17 @@ Keyboard shortcuts: `Ctrl+C` cancels the current turn, `Ctrl+D` exits on an empt
   - `.papert/agents/` for specialized subagents
   - MCP servers for external toolchains and data sources
 
+### Skill routing policy
+
+Papert applies explicit skill routing rules so behavior stays deterministic across interactive and headless runs:
+
+1. Invoke skills first when the user names a skill or the task clearly matches a skill description.
+2. Resolve relative skill paths against that skill's directory before workspace/cwd fallback.
+3. Load `SKILL.md` progressively and read linked references only when required by the current step.
+4. If a skill is missing or unreadable, report it and continue with a safe fallback path.
+
+Use `/skills policy` in the CLI to print the current policy text.
+
 ## Governance and platform upgrades
 
 Recent improvements add safety, admin policy gating, and structured registries that make Papert Code more robust in enterprise and headless scenarios.

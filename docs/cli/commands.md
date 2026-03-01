@@ -186,6 +186,14 @@ Slash commands provide meta-level control over the CLI itself.
 - **`/extensions`**
   - **Description:** Lists all active extensions in the current Papert Code session. See [Papert Code Extensions](../extensions/extension.md).
 
+- **`/skills`**
+  - **Description:** Manage active skills and skill updates.
+  - **Usage:** `/skills <list|update|policy>`
+  - **Sub-commands:**
+    - **`list`**: Render the active skills panel.
+    - **`update <skill-names>|--all`**: Update one or more installed skills.
+    - **`policy`**: Show the skill invocation and path-resolution rules used for deterministic routing.
+
 - **`/help`** (or **`/?`**)
   - **Description:** Display help information about the Papert Code, including available commands and their usage.
 
