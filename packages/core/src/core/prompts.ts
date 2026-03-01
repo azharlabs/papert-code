@@ -12,6 +12,7 @@ import process from 'node:process';
 import { isGitRepository } from '../utils/gitUtils.js';
 import { PAPERT_CONFIG_DIR } from '../tools/memoryTool.js';
 import type { GenerateContentConfig } from '@google/genai';
+import { debugLogger } from '../utils/debugLogger.js';
 
 export function resolvePathFromEnv(envVar?: string): {
   isSwitch: boolean;
@@ -46,7 +47,7 @@ export function resolvePathFromEnv(envVar?: string): {
       }
     } catch (error) {
       // If os.homedir() fails, we catch the error instead of crashing.
-      console.warn(
+      debugLogger.warn(
         `Could not resolve home directory for path: ${trimmedEnvVar}`,
         error,
       );
