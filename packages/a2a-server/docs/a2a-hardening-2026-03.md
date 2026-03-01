@@ -30,6 +30,11 @@ This note documents hardening work applied to `packages/a2a-server` after Gemini
 - Added per-file serialized write queues + atomic JSON write path for state/settings/schedule-backed updates.
 - Reduces lost updates under concurrent request bursts.
 
+6. HTTP route modularization
+- Extracted Web UI mutating routes into:
+  - `packages/a2a-server/src/http/webUiMutations.ts`
+- `app.ts` now wires this module via `registerWebUiMutationRoutes(...)`, reducing central file size and isolating validation/mutation logic.
+
 ## Tests Added/Updated
 
 - `src/http/shareStore.test.ts`

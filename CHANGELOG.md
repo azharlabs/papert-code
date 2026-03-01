@@ -8,6 +8,7 @@
 - Switched JSON-backed A2A state/settings/schedule writes to serialized atomic updates to reduce concurrent write loss.
 - Expanded A2A regression coverage for share security and web-ui validation paths.
 - Promoted `GET/PUT /api/v1/webui/state` into stable OpenAPI contract coverage and regenerated both TypeScript/Python remote API SDK clients.
+- Refactored A2A Web UI mutation handlers into `webUiMutations.ts` to reduce `app.ts` complexity while preserving existing API behavior.
 - Added A2A hardening notes in `packages/a2a-server/docs/a2a-hardening-2026-03.md` and clarified OpenAPI stable-contract scope in docs.
 
 ## 0.3.96
