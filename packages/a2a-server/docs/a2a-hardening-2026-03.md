@@ -51,6 +51,11 @@ This note documents hardening work applied to `packages/a2a-server` after Gemini
 - Full A2A package tests pass:
   - `npm run test --workspace packages/a2a-server`
 
+## Downstream Compatibility Audit
+
+- Audited downstream consumers (`packages/desktop` and `papert-claw`) for direct usage of newly promoted OpenAPI/SDK endpoints.
+- No required code changes were identified for this batch because all added API/SDK surfaces are backward-compatible additions.
+
 ## Notes on OpenAPI Scope
 
 - The current OpenAPI contract remains focused on stable remote-control endpoints.
