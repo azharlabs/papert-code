@@ -155,6 +155,8 @@ Papert applies explicit skill routing rules so behavior stays deterministic acro
 
 Use `/skills policy` in the CLI to print the current policy text.
 
+Custom command migration note: legacy `.toml` commands are still supported, but Papert now nudges users toward markdown-frontmatter commands and safely auto-generates `.md` siblings when possible.
+
 ## Governance and platform upgrades
 
 Recent improvements add safety, admin policy gating, and structured registries that make Papert Code more robust in enterprise and headless scenarios.

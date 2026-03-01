@@ -15,6 +15,7 @@
 - Added markdown-frontmatter custom command loading (`.md`) with explicit prompt contracts, while keeping legacy `.toml` support for migration compatibility.
 - Added `/export` and `/chat export` conversation artifact export formats (`jsonl`, `html`, `md`, `json`) for downstream replay/eval workflows.
 - Added `/skills policy` plus documented skill invocation/path-resolution routing rules in README and command docs.
+- Added startup migration nudges for legacy custom-command TOML files with safe auto-generation of markdown siblings and explicit deprecation messaging.
 - Added A2A hardening notes in `packages/a2a-server/docs/a2a-hardening-2026-03.md` and clarified OpenAPI stable-contract scope in docs.
 
 ## 0.3.96

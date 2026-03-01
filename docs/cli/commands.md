@@ -432,6 +432,13 @@ Papert Code supports both markdown and TOML custom command files:
 
 If both `name.md` and `name.toml` exist for the same command path, **the markdown command takes precedence**.
 
+##### Migration and Deprecation Behavior
+
+- On startup, Papert scans command directories for legacy `.toml` command files.
+- Safe auto-migration creates `.md` sibling files when missing, and never overwrites existing markdown commands.
+- Legacy `.toml` files remain in place for backward compatibility, but are treated as deprecated.
+- The CLI shows an in-app migration/deprecation notice summarizing migrated, skipped, and invalid files.
+
 ##### Markdown Format (v2, preferred)
 
 Use markdown with frontmatter for better readability and prompt maintenance:

@@ -67,6 +67,12 @@ interface ParsedCommandFile {
   contract?: string;
 }
 
+export interface LegacyCommandMigrationResult {
+  migrated: string[];
+  skipped: string[];
+  invalid: string[];
+}
+
 /**
  * Discovers and loads custom slash commands from .md/.toml files in both the
  * user's global config directory and the current project's directory.
@@ -495,4 +501,102 @@ function parseSimpleFrontmatterMap(lines: string[]): Record<string, string> {
     data[key] = value.replace(/^["']|["']$/g, '');
   }
   return data;
+}
+
+function buildMarkdownCommandContent(input: {
+  description?: string;
+  prompt: string;
+}): string {
+  const frontmatterLines = ['---'];
+  if (input.description?.trim()) {
+    frontmatterLines.push(`description: ${input.description.trim()}`);
+  }
+  frontmatterLines.push('contract: custom-command/v1', '---', '');
+  return `${frontmatterLines.join('\n')}${input.prompt.trim()}\n`;
+}
+
+/**
+ * Migrate legacy `.toml` custom commands to markdown (`.md`) files.
+ *
+ * Safe behavior:
+ * - never overwrites existing `.md` siblings
+ * - leaves original `.toml` files in place
+ * - skips invalid TOML files
+ */
+export async function migrateLegacyTomlCommands(
+  commandDirs: readonly string[],
+): Promise<LegacyCommandMigrationResult> {
+  const result: LegacyCommandMigrationResult = {
+    migrated: [],
+    skipped: [],
+    invalid: [],
+  };
+
+  const globOptions = {
+    nodir: true,
+    dot: true,
+    follow: true,
+  } as const;
+
+  for (const dir of commandDirs) {
+    let files: string[] = [];
+    try {
+      files = await glob('**/*.toml', {
+        ...globOptions,
+        cwd: dir,
+      });
+    } catch (error) {
+      const isEnoent = (error as NodeJS.ErrnoException).code === 'ENOENT';
+      if (!isEnoent) {
+        console.error(
+          `[FileCommandLoader] Failed to scan legacy TOML commands in ${dir}:`,
+          error,
+        );
+      }
+      continue;
+    }
+
+    for (const relativeFile of files) {
+      const tomlPath = path.join(dir, relativeFile);
+      const mdPath = tomlPath.slice(0, -LEGACY_TOML_EXTENSION.length) + '.md';
+      try {
+        await fs.access(mdPath);
+        result.skipped.push(tomlPath);
+        continue;
+      } catch {
+        // no-op, markdown sibling does not exist
+      }
+
+      let fileContent = '';
+      try {
+        fileContent = await fs.readFile(tomlPath, 'utf-8');
+      } catch {
+        result.invalid.push(tomlPath);
+        continue;
+      }
+
+      let parsed: ParsedCommandFile;
+      try {
+        const raw = toml.parse(fileContent);
+        const validation = TomlCommandDefSchema.safeParse(raw);
+        if (!validation.success) {
+          result.invalid.push(tomlPath);
+          continue;
+        }
+        parsed = validation.data;
+      } catch {
+        result.invalid.push(tomlPath);
+        continue;
+      }
+
+      const markdownContent = buildMarkdownCommandContent({
+        description: parsed.description,
+        prompt: parsed.prompt,
+      });
+      await fs.writeFile(mdPath, markdownContent, 'utf-8');
+      result.migrated.push(mdPath);
+    }
+  }
+
+  return result;
 }

@@ -43,6 +43,7 @@ import {
   fireSessionEndHook,
   SessionStartSource,
   SessionEndReason,
+  Storage,
 } from '@papert-code/papert-code-core';
 import { validateAuthMethod } from '../config/auth.js';
 import { loadHierarchicalGeminiMemory } from '../config/config.js';
@@ -105,6 +106,7 @@ import { processVisionSwitchOutcome } from './hooks/useVisionAutoSwitch.js';
 import { useSubagentCreateDialog } from './hooks/useSubagentCreateDialog.js';
 import { useAgentsManagerDialog } from './hooks/useAgentsManagerDialog.js';
 import { useAttentionNotifications } from './hooks/useAttentionNotifications.js';
+import { migrateLegacyTomlCommands } from '../services/FileCommandLoader.js';
 
 const CTRL_EXIT_PROMPT_DURATION_MS = 1000;
 
@@ -860,6 +862,7 @@ export const AppContainer = (props: AppContainerProps) => {
   // Initial prompt handling
   const initialPrompt = useMemo(() => config.getQuestion(), [config]);
   const initialPromptSubmitted = useRef(false);
+  const hasCheckedLegacyCommandMigration = useRef(false);
   const geminiClient = config.getGeminiClient();
 
   useEffect(() => {
@@ -902,6 +905,58 @@ export const AppContainer = (props: AppContainerProps) => {
     welcomeBackChoice,
     geminiClient,
   ]);
+
+  useEffect(() => {
+    if (!isConfigInitialized || hasCheckedLegacyCommandMigration.current) {
+      return;
+    }
+    hasCheckedLegacyCommandMigration.current = true;
+
+    // Safe migration flow for legacy TOML custom commands:
+    // create .md siblings when absent and keep legacy files in place.
+    const runMigrationNudge = async () => {
+      const commandDirs = [
+        Storage.getUserCommandsDir(),
+        config.storage.getProjectCommandsDir(),
+      ];
+      const migrationResult = await migrateLegacyTomlCommands(commandDirs);
+      const { migrated, skipped, invalid } = migrationResult;
+      const totalDetected = migrated.length + skipped.length + invalid.length;
+      if (totalDetected === 0) {
+        return;
+      }
+
+      const parts: string[] = [];
+      if (migrated.length > 0) {
+        parts.push(
+          `Migrated ${migrated.length} legacy .toml custom command(s) to markdown (.md).`,
+        );
+      }
+      if (skipped.length > 0) {
+        parts.push(
+          `${skipped.length} command(s) already had markdown versions and were left unchanged.`,
+        );
+      }
+      if (invalid.length > 0) {
+        parts.push(
+          `${invalid.length} invalid legacy file(s) could not be migrated automatically.`,
+        );
+      }
+      parts.push(
+        'TOML custom commands remain supported but are deprecated. Prefer markdown frontmatter for new commands.',
+      );
+
+      historyManager.addItem(
+        {
+          type: MessageType.INFO,
+          text: parts.join(' '),
+        },
+        Date.now(),
+      );
+    };
+
+    void runMigrationNudge();
+  }, [config.storage, historyManager, isConfigInitialized]);
 
   // Skip the initial IDE integration nudge to avoid prompting users with an
   // auto-triggered `/ide install` flow.

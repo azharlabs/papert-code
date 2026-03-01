@@ -5,10 +5,14 @@
  */
 
 import * as path from 'node:path';
+import * as fsPromises from 'node:fs/promises';
 import type { Config } from '@papert-code/papert-code-core';
 import { Storage } from '@papert-code/papert-code-core';
 import mock from 'mock-fs';
-import { FileCommandLoader } from './FileCommandLoader.js';
+import {
+  FileCommandLoader,
+  migrateLegacyTomlCommands,
+} from './FileCommandLoader.js';
 import { assert, vi } from 'vitest';
 import { createMockCommandContext } from '../test-utils/mockCommandContext.js';
 import {
@@ -1381,6 +1385,47 @@ deploy markdown api`,
       // Should not throw or print errors
       const commands = await loadPromise;
       expect(commands).toHaveLength(0);
+    });
+  });
+
+  describe('legacy command migration', () => {
+    it('migrates toml commands to markdown without removing legacy files', async () => {
+      const userCommandsDir = Storage.getUserCommandsDir();
+      mock({
+        [userCommandsDir]: {
+          'review.toml':
+            'description = "Review code"\nprompt = """Please review {{args}}."""',
+        },
+      });
+
+      const result = await migrateLegacyTomlCommands([userCommandsDir]);
+      expect(result.invalid).toEqual([]);
+      expect(result.skipped).toEqual([]);
+      expect(result.migrated).toHaveLength(1);
+      expect(result.migrated[0]).toBe(path.join(userCommandsDir, 'review.md'));
+
+      const markdown = await fsPromises.readFile(
+        path.join(userCommandsDir, 'review.md'),
+        'utf-8',
+      );
+      expect(markdown).toContain('description: Review code');
+      expect(markdown).toContain('contract: custom-command/v1');
+      expect(markdown).toContain('Please review {{args}}.');
+    });
+
+    it('skips migration when markdown sibling already exists', async () => {
+      const userCommandsDir = Storage.getUserCommandsDir();
+      mock({
+        [userCommandsDir]: {
+          'deploy.toml': 'prompt = "legacy deploy"',
+          'deploy.md': '---\ndescription: Existing\n---\nnew deploy',
+        },
+      });
+
+      const result = await migrateLegacyTomlCommands([userCommandsDir]);
+      expect(result.migrated).toEqual([]);
+      expect(result.invalid).toEqual([]);
+      expect(result.skipped).toEqual([path.join(userCommandsDir, 'deploy.toml')]);
     });
   });
 });
