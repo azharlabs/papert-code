@@ -154,6 +154,74 @@ export const REMOTE_CONTROL_OPENAPI_SPEC = {
         },
       },
     },
+    '/api/v1/webui/state': {
+      get: {
+        operationId: 'getWebUiState',
+        summary: 'Fetch persisted Web UI state',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '200': {
+            description: 'Web UI state payload',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    state: {
+                      oneOf: [{ type: 'object' }, { type: 'null' }],
+                    },
+                  },
+                  required: ['state'],
+                },
+              },
+            },
+          },
+          '401': {
+            description: 'Unauthorized',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
+      put: {
+        operationId: 'updateWebUiState',
+        summary: 'Persist Web UI state',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                additionalProperties: true,
+              },
+            },
+          },
+        },
+        responses: {
+          '204': { description: 'Updated' },
+          '400': {
+            description: 'Invalid state payload',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+          '401': {
+            description: 'Unauthorized',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
+    },
     '/api/v1/webui/release-channel': {
       put: {
         operationId: 'updateWebUiReleaseChannel',

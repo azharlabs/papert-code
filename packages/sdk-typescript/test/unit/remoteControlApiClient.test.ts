@@ -123,4 +123,62 @@ describe('RemoteControlApiClient', () => {
       body: { error: 'Workspace is already in use.', code: 'WORKSPACE_LOCKED' },
     } satisfies Partial<RemoteControlApiError>);
   });
+
+  it('gets and updates web ui state with session headers', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          body: { state: { panel: 'catalog' } },
+        }),
+      )
+      .mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 204,
+          statusText: 'No Content',
+        }),
+      );
+
+    const client = new RemoteControlApiClient({ baseUrl: 'http://localhost:41242' });
+    const state = await client.getWebUiState({
+      sessionId: 'sid-1',
+      sessionToken: 'session-token',
+    });
+    expect(state).toEqual({ state: { panel: 'catalog' } });
+
+    await client.updateWebUiState({
+      sessionId: 'sid-1',
+      sessionToken: 'session-token',
+      state: { panel: 'activity' },
+    });
+
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      1,
+      new URL('/api/v1/webui/state', 'http://localhost:41242'),
+      expect.objectContaining({
+        method: 'GET',
+        headers: {
+          authorization: 'Bearer session-token',
+          'x-papert-session-id': 'sid-1',
+        },
+      }),
+    );
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      new URL('/api/v1/webui/state', 'http://localhost:41242'),
+      expect.objectContaining({
+        method: 'PUT',
+        headers: {
+          authorization: 'Bearer session-token',
+          'x-papert-session-id': 'sid-1',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ panel: 'activity' }),
+      }),
+    );
+  });
 });

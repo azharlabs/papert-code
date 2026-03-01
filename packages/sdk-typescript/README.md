@@ -89,6 +89,15 @@ const catalog = await api.getWebUiCatalog({
   sessionId: session.sessionId,
   sessionToken: session.token,
 });
+const uiState = await api.getWebUiState({
+  sessionId: session.sessionId,
+  sessionToken: session.token,
+});
+await api.updateWebUiState({
+  sessionId: session.sessionId,
+  sessionToken: session.token,
+  state: { ...uiState.state, panel: 'activity' },
+});
 
 console.log(catalog.releaseChannel);
 ```

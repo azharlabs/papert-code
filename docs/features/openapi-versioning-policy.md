@@ -44,3 +44,6 @@ This project maintains OpenAPI contracts for remote-control and web-ui server en
 - Clarified contract boundary:
   - OpenAPI covers stable remote-control endpoints.
   - Web UI internal mutating endpoints remain out-of-contract unless explicitly promoted.
+- Promoted Web UI state contract endpoints:
+  - `GET /api/v1/webui/state`
+  - `PUT /api/v1/webui/state`

@@ -13,7 +13,7 @@ import {
 
 type RouteContract = {
   path: string;
-  method: 'get' | 'post';
+  method: 'get' | 'post' | 'put' | 'delete';
   requiresBearerAuth: boolean;
   expectedStatuses: string[];
 };
@@ -42,6 +42,18 @@ const ROUTE_CONTRACTS: RouteContract[] = [
     method: 'get',
     requiresBearerAuth: true,
     expectedStatuses: ['200', '401'],
+  },
+  {
+    path: '/api/v1/webui/state',
+    method: 'get',
+    requiresBearerAuth: true,
+    expectedStatuses: ['200', '401'],
+  },
+  {
+    path: '/api/v1/webui/state',
+    method: 'put',
+    requiresBearerAuth: true,
+    expectedStatuses: ['204', '400', '401'],
   },
 ];
 

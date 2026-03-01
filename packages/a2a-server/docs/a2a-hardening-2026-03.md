@@ -50,3 +50,6 @@ This note documents hardening work applied to `packages/a2a-server` after Gemini
 
 - The current OpenAPI contract remains focused on stable remote-control endpoints.
 - Many `webui` mutating routes are implementation endpoints for the bundled Web UI and are intentionally outside the stable SDK contract surface.
+- As part of this pass, `webui/state` was promoted into the stable OpenAPI + SDK surface:
+  - `GET /api/v1/webui/state`
+  - `PUT /api/v1/webui/state`

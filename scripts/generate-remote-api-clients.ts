@@ -18,6 +18,8 @@ const REQUIRED_OPERATION_IDS = new Set([
   'createRemoteSession',
   'releaseRemoteSession',
   'getWebUiCatalog',
+  'getWebUiState',
+  'updateWebUiState',
   'updateWebUiReleaseChannel',
 ]);
 
@@ -97,9 +99,17 @@ export interface WebUiCatalogResponse {
   [key: string]: unknown;
 }
 
+export interface WebUiStateResponse {
+  state: Record<string, unknown> | null;
+}
+
 export interface WebUiSessionParams {
   sessionId: string;
   sessionToken: string;
+}
+
+export interface UpdateWebUiStateParams extends WebUiSessionParams {
+  state: Record<string, unknown>;
 }
 
 export interface UpdateWebUiReleaseChannelParams extends WebUiSessionParams {
@@ -175,6 +185,28 @@ export class RemoteControlApiClient {
         authorization: \`Bearer \${params.sessionToken}\`,
         'x-papert-session-id': params.sessionId,
       },
+    });
+  }
+
+  async getWebUiState(params: WebUiSessionParams): Promise<WebUiStateResponse> {
+    return this.requestJson<WebUiStateResponse>('/api/v1/webui/state', {
+      method: 'GET',
+      headers: {
+        authorization: \`Bearer \${params.sessionToken}\`,
+        'x-papert-session-id': params.sessionId,
+      },
+    });
+  }
+
+  async updateWebUiState(params: UpdateWebUiStateParams): Promise<void> {
+    await this.requestNoContent('/api/v1/webui/state', {
+      method: 'PUT',
+      headers: {
+        authorization: \`Bearer \${params.sessionToken}\`,
+        'x-papert-session-id': params.sessionId,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(params.state),
     });
   }
 
@@ -288,6 +320,9 @@ class WebUiCatalogResponse(TypedDict, total=False):
     releaseChannel: ReleaseChannel
     releaseChannelGate: Dict[str, Any]
 
+class WebUiStateResponse(TypedDict):
+    state: Optional[Dict[str, Any]]
+
 
 HttpResponse = Tuple[int, Mapping[str, str], bytes]
 RequestImpl = Callable[[str, str, Dict[str, str], Optional[bytes]], HttpResponse]
@@ -341,6 +376,35 @@ class RemoteControlApiClient:
             },
         )
         return body
+
+    def get_webui_state(self, session_id: str, session_token: str) -> WebUiStateResponse:
+        body = self._request_json(
+            "GET",
+            "/api/v1/webui/state",
+            headers={
+                "authorization": f"Bearer {session_token}",
+                "x-papert-session-id": session_id,
+            },
+        )
+        return body
+
+    def update_webui_state(
+        self,
+        session_id: str,
+        session_token: str,
+        state: Dict[str, Any],
+    ) -> None:
+        payload = json.dumps(state).encode("utf-8")
+        self._request_no_content(
+            "PUT",
+            "/api/v1/webui/state",
+            headers={
+                "authorization": f"Bearer {session_token}",
+                "x-papert-session-id": session_id,
+                "content-type": "application/json",
+            },
+            body=payload,
+        )
 
     def update_webui_release_channel(
         self,

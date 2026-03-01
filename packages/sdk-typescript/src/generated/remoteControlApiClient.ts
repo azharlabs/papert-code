@@ -53,9 +53,17 @@ export interface WebUiCatalogResponse {
   [key: string]: unknown;
 }
 
+export interface WebUiStateResponse {
+  state: Record<string, unknown> | null;
+}
+
 export interface WebUiSessionParams {
   sessionId: string;
   sessionToken: string;
+}
+
+export interface UpdateWebUiStateParams extends WebUiSessionParams {
+  state: Record<string, unknown>;
 }
 
 export interface UpdateWebUiReleaseChannelParams extends WebUiSessionParams {
@@ -131,6 +139,28 @@ export class RemoteControlApiClient {
         authorization: `Bearer ${params.sessionToken}`,
         'x-papert-session-id': params.sessionId,
       },
+    });
+  }
+
+  async getWebUiState(params: WebUiSessionParams): Promise<WebUiStateResponse> {
+    return this.requestJson<WebUiStateResponse>('/api/v1/webui/state', {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${params.sessionToken}`,
+        'x-papert-session-id': params.sessionId,
+      },
+    });
+  }
+
+  async updateWebUiState(params: UpdateWebUiStateParams): Promise<void> {
+    await this.requestNoContent('/api/v1/webui/state', {
+      method: 'PUT',
+      headers: {
+        authorization: `Bearer ${params.sessionToken}`,
+        'x-papert-session-id': params.sessionId,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(params.state),
     });
   }
 

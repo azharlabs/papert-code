@@ -64,3 +64,34 @@ def test_update_release_channel_sends_session_headers_and_json_body():
     assert calls[0][2]["authorization"] == "Bearer session-token"
     assert calls[0][2]["x-papert-session-id"] == "sid-1"
     assert json.loads(calls[0][3].decode("utf-8")) == {"releaseChannel": "preview"}
+
+
+def test_get_and_update_webui_state_use_session_headers():
+    calls = []
+
+    def fake_request(method, url, headers, body):
+        calls.append((method, url, headers, body))
+        if method == "GET":
+            return (
+                200,
+                {"content-type": "application/json"},
+                json.dumps({"state": {"panel": "catalog"}}).encode("utf-8"),
+            )
+        return (204, {}, b"")
+
+    client = RemoteControlApiClient("http://localhost:41242", request_impl=fake_request)
+    state = client.get_webui_state("sid-1", "session-token")
+    client.update_webui_state("sid-1", "session-token", {"panel": "activity"})
+
+    assert state == {"state": {"panel": "catalog"}}
+    assert calls[0][0] == "GET"
+    assert calls[0][1] == "http://localhost:41242/api/v1/webui/state"
+    assert calls[0][2]["authorization"] == "Bearer session-token"
+    assert calls[0][2]["x-papert-session-id"] == "sid-1"
+
+    assert calls[1][0] == "PUT"
+    assert calls[1][1] == "http://localhost:41242/api/v1/webui/state"
+    assert calls[1][2]["authorization"] == "Bearer session-token"
+    assert calls[1][2]["x-papert-session-id"] == "sid-1"
+    assert calls[1][2]["content-type"] == "application/json"
+    assert json.loads(calls[1][3].decode("utf-8")) == {"panel": "activity"}

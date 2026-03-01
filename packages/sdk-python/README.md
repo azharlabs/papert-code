@@ -235,6 +235,12 @@ from papert_code_sdk import RemoteControlApiClient
 api = RemoteControlApiClient("http://127.0.0.1:41242")
 session = api.create_remote_session("server-token")
 catalog = api.get_webui_catalog(session["sessionId"], session["token"])
+state = api.get_webui_state(session["sessionId"], session["token"])
+api.update_webui_state(
+    session["sessionId"],
+    session["token"],
+    {"panel": "activity", **(state.get("state") or {})},
+)
 print(catalog.get("releaseChannel"))
 ```
 

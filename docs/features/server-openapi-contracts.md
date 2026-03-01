@@ -33,6 +33,9 @@ The tests validate:
   - `/api/v1/health`
   - `/api/v1/sessions`
   - `/api/v1/sessions/{sessionId}/release`
+  - `/api/v1/webui/catalog`
+  - `/api/v1/webui/state`
+  - `/api/v1/webui/release-channel`
 - Expected HTTP methods exist for each path.
 - Stable operation IDs are unique and present.
 - Expected status codes are documented.
