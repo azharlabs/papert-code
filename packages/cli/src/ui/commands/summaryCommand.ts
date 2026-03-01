@@ -4,15 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as fsPromises from 'fs/promises';
-import path from 'path';
 import {
   type SlashCommand,
   CommandKind,
   type SlashCommandActionReturn,
 } from './types.js';
 import { getProjectSummaryPrompt } from '@papert-code/papert-code-core';
-import type { HistoryItemSummary } from '../types.js';
 import { t } from '../../i18n/index.js';
 
 export const summaryCommand: SlashCommand = {
@@ -24,177 +21,26 @@ export const summaryCommand: SlashCommand = {
   },
   kind: CommandKind.BUILT_IN,
   action: async (context): Promise<SlashCommandActionReturn> => {
-    const { config } = context.services;
-    const { ui } = context;
-    if (!config) {
+    if (!context.services.config) {
       return {
         type: 'message',
         messageType: 'error',
         content: t('Config not loaded.'),
       };
     }
+    const summaryPrompt = [
+      'SYSTEM CONTRACT: summary-command/v1',
+      'Generate a complete markdown project summary from this session context.',
+      getProjectSummaryPrompt(),
+      'Write the final markdown to `.papert/PROJECT_SUMMARY.md`.',
+      'Always overwrite the file if it already exists.',
+      'After writing the file, respond with a short confirmation line containing exactly this relative path: `.papert/PROJECT_SUMMARY.md`.',
+      'Do not ask follow-up questions before writing the file.',
+    ].join('\n\n');
 
-    const geminiClient = config.getGeminiClient();
-    if (!geminiClient) {
-      return {
-        type: 'message',
-        messageType: 'error',
-        content: t('No chat client available to generate summary.'),
-      };
-    }
-
-    // Check if already generating summary
-    if (ui.pendingItem) {
-      ui.addItem(
-        {
-          type: 'error' as const,
-          text: t(
-            'Already generating summary, wait for previous request to complete',
-          ),
-        },
-        Date.now(),
-      );
-      return {
-        type: 'message',
-        messageType: 'error',
-        content: t(
-          'Already generating summary, wait for previous request to complete',
-        ),
-      };
-    }
-
-    try {
-      // Get the current chat history
-      const chat = geminiClient.getChat();
-      const history = chat.getHistory();
-
-      if (history.length <= 2) {
-        return {
-          type: 'message',
-          messageType: 'info',
-          content: t('No conversation found to summarize.'),
-        };
-      }
-
-      // Show loading state
-      const pendingMessage: HistoryItemSummary = {
-        type: 'summary',
-        summary: {
-          isPending: true,
-          stage: 'generating',
-        },
-      };
-      ui.setPendingItem(pendingMessage);
-
-      // Build the conversation context for summary generation
-      const conversationContext = history.map((message) => ({
-        role: message.role,
-        parts: message.parts,
-      }));
-
-      // Use generateContent with chat history as context
-      const response = await geminiClient.generateContent(
-        [
-          ...conversationContext,
-          {
-            role: 'user',
-            parts: [
-              {
-                text: getProjectSummaryPrompt(),
-              },
-            ],
-          },
-        ],
-        {},
-        new AbortController().signal,
-        config.getModel(),
-      );
-
-      // Extract text from response
-      const parts = response.candidates?.[0]?.content?.parts;
-
-      const markdownSummary =
-        parts
-          ?.map((part) => part.text)
-          .filter((text): text is string => typeof text === 'string')
-          .join('') || '';
-
-      if (!markdownSummary) {
-        throw new Error(
-          'Failed to generate summary - no text content received from LLM response',
-        );
-      }
-
-      // Update loading message to show saving progress
-      ui.setPendingItem({
-        type: 'summary',
-        summary: {
-          isPending: true,
-          stage: 'saving',
-        },
-      });
-
-      // Ensure .papert directory exists
-      const projectRoot = config.getProjectRoot();
-      const papertDir = path.join(projectRoot, '.papert');
-      try {
-        await fsPromises.mkdir(papertDir, { recursive: true });
-      } catch (_err) {
-        // Directory might already exist, ignore error
-      }
-
-      // Save the summary to PROJECT_SUMMARY.md
-      const summaryPath = path.join(papertDir, 'PROJECT_SUMMARY.md');
-      const summaryContent = `${markdownSummary}
-
----
-
-## Summary Metadata
-**Update time**: ${new Date().toISOString()} 
-`;
-
-      await fsPromises.writeFile(summaryPath, summaryContent, 'utf8');
-
-      // Clear pending item and show success message
-      ui.setPendingItem(null);
-      const completedSummaryItem: HistoryItemSummary = {
-        type: 'summary',
-        summary: {
-          isPending: false,
-          stage: 'completed',
-          filePath: '.papert/PROJECT_SUMMARY.md',
-        },
-      };
-      ui.addItem(completedSummaryItem, Date.now());
-
-      return {
-        type: 'message',
-        messageType: 'info',
-        content: '', // Empty content since we show the message in UI component
-      };
-    } catch (error) {
-      // Clear pending item on error
-      ui.setPendingItem(null);
-      ui.addItem(
-        {
-          type: 'error' as const,
-          text: `❌ ${t(
-            'Failed to generate project context summary: {{error}}',
-            {
-              error: error instanceof Error ? error.message : String(error),
-            },
-          )}`,
-        },
-        Date.now(),
-      );
-
-      return {
-        type: 'message',
-        messageType: 'error',
-        content: t('Failed to generate project context summary: {{error}}', {
-          error: error instanceof Error ? error.message : String(error),
-        }),
-      };
-    }
+    return {
+      type: 'submit_prompt',
+      content: [{ text: summaryPrompt }],
+    };
   },
 };

@@ -11,6 +11,7 @@
 - Promoted share endpoints (`POST /api/v1/share`, `GET/DELETE /api/v1/share/{id}`) into OpenAPI contract and SDK clients.
 - Refactored A2A Web UI mutation handlers into `webUiMutations.ts` to reduce `app.ts` complexity while preserving existing API behavior.
 - Routed core prompt path-resolution warnings through shared `debugLogger` (instead of direct `console.warn`) and added regression coverage.
+- Standardized `/summary` behavior across interactive, headless, and ACP flows by switching to a shared prompt contract and enabling built-in slash-command allowlists (`summary`, `init`) in non-interactive/ACP routing.
 - Added A2A hardening notes in `packages/a2a-server/docs/a2a-hardening-2026-03.md` and clarified OpenAPI stable-contract scope in docs.
 
 ## 0.3.96

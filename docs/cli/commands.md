@@ -103,15 +103,13 @@ Slash commands provide meta-level control over the CLI itself.
   - **Keyboard shortcut:** Press **Ctrl+L** at any time to perform a clear action.
 
 - **`/summary`**
-  - **Description:** Generate a comprehensive project summary from the current conversation history and save it to `.papert/PROJECT_SUMMARY.md`. This summary includes the overall goal, key knowledge, recent actions, and current plan, making it perfect for resuming work in future sessions.
+  - **Description:** Generate a comprehensive project summary from the current conversation history and save it to `.papert/PROJECT_SUMMARY.md`.
   - **Usage:** `/summary`
   - **Features:**
-    - Analyzes the entire conversation history to extract important context
-    - Creates a structured markdown summary with sections for goals, knowledge, actions, and plans
-    - Automatically saves to `.papert/PROJECT_SUMMARY.md` in your project root
-    - Shows progress indicators during generation and saving
+    - Uses a prompt contract (`summary-command/v1`) instead of a UI-only code path
+    - Keeps behavior aligned across interactive, headless (`--prompt`), and ACP slash-command routing
+    - Instructs the model to overwrite `.papert/PROJECT_SUMMARY.md` and confirm the saved path
     - Integrates with the Welcome Back feature for seamless session resumption
-  - **Note:** This command requires an active conversation with at least 2 messages to generate a meaningful summary.
 
 - **`/compress`**
   - **Description:** Replace the entire chat context with a summary. This saves on tokens used for future tasks while retaining a high level summary of what has happened.

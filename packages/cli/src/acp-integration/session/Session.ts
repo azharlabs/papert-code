@@ -61,7 +61,7 @@ import { SubAgentTracker } from './SubAgentTracker.js';
  * Built-in commands that are allowed in ACP integration mode.
  * Only safe, read-only commands that don't require interactive UI.
  */
-export const ALLOWED_BUILTIN_COMMANDS_FOR_ACP = ['init'];
+export const ALLOWED_BUILTIN_COMMANDS_FOR_ACP = ['init', 'summary'];
 
 /**
  * Session represents an active conversation session with the AI model.

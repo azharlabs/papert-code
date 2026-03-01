@@ -948,6 +948,44 @@ describe('runNonInteractive', () => {
     expect(processStdoutSpy).toHaveBeenCalledWith('Response from command');
   });
 
+  it('should allow built-in /summary command in non-interactive mode', async () => {
+    const mockCommand = {
+      name: 'summary',
+      description: 'generate summary',
+      kind: CommandKind.BUILT_IN,
+      action: vi.fn().mockResolvedValue({
+        type: 'submit_prompt',
+        content: [{ text: 'Summary contract prompt' }],
+      }),
+    };
+    mockGetCommands.mockReturnValue([mockCommand]);
+
+    const events: ServerGeminiStreamEvent[] = [
+      { type: GeminiEventType.Content, value: 'Summary done' },
+      {
+        type: GeminiEventType.Finished,
+        value: { reason: undefined, usageMetadata: { totalTokenCount: 5 } },
+      },
+    ];
+    mockGeminiClient.sendMessageStream.mockReturnValue(
+      createStreamFromEvents(events),
+    );
+
+    await runNonInteractive(
+      mockConfig,
+      mockSettings,
+      '/summary',
+      'prompt-id-summary',
+    );
+
+    expect(mockGeminiClient.sendMessageStream).toHaveBeenCalledWith(
+      [{ text: 'Summary contract prompt' }],
+      expect.any(AbortSignal),
+      'prompt-id-summary',
+    );
+    expect(processStdoutSpy).toHaveBeenCalledWith('Summary done');
+  });
+
   it('should throw FatalInputError if a command requires confirmation', async () => {
     const mockCommand = {
       name: 'confirm',

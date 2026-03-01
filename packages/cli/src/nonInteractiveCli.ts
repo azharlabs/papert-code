@@ -49,6 +49,8 @@ import {
   computeUsageFromMetrics,
 } from './utils/nonInteractiveHelpers.js';
 
+const ALLOWED_BUILTIN_PROMPT_COMMANDS = ['init', 'summary'] as const;
+
 /**
  * Provides optional overrides for `runNonInteractive` execution.
  *
@@ -158,6 +160,7 @@ export async function runNonInteractive(
             abortController,
             config,
             settings,
+            [...ALLOWED_BUILTIN_PROMPT_COMMANDS],
           );
           if (slashCommandResult) {
             // A slash command can replace the prompt entirely; fall back to @-command processing otherwise.
