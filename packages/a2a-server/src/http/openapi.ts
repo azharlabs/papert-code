@@ -93,6 +93,169 @@ export const REMOTE_CONTROL_OPENAPI_SPEC = {
         },
       },
     },
+    '/api/v1/share': {
+      post: {
+        operationId: 'createShare',
+        summary: 'Create a share link',
+        description:
+          'Creates a share record from the provided payload. May require bearer token when share auth is configured.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  payload: {
+                    type: 'object',
+                    additionalProperties: true,
+                  },
+                  sessionId: { type: 'string' },
+                },
+                required: ['payload'],
+              },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Share created',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    url: { type: 'string' },
+                    secret: { type: 'string' },
+                  },
+                  required: ['id', 'url', 'secret'],
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid payload',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+          '401': {
+            description: 'Unauthorized',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/share/{id}': {
+      get: {
+        operationId: 'getShare',
+        summary: 'Get share payload by id',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Share payload',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  additionalProperties: true,
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'Share not found',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+          '500': {
+            description: 'Server error',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
+      delete: {
+        operationId: 'deleteShare',
+        summary: 'Delete share by id and secret',
+        description:
+          'Deletes a share record. Secret may be provided via x-papert-share-secret header or JSON body.',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+          },
+          {
+            name: 'x-papert-share-secret',
+            in: 'header',
+            required: false,
+            schema: { type: 'string' },
+          },
+        ],
+        requestBody: {
+          required: false,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  secret: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '204': { description: 'Deleted' },
+          '400': {
+            description: 'Missing or invalid secret',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+          '403': {
+            description: 'Invalid share secret',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+          '404': {
+            description: 'Share not found',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
+    },
     '/api/v1/webui/catalog': {
       get: {
         operationId: 'getWebUiCatalog',

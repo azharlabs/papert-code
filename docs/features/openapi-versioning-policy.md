@@ -47,3 +47,7 @@ This project maintains OpenAPI contracts for remote-control and web-ui server en
 - Promoted Web UI state contract endpoints:
   - `GET /api/v1/webui/state`
   - `PUT /api/v1/webui/state`
+- Promoted share contract endpoints:
+  - `POST /api/v1/share`
+  - `GET /api/v1/share/{id}`
+  - `DELETE /api/v1/share/{id}`

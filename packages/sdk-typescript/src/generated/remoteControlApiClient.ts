@@ -34,6 +34,20 @@ export interface ReleaseRemoteSessionParams {
   sessionToken: string;
 }
 
+export interface CreateShareResponse {
+  id: string;
+  url: string;
+  secret: string;
+}
+
+export interface ShareRecordResponse {
+  id: string;
+  createdAt: string;
+  payload: Record<string, unknown>;
+  sessionId?: string;
+  [key: string]: unknown;
+}
+
 export interface WebUiCatalogResponse {
   tools?: unknown[];
   agents?: unknown[];
@@ -130,6 +144,47 @@ export class RemoteControlApiClient {
         },
       },
     );
+  }
+
+  async createShare(params: {
+    payload: Record<string, unknown>;
+    sessionId?: string;
+    authToken?: string;
+  }): Promise<CreateShareResponse> {
+    const headers: Record<string, string> = {
+      'content-type': 'application/json',
+    };
+    if (params.authToken && params.authToken.trim().length > 0) {
+      headers.authorization = `Bearer ${params.authToken}`;
+    }
+    return this.requestJson<CreateShareResponse>('/api/v1/share', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        payload: params.payload,
+        sessionId: params.sessionId,
+      }),
+    });
+  }
+
+  async getShare(id: string): Promise<ShareRecordResponse> {
+    return this.requestJson<ShareRecordResponse>(
+      `/api/v1/share/${encodeURIComponent(id)}`,
+      { method: 'GET' },
+    );
+  }
+
+  async deleteShare(params: {
+    id: string;
+    secret: string;
+  }): Promise<void> {
+    await this.requestNoContent(`/api/v1/share/${encodeURIComponent(params.id)}`, {
+      method: 'DELETE',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ secret: params.secret }),
+    });
   }
 
   async getWebUiCatalog(params: WebUiSessionParams): Promise<WebUiCatalogResponse> {

@@ -38,6 +38,24 @@ const ROUTE_CONTRACTS: RouteContract[] = [
     expectedStatuses: ['204', '401', '501'],
   },
   {
+    path: '/api/v1/share',
+    method: 'post',
+    requiresBearerAuth: false,
+    expectedStatuses: ['201', '400', '401'],
+  },
+  {
+    path: '/api/v1/share/{id}',
+    method: 'get',
+    requiresBearerAuth: false,
+    expectedStatuses: ['200', '404', '500'],
+  },
+  {
+    path: '/api/v1/share/{id}',
+    method: 'delete',
+    requiresBearerAuth: false,
+    expectedStatuses: ['204', '400', '403', '404'],
+  },
+  {
     path: '/api/v1/webui/catalog',
     method: 'get',
     requiresBearerAuth: true,

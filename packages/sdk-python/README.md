@@ -241,6 +241,8 @@ api.update_webui_state(
     session["token"],
     {"panel": "activity", **(state.get("state") or {})},
 )
+share = api.create_share({"summary": "checkpoint note"}, session["sessionId"])
+api.delete_share(share["id"], share["secret"])
 print(catalog.get("releaseChannel"))
 ```
 

@@ -98,6 +98,11 @@ await api.updateWebUiState({
   sessionToken: session.token,
   state: { ...uiState.state, panel: 'activity' },
 });
+const share = await api.createShare({
+  payload: { summary: 'checkpoint note' },
+  sessionId: session.sessionId,
+});
+await api.deleteShare({ id: share.id, secret: share.secret });
 
 console.log(catalog.releaseChannel);
 ```

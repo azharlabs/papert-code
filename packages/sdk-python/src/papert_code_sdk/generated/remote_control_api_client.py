@@ -35,6 +35,17 @@ class CreateRemoteSessionResponse(TypedDict):
     expiresAtMs: float
     workspaceRoot: str
 
+class CreateShareResponse(TypedDict):
+    id: str
+    url: str
+    secret: str
+
+class ShareRecordResponse(TypedDict, total=False):
+    id: str
+    createdAt: str
+    payload: Dict[str, Any]
+    sessionId: str
+
 
 class WebUiCatalogResponse(TypedDict, total=False):
     tools: list
@@ -90,6 +101,35 @@ class RemoteControlApiClient:
             "POST",
             f"/api/v1/sessions/{session_id}/release",
             headers={"authorization": f"Bearer {session_token}"},
+        )
+
+    def create_share(
+        self,
+        payload: Dict[str, Any],
+        session_id: Optional[str] = None,
+        auth_token: Optional[str] = None,
+    ) -> CreateShareResponse:
+        headers: Dict[str, str] = {"content-type": "application/json"}
+        if auth_token and auth_token.strip():
+            headers["authorization"] = f"Bearer {auth_token}"
+        body = self._request_json(
+            "POST",
+            "/api/v1/share",
+            headers=headers,
+            body=json.dumps({"payload": payload, "sessionId": session_id}).encode("utf-8"),
+        )
+        return body
+
+    def get_share(self, share_id: str) -> ShareRecordResponse:
+        body = self._request_json("GET", f"/api/v1/share/{share_id}")
+        return body
+
+    def delete_share(self, share_id: str, secret: str) -> None:
+        self._request_no_content(
+            "DELETE",
+            f"/api/v1/share/{share_id}",
+            headers={"content-type": "application/json"},
+            body=json.dumps({"secret": secret}).encode("utf-8"),
         )
 
     def get_webui_catalog(self, session_id: str, session_token: str) -> WebUiCatalogResponse:

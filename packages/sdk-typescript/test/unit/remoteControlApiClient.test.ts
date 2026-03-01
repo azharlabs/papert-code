@@ -181,4 +181,75 @@ describe('RemoteControlApiClient', () => {
       }),
     );
   });
+
+  it('creates, reads, and deletes share links', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 201,
+          statusText: 'Created',
+          body: {
+            id: 'share1',
+            url: 'http://localhost:41242/s/share1',
+            secret: 'top-secret',
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          body: { id: 'share1', createdAt: '2026-03-01T00:00:00.000Z', payload: { hello: 'world' } },
+        }),
+      )
+      .mockResolvedValueOnce(
+        createMockResponse({
+          ok: true,
+          status: 204,
+          statusText: 'No Content',
+        }),
+      );
+
+    const client = new RemoteControlApiClient({ baseUrl: 'http://localhost:41242' });
+    const created = await client.createShare({
+      payload: { hello: 'world' },
+      sessionId: 'sid-1',
+      authToken: 'server-token',
+    });
+    expect(created.id).toBe('share1');
+
+    const loaded = await client.getShare('share1');
+    expect(loaded.payload).toEqual({ hello: 'world' });
+
+    await client.deleteShare({ id: 'share1', secret: 'top-secret' });
+
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      1,
+      new URL('/api/v1/share', 'http://localhost:41242'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer server-token',
+          'content-type': 'application/json',
+        },
+      }),
+    );
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      new URL('/api/v1/share/share1', 'http://localhost:41242'),
+      expect.objectContaining({
+        method: 'GET',
+      }),
+    );
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      3,
+      new URL('/api/v1/share/share1', 'http://localhost:41242'),
+      expect.objectContaining({
+        method: 'DELETE',
+      }),
+    );
+  });
 });

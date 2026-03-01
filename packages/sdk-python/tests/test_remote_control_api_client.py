@@ -95,3 +95,50 @@ def test_get_and_update_webui_state_use_session_headers():
     assert calls[1][2]["x-papert-session-id"] == "sid-1"
     assert calls[1][2]["content-type"] == "application/json"
     assert json.loads(calls[1][3].decode("utf-8")) == {"panel": "activity"}
+
+
+def test_create_get_delete_share_calls_expected_routes():
+    calls = []
+
+    def fake_request(method, url, headers, body):
+        calls.append((method, url, headers, body))
+        if method == "POST":
+            return (
+                201,
+                {"content-type": "application/json"},
+                json.dumps(
+                    {
+                        "id": "share1",
+                        "url": "http://localhost:41242/s/share1",
+                        "secret": "top-secret",
+                    }
+                ).encode("utf-8"),
+            )
+        if method == "GET":
+            return (
+                200,
+                {"content-type": "application/json"},
+                json.dumps(
+                    {
+                        "id": "share1",
+                        "createdAt": "2026-03-01T00:00:00.000Z",
+                        "payload": {"hello": "world"},
+                    }
+                ).encode("utf-8"),
+            )
+        return (204, {}, b"")
+
+    client = RemoteControlApiClient("http://localhost:41242", request_impl=fake_request)
+    created = client.create_share({"hello": "world"}, "sid-1", "server-token")
+    loaded = client.get_share("share1")
+    client.delete_share("share1", "top-secret")
+
+    assert created["id"] == "share1"
+    assert loaded["payload"] == {"hello": "world"}
+    assert calls[0][0] == "POST"
+    assert calls[0][1] == "http://localhost:41242/api/v1/share"
+    assert calls[0][2]["authorization"] == "Bearer server-token"
+    assert calls[1][0] == "GET"
+    assert calls[1][1] == "http://localhost:41242/api/v1/share/share1"
+    assert calls[2][0] == "DELETE"
+    assert calls[2][1] == "http://localhost:41242/api/v1/share/share1"

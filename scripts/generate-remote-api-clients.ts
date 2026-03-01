@@ -17,6 +17,9 @@ const REQUIRED_OPERATION_IDS = new Set([
   'remoteHealth',
   'createRemoteSession',
   'releaseRemoteSession',
+  'createShare',
+  'getShare',
+  'deleteShare',
   'getWebUiCatalog',
   'getWebUiState',
   'updateWebUiState',
@@ -78,6 +81,20 @@ export interface CreateRemoteSessionResponse {
 export interface ReleaseRemoteSessionParams {
   sessionId: string;
   sessionToken: string;
+}
+
+export interface CreateShareResponse {
+  id: string;
+  url: string;
+  secret: string;
+}
+
+export interface ShareRecordResponse {
+  id: string;
+  createdAt: string;
+  payload: Record<string, unknown>;
+  sessionId?: string;
+  [key: string]: unknown;
 }
 
 export interface WebUiCatalogResponse {
@@ -176,6 +193,47 @@ export class RemoteControlApiClient {
         },
       },
     );
+  }
+
+  async createShare(params: {
+    payload: Record<string, unknown>;
+    sessionId?: string;
+    authToken?: string;
+  }): Promise<CreateShareResponse> {
+    const headers: Record<string, string> = {
+      'content-type': 'application/json',
+    };
+    if (params.authToken && params.authToken.trim().length > 0) {
+      headers.authorization = \`Bearer \${params.authToken}\`;
+    }
+    return this.requestJson<CreateShareResponse>('/api/v1/share', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        payload: params.payload,
+        sessionId: params.sessionId,
+      }),
+    });
+  }
+
+  async getShare(id: string): Promise<ShareRecordResponse> {
+    return this.requestJson<ShareRecordResponse>(
+      \`/api/v1/share/\${encodeURIComponent(id)}\`,
+      { method: 'GET' },
+    );
+  }
+
+  async deleteShare(params: {
+    id: string;
+    secret: string;
+  }): Promise<void> {
+    await this.requestNoContent(\`/api/v1/share/\${encodeURIComponent(params.id)}\`, {
+      method: 'DELETE',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ secret: params.secret }),
+    });
   }
 
   async getWebUiCatalog(params: WebUiSessionParams): Promise<WebUiCatalogResponse> {
@@ -309,6 +367,17 @@ class CreateRemoteSessionResponse(TypedDict):
     expiresAtMs: float
     workspaceRoot: str
 
+class CreateShareResponse(TypedDict):
+    id: str
+    url: str
+    secret: str
+
+class ShareRecordResponse(TypedDict, total=False):
+    id: str
+    createdAt: str
+    payload: Dict[str, Any]
+    sessionId: str
+
 
 class WebUiCatalogResponse(TypedDict, total=False):
     tools: list
@@ -364,6 +433,35 @@ class RemoteControlApiClient:
             "POST",
             f"/api/v1/sessions/{session_id}/release",
             headers={"authorization": f"Bearer {session_token}"},
+        )
+
+    def create_share(
+        self,
+        payload: Dict[str, Any],
+        session_id: Optional[str] = None,
+        auth_token: Optional[str] = None,
+    ) -> CreateShareResponse:
+        headers: Dict[str, str] = {"content-type": "application/json"}
+        if auth_token and auth_token.strip():
+            headers["authorization"] = f"Bearer {auth_token}"
+        body = self._request_json(
+            "POST",
+            "/api/v1/share",
+            headers=headers,
+            body=json.dumps({"payload": payload, "sessionId": session_id}).encode("utf-8"),
+        )
+        return body
+
+    def get_share(self, share_id: str) -> ShareRecordResponse:
+        body = self._request_json("GET", f"/api/v1/share/{share_id}")
+        return body
+
+    def delete_share(self, share_id: str, secret: str) -> None:
+        self._request_no_content(
+            "DELETE",
+            f"/api/v1/share/{share_id}",
+            headers={"content-type": "application/json"},
+            body=json.dumps({"secret": secret}).encode("utf-8"),
         )
 
     def get_webui_catalog(self, session_id: str, session_token: str) -> WebUiCatalogResponse:
