@@ -2266,6 +2266,20 @@ const WEB_UI_SCRIPT = `
         saveState();
       }
 
+      function addSystemMessageOnce(content, chatId, withinMs = 3000) {
+        const chat = chatId ? getChatById(chatId) : currentChat();
+        if (!chat) return;
+        const last = chat.messages[chat.messages.length - 1];
+        const isDuplicate =
+          !!last &&
+          last.role === 'system' &&
+          last.content === content &&
+          Date.now() - (last.createdAt || 0) <= withinMs;
+        if (!isDuplicate) {
+          addMessage('system', content, chatId);
+        }
+      }
+
       function appendAssistantText(text, chatId) {
         const chat = chatId ? getChatById(chatId) : currentChat();
         if (!chat) return;
@@ -2314,7 +2328,7 @@ const WEB_UI_SCRIPT = `
       async function apiFetch(url, options = {}, allowRetry = true) {
         const session = currentConnectedSession();
         if (!session) {
-          addMessage('system', 'Connect a session to manage configuration.');
+          addSystemMessageOnce('Connect a session to manage configuration.');
           throw new Error('No active session');
         }
         const headers = buildHeaders(session);
