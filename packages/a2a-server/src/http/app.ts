@@ -219,6 +219,7 @@ export async function createApp() {
 
     const storage = new Storage(workspaceRoot);
     const papertDir = storage.getPapertDir();
+    const globalPapertDir = Storage.getGlobalPapertDir();
     const settingsPath = storage.getWorkspaceSettingsPath();
     const schedulePath = path.join(papertDir, 'schedule', 'jobs.json');
     const webUiStatePath = path.join(papertDir, 'webui', 'state.json');
@@ -236,6 +237,8 @@ export async function createApp() {
       }
       return resolved;
     };
+    const resolveWithinGlobalPapert = (relativePath: string) =>
+      path.resolve(globalPapertDir, relativePath);
 
     const readText = async (filePath: string) => fs.readFile(filePath, 'utf8');
 
@@ -418,60 +421,149 @@ export async function createApp() {
     expressApp.get('/api/v1/webui/catalog', async (_req, res) => {
       try {
         const agentsDir = resolveWithinPapert('agents');
+        const globalAgentsDir = resolveWithinGlobalPapert('agents');
         const skillsDir = resolveWithinPapert('skills');
+        const globalSkillsDir = resolveWithinGlobalPapert('skills');
         const toolsDir = resolveWithinPapert('tools');
+        const globalToolsDir = resolveWithinGlobalPapert('tools');
         const customToolsDir = resolveWithinPapert('custom-tools');
+        const globalCustomToolsDir = resolveWithinGlobalPapert('custom-tools');
         const pluginsDir = resolveWithinPapert('plugins');
+        const globalPluginsDir = resolveWithinGlobalPapert('plugins');
 
-        const agentFiles = await listFiles(agentsDir, '.md');
-        const agents = await Promise.all(
-          agentFiles.map(async (file) => ({
-            id: path.basename(file, '.md'),
-            name: path.basename(file, '.md'),
-            detail:
-              (await readDescription(path.join(agentsDir, file))) ||
-              'No description yet.',
-            tag: 'agent',
-          })),
+        const mergeWorkspaceAndGlobal = <
+          T extends { id: string; name: string; detail: string; tag: string }
+        >(
+          workspaceItems: T[],
+          globalItems: T[],
+        ): Array<T & { readOnly?: boolean }> => {
+          const seen = new Set(workspaceItems.map((item) => item.name));
+          const globalOnly = globalItems
+            .filter((item) => !seen.has(item.name))
+            .map((item) => ({
+              ...item,
+              tag: 'global',
+              readOnly: true,
+            }));
+          return [...workspaceItems, ...globalOnly];
+        };
+
+        const [agentFiles, globalAgentFiles] = await Promise.all([
+          listFiles(agentsDir, '.md'),
+          listFiles(globalAgentsDir, '.md'),
+        ]);
+        const [workspaceAgents, globalAgents] = await Promise.all([
+          Promise.all(
+            agentFiles.map(async (file) => ({
+              id: path.basename(file, '.md'),
+              name: path.basename(file, '.md'),
+              detail:
+                (await readDescription(path.join(agentsDir, file))) ||
+                'No description yet.',
+              tag: 'agent',
+            })),
+          ),
+          Promise.all(
+            globalAgentFiles.map(async (file) => ({
+              id: path.basename(file, '.md'),
+              name: path.basename(file, '.md'),
+              detail:
+                (await readDescription(path.join(globalAgentsDir, file))) ||
+                'No description yet.',
+              tag: 'agent',
+            })),
+          ),
+        ]);
+        const agents = mergeWorkspaceAndGlobal(workspaceAgents, globalAgents);
+
+        const [skillDirs, globalSkillDirs] = await Promise.all([
+          listDirs(skillsDir),
+          listDirs(globalSkillsDir),
+        ]);
+        const [workspaceSkills, globalSkills] = await Promise.all([
+          Promise.all(
+            skillDirs.map(async (dir) => ({
+              id: dir,
+              name: dir,
+              detail:
+                (await readDescription(path.join(skillsDir, dir, 'SKILL.md'))) ||
+                'No description yet.',
+              tag: 'skill',
+            })),
+          ),
+          Promise.all(
+            globalSkillDirs.map(async (dir) => ({
+              id: dir,
+              name: dir,
+              detail:
+                (await readDescription(path.join(globalSkillsDir, dir, 'SKILL.md'))) ||
+                'No description yet.',
+              tag: 'skill',
+            })),
+          ),
+        ]);
+        const skills = mergeWorkspaceAndGlobal(workspaceSkills, globalSkills);
+
+        const [toolFiles, globalToolFiles] = await Promise.all([
+          listFiles(toolsDir, '.mjs'),
+          listFiles(globalToolsDir, '.mjs'),
+        ]);
+        const [workspaceTools, globalTools] = await Promise.all([
+          Promise.all(
+            toolFiles.map(async (file) => ({
+              id: path.basename(file, '.mjs'),
+              name: path.basename(file, '.mjs'),
+              detail:
+                (await readDescription(path.join(toolsDir, file))) ||
+                'No description yet.',
+              tag: 'tool',
+            })),
+          ),
+          Promise.all(
+            globalToolFiles.map(async (file) => ({
+              id: path.basename(file, '.mjs'),
+              name: path.basename(file, '.mjs'),
+              detail:
+                (await readDescription(path.join(globalToolsDir, file))) ||
+                'No description yet.',
+              tag: 'tool',
+            })),
+          ),
+        ]);
+        const tools = mergeWorkspaceAndGlobal(workspaceTools, globalTools);
+
+        const [customToolFiles, globalCustomToolFiles] = await Promise.all([
+          listFiles(customToolsDir, '.mjs'),
+          listFiles(globalCustomToolsDir, '.mjs'),
+        ]);
+        const [workspaceCustomTools, globalCustomTools] = await Promise.all([
+          Promise.all(
+            customToolFiles.map(async (file) => ({
+              id: path.basename(file, '.mjs'),
+              name: path.basename(file, '.mjs'),
+              detail:
+                (await readDescription(path.join(customToolsDir, file))) ||
+                'No description yet.',
+              tag: 'custom',
+            })),
+          ),
+          Promise.all(
+            globalCustomToolFiles.map(async (file) => ({
+              id: path.basename(file, '.mjs'),
+              name: path.basename(file, '.mjs'),
+              detail:
+                (await readDescription(path.join(globalCustomToolsDir, file))) ||
+                'No description yet.',
+              tag: 'custom',
+            })),
+          ),
+        ]);
+        const customTools = mergeWorkspaceAndGlobal(
+          workspaceCustomTools,
+          globalCustomTools,
         );
 
-        const skillDirs = await listDirs(skillsDir);
-        const skills = await Promise.all(
-          skillDirs.map(async (dir) => ({
-            id: dir,
-            name: dir,
-            detail:
-              (await readDescription(path.join(skillsDir, dir, 'SKILL.md'))) ||
-              'No description yet.',
-            tag: 'skill',
-          })),
-        );
-
-        const toolFiles = await listFiles(toolsDir, '.mjs');
-        const tools = await Promise.all(
-          toolFiles.map(async (file) => ({
-            id: path.basename(file, '.mjs'),
-            name: path.basename(file, '.mjs'),
-            detail:
-              (await readDescription(path.join(toolsDir, file))) ||
-              'No description yet.',
-            tag: 'tool',
-          })),
-        );
-
-        const customToolFiles = await listFiles(customToolsDir, '.mjs');
-        const customTools = await Promise.all(
-          customToolFiles.map(async (file) => ({
-            id: path.basename(file, '.mjs'),
-            name: path.basename(file, '.mjs'),
-            detail:
-              (await readDescription(path.join(customToolsDir, file))) ||
-              'No description yet.',
-            tag: 'custom',
-          })),
-        );
-
-        const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+        const settings = loadSettings(workspaceRoot) as Record<string, unknown>;
         const mcpServers = (settings['mcpServers'] || {}) as Record<string, unknown>;
         const mcps = Object.entries(mcpServers).map(([name, config]) => {
           const cfg = config as Record<string, unknown>;
@@ -483,9 +575,12 @@ export async function createApp() {
           return { id: name, name, detail: String(detail), tag: 'mcp', config };
         });
 
-        const pluginFiles = await listFiles(pluginsDir, '.mjs');
+        const [pluginFiles, globalPluginFiles] = await Promise.all([
+          listFiles(pluginsDir, '.mjs'),
+          listFiles(globalPluginsDir, '.mjs'),
+        ]);
         const pluginPaths = (settings['plugins'] as string[] | undefined) ?? [];
-        const plugins = pluginFiles.map((file) => {
+        const workspacePlugins = pluginFiles.map((file) => {
           const fullPath = path.join(pluginsDir, file);
           const enabled = pluginPaths.includes(fullPath);
           return {
@@ -495,6 +590,17 @@ export async function createApp() {
             tag: enabled ? 'enabled' : 'disabled',
           };
         });
+        const globalPlugins = globalPluginFiles.map((file) => {
+          const fullPath = path.join(globalPluginsDir, file);
+          const enabled = pluginPaths.includes(fullPath);
+          return {
+            id: path.basename(file, '.mjs'),
+            name: path.basename(file, '.mjs'),
+            detail: enabled ? 'Enabled (global)' : 'Disabled (global)',
+            tag: enabled ? 'enabled' : 'global',
+          };
+        });
+        const plugins = mergeWorkspaceAndGlobal(workspacePlugins, globalPlugins);
 
         const hooksConfig = (settings['hooks'] || {}) as Record<string, unknown>;
         const hooks: Array<{
@@ -795,13 +901,13 @@ export async function createApp() {
           return res.status(200).json({ content: await readText(filePath) });
         }
         if (type === 'mcps') {
-          const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+          const settings = loadSettings(workspaceRoot) as Record<string, unknown>;
           const mcpServers = (settings['mcpServers'] || {}) as Record<string, unknown>;
           const config = mcpServers[id] ?? {};
           return res.status(200).json({ content: JSON.stringify(config, null, 2) });
         }
         if (type === 'hooks') {
-          const settings = await readJson(settingsPath, {} as Record<string, unknown>);
+          const settings = loadSettings(workspaceRoot) as Record<string, unknown>;
           const hooks = (settings['hooks'] || {}) as Record<string, unknown>;
           const [section, rawIndex] = id.split(':');
           const index = Number(rawIndex);
