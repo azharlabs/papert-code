@@ -191,6 +191,12 @@ button {
   background: #3869f7;
 }
 
+#new-project-btn.primary,
+#empty-state-open-btn.primary {
+  background: #3cd6b4;
+  color: #041411;
+}
+
 .secondary {
   color: #dce6fa;
   background: #1b2a43;
