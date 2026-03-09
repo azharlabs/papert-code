@@ -25,6 +25,20 @@ describe('deflake-integration script helpers', () => {
     ]);
   });
 
+  it('extracts signatures from additional vitest markers and error lines', () => {
+    const output = `
+\u001b[31m❯ integration-tests/x.test.ts > suite > case 3\u001b[0m
+> integration-tests/y.test.ts > suite > case 4
+Error: OpenAI API Streaming Error: Connection error.
+`;
+
+    expect(extractVitestFailureSignatures(output)).toEqual([
+      'Error: OpenAI API Streaming Error: Connection error.',
+      'integration-tests/x.test.ts > suite > case 3',
+      'integration-tests/y.test.ts > suite > case 4',
+    ]);
+  });
+
   it('reports flaky signatures when retries eventually pass', () => {
     const report = buildFlakyReport('npm run test:integration:sandbox:none', [
       {

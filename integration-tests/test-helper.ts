@@ -155,6 +155,20 @@ export class TestRig {
     this.testDir = null;
   }
 
+  private getChildEnv(): NodeJS.ProcessEnv {
+    const childEnv: NodeJS.ProcessEnv = { ...process.env };
+    if (this.testDir) {
+      childEnv['HOME'] = this.testDir;
+      childEnv['USERPROFILE'] = this.testDir;
+      childEnv['PAPERT_CLI_TRUSTED_FOLDERS_PATH'] = join(
+        this.testDir,
+        '.papert',
+        'trustedFolders.json',
+      );
+    }
+    return childEnv;
+  }
+
   // Get timeout based on environment
   getDefaultTimeout() {
     if (env['CI']) return 60000; // 1 minute in CI
@@ -177,6 +191,12 @@ export class TestRig {
     // In sandbox mode, use an absolute path for telemetry inside the container
     // The container mounts the test directory at the same path as the host
     const telemetryPath = join(this.testDir, 'telemetry.log'); // Always use test directory for telemetry
+    const envAuth = {
+      apiKey: process.env['OPENAI_API_KEY'],
+      baseUrl: process.env['OPENAI_BASE_URL'],
+      modelName: process.env['OPENAI_MODEL'],
+      selectedType: process.env['PAPERT_OAUTH'] ? 'oauth-personal' : undefined,
+    };
 
     const settings = {
       telemetry: {
@@ -185,6 +205,22 @@ export class TestRig {
         otlpEndpoint: '',
         outfile: telemetryPath,
       },
+      tools: {
+        approvalMode: 'yolo',
+      },
+      security: {
+        folderTrust: {
+          enabled: false,
+        },
+        auth: {
+          ...(envAuth.selectedType
+            ? { selectedType: envAuth.selectedType }
+            : {}),
+          ...(envAuth.apiKey ? { apiKey: envAuth.apiKey } : {}),
+          ...(envAuth.baseUrl ? { baseUrl: envAuth.baseUrl } : {}),
+        },
+      },
+      ...(envAuth.modelName ? { model: { name: envAuth.modelName } } : {}),
       sandbox:
         getSandboxEnvValue() !== 'false' ? getSandboxEnvValue() : false,
       ...options.settings, // Allow tests to override/add settings
@@ -264,7 +300,7 @@ export class TestRig {
     const child = spawn(command, commandArgs, {
       cwd: this.testDir!,
       stdio: 'pipe',
-      env: process.env,
+      env: this.getChildEnv(),
     });
 
     let stdout = '';
@@ -389,6 +425,7 @@ export class TestRig {
     const child = spawn(command, commandArgs, {
       cwd: this.testDir!,
       stdio: 'pipe',
+      env: this.getChildEnv(),
     });
 
     let stdout = '';
@@ -843,7 +880,7 @@ export class TestRig {
       cols: 80,
       rows: 30,
       cwd: this.testDir!,
-      env: process.env as { [key: string]: string },
+      env: this.getChildEnv() as { [key: string]: string },
     });
 
     ptyProcess.onData((data) => {

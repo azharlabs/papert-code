@@ -81,6 +81,14 @@ export class SDKTestHelper {
         telemetry: {
           enabled: false, // SDK tests don't need telemetry
         },
+        tools: {
+          approvalMode: 'yolo',
+        },
+        security: {
+          folderTrust: {
+            enabled: false,
+          },
+        },
         ...options.settings,
       };
 

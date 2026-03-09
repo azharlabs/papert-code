@@ -59,15 +59,23 @@ export function extractVitestFailureSignatures(output) {
   const signatures = new Set();
   const lines = output.split('\n');
   for (const line of lines) {
-    const trimmed = line.trim();
+    const trimmed = line
+      .replace(/\u001b\[[0-9;]*m/g, '')
+      .replace(/\u001b\[[0-9;]*K/g, '')
+      .trim();
     const failMatch = trimmed.match(/^FAIL\s+(.+)$/);
     if (failMatch && failMatch[1]) {
       signatures.add(failMatch[1]);
       continue;
     }
-    const testMatch = trimmed.match(/^×\s+(.+)$/);
+    const testMatch = trimmed.match(/^(?:×|✖|❯|>)\s+(.+)$/);
     if (testMatch && testMatch[1]) {
       signatures.add(testMatch[1]);
+      continue;
+    }
+    const errorMatch = trimmed.match(/^Error:\s+(.+)$/);
+    if (errorMatch && errorMatch[1]) {
+      signatures.add(`Error: ${errorMatch[1]}`);
     }
   }
   return [...signatures].sort();

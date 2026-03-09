@@ -19,7 +19,7 @@ jobs:
             command: npm run test:integration:sandbox:none
             attempts: 3
           - id: terminal-bench
-            command: npm run test:terminal-bench
+            command: npm run test:terminal-bench:oracle
             attempts: 2
 
     steps:

@@ -190,13 +190,7 @@ export class ChatRecordingService {
    */
   private ensureChatsDir(): string {
     const chatsDir = path.join(this.config.storage.getProjectTempDir(), 'chats');
-
-    try {
-      fs.mkdirSync(chatsDir, { recursive: true });
-    } catch {
-      // Ignore errors - directory will be created if it doesn't exist
-    }
-
+    fs.mkdirSync(chatsDir, { recursive: true });
     return chatsDir;
   }
 
@@ -223,12 +217,32 @@ export class ChatRecordingService {
     } catch (error) {
       const nodeError = error as NodeJS.ErrnoException;
       // EEXIST means file already exists, which is expected and fine
-      if (nodeError.code !== 'EEXIST') {
-        const message = error instanceof Error ? error.message : String(error);
-        throw new Error(
-          `Failed to create conversation file at ${conversationFile}: ${message}`,
-        );
+      if (nodeError.code === 'EEXIST') {
+        return conversationFile;
       }
+
+      if (nodeError.code === 'ENOENT') {
+        fs.mkdirSync(path.dirname(conversationFile), { recursive: true });
+        try {
+          fs.writeFileSync(conversationFile, '', { flag: 'wx', encoding: 'utf8' });
+          return conversationFile;
+        } catch (retryError) {
+          const retryNodeError = retryError as NodeJS.ErrnoException;
+          if (retryNodeError.code === 'EEXIST') {
+            return conversationFile;
+          }
+          const message =
+            retryError instanceof Error ? retryError.message : String(retryError);
+          throw new Error(
+            `Failed to create conversation file at ${conversationFile}: ${message}`,
+          );
+        }
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Failed to create conversation file at ${conversationFile}: ${message}`,
+      );
     }
 
     return conversationFile;

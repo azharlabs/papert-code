@@ -108,6 +108,26 @@ describe('ChatRecordingService', () => {
       expect(record.gitBranch).toBe('main');
     });
 
+    it('retries conversation file creation when first write fails with ENOENT', () => {
+      const enoent = Object.assign(new Error('no such file or directory'), {
+        code: 'ENOENT',
+      });
+      vi.mocked(fs.writeFileSync)
+        .mockImplementationOnce(() => {
+          throw enoent;
+        })
+        .mockImplementation(() => undefined);
+
+      chatRecordingService.recordUserMessage([{ text: 'Hello with retry' }]);
+
+      expect(fs.mkdirSync).toHaveBeenCalledWith(
+        '/test/project/root/.gemini/tmp/hash/chats',
+        { recursive: true },
+      );
+      expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
+      expect(jsonl.writeLineSync).toHaveBeenCalledTimes(1);
+    });
+
     it('should chain messages correctly with parentUuid', () => {
       chatRecordingService.recordUserMessage([{ text: 'First message' }]);
       chatRecordingService.recordAssistantTurn({

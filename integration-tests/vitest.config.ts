@@ -12,13 +12,25 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const timeoutMinutes = Number(process.env['TB_TIMEOUT_MINUTES'] || '5');
 const testTimeoutMs = timeoutMinutes * 60 * 1000;
 
+function hasConfiguredAuth(): boolean {
+  return Boolean(process.env['OPENAI_API_KEY'] || process.env['PAPERT_OAUTH']);
+}
+
+const authConfigured = hasConfiguredAuth();
+if (!authConfigured) {
+  console.warn(
+    '[integration-tests] No auth configured (OPENAI_API_KEY or PAPERT_OAUTH). Skipping auth-required integration tests.',
+  );
+}
+
 export default defineConfig({
   test: {
     testTimeout: testTimeoutMs,
     globalSetup: './globalSetup.ts',
     reporters: ['default'],
-    include: ['**/*.test.ts'],
+    include: authConfigured ? ['**/*.test.ts'] : ['**/__auth_required__/*.test.ts'],
     exclude: ['**/terminal-bench/*.test.ts', '**/node_modules/**'],
+    passWithNoTests: !authConfigured,
     retry: 2,
     fileParallelism: true,
     poolOptions: {
