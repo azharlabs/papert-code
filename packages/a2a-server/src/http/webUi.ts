@@ -607,7 +607,7 @@ const WEB_UI_STYLES = `
       .composer {
         display: grid;
         gap: 8px;
-        padding: 8px;
+        padding: 12px 8px 8px;
         border-radius: 16px;
         background: var(--panel);
         border: 1px solid var(--stroke);
@@ -761,21 +761,6 @@ const WEB_UI_STYLES = `
         min-height: 14px;
       }
 
-      .composer-meta {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .toggle {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        color: var(--muted);
-        white-space: nowrap;
-      }
-
       .dock {
         display: flex;
         flex-direction: column;
@@ -804,45 +789,6 @@ const WEB_UI_STYLES = `
         gap: 8px;
         max-height: 300px;
         overflow-y: auto;
-      }
-
-      .activity-fab {
-        position: fixed;
-        right: 24px;
-        bottom: 24px;
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        border: 1px solid var(--stroke-soft);
-        background: var(--activity-fab-bg);
-        color: var(--text);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
-        cursor: pointer;
-        z-index: 25;
-      }
-
-      .activity-panel {
-        position: fixed;
-        right: 24px;
-        bottom: 88px;
-        width: min(320px, 86vw);
-        max-height: 380px;
-        background: var(--panel);
-        border: 1px solid var(--stroke);
-        border-radius: 16px;
-        padding: 12px;
-        display: none;
-        flex-direction: column;
-        gap: 8px;
-        z-index: 25;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
-      }
-
-      .activity-panel.active {
-        display: flex;
       }
 
       .activity-item {
@@ -1200,14 +1146,6 @@ const WEB_UI_STYLES = `
         .dock {
           order: -1;
         }
-        .activity-panel {
-          right: 16px;
-          bottom: 76px;
-        }
-        .activity-fab {
-          right: 16px;
-          bottom: 16px;
-        }
       }
 
       @media (max-width: 980px) {
@@ -1245,10 +1183,7 @@ const WEB_UI_STYLES = `
           padding: 14px;
         }
         .composer {
-          padding: 10px;
-        }
-        .activity-panel {
-          width: min(92vw, 360px);
+          padding: 12px 10px 10px;
         }
         .view-header {
           flex-direction: column;
@@ -1295,7 +1230,7 @@ const WEB_UI_STYLES = `
           grid-template-rows: minmax(0, 1fr) auto;
         }
         .composer {
-          padding: 8px;
+          padding: 12px 8px 8px;
         }
         #promptInput {
           min-height: 52px;
@@ -1314,16 +1249,6 @@ const WEB_UI_STYLES = `
         }
         button {
           padding: 8px 10px;
-        }
-        .activity-panel {
-          right: 12px;
-          bottom: 72px;
-        }
-        .activity-fab {
-          width: 48px;
-          height: 48px;
-          right: 12px;
-          bottom: 12px;
         }
       }
 `
@@ -1640,7 +1565,6 @@ const WEB_UI_SCRIPT = `
       const statusPulse = document.getElementById('statusPulse');
       const activeSessionTitle = document.getElementById('activeSessionTitle');
       const activeSessionMeta = document.getElementById('activeSessionMeta');
-      const autoExecToggle = document.getElementById('autoExecToggle');
       const attachmentStrip = document.getElementById('attachmentStrip');
       const attachmentError = document.getElementById('attachmentError');
       const uploadImageBtn = document.getElementById('uploadImageBtn');
@@ -1656,8 +1580,6 @@ const WEB_UI_SCRIPT = `
       const releaseChannelSelect = document.getElementById('releaseChannelSelect');
       const releaseChannelSave = document.getElementById('releaseChannelSave');
       const brandHome = document.getElementById('brandHome');
-      const activityFab = document.getElementById('activityFab');
-      const activityPanel = document.getElementById('activityPanel');
       const chatSidebarToggle = document.getElementById('chatSidebarToggle');
       const toolsList = document.getElementById('toolsList');
       const agentsList = document.getElementById('agentsList');
@@ -2137,6 +2059,7 @@ const WEB_UI_SCRIPT = `
       }
 
       function renderActivity() {
+        if (!activityFeed) return;
         activityFeed.innerHTML = '';
         const chat = currentChat();
         if (!chat) return;
@@ -2530,7 +2453,7 @@ const WEB_UI_SCRIPT = `
               coderAgent: {
                 kind: 'agent-settings',
                 workspacePath: session.workspaceRoot || '/',
-                autoExecute: autoExecToggle.checked,
+                autoExecute: true,
               },
             },
           },
@@ -2568,7 +2491,7 @@ const WEB_UI_SCRIPT = `
               coderAgent: {
                 kind: 'agent-settings',
                 workspacePath: session.workspaceRoot || '/',
-                autoExecute: autoExecToggle.checked,
+                autoExecute: true,
               },
             },
           },
@@ -3840,21 +3763,11 @@ const WEB_UI_SCRIPT = `
         }
       });
 
-      if (desktopMode && autoExecToggle && !autoExecToggle.checked) {
-        autoExecToggle.checked = true;
-      }
-
       on(shareBtn, 'click', () => shareCurrentChat());
       on(shareNowBtn, 'click', () => shareCurrentChat());
 
       if (brandHome) {
         brandHome.addEventListener('click', () => goToWorkspace());
-      }
-
-      if (activityFab && activityPanel) {
-        activityFab.addEventListener('click', () => {
-          activityPanel.classList.toggle('active');
-        });
       }
 
       if (chatSidebarToggle) {
@@ -4291,12 +4204,6 @@ const WEB_UI_MAIN = `
                       </div>
                     </div>
                     <div id="attachmentError" class="attachment-error"></div>
-                    <div class="composer-meta">
-                      <label id="autoExecToggleRow" class="toggle">
-                        <input id="autoExecToggle" type="checkbox" />
-                        Auto-execute tools
-                      </label>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -4341,7 +4248,7 @@ const WEB_UI_MAIN = `
                 <div class="page-card">
                   <h3>Tool Policies</h3>
                   <div class="activity-item">Sensitive tools require confirmation before running.</div>
-                  <div class="activity-item">Auto-execute can be toggled per session.</div>
+                  <div class="activity-item">Tool execution follows the current session policy.</div>
                 </div>
               </div>
             </section>
@@ -4592,13 +4499,6 @@ ${WEB_UI_EDITOR_MODAL}
 ${WEB_UI_COMMAND_PALETTE}
       </div>
     </div>
-    <div class="activity-panel" id="activityPanel">
-      <div class="panel" style="margin:0;">
-        <h3>Activity</h3>
-        <div id="activityFeed" class="activity"></div>
-      </div>
-    </div>
-    <button class="activity-fab" id="activityFab" aria-label="Activity">⚙️</button>
 
     <script>
 window.__PAPERT_WEB_UI_ALLOW_EMPTY_TOKEN__ = ${allowEmptyToken ? "true" : "false"};
