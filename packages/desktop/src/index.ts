@@ -29,8 +29,11 @@ type Project = {
   lastOpenedAt: number
 }
 
+type ThemeMode = "light" | "dark"
+
 const PROJECTS_STORAGE_KEY = "papert.desktop.projects.v1"
 const AUTH_STORAGE_KEY = "papert.desktop.auth.v1"
+const THEME_STORAGE_KEY = "papert.desktop.theme.v1"
 
 const projectsListEl = document.getElementById("projects-list")
 const appShell = document.querySelector(".app-shell")
@@ -64,11 +67,15 @@ const authAdminTokenInput = document.getElementById("auth-admin-token") as HTMLI
 const authOpenAiApiKeyInput = document.getElementById("auth-openai-api-key") as HTMLInputElement | null
 const authOpenAiBaseUrlInput = document.getElementById("auth-openai-base-url") as HTMLInputElement | null
 const authOpenAiModelInput = document.getElementById("auth-openai-model") as HTMLInputElement | null
+const themeToggleInput = document.getElementById("theme-toggle") as HTMLInputElement | null
+const themeLabelEl = document.getElementById("theme-label")
+const themeColorMetaEl = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null
 
 let projects: Project[] = loadProjects()
 let activeProjectId = ""
 let isSidebarCollapsed = false
 let authSettings = loadAuthSettings()
+let themeMode: ThemeMode = loadThemeMode()
 
 function defaultAuthSettings(): AuthSettings {
   return {
@@ -100,6 +107,35 @@ function loadAuthSettings(): AuthSettings {
 
 function saveAuthSettings() {
   localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authSettings))
+}
+
+function loadThemeMode(): ThemeMode {
+  try {
+    const raw = localStorage.getItem(THEME_STORAGE_KEY)
+    return raw === "dark" ? "dark" : "light"
+  } catch {
+    return "light"
+  }
+}
+
+function saveThemeMode() {
+  localStorage.setItem(THEME_STORAGE_KEY, themeMode)
+}
+
+function applyThemeMode() {
+  document.documentElement.dataset.theme = themeMode
+  if (themeToggleInput) themeToggleInput.checked = themeMode === "dark"
+  if (themeLabelEl) themeLabelEl.textContent = themeMode === "dark" ? "Dark" : "Light"
+  if (themeColorMetaEl) themeColorMetaEl.content = themeMode === "dark" ? "#101726" : "#f6f8fc"
+  if (webview?.contentWindow) {
+    webview.contentWindow.postMessage(
+      {
+        type: "papert.desktop.theme",
+        theme: themeMode,
+      },
+      "*",
+    )
+  }
 }
 
 function hasAuthValues(settings: AuthSettings) {
@@ -223,7 +259,7 @@ function showLoading() {
 function showWebview(url: string) {
   hideAllPanels()
   if (webview) {
-    const cacheBust = `${url.includes("?") ? "&" : "?"}desktop=1&t=${Date.now()}`
+    const cacheBust = `${url.includes("?") ? "&" : "?"}desktop=1&theme=${themeMode}&t=${Date.now()}`
     webview.src = `${url}${cacheBust}`
   }
   webviewWrap?.classList.remove("hidden")
@@ -403,6 +439,12 @@ emptyStateOpenBtn?.addEventListener("click", () => {
   void openFolderPicker()
 })
 
+themeToggleInput?.addEventListener("change", () => {
+  themeMode = themeToggleInput.checked ? "dark" : "light"
+  saveThemeMode()
+  applyThemeMode()
+})
+
 window.addEventListener("beforeunload", () => {
   void invoke("stop_project_server")
 })
@@ -413,4 +455,5 @@ if (!UPDATER_ENABLED) {
 }
 renderProjects()
 updateSidebarToggleButton()
+applyThemeMode()
 showEmptyState()

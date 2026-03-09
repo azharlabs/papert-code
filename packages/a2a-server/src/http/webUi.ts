@@ -6,8 +6,8 @@
 
 const WEB_UI_STYLES = `
       :root {
-        color-scheme: light dark;
         --bg: #0b0f14;
+        --bg-grad-top: #1a263a;
         --bg-elev: #0f1724;
         --bg-soft: #141c2b;
         --panel: #161f2f;
@@ -21,6 +21,74 @@ const WEB_UI_STYLES = `
         --accent-3: #7aa2ff;
         --danger: #ff6b6b;
         --shadow: rgba(7, 10, 16, 0.5);
+        --menu-grad-start: #0f1624;
+        --menu-grad-end: #111b2b;
+        --sidebar-grad-start: #0d1420;
+        --sidebar-grad-end: #0a0f18;
+        --main-grad-start: rgba(16, 22, 34, 0.9);
+        --main-grad-end: rgba(12, 16, 22, 0.95);
+        --menu-hover-bg: rgba(16, 25, 39, 0.7);
+        --chip-bg: #101826;
+        --secondary-bg: #233047;
+        --input-bg: #0b111c;
+        --messages-bg: rgba(12, 18, 28, 0.85);
+        --msg-bg: #111827;
+        --msg-system-bg: #0f1521;
+        --code-bg: #0b111c;
+        --code-border: #233148;
+        --composer-shell-bg: #0b111c;
+        --icon-btn-grad-start: #1a2537;
+        --icon-btn-grad-end: #121a28;
+        --attachment-chip-bg: #101827;
+        --activity-fab-bg: #121a28;
+        --surface-1: #101826;
+        --surface-2: #192339;
+        --overlay-bg: rgba(4, 6, 10, 0.75);
+        --panel-strong: #0f1726;
+        color-scheme: dark;
+      }
+
+      :root[data-theme="light"] {
+        --bg: #f6f8fc;
+        --bg-grad-top: #e9eef8;
+        --bg-elev: #ffffff;
+        --bg-soft: #eef3fb;
+        --panel: #ffffff;
+        --panel-2: #f7fafe;
+        --stroke: #d7e1ef;
+        --stroke-soft: #c7d5ea;
+        --text: #1b2433;
+        --muted: #5b6b84;
+        --accent: #3cd6b4;
+        --accent-2: #b87a20;
+        --accent-3: #315fce;
+        --danger: #d6405f;
+        --shadow: rgba(18, 28, 40, 0.12);
+        --menu-grad-start: #ffffff;
+        --menu-grad-end: #f4f8ff;
+        --sidebar-grad-start: #f7faff;
+        --sidebar-grad-end: #edf3fb;
+        --main-grad-start: #ffffff;
+        --main-grad-end: #f6f9ff;
+        --menu-hover-bg: #edf3fb;
+        --chip-bg: #eef3fb;
+        --secondary-bg: #e6eef9;
+        --input-bg: #ffffff;
+        --messages-bg: #f9fbff;
+        --msg-bg: #eef4ff;
+        --msg-system-bg: #f2f6fd;
+        --code-bg: #eef3fb;
+        --code-border: #c7d5ea;
+        --composer-shell-bg: #ffffff;
+        --icon-btn-grad-start: #ffffff;
+        --icon-btn-grad-end: #edf3fb;
+        --attachment-chip-bg: #eef3fb;
+        --activity-fab-bg: #ffffff;
+        --surface-1: #ffffff;
+        --surface-2: #e8effb;
+        --overlay-bg: rgba(14, 26, 40, 0.2);
+        --panel-strong: #ffffff;
+        color-scheme: light;
       }
 
       * {
@@ -31,7 +99,7 @@ const WEB_UI_STYLES = `
         margin: 0;
         font-family: 'Space Grotesk', sans-serif;
         font-size: 14px;
-        background: radial-gradient(circle at top, #1a263a, #0b0f14 60%);
+        background: radial-gradient(circle at top, var(--bg-grad-top), var(--bg) 60%);
         color: var(--text);
       }
 
@@ -49,7 +117,7 @@ const WEB_UI_STYLES = `
         gap: 16px;
         padding: 12px 20px;
         border-bottom: 1px solid var(--stroke);
-        background: linear-gradient(90deg, #0f1624, #111b2b);
+        background: linear-gradient(90deg, var(--menu-grad-start), var(--menu-grad-end));
         position: sticky;
         top: 0;
         z-index: 5;
@@ -130,7 +198,7 @@ const WEB_UI_STYLES = `
       .menu-item:hover {
         color: var(--text);
         border-color: var(--stroke-soft);
-        background: rgba(16, 25, 39, 0.7);
+        background: var(--menu-hover-bg);
       }
 
       .menu-item.active {
@@ -159,7 +227,7 @@ const WEB_UI_STYLES = `
       .chip {
         border-radius: 999px;
         border: 1px solid var(--stroke-soft);
-        background: #101826;
+        background: var(--chip-bg);
         color: var(--text);
         padding: 6px 12px;
         font-size: 12px;
@@ -214,7 +282,7 @@ const WEB_UI_STYLES = `
       }
 
       .sidebar {
-        background: linear-gradient(180deg, #0d1420, #0a0f18);
+        background: linear-gradient(180deg, var(--sidebar-grad-start), var(--sidebar-grad-end));
         border-right: 1px solid var(--stroke);
         display: flex;
         flex-direction: column;
@@ -317,7 +385,7 @@ const WEB_UI_STYLES = `
         display: grid;
         grid-template-rows: auto 1fr;
         gap: 16px;
-        background: linear-gradient(180deg, rgba(16, 22, 34, 0.9), rgba(12, 16, 22, 0.95));
+        background: linear-gradient(180deg, var(--main-grad-start), var(--main-grad-end));
         min-height: 0;
         height: 100%;
         overflow: hidden;
@@ -361,7 +429,7 @@ const WEB_UI_STYLES = `
       }
 
       button.secondary {
-        background: #233047;
+        background: var(--secondary-bg);
         color: var(--text);
       }
 
@@ -387,7 +455,7 @@ const WEB_UI_STYLES = `
         padding: 8px 10px;
         border-radius: 10px;
         border: 1px solid var(--stroke-soft);
-        background: #0b111c;
+        background: var(--input-bg);
         color: var(--text);
       }
 
@@ -432,7 +500,7 @@ const WEB_UI_STYLES = `
         min-height: 0;
         padding: 16px;
         border-radius: 16px;
-        background: rgba(12, 18, 28, 0.85);
+        background: var(--messages-bg);
         border: 1px solid var(--stroke);
         overflow-y: auto;
         overflow-x: hidden;
@@ -444,7 +512,7 @@ const WEB_UI_STYLES = `
         padding: 0 14px;
         border-radius: 12px;
         margin-bottom: 12px;
-        background: #111827;
+        background: var(--msg-bg);
         border: none;
         font-size: 13px;
       }
@@ -461,7 +529,7 @@ const WEB_UI_STYLES = `
       .msg.system {
         font-size: 12px;
         color: var(--muted);
-        background: #0f1521;
+        background: var(--msg-system-bg);
       }
 
       .msg .content {
@@ -472,8 +540,8 @@ const WEB_UI_STYLES = `
       }
 
       .msg .content pre {
-        background: #0b111c;
-        border: 1px solid #233148;
+        background: var(--code-bg);
+        border: 1px solid var(--code-border);
         border-radius: 10px;
         padding: 12px;
         overflow-x: hidden;
@@ -487,8 +555,8 @@ const WEB_UI_STYLES = `
       .msg .content code {
         font-family: 'JetBrains Mono', monospace;
         font-size: 12px;
-        background: #0b111c;
-        border: 1px solid #233148;
+        background: var(--code-bg);
+        border: 1px solid var(--code-border);
         border-radius: 6px;
         padding: 2px 6px;
       }
@@ -555,7 +623,7 @@ const WEB_UI_STYLES = `
         border: 1px solid var(--stroke-soft);
         border-radius: 14px;
         padding: 8px 10px;
-        background: #0b111c;
+        background: var(--composer-shell-bg);
       }
 
       #promptInput {
@@ -600,7 +668,7 @@ const WEB_UI_STYLES = `
         min-width: 30px;
         border-radius: 999px;
         border: 1px solid var(--stroke-soft);
-        background: linear-gradient(180deg, #1a2537 0%, #121a28 100%);
+        background: linear-gradient(180deg, var(--icon-btn-grad-start) 0%, var(--icon-btn-grad-end) 100%);
         color: var(--text);
         display: inline-flex;
         align-items: center;
@@ -657,7 +725,7 @@ const WEB_UI_STYLES = `
         max-width: 100%;
         border: 1px solid var(--stroke-soft);
         border-radius: 999px;
-        background: #101827;
+        background: var(--attachment-chip-bg);
         color: var(--text);
         font-size: 11px;
         padding: 4px 8px;
@@ -746,7 +814,7 @@ const WEB_UI_STYLES = `
         height: 52px;
         border-radius: 50%;
         border: 1px solid var(--stroke-soft);
-        background: #121a28;
+        background: var(--activity-fab-bg);
         color: var(--text);
         display: flex;
         align-items: center;
@@ -780,8 +848,8 @@ const WEB_UI_STYLES = `
       .activity-item {
         padding: 8px 10px;
         border-radius: 10px;
-        background: #101826;
-        border: 1px solid #1f2a3b;
+        background: var(--surface-1);
+        border: 1px solid var(--stroke-soft);
         font-size: 12px;
       }
 
@@ -797,8 +865,8 @@ const WEB_UI_STYLES = `
       .share-link {
         font-family: 'JetBrains Mono', monospace;
         font-size: 12px;
-        background: #0b111c;
-        border: 1px solid #233148;
+        background: var(--code-bg);
+        border: 1px solid var(--code-border);
         border-radius: 10px;
         padding: 10px;
         word-break: break-all;
@@ -842,7 +910,7 @@ const WEB_UI_STYLES = `
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        background: #141e2d;
+        background: var(--surface-1);
         border: 1px solid var(--stroke-soft);
         border-radius: 10px;
         padding: 8px 10px;
@@ -907,7 +975,7 @@ const WEB_UI_STYLES = `
       .data-item {
         border-radius: 12px;
         border: 1px solid var(--stroke-soft);
-        background: #101826;
+        background: var(--surface-1);
         padding: 10px 12px;
         display: grid;
         gap: 6px;
@@ -920,7 +988,7 @@ const WEB_UI_STYLES = `
       }
 
       .data-item-actions button {
-        background: #192339;
+        background: var(--surface-2);
         color: var(--text);
         border: 1px solid var(--stroke-soft);
         padding: 6px 10px;
@@ -955,7 +1023,7 @@ const WEB_UI_STYLES = `
       .command-palette {
         position: fixed;
         inset: 0;
-        background: rgba(4, 6, 10, 0.7);
+        background: var(--overlay-bg);
         display: none;
         align-items: center;
         justify-content: center;
@@ -968,8 +1036,8 @@ const WEB_UI_STYLES = `
 
       .palette-card {
         width: min(520px, 92vw);
-        background: #0d1422;
-        border: 1px solid #223047;
+        background: var(--panel-strong);
+        border: 1px solid var(--stroke);
         border-radius: 16px;
         padding: 16px;
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
@@ -990,14 +1058,14 @@ const WEB_UI_STYLES = `
 
       .palette-actions button {
         justify-content: flex-start;
-        background: #182336;
+        background: var(--surface-2);
         color: var(--text);
       }
 
       .info-modal {
         position: fixed;
         inset: 0;
-        background: rgba(4, 6, 10, 0.75);
+        background: var(--overlay-bg);
         display: none;
         align-items: center;
         justify-content: center;
@@ -1010,8 +1078,8 @@ const WEB_UI_STYLES = `
 
       .info-card {
         width: min(820px, 92vw);
-        background: #101826;
-        border: 1px solid #223047;
+        background: var(--panel-strong);
+        border: 1px solid var(--stroke);
         border-radius: 18px;
         padding: 18px;
         display: grid;
@@ -1036,7 +1104,7 @@ const WEB_UI_STYLES = `
       .editor-modal {
         position: fixed;
         inset: 0;
-        background: rgba(4, 6, 10, 0.75);
+        background: var(--overlay-bg);
         display: none;
         align-items: center;
         justify-content: center;
@@ -1049,8 +1117,8 @@ const WEB_UI_STYLES = `
 
       .editor-card {
         width: min(920px, 94vw);
-        background: #0f1726;
-        border: 1px solid #223047;
+        background: var(--panel-strong);
+        border: 1px solid var(--stroke);
         border-radius: 18px;
         padding: 18px;
         display: grid;
@@ -1086,7 +1154,7 @@ const WEB_UI_STYLES = `
         resize: none;
         padding: 12px;
         color: var(--text);
-        background: #0d1422;
+        background: var(--code-bg);
         font-family: 'JetBrains Mono', monospace;
         font-size: 12px;
         line-height: 1.45;
@@ -1110,7 +1178,7 @@ const WEB_UI_STYLES = `
       .info-actions button {
         flex: 1 1 calc(50% - 8px);
         min-width: 220px;
-        background: #162136;
+        background: var(--surface-2);
         color: var(--text);
         border: 1px solid var(--stroke-soft);
         border-radius: 12px;
@@ -1277,6 +1345,24 @@ const WEB_UI_SCRIPT = `
       const hostInitialState = window.__PAPERT_WEB_UI_INITIAL_STATE__;
       const allowEmptyToken = window.__PAPERT_WEB_UI_ALLOW_EMPTY_TOKEN__ === true;
       const desktopMode = window.__PAPERT_WEB_UI_DESKTOP_MODE__ === true;
+      const urlTheme = new URLSearchParams(window.location.search).get('theme');
+
+      function applyEmbeddedTheme(theme) {
+        const normalized = theme === 'light' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = normalized;
+      }
+
+      if (desktopMode) {
+        applyEmbeddedTheme(urlTheme || 'light');
+      }
+
+      window.addEventListener('message', (event) => {
+        const data = event && event.data;
+        if (!data || typeof data !== 'object') return;
+        if (data.type === 'papert.desktop.theme') {
+          applyEmbeddedTheme(data.theme);
+        }
+      });
 
       const storage = {
         load() {
@@ -1929,14 +2015,17 @@ const WEB_UI_SCRIPT = `
           el.className = 'data-item';
           const tag = item.tag || type;
           const itemId = item.id || item.name || '';
+          const actions = item.readOnly
+            ? ''
+            : '<div class="data-item-actions">' +
+                '<button data-action="edit" data-type="' + escapeAttr(type) + '" data-id="' + escapeAttr(itemId) + '">Edit</button>' +
+                '<button data-action="delete" data-type="' + escapeAttr(type) + '" data-id="' + escapeAttr(itemId) + '">Delete</button>' +
+              '</div>';
           el.innerHTML =
             '<div class="name">' + escapeHtml(item.name || '') + '</div>' +
             '<div class="meta">' + escapeHtml(item.detail || '') + '</div>' +
             '<div class="tag ' + tagClass(tag) + '">' + escapeHtml(tag) + '</div>' +
-            '<div class="data-item-actions">' +
-              '<button data-action="edit" data-type="' + escapeAttr(type) + '" data-id="' + escapeAttr(itemId) + '">Edit</button>' +
-              '<button data-action="delete" data-type="' + escapeAttr(type) + '" data-id="' + escapeAttr(itemId) + '">Delete</button>' +
-            '</div>';
+            actions;
           target.appendChild(el);
         });
       }
