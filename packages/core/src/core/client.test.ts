@@ -29,6 +29,7 @@ import {
 import { type GeminiChat } from './geminiChat.js';
 import type { Config } from '../config/config.js';
 import { ApprovalMode } from '../config/config.js';
+import type { IdeContext } from '../ide/types.js';
 import {
   CompressionStatus,
   GeminiEventType,
@@ -439,6 +440,28 @@ describe('Gemini Client (client.ts)', () => {
       expect(newChat).not.toBe(initialChat);
       expect(newHistory.length).toBe(initialHistory.length);
       expect(JSON.stringify(newHistory)).not.toContain('some old message');
+    });
+
+    it('should clear session-scoped runtime state', async () => {
+      client['sessionTurnCount'] = 7;
+      client['currentSequenceModel'] = 'temporary-model';
+      client['lastSentIdeContext'] = {
+        workspaceState: { openFiles: [] },
+      } as unknown as IdeContext;
+      client['hookStateMap'].set('stale-prompt', {
+        hasFiredBeforeAgent: true,
+        cumulativeResponse: 'stale',
+        activeCalls: 1,
+        originalRequest: [{ text: 'stale request' }],
+      });
+
+      await client.resetChat();
+
+      expect(client['sessionTurnCount']).toBe(0);
+      expect(client['currentSequenceModel']).toBeNull();
+      expect(client['lastSentIdeContext']).toBeUndefined();
+      expect(client['hookStateMap'].size).toBe(0);
+      expect(client['lastPromptId']).toBe(mockConfig.getSessionId());
     });
   });
 

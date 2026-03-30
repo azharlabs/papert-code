@@ -281,11 +281,7 @@ export class OpenAIContentConverter {
     // Handle function responses (tool results) first
     if (parsedParts.functionResponses.length > 0) {
       for (const funcResponse of parsedParts.functionResponses) {
-        messages.push({
-          role: 'tool' as const,
-          tool_call_id: funcResponse.id || '',
-          content: this.extractFunctionResponseContent(funcResponse.response),
-        });
+        messages.push(this.createToolMessage(funcResponse));
       }
       return;
     }
@@ -394,6 +390,40 @@ export class OpenAIContentConverter {
     }
   }
 
+  private createToolMessage(
+    response: FunctionResponse,
+  ): OpenAI.Chat.ChatCompletionToolMessageParam {
+    const textContent = this.extractFunctionResponseContent(response.response);
+    const contentParts: OpenAI.Chat.ChatCompletionContentPart[] = [];
+
+    if (textContent) {
+      contentParts.push({ type: 'text' as const, text: textContent });
+    }
+
+    for (const part of response.parts || []) {
+      const mediaPart = this.createToolMediaContentPart(part);
+      if (mediaPart) {
+        contentParts.push(mediaPart);
+      }
+    }
+
+    if (contentParts.length === 0) {
+      return {
+        role: 'tool' as const,
+        tool_call_id: response.id || '',
+        content: '',
+      };
+    }
+
+    return {
+      role: 'tool' as const,
+      tool_call_id: response.id || '',
+      content: contentParts as unknown as
+        | string
+        | OpenAI.Chat.ChatCompletionContentPartText[],
+    };
+  }
+
   /**
    * Determine media type from MIME type
    */
@@ -473,6 +503,49 @@ export class OpenAIContentConverter {
   private getAudioFormat(mimeType: string): 'wav' | 'mp3' | null {
     if (mimeType.includes('wav')) return 'wav';
     if (mimeType.includes('mp3') || mimeType.includes('mpeg')) return 'mp3';
+    return null;
+  }
+
+  private createToolMediaContentPart(
+    part: Part,
+  ): OpenAI.Chat.ChatCompletionContentPart | null {
+    if (part.inlineData?.mimeType && part.inlineData?.data) {
+      const mimeType = part.inlineData.mimeType;
+      const mediaType = this.getMediaType(mimeType);
+
+      if (mediaType === 'image') {
+        return {
+          type: 'image_url' as const,
+          image_url: {
+            url: `data:${mimeType};base64,${part.inlineData.data}`,
+          },
+        };
+      }
+
+      if (mediaType === 'audio') {
+        const format = this.getAudioFormat(mimeType);
+        if (!format) {
+          return null;
+        }
+        return {
+          type: 'input_audio' as const,
+          input_audio: {
+            data: part.inlineData.data,
+            format,
+          },
+        };
+      }
+    }
+
+    if (part.fileData?.mimeType && part.fileData?.fileUri) {
+      if (this.getMediaType(part.fileData.mimeType) === 'image') {
+        return {
+          type: 'image_url' as const,
+          image_url: { url: part.fileData.fileUri },
+        };
+      }
+    }
+
     return null;
   }
 

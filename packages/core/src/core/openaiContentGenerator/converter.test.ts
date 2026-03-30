@@ -115,7 +115,9 @@ describe('OpenAIContentConverter', () => {
       const toolMessage = messages.find((message) => message.role === 'tool');
 
       expect(toolMessage).toBeDefined();
-      expect(toolMessage?.content).toBe('Raw output text');
+      expect(toolMessage?.content).toMatchObject([
+        { type: 'text', text: 'Raw output text' },
+      ]);
     });
 
     it('should prioritize error field when present', () => {
@@ -127,7 +129,9 @@ describe('OpenAIContentConverter', () => {
       const toolMessage = messages.find((message) => message.role === 'tool');
 
       expect(toolMessage).toBeDefined();
-      expect(toolMessage?.content).toBe('Command failed');
+      expect(toolMessage?.content).toMatchObject([
+        { type: 'text', text: 'Command failed' },
+      ]);
     });
 
     it('should stringify non-string responses', () => {
@@ -139,7 +143,77 @@ describe('OpenAIContentConverter', () => {
       const toolMessage = messages.find((message) => message.role === 'tool');
 
       expect(toolMessage).toBeDefined();
-      expect(toolMessage?.content).toBe('{"data":{"value":42}}');
+      expect(toolMessage?.content).toMatchObject([
+        { type: 'text', text: '{"data":{"value":42}}' },
+      ]);
+    });
+
+    it('should keep tool media inside the tool message', () => {
+      const request: GenerateContentParameters = {
+        model: 'models/test',
+        contents: [
+          {
+            role: 'model',
+            parts: [
+              {
+                functionCall: {
+                  id: 'call_1',
+                  name: 'figma_get_screenshot',
+                  args: {},
+                },
+              },
+            ],
+          },
+          {
+            role: 'user',
+            parts: [
+              {
+                functionResponse: {
+                  id: 'call_1',
+                  name: 'figma_get_screenshot',
+                  response: {
+                    output: 'Screenshot attached',
+                  },
+                  parts: [
+                    {
+                      inlineData: {
+                        mimeType: 'image/png',
+                        data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==',
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      };
+
+      const messages = converter.convertGeminiRequestToOpenAI(request);
+      const toolMessage = messages.find((message) => message.role === 'tool');
+      const userMessages = messages.filter((message) => message.role === 'user');
+
+      expect(toolMessage).toBeDefined();
+      expect(userMessages).toHaveLength(0);
+      expect(toolMessage).toMatchObject({
+        role: 'tool',
+        tool_call_id: 'call_1',
+      });
+
+      const toolContent = toolMessage?.content;
+      expect(Array.isArray(toolContent)).toBe(true);
+      expect(toolContent).toMatchObject([
+        {
+          type: 'text',
+          text: 'Screenshot attached',
+        },
+        {
+          type: 'image_url',
+          image_url: {
+            url: expect.stringContaining('data:image/png;base64,'),
+          },
+        },
+      ]);
     });
   });
 });

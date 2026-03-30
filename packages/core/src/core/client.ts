@@ -277,6 +277,13 @@ export class GeminiClient {
   }
 
   async resetChat(): Promise<void> {
+    this.sessionTurnCount = 0;
+    this.currentSequenceModel = null;
+    this.lastSentIdeContext = undefined;
+    this.forceFullIdeContext = true;
+    this.hookStateMap.clear();
+    this.lastPromptId = this.config.getSessionId();
+    this.loopDetector.reset(this.lastPromptId);
     this.chat = await this.startChat();
   }
 
