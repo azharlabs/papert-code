@@ -6,6 +6,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { getBrandConfig } from '../config/branding.js';
 
 export interface ProjectSummaryInfo {
   hasHistory: boolean;
@@ -25,7 +26,10 @@ export interface ProjectSummaryInfo {
  * Reads and parses the project summary file to extract structured information
  */
 export async function getProjectSummaryInfo(): Promise<ProjectSummaryInfo> {
-  const summaryPath = path.join(process.cwd(), '.papert', 'PROJECT_SUMMARY.md');
+  const summaryPath = path.join(
+    process.cwd(),
+    getBrandConfig().projectSummaryRelativePath,
+  );
 
   try {
     await fs.access(summaryPath);

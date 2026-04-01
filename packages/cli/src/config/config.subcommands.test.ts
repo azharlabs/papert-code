@@ -11,6 +11,7 @@ import { EventEmitter } from 'node:events';
 import type { ChildProcess } from 'node:child_process';
 import { __setSpawnForServer, __resetSpawnForServer } from '../commands/server.js';
 import { __setSpawnForConnect, __resetSpawnForConnect } from '../commands/connect.js';
+import { getBrandConfig } from '@papert-code/papert-code-core';
 
 describe('parseArguments (subcommands)', () => {
   const child = new EventEmitter() as unknown as ChildProcess;
@@ -63,5 +64,15 @@ describe('parseArguments (subcommands)', () => {
     const argv = await parseArguments({} as Settings);
 
     expect(argv.remoteControl).toBe(true);
+  });
+
+  it('should accept branded cli names in help metadata', async () => {
+    process.env['PAPERT_CLI_NAME'] = 'astra';
+    process.argv = ['node', 'dist/index.js', '--help'];
+
+    await expect(parseArguments({} as Settings)).rejects.toBeTruthy();
+
+    delete process.env['PAPERT_CLI_NAME'];
+    expect(getBrandConfig().cliName).toBe('papert');
   });
 });

@@ -7,6 +7,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import ignore from 'ignore';
+import { getBrandConfig } from '../config/branding.js';
 
 export interface PapertIgnoreFilter {
   isIgnored(filePath: string): boolean;
@@ -24,7 +25,11 @@ export class PapertIgnoreParser implements PapertIgnoreFilter {
   }
 
   private loadPatterns(): void {
-    const candidates = ['.papertignore', '.papertignore'];
+    const candidates = [
+      getBrandConfig().ignoreFileName,
+      '.papertignore',
+      '.geminiignore',
+    ];
     let content: string | undefined;
     let patternsFilePath: string | undefined;
 

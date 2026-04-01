@@ -22,6 +22,7 @@ const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
 const cliBundlePath = path.join(distDir, 'cli.js');
 const vendorDir = path.join(distDir, 'vendor');
+const astraWrapperPath = path.join(distDir, 'astra.js');
 
 // Verify dist directory and bundle exist
 if (!fs.existsSync(distDir)) {
@@ -41,6 +42,21 @@ if (!fs.existsSync(vendorDir)) {
   console.error('Please run "npm run bundle" first');
   process.exit(1);
 }
+
+const astraWrapper = `#!/usr/bin/env node
+process.env.PAPERT_CLI_NAME ??= 'astra';
+process.env.PAPERT_APP_NAME ??= 'Astra';
+process.env.PAPERT_CONFIG_DIR ??= '.astra';
+process.env.PAPERT_IGNORE_FILE ??= '.astraignore';
+process.env.PAPERT_CONTEXT_FILE ??= 'astra.md';
+process.env.PAPERT_EXTENSION_CONFIG_FILE ??= 'astra-extension.json';
+process.env.PAPERT_EXTENSION_SETTINGS_FILE ??= '.astra-extension-settings.json';
+process.env.PAPERT_EXTENSION_INSTALL_METADATA_FILE ??= '.astra-extension-install.json';
+process.env.PAPERT_A2A_SERVER_COMMAND ??= 'astra-a2a-server';
+await import('./cli.js');
+`;
+
+fs.writeFileSync(astraWrapperPath, astraWrapper, { mode: 0o755 });
 
 // Copy README and LICENSE
 console.log('Copying documentation files...');
@@ -121,8 +137,17 @@ const distPackageJson = {
   main: 'cli.js',
   bin: {
     papert: 'cli.js',
+    astra: 'astra.js',
   },
-  files: ['cli.js', 'vendor', '*.sb', 'README.md', 'LICENSE', 'locales'],
+  files: [
+    'cli.js',
+    'astra.js',
+    'vendor',
+    '*.sb',
+    'README.md',
+    'LICENSE',
+    'locales',
+  ],
   config: rootPackageJson.config,
   dependencies: runtimeDependencies,
   optionalDependencies: {

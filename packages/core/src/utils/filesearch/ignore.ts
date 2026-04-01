@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ignore from 'ignore';
 import picomatch from 'picomatch';
+import { getBrandConfig } from '../../config/branding.js';
 
 const hasFileExtension = picomatch('**/*[*.]*');
 
@@ -28,9 +29,16 @@ export function loadIgnoreRules(options: LoadIgnoreRulesOptions): Ignore {
   }
 
   if (options.usePapertignore) {
-    const papertignorePath = path.join(options.projectRoot, '.papertignore');
-    if (fs.existsSync(papertignorePath)) {
-      ignorer.add(fs.readFileSync(papertignorePath, 'utf8'));
+    const papertIgnorePaths = [
+      path.join(options.projectRoot, getBrandConfig().ignoreFileName),
+      path.join(options.projectRoot, '.papertignore'),
+      path.join(options.projectRoot, '.geminiignore'),
+    ];
+    for (const papertignorePath of papertIgnorePaths) {
+      if (fs.existsSync(papertignorePath)) {
+        ignorer.add(fs.readFileSync(papertignorePath, 'utf8'));
+        break;
+      }
     }
   }
 

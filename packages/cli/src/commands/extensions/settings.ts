@@ -12,8 +12,9 @@ import {
   loadExtensionByName,
 } from '../../config/extension.js';
 import { getErrorMessage } from '../../utils/errors.js';
+import { getBrandConfig } from '@papert-code/papert-code-core';
 
-const EXTENSION_SETTINGS_FILE = '.papert-extension-settings.json';
+const EXTENSION_SETTINGS_FILE = getBrandConfig().extensionSettingsFileName;
 
 type ExtensionSettings = Record<string, string>;
 

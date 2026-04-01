@@ -78,7 +78,8 @@
     }
   },
   "bin": {
-    "papert": "dist/cli.js"
+    "papert": "dist/cli.js",
+    "astra": "dist/astra.js"
   },
   "files": [
     "dist/",

@@ -5,6 +5,7 @@
  */
 
 import type { CommandModule } from 'yargs';
+import { getBrandConfig } from '@papert-code/papert-code-core';
 import { installCommand } from './extensions/install.js';
 import { uninstallCommand } from './extensions/uninstall.js';
 import { listCommand } from './extensions/list.js';
@@ -21,7 +22,7 @@ import { defer } from '../deferred.js';
 
 export const extensionsCommand: CommandModule = {
   command: 'extensions <command>',
-  describe: 'Manage Papert Code extensions.',
+  describe: `Manage ${getBrandConfig().appName} extensions.`,
   builder: (yargs) =>
     yargs
       .command(defer(installCommand, 'extensions'))

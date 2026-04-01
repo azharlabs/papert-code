@@ -8,6 +8,7 @@ import {
   getErrorMessage,
   loadServerHierarchicalMemory,
   PAPERT_DIR,
+  getBrandConfig,
 } from '@papert-code/papert-code-core';
 import path from 'node:path';
 import os from 'os';
@@ -70,7 +71,10 @@ export const memoryCommand: SlashCommand = {
           kind: CommandKind.BUILT_IN,
           action: async (context) => {
             try {
-              const projectMemoryPath = path.join(process.cwd(), 'papert.md');
+              const projectMemoryPath = path.join(
+                process.cwd(),
+                getBrandConfig().contextFileName,
+              );
               const memoryContent = await fs.readFile(
                 projectMemoryPath,
                 'utf-8',
@@ -118,7 +122,7 @@ export const memoryCommand: SlashCommand = {
               const globalMemoryPath = path.join(
                 os.homedir(),
                 PAPERT_DIR,
-                'papert.md',
+                getBrandConfig().contextFileName,
               );
               const globalMemoryContent = await fs.readFile(
                 globalMemoryPath,

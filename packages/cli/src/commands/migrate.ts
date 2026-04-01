@@ -7,6 +7,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { CommandModule } from 'yargs';
+import { getBrandConfig } from '@papert-code/papert-code-core';
 
 interface MigrateArgs {
   fromGemini?: boolean;
@@ -42,13 +43,16 @@ const GEMINI_TO_PAPERT_ENV_MAP: Readonly<Record<string, string>> = {
   GEMINI_YOLO_MODE: 'PAPERT_YOLO_MODE',
 };
 
-const CANDIDATE_FILES = [
-  '.env',
-  '.papert/.env',
-  '.papert/settings.json',
-  '.papert/settings.local.json',
-  '.papert/hooks.json',
-] as const;
+const CANDIDATE_FILES = (() => {
+  const configDir = getBrandConfig().configDirName;
+  return [
+    '.env',
+    `${configDir}/.env`,
+    `${configDir}/settings.json`,
+    `${configDir}/settings.local.json`,
+    `${configDir}/hooks.json`,
+  ] as const;
+})();
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -198,4 +202,3 @@ export const migrateCommand: CommandModule = {
     printMigrationResult(result, process.cwd());
   },
 };
-

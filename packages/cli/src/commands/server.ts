@@ -11,6 +11,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { randomBytes } from 'node:crypto';
+import { getBrandConfig } from '@papert-code/papert-code-core';
 
 let spawnImpl: typeof childProcessSpawn = childProcessSpawn;
 
@@ -101,7 +102,7 @@ function resolveA2aServerEntrypoint(): string | undefined {
 
 export const serverCommand: CommandModule = {
   command: 'server|serve',
-  describe: 'Run Papert Code daemon (remote driving server).',
+  describe: `Run ${getBrandConfig().appName} daemon (remote driving server).`,
   builder: (yargs) =>
     yargs
       .option('port', {
@@ -137,6 +138,7 @@ export const serverCommand: CommandModule = {
       })
       .version(false),
   handler: async (argv) => {
+    const brand = getBrandConfig();
     const allowEmptyToken = Boolean(argv['allow-empty-token']);
     const token = resolveServerToken(argv['token'], allowEmptyToken);
     const bindHost = String(argv['host'] ?? '127.0.0.1');
@@ -156,26 +158,28 @@ export const serverCommand: CommandModule = {
     };
 
     console.error(
-      `[papert] starting a2a server\n` +
+      `[${brand.cliName}] starting a2a server\n` +
         `  bind:  ${bindHost}:${port}\n` +
         `  url:   ${connectUrl}\n` +
         `  port:  ${env.CODER_AGENT_PORT}\n` +
         `  token: ${env.PAPERT_REMOTE_SERVER_TOKEN}\n` +
-        `  cmd:   papert-a2a-server`
+        `  cmd:   ${brand.a2aServerCommand}`
     );
     if (allowEmptyToken) {
       console.error(
-        '[papert] warning: --allow-empty-token disables server-token auth for session creation',
+        `[${brand.cliName}] warning: --allow-empty-token disables server-token auth for session creation`,
       );
     }
     if (!allowEmptyToken && typeof argv['token'] !== 'string') {
-      console.error('[papert] generated ephemeral server token for this run');
+      console.error(
+        `[${brand.cliName}] generated ephemeral server token for this run`,
+      );
     }
     console.error(
-      `[papert] connect: papert connect ${connectUrl} --token ${token}`,
+      `[${brand.cliName}] connect: ${brand.cliName} connect ${connectUrl} --token ${token}`,
     );
     console.error(
-      `[papert] attach:  papert attach ${connectUrl} --server-token ${token}`,
+      `[${brand.cliName}] attach:  ${brand.cliName} attach ${connectUrl} --server-token ${token}`,
     );
 
     const localServerEntrypoint = resolveA2aServerEntrypoint();
@@ -187,12 +191,12 @@ export const serverCommand: CommandModule = {
           display: `${process.execPath} ${localServerEntrypoint}`,
         }
       : {
-          command: 'papert-a2a-server',
+          command: brand.a2aServerCommand,
           args: [],
-          display: 'papert-a2a-server',
+          display: brand.a2aServerCommand,
         };
 
-    console.error(`[papert] spawning: ${spawnCommand.display}`);
+    console.error(`[${brand.cliName}] spawning: ${spawnCommand.display}`);
 
     let child;
     try {
@@ -201,19 +205,21 @@ export const serverCommand: CommandModule = {
         env,
       });
     } catch (err) {
-      console.error(`[papert] failed to spawn daemon:`, err);
+      console.error(`[${brand.cliName}] failed to spawn daemon:`, err);
       process.exit(1);
       return;
     }
 
     child.on('error', (err) => {
-      console.error(`[papert] daemon spawn error:`, err);
+      console.error(`[${brand.cliName}] daemon spawn error:`, err);
       process.exit(1);
     });
 
     child.on('close', (code) => {
       if (code && code !== 0) {
-        console.error(`[papert] papert-a2a-server exited with code ${code}`);
+        console.error(
+          `[${brand.cliName}] ${brand.a2aServerCommand} exited with code ${code}`,
+        );
       }
       process.exit(code ?? 0);
     });

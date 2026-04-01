@@ -8,6 +8,7 @@
 export * from './config/config.js';
 export * from './config/defaultModelConfigs.js';
 export * from './config/models.js';
+export * from './config/branding.js';
 export * from './output/types.js';
 export * from './output/json-formatter.js';
 export * from './confirmation-bus/types.js';

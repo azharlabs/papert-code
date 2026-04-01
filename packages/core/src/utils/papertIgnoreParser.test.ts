@@ -9,6 +9,7 @@ import { PapertIgnoreParser } from './papertIgnoreParser.js';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { getBrandConfig } from '../config/branding.js';
 
 describe('PapertIgnoreParser', () => {
   let projectRoot: string;
@@ -31,7 +32,7 @@ describe('PapertIgnoreParser', () => {
   describe('when .papertignore exists', () => {
     beforeEach(async () => {
       await createTestFile(
-        '.papertignore',
+        getBrandConfig().ignoreFileName,
         'ignored.txt\n# A comment\n/ignored_dir/\n',
       );
       await createTestFile('ignored.txt', 'ignored');

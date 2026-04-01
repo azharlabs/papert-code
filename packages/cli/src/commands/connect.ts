@@ -6,6 +6,7 @@
 
 import type { CommandModule } from 'yargs';
 import { spawn as childProcessSpawn } from 'node:child_process';
+import { getBrandConfig } from '@papert-code/papert-code-core';
 
 let spawnImpl: typeof childProcessSpawn = childProcessSpawn;
 
@@ -41,7 +42,7 @@ function normalizeDaemonUrl(rawUrl: string): URL {
 
 export const connectCommand: CommandModule = {
   command: 'connect <url>',
-  describe: 'Connect to a remote Papert Code daemon and run the CLI against it.',
+  describe: `Connect to a remote ${getBrandConfig().appName} daemon and run the CLI against it.`,
   builder: (yargs) =>
     yargs
       .positional('url', {

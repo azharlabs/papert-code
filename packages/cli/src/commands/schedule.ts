@@ -9,6 +9,7 @@ import {
   TaskScheduler,
   resolveSchedulerStorePath,
   readRunLogEntries,
+  getBrandConfig,
   type ScheduledJob,
   type SchedulerLogger,
   type SchedulerRunResult,
@@ -48,8 +49,9 @@ const schedulerLogger: SchedulerLogger = {
 };
 
 function logWith(level: 'debug' | 'info' | 'warn' | 'error', msg: string, obj?: unknown) {
+  const brand = getBrandConfig();
   const suffix = obj ? ` ${JSON.stringify(obj)}` : '';
-  const line = `[papert] ${msg}${suffix}`;
+  const line = `[${brand.cliName}] ${msg}${suffix}`;
   if (level === 'debug') console.debug(line);
   else if (level === 'info') console.log(line);
   else if (level === 'warn') console.warn(line);

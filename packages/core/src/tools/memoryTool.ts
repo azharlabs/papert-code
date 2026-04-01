@@ -15,6 +15,7 @@ import type { FunctionDeclaration } from '@google/genai';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { Storage } from '../config/storage.js';
+import { getBrandConfig } from '../config/branding.js';
 import * as Diff from 'diff';
 import { DEFAULT_DIFF_OPTIONS } from './diffOptions.js';
 import { tildeifyPath } from '../utils/paths.js';
@@ -71,8 +72,8 @@ Do NOT use this tool:
   - If not specified, the tool will ask the user where they want to save the memory.
 `;
 
-export const PAPERT_CONFIG_DIR = '.papert';
-export const DEFAULT_CONTEXT_FILENAME = 'papert.md';
+export const PAPERT_CONFIG_DIR = getBrandConfig().configDirName;
+export const DEFAULT_CONTEXT_FILENAME = getBrandConfig().contextFileName;
 export const MEMORY_SECTION_HEADER = '## Papert Added Memories';
 
 // This variable will hold the currently configured filename for papert.md context files.

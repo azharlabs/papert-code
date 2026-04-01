@@ -31,6 +31,7 @@ import {
   type HookDefinition,
   type HookEventName,
   getVersion,
+  getBrandConfig,
 } from '@papert-code/papert-code-core';
 import { extensionsCommand } from '../commands/extensions.js';
 import { skillsCommand } from '../commands/skills.js';
@@ -268,12 +269,13 @@ function parseStructuredOutputSchema(rawSchema: string): Record<string, unknown>
 }
 
 export async function parseArguments(settings: Settings): Promise<CliArgs> {
+  const brand = getBrandConfig();
   const rawArgv = hideBin(process.argv);
   const yargsInstance = yargs(rawArgv)
     .locale('en')
-    .scriptName('papert')
+    .scriptName(brand.cliName)
     .usage(
-      'Usage: papert [options] [command]\n\nPapert Code - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
+      `Usage: ${brand.cliName} [options] [command]\n\n${brand.appName} - Launch an interactive CLI, use -p/--prompt for non-interactive mode`,
     )
     .option('telemetry', {
       type: 'boolean',
@@ -338,27 +340,27 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     })
     .option('proxy', {
       type: 'string',
-      description: 'Proxy for Papert Code, like schema://user:password@host:port',
+      description: `Proxy for ${brand.appName}, like schema://user:password@host:port`,
     })
     .option('remote-url', {
       type: 'string',
-      description: 'Remote daemon base URL (used by `papert connect`).',
+      description: `Remote daemon base URL (used by \`${brand.cliName} connect\`).`,
     })
     .option('remote-token', {
       type: 'string',
-      description: 'Remote daemon server token (used by `papert connect`).',
+      description: `Remote daemon server token (used by \`${brand.cliName} connect\`).`,
     })
     .option('remote-control', {
       type: 'boolean',
       description:
-        'Internal flag: run in remote-control mode (used by `papert connect`).',
+        `Internal flag: run in remote-control mode (used by \`${brand.cliName} connect\`).`,
       hidden: true,
     })
     .deprecateOption(
       'proxy',
       'Use the "proxy" setting in settings.json instead. This flag will be removed in a future version.',
     )
-    .command('$0 [query..]', 'Launch Papert Code CLI', (yargsInstance: Argv) =>
+    .command('$0 [query..]', `Launch ${brand.appName} CLI`, (yargsInstance: Argv) =>
       yargsInstance
         .positional('query', {
           description:

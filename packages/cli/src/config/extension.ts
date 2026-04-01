@@ -13,6 +13,7 @@ import {
   PAPERT_DIR,
   Storage,
   Config,
+  getBrandConfig,
   ExtensionInstallEvent,
   ExtensionUninstallEvent,
   ExtensionDisableEvent,
@@ -43,13 +44,15 @@ import type { ConfirmationRequest } from '../ui/types.js';
 export const EXTENSIONS_DIRECTORY_NAME = path.join(PAPERT_DIR, 'extensions');
 
 export const EXTENSION_CONFIG_FILENAMES = [
-  'papert-extension.json', // Preferred
+  getBrandConfig().extensionConfigFileName, // Preferred
+  'papert-extension.json',
   'gemini-extension.json', // Legacy (Gemini CLI)
 ];
 export const PRIMARY_EXTENSION_CONFIG_FILENAME = EXTENSION_CONFIG_FILENAMES[0];
 // Deprecated: keep for backward compatibility with older imports/tests.
 export const EXTENSIONS_CONFIG_FILENAME = PRIMARY_EXTENSION_CONFIG_FILENAME;
-export const INSTALL_METADATA_FILENAME = '.papert-extension-install.json';
+export const INSTALL_METADATA_FILENAME =
+  getBrandConfig().extensionInstallMetadataFileName;
 
 export interface Extension {
   path: string;
@@ -310,7 +313,7 @@ export function loadInstallMetadata(
 
 function getContextFileNames(config: ExtensionConfig): string[] {
   if (!config.contextFileName) {
-    return ['papert.md'];
+    return [getBrandConfig().contextFileName];
   } else if (!Array.isArray(config.contextFileName)) {
     return [config.contextFileName];
   }

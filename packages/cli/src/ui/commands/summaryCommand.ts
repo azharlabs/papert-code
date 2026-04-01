@@ -9,14 +9,18 @@ import {
   CommandKind,
   type SlashCommandActionReturn,
 } from './types.js';
-import { getProjectSummaryPrompt } from '@papert-code/papert-code-core';
+import {
+  getProjectSummaryPrompt,
+  getBrandConfig,
+} from '@papert-code/papert-code-core';
 import { t } from '../../i18n/index.js';
 
 export const summaryCommand: SlashCommand = {
   name: 'summary',
   get description() {
+    const summaryPath = getBrandConfig().projectSummaryRelativePath;
     return t(
-      'Generate a project summary and save it to .papert/PROJECT_SUMMARY.md',
+      `Generate a project summary and save it to ${summaryPath}`,
     );
   },
   kind: CommandKind.BUILT_IN,
@@ -28,13 +32,14 @@ export const summaryCommand: SlashCommand = {
         content: t('Config not loaded.'),
       };
     }
+    const summaryPath = getBrandConfig().projectSummaryRelativePath;
     const summaryPrompt = [
       'SYSTEM CONTRACT: summary-command/v1',
       'Generate a complete markdown project summary from this session context.',
       getProjectSummaryPrompt(),
-      'Write the final markdown to `.papert/PROJECT_SUMMARY.md`.',
+      `Write the final markdown to \`${summaryPath}\`.`,
       'Always overwrite the file if it already exists.',
-      'After writing the file, respond with a short confirmation line containing exactly this relative path: `.papert/PROJECT_SUMMARY.md`.',
+      `After writing the file, respond with a short confirmation line containing exactly this relative path: \`${summaryPath}\`.`,
       'Do not ask follow-up questions before writing the file.',
     ].join('\n\n');
 
